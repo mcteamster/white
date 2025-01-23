@@ -17,11 +17,15 @@ const pickupCard: Move<GameState> = ({ G, random, playerID }) => {
     if (pile.length > 0 || discard.length > 0) {
       pile.map(card => {
         card.owner = undefined;
+        card.previousOwner = undefined;
+        card.timestamp = Number(Date.now());
         card.location = "deck";
         return card;
       });
       discard.map(card => {
         card.owner = undefined;
+        card.previousOwner = undefined;
+        card.timestamp = Number(Date.now());
         card.location = "deck";
         return card;
       });
@@ -30,8 +34,9 @@ const pickupCard: Move<GameState> = ({ G, random, playerID }) => {
     }
   } else {
     // Pickup Card
-    const card = deck[random?.Die(deck.length)-1];
+    const card = deck[random?.Die(deck.length) - 1];
     card.owner = playerID;
+    card.timestamp = Number(Date.now());
     card.location = "hand";
   }
 }
@@ -42,10 +47,14 @@ const moveCard: Move<GameState> = ({ G, playerID }, id, target, owner) => {
     if (['pile', 'discard', 'deck'].includes(target)) {
       selectedCard.location = target;
       selectedCard.owner = undefined;
+      selectedCard.previousOwner = playerID;
+      selectedCard.timestamp = Number(Date.now());
     } else if (['hand', 'table'].includes(target)) {
       if (owner && owner != playerID) {
         selectedCard.owner = owner;
+        selectedCard.previousOwner = playerID;
       }
+      selectedCard.timestamp = Number(Date.now());
       selectedCard.location = target;
     } else {
       return INVALID_MOVE;
@@ -56,43 +65,12 @@ const moveCard: Move<GameState> = ({ G, playerID }, id, target, owner) => {
 }
 
 // Game
+import { initialData } from './data/initialData';
 export const BlankWhiteCards: Game<GameState> = {
   name: 'blank-white-cards',
 
-  setup: () => ({
-    cards: [
-      {
-        id: 1,
-        content: {
-          title: "Card 1",
-          description: "This is card 1",
-          author: "Author",
-          image: "https://via.placeholder.com/150",
-        },
-        location: "deck",
-      },
-      {
-        id: 2,
-        content: {
-          title: "Card 2",
-          description: "This is card 2",
-          author: "Author",
-          image: "https://via.placeholder.com/150",
-        },
-        location: "deck",
-      },
-      {
-        id: 3,
-        content: {
-          title: "Card 3",
-          description: "This is card 3",
-          author: "Author",
-          image: "https://via.placeholder.com/150",
-        },
-        location: "deck",
-      },
-    ],
-  }),
+  // @ts-ignore
+  setup: () => (initialData),
 
   moves: {
     pickupCard,

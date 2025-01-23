@@ -2,13 +2,17 @@
 export interface Card {
   id: number,
   content: {
-    title?: string,
+    title: string,
     description?: string,
     author?: string,
+    date?: string,
     image?: string,
   },
-  location: 'deck' | 'pile' | 'discard' | 'hand' | 'table',
-  owner?: string,
+  location: string, // 'deck' | 'pile' | 'discard' | 'hand' | 'table',
+  owner?: string, // playerID
+  previousOwner?: string, // playerID, used for tracking ownership changes
+  timestamp?: number, // epoch of last move
+  likes?: number, // number of times this card has been liked
 }
 
 // Helper Functions

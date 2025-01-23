@@ -1,28 +1,35 @@
-// Board.tsx
 import type { BoardProps } from 'boardgame.io/react';
 import type { GameState } from './Game.ts'
 import type { Properties } from 'csstype';
-import { getCardsByLocation } from './Cards';
+import { CommonSpace } from './Components/CommonSpace.tsx';
 
-export function BlankWhiteCardsBoard({ G, moves }: BoardProps<GameState>) {
-  const pickupCard = () => moves.pickupCard();
+// Web Components from https://wiredjs.com/
+import 'wired-elements';
+import { PlayerSpace } from './Components/PlayerSpace.tsx';
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'wired-button': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & { elevation?: number }, HTMLElement>;
+      'wired-card': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & { elevation?: number }, HTMLElement>;
+      'wired-image': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & { elevation?: number, src?: string }, HTMLElement>;
+    }
+  }
+}
 
-  const cellStyle: Properties<string | number> = {
-    border: '1px solid #555',
-    width: '50px',
-    height: '50px',
-    lineHeight: '50px',
-    textAlign: 'center',
+// Board
+export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
+  const boardStyle: Properties<string | number> = {
+    minHeight: '90vh',
+    width: '97vw',
+    display: 'grid',
+    gridTemplateColumns: 'auto auto auto auto auto auto auto auto auto',
+    gridTemplateRows: '3vh 15vh 15vh 15vh 15vh 3vh auto 10vh auto',
   };
 
   return (
-    <div>
-      <div>Pile: {JSON.stringify(getCardsByLocation(G.cards, "pile"))}</div>
-      <div>Deck: {JSON.stringify(getCardsByLocation(G.cards, "deck"))}</div>
-      <div>Hand: {JSON.stringify(getCardsByLocation(G.cards, "hand"))}</div>
-      <div>Table: {JSON.stringify(getCardsByLocation(G.cards, "table"))}</div>
-      <div>Discard: {JSON.stringify(getCardsByLocation(G.cards, "discard"))}</div>
-      <button style={cellStyle} onClick={() => pickupCard()}>Pickup</button>
+    <div id="board" style={boardStyle}>
+      <CommonSpace {...props} />
+      <PlayerSpace {...props} />
     </div>
   );
 }
