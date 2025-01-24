@@ -41,6 +41,17 @@ const pickupCard: Move<GameState> = ({ G, random, playerID }) => {
   }
 }
 
+const focusCard: Move<GameState> = ({ G, playerID }, id: number, focusState: boolean) => {
+  // Only one card can be focused at any time
+  G.cards.forEach(card => {
+    if (card.id == id) {
+      card.focused = focusState
+    } else {
+      card.focused = undefined
+    }
+  });
+}
+
 const moveCard: Move<GameState> = ({ G, playerID }, id, target, owner) => {
   let selectedCard = getCardById(getCardsByOwner(G.cards, playerID), id);
   if (selectedCard) {
@@ -74,6 +85,7 @@ export const BlankWhiteCards: Game<GameState> = {
 
   moves: {
     pickupCard,
+    focusCard,
     moveCard,
   },
 

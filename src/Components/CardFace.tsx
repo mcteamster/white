@@ -62,7 +62,7 @@ export function CardFace(card: Card) {
         width: '300px',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'flex-start',
+        justifyContent: 'space-between',
         textAlign: 'center',
       },
       title: {
@@ -86,14 +86,17 @@ export function CardFace(card: Card) {
       credit: {
         fontSize: '0.6em',
         borderColor: 'white',
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
       },
     };
     return (
       <wired-card style={styles.pile} elevation={4}>
         <img style={styles.image} src={card.content.image ?? "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="}></img>
         <div style={styles.title}>{card.content.title}</div>
-        <div style={styles.credit}>by {card.content.author} {localDate ? `on ${localDate}` : ''}</div>
         <div style={styles.description}>{card.content.description}</div>
+        <div style={styles.credit}><span>by {card.content.author}</span><span>{localDate ? `${localDate}` : ''}</span></div>
       </wired-card>
     );
   } else {

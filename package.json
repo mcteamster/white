@@ -7,7 +7,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "serve": "npx ts-node ./src/server.ts"
+    "serve": "ts-node ./src/server.ts"
   },
   "dependencies": {
     "boardgame.io": "^0.50.2",

@@ -12,12 +12,17 @@ export interface Card {
   owner?: string, // playerID
   previousOwner?: string, // playerID, used for tracking ownership changes
   timestamp?: number, // epoch of last move
+  focused?: boolean, // selected card
   likes?: number, // number of times this card has been liked
 }
 
 // Helper Functions
 export const getCardById = (cards: Card[], id: number) => {
   return cards.find(card => card.id === id);
+}
+
+export const getCardByFocus = (cards: Card[]) => {
+  return cards.find(card => card.focused === true);
 }
 
 export const getCardsByLocation = (cards: Card[], position: string) => {

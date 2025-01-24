@@ -34,8 +34,8 @@ export function Hand(props: BoardProps<GameState>) {
   }
   return (
     <div style={styles.hand}>
-      {hand.map(card => {
-        return <div onClick={() => props.moves.moveCard(card.id, "pile")}>
+      {hand.map((card, i) => {
+        return <div key={`${props.playerID}-hand-${i}`} onClick={() => props.moves.focusCard(card.id, true)}>
           <CardFace {...card} />
         </div>
       })}
@@ -60,8 +60,8 @@ export function Table(props: BoardProps<GameState>) {
   let table = getCardsByLocation(props.G.cards, "table");
   return (
     <div style={styles.table}>
-      {table.map(card => {
-        return <div onClick={() => props.moves.moveCard(card.id, "pile")}>
+      {table.map((card, i) => {
+        return <div key={`${props.playerID}-table-${i}`} onClick={() => props.moves.focusCard(card.id, true)}>
           <CardFace {...card} />
         </div>
       })}

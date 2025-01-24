@@ -5,7 +5,7 @@ import { CardFace } from './CardFace.tsx';
 import { getCardsByLocation } from '../Cards';
 
 export function Deck(props: BoardProps<GameState>) {
-  let deck = getCardsByLocation(props.G.cards, "deck"); // Oldest to Newest
+  let deck = getCardsByLocation(props.G.cards, "deck");
 
   const styles: { [key: string]: Properties<string | number> } = {
     deck: {
@@ -18,10 +18,22 @@ export function Deck(props: BoardProps<GameState>) {
       justifyContent: 'center',
       alignItems: 'center',
     },
+    button: {
+      height: '50px',
+      width: '100px',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
   };
 
   return (
-    <wired-button onClick={() => props.moves.pickupCard()} style={styles.deck} elevation={deck.length > 5 ? 5 : deck.length}>Pickup ({deck.length})</wired-button>
+    <div style={styles.deck} >
+      {/* <wired-card style={styles.button} onClick={() => props.moves.createCard()} elevation={2}>Create Card</wired-card> */}
+      <wired-card style={styles.button} onClick={() => props.moves.pickupCard()} elevation={deck.length > 4 ? 4 : deck.length}>Pickup Card</wired-card>
+    </div>
   );
 }
 
@@ -43,17 +55,19 @@ export function Pile(props: BoardProps<GameState>) {
 
   return (
     <div style={styles.pile}>
-      {pile.length > 0 ?
-      <CardFace {...pile[0]} /> :
-      <CardFace {...{
-        "id": 0,
-        "content": {
-          "title": "Blank White Cards",
-          "author": "mcteamster",
-          "description": "Pick up cards. Do what they say. Add your own!",
-        },
-        "location": "pile",
-      }} />}
+      <div onClick={() => props.moves.focusCard(pile[0].id, true)}>
+        {pile.length > 0 ?
+        <CardFace {...pile[0]} /> :
+        <CardFace {...{
+          "id": 0,
+          "content": {
+            "title": "Blank White Cards",
+            "author": "mcteamster",
+            "description": "Pick up cards. Do what they say. Add your own!",
+          },
+          "location": "pile",
+        }} />}
+      </div>
     </div>
   );
 }
