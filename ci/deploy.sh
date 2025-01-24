@@ -13,7 +13,9 @@ bucket="s3://white-customresourcestack-1jnvtik9vz8-s3bucketroot-ywxqmnekzlpf"
 # NEED TO RE-APPLY OAI to the S3 Origin?
 
 # website deploy
-aws s3 sync "../dist" "$bucket"
+npm ci
+npm run build
+aws s3 sync "./dist" "$bucket"
 
 # invalidation
 aws cloudfront create-invalidation --distribution-id=$distribution --path="/*"

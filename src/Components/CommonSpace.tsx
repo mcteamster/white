@@ -3,6 +3,7 @@ import type { GameState } from '../Game.ts'
 import type { Properties } from 'csstype';
 import { CardFace } from './CardFace.tsx';
 import { getCardsByLocation } from '../Cards';
+import { Icon } from './Icons';
 
 export function Deck(props: BoardProps<GameState>) {
   let deck = getCardsByLocation(props.G.cards, "deck");
@@ -36,7 +37,7 @@ export function Deck(props: BoardProps<GameState>) {
   return (
     <div style={styles.deck} >
       {/* <wired-card style={styles.button} onClick={() => props.moves.createCard()} elevation={2}>Create Card</wired-card> */}
-      <wired-card style={styles.button} onClick={() => props.moves.pickupCard()} elevation={2}>{deck.length > 0 ? 'Pickup Card' : `Reshuffle (${pile.length + discard.length})`}</wired-card>
+      <wired-card style={styles.button} onClick={() => props.moves.pickupCard()} elevation={2}><Icon name='add'/>{deck.length > 0 ? 'Pickup' : `Reshuffle (${pile.length + discard.length})`}</wired-card>
     </div>
   );
 }

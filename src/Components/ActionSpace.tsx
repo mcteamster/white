@@ -2,6 +2,7 @@ import type { BoardProps } from 'boardgame.io/react';
 import type { GameState } from '../Game.ts'
 import type { Properties } from 'csstype';
 import { Card, getCardByFocus } from '../Cards';
+import { Icon } from './Icons';
 
 export function ActionSpace(props: BoardProps<GameState>) {
   const focused: Card | undefined = getCardByFocus(props.G.cards);
@@ -73,11 +74,11 @@ export function ActionSpace(props: BoardProps<GameState>) {
     let tray = <></>
     if (owned) {
       tray = <div style={styles.tray}>
-        {focused.location != 'discard' && <wired-card style={{...styles.button, color: 'red'}} id="moveToDiscard" onClick={()=> {props.moves.moveCard(focused.id, "discard"); props.moves.focusCard(focused.id, false)}}>Discard</wired-card>}
-        {focused.location != 'deck' && <wired-card style={{...styles.button, color: 'black'}} id="moveToDeck" onClick={()=> {props.moves.moveCard(focused.id, "deck"); props.moves.focusCard(focused.id, false)}}>Return</wired-card>}
-        {focused.location != 'hand' && <wired-card style={{...styles.button, color: 'black'}} id="moveToHand" onClick={()=> {props.moves.moveCard(focused.id, "hand"); props.moves.focusCard(focused.id, false)}}>Put in Hand</wired-card>}
-        {focused.location != 'table' && <wired-card style={{...styles.button, color: 'black'}} id="moveToTable" onClick={()=> {props.moves.moveCard(focused.id, "table"); props.moves.focusCard(focused.id, false)}}>Put on Table</wired-card>}
-        {focused.location != 'pile' && <wired-card style={{...styles.button, color: 'black'}} id="moveToPile" onClick={()=> {props.moves.moveCard(focused.id, "pile"); props.moves.focusCard(focused.id, false)}}>Play on Pile</wired-card>}
+        {focused.location != 'discard' && <wired-card style={{...styles.button, color: 'red'}} id="moveToDiscard" onClick={()=> {props.moves.moveCard(focused.id, "discard"); props.moves.focusCard(focused.id, false)}}><Icon name='discard'/>Discard</wired-card>}
+        {focused.location != 'deck' && <wired-card style={{...styles.button, color: 'black'}} id="moveToDeck" onClick={()=> {props.moves.moveCard(focused.id, "deck"); props.moves.focusCard(focused.id, false)}}><Icon name='return'/>Reshuffle</wired-card>}
+        {focused.location != 'hand' && <wired-card style={{...styles.button, color: 'black'}} id="moveToHand" onClick={()=> {props.moves.moveCard(focused.id, "hand"); props.moves.focusCard(focused.id, false)}}><Icon name='take'/>Put in Hand</wired-card>}
+        {focused.location != 'table' && <wired-card style={{...styles.button, color: 'black'}} id="moveToTable" onClick={()=> {props.moves.moveCard(focused.id, "table"); props.moves.focusCard(focused.id, false)}}><Icon name='take'/>Put on Table</wired-card>}
+        {focused.location != 'pile' && <wired-card style={{...styles.button, color: 'black'}} id="moveToPile" onClick={()=> {props.moves.moveCard(focused.id, "pile"); props.moves.focusCard(focused.id, false)}}><Icon name='play'/>Play on Pile</wired-card>}
       </div>
     }
 

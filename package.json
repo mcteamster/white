@@ -7,9 +7,12 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "serve": "ts-node ./src/server.ts"
+    "serve": "ts-node ./src/server.ts",
+    "deploy": "./ci/deploy.sh"
   },
   "dependencies": {
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^6.4.1",
     "boardgame.io": "^0.50.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
