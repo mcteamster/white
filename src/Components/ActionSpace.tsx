@@ -30,14 +30,14 @@ export function ActionSpace(props: BoardProps<GameState>) {
     },
     description: {
       width: 'min(66vw, 66vh)',
-      height: '140px',
+      minHeight: '8em',
       fontSize: '1em',
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
     },
     credit: {
-      fontSize: '0.75em',
+      fontSize: '0.8em',
       borderColor: 'white',
       display: 'flex',
       flexDirection: 'row',
@@ -82,8 +82,8 @@ export function ActionSpace(props: BoardProps<GameState>) {
     }
 
     return (
-      <wired-dialog elevation={1} open onClick={()=>{props.moves.focusCard(focused.id, false)}}>
-        <div style={styles.focus} onClick={e => e.stopPropagation()}>
+      <wired-dialog open onClick={()=>{props.moves.focusCard(focused.id, false)}}>
+        <div style={styles.focus} onClick={e => owned && e.stopPropagation()}>
           <div style={styles.title}>{focused.content.title}</div>
           <div style={styles.credit}>by {focused.content.author}</div>
           <div style={styles.credit}>{localDate ? `${localDate}` : ''}</div>

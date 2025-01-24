@@ -41,7 +41,7 @@ const pickupCard: Move<GameState> = ({ G, random, playerID }) => {
   }
 }
 
-const focusCard: Move<GameState> = ({ G, playerID }, id: number, focusState: boolean) => {
+const focusCard: Move<GameState> = ({ G }, id: number, focusState: boolean) => {
   // Only one card can be focused at any time
   G.cards.forEach(card => {
     if (card.id == id) {

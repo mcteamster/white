@@ -6,6 +6,8 @@ import { getCardsByLocation } from '../Cards';
 
 export function Deck(props: BoardProps<GameState>) {
   let deck = getCardsByLocation(props.G.cards, "deck");
+  let pile = getCardsByLocation(props.G.cards, "pile");
+  let discard = getCardsByLocation(props.G.cards, "discard");
 
   const styles: { [key: string]: Properties<string | number> } = {
     deck: {
@@ -19,20 +21,22 @@ export function Deck(props: BoardProps<GameState>) {
       alignItems: 'center',
     },
     button: {
-      height: '50px',
-      width: '100px',
+      height: '3em',
+      width: '8em',
       fontWeight: 'bold',
       textAlign: 'center',
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
+      backgroundColor: '#f0f0f0',
+      borderRadius: '1em',
     },
   };
 
   return (
     <div style={styles.deck} >
       {/* <wired-card style={styles.button} onClick={() => props.moves.createCard()} elevation={2}>Create Card</wired-card> */}
-      <wired-card style={styles.button} onClick={() => props.moves.pickupCard()} elevation={deck.length > 4 ? 4 : deck.length}>Pickup Card</wired-card>
+      <wired-card style={styles.button} onClick={() => props.moves.pickupCard()} elevation={2}>{deck.length > 0 ? 'Pickup Card' : `Reshuffle (${pile.length + discard.length})`}</wired-card>
     </div>
   );
 }
@@ -44,7 +48,7 @@ export function Pile(props: BoardProps<GameState>) {
     pile: {
       width: '100%',
       height: '100%',
-      gridRow: '2 / 6',
+      gridRow: '3 / 6',
       gridColumn: '1 / 10',
       display: 'flex',
       flexDirection: 'row',
@@ -72,10 +76,34 @@ export function Pile(props: BoardProps<GameState>) {
   );
 }
 
+export function Header(props: BoardProps<GameState>) {
+  let deck = getCardsByLocation(props.G.cards, "deck");
+
+  const styles: { [key: string]: Properties<string | number> } = {
+    header: {
+      width: '100%',
+      height: '100%',
+      gridRow: '1',
+      gridColumn: '1 / 10',
+      display: 'flex',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  };
+
+  return (
+    <div style={styles.header}>
+      <div>{`${deck.length}/${props.G.cards.length}`}</div>
+    </div>
+  )
+}
+
 export function CommonSpace(props: BoardProps<GameState>) {
 
   return (
     <>
+      <Header {...props} />
       <Pile {...props} />
       <Deck {...props} />
     </>

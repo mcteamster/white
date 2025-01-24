@@ -7,6 +7,7 @@ import { Client } from 'boardgame.io/react';
 const BlankWhiteCardsClient = Client({
   game: BlankWhiteCards,
   board: BlankWhiteCardsBoard,
+  debug: false,
 });
 const App = () => (
   <BlankWhiteCardsClient playerID='0' />

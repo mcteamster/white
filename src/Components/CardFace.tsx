@@ -10,25 +10,25 @@ export function CardFace(card: Card) {
   if (card.location === 'hand') {
     const styles: {[key: string]: Properties<string | number>} = {
       card: {
-        height: '160px',
-        width: '100px',
+        height: '10em',
+        width: '6em',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         textAlign: 'center',
       },
       title: {
-        width: '100px',
+        width: '100%',
         fontSize: '0.75em',
         fontWeight: 'bold',
       },
       image: {
-        width: '100px',
+        width: '100%',
         objectFit: 'cover',
       },
     };
     return (
-      <wired-card style={styles.card} elevation={2}>
+      <wired-card style={styles.card} elevation={1}>
         <div style={styles.title}>{card.content.title}</div>
         <img style={styles.image} src={card.content.image}></img>
       </wired-card>
@@ -36,20 +36,20 @@ export function CardFace(card: Card) {
   } else if (card.location === 'table') {
     const styles: {[key: string]: Properties<string | number>} = {
       card: {
-        height: '50px',
-        width: '50px',
+        height: '3em',
+        width: '3em',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         textAlign: 'center',
       },
       image: {
-        width: '50px',
+        width: '3em',
         objectFit: 'cover',
       },
     };
     return (
-      <wired-card style={styles.card} elevation={2}>
+      <wired-card style={styles.card} elevation={1}>
         <img style={styles.image} src={card.content.image}></img>
       </wired-card>
     );
@@ -58,33 +58,34 @@ export function CardFace(card: Card) {
     const styles: {[key: string]: Properties<string | number>} = {
       pile: {
         height: '100%',
-        maxHeight: '480px',
-        width: '300px',
+        maxHeight: '32em',
+        width: '20em',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
         textAlign: 'center',
       },
       title: {
+        fontSize: '1.5em',
         fontWeight: 'bold',
       },
       image: {
         width: '100%',
-        maxWidth: '300px',
+        maxWidth: '20em',
         height: '100%',
-        maxHeight: '300px',
+        maxHeight: '20em',
         objectFit: 'cover',
       },
       description: {
         width: '100%',
-        height: '140px',
-        fontSize: '0.85em',
+        height: '8em',
+        fontSize: '1em',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
       },
       credit: {
-        fontSize: '0.6em',
+        fontSize: '0.75em',
         borderColor: 'white',
         display: 'flex',
         flexDirection: 'row',
@@ -92,7 +93,7 @@ export function CardFace(card: Card) {
       },
     };
     return (
-      <wired-card style={styles.pile} elevation={4}>
+      <wired-card style={styles.pile} elevation={1}>
         <img style={styles.image} src={card.content.image ?? "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="}></img>
         <div style={styles.title}>{card.content.title}</div>
         <div style={styles.description}>{card.content.description}</div>
