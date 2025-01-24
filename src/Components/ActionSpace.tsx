@@ -74,9 +74,9 @@ export function ActionSpace(props: BoardProps<GameState>) {
     if (owned) {
       tray = <div style={styles.tray}>
         {focused.location != 'discard' && <wired-card style={{...styles.button, color: 'red'}} id="moveToDiscard" onClick={()=> {props.moves.moveCard(focused.id, "discard"); props.moves.focusCard(focused.id, false)}}>Discard</wired-card>}
-        {focused.location != 'deck' && <wired-card style={{...styles.button, color: 'black'}} id="moveToDeck" onClick={()=> {props.moves.moveCard(focused.id, "deck"); props.moves.focusCard(focused.id, false)}}>Return to Deck</wired-card>}
-        {focused.location != 'hand' && <wired-card style={{...styles.button, color: 'black'}} id="moveToHand" onClick={()=> {props.moves.moveCard(focused.id, "hand"); props.moves.focusCard(focused.id, false)}}>Move to Hand</wired-card>}
-        {focused.location != 'table' && <wired-card style={{...styles.button, color: 'black'}} id="moveToTable" onClick={()=> {props.moves.moveCard(focused.id, "table"); props.moves.focusCard(focused.id, false)}}>Play to Table</wired-card>}
+        {focused.location != 'deck' && <wired-card style={{...styles.button, color: 'black'}} id="moveToDeck" onClick={()=> {props.moves.moveCard(focused.id, "deck"); props.moves.focusCard(focused.id, false)}}>Return</wired-card>}
+        {focused.location != 'hand' && <wired-card style={{...styles.button, color: 'black'}} id="moveToHand" onClick={()=> {props.moves.moveCard(focused.id, "hand"); props.moves.focusCard(focused.id, false)}}>Put in Hand</wired-card>}
+        {focused.location != 'table' && <wired-card style={{...styles.button, color: 'black'}} id="moveToTable" onClick={()=> {props.moves.moveCard(focused.id, "table"); props.moves.focusCard(focused.id, false)}}>Put on Table</wired-card>}
         {focused.location != 'pile' && <wired-card style={{...styles.button, color: 'black'}} id="moveToPile" onClick={()=> {props.moves.moveCard(focused.id, "pile"); props.moves.focusCard(focused.id, false)}}>Play on Pile</wired-card>}
       </div>
     }

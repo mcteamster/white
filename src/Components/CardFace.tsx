@@ -19,7 +19,7 @@ export function CardFace(card: Card) {
       },
       title: {
         width: '100%',
-        fontSize: '0.75em',
+        fontSize: '1em',
         fontWeight: 'bold',
       },
       image: {
@@ -58,7 +58,7 @@ export function CardFace(card: Card) {
     const styles: {[key: string]: Properties<string | number>} = {
       pile: {
         height: '100%',
-        maxHeight: '32em',
+        maxHeight: '36em',
         width: '20em',
         display: 'flex',
         flexDirection: 'column',
@@ -86,18 +86,19 @@ export function CardFace(card: Card) {
       },
       credit: {
         fontSize: '0.75em',
-        borderColor: 'white',
-        display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+        textAlign: 'center',
       },
     };
-    return (
-      <wired-card style={styles.pile} elevation={1}>
-        <img style={styles.image} src={card.content.image ?? "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="}></img>
+    const content = <>
+        {card.id != 0 && <img style={styles.image} src={card.content.image ?? "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="}></img>}
         <div style={styles.title}>{card.content.title}</div>
         <div style={styles.description}>{card.content.description}</div>
-        <div style={styles.credit}><span>by {card.content.author}</span><span>{localDate ? `${localDate}` : ''}</span></div>
+        <div style={styles.credit}>{card.content.author && `${card.content.author}`}{card.content.date && ` - ${localDate}`}</div>
+    </>
+
+    return (
+      <wired-card style={styles.pile} elevation={1}>
+        {content}
       </wired-card>
     );
   } else {
