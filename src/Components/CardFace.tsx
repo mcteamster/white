@@ -2,6 +2,16 @@ import type { Properties } from 'csstype';
 import type { Card } from '../Cards.ts';
 
 export function CardFace(card: Card) {
+  const baseStyles: {[key: string]: Properties<string | number>} = {
+    card: {
+      borderRadius: '0.5em',
+      backgroundColor: 'white',
+      display: 'flex',
+      flexDirection: 'column',
+      textAlign: 'center',
+    }
+  }
+
   let localDate;
   if (card.content.date) {
     localDate = new Date(Number(card.content.date)).toLocaleDateString();
@@ -12,10 +22,8 @@ export function CardFace(card: Card) {
       card: {
         height: '10em',
         width: '6em',
-        display: 'flex',
-        flexDirection: 'column',
+        margin: '0.25em 0.1em',
         justifyContent: 'center',
-        textAlign: 'center',
       },
       title: {
         width: '100%',
@@ -28,7 +36,7 @@ export function CardFace(card: Card) {
       },
     };
     return (
-      <wired-card style={styles.card} elevation={1}>
+      <wired-card style={{...baseStyles.card, ...styles.card}} elevation={1}>
         <div style={styles.title}>{card.content.title}</div>
         <img style={styles.image} src={card.content.image}></img>
       </wired-card>
@@ -38,10 +46,8 @@ export function CardFace(card: Card) {
       card: {
         height: '3em',
         width: '3em',
-        display: 'flex',
-        flexDirection: 'column',
+        margin: '0.25em 0.1em',
         justifyContent: 'center',
-        textAlign: 'center',
       },
       image: {
         width: '3em',
@@ -49,21 +55,19 @@ export function CardFace(card: Card) {
       },
     };
     return (
-      <wired-card style={styles.card} elevation={1}>
+      <wired-card style={{...baseStyles.card, ...styles.card}} elevation={1}>
         <img style={styles.image} src={card.content.image}></img>
       </wired-card>
     );
   }
   else if (card.location === 'pile') {
     const styles: {[key: string]: Properties<string | number>} = {
-      pile: {
+      card: {
         height: '100%',
+        minHeight: '20em',
         maxHeight: '36em',
         width: '20em',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        textAlign: 'center',
+        justifyContent: 'space-around',
       },
       title: {
         fontSize: '1.5em',
@@ -97,7 +101,7 @@ export function CardFace(card: Card) {
     </>
 
     return (
-      <wired-card style={styles.pile} elevation={1}>
+      <wired-card style={{...baseStyles.card, ...styles.card}} elevation={1}>
         {content}
       </wired-card>
     );

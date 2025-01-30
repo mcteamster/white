@@ -3,17 +3,25 @@ import RecyclingIcon from '@mui/icons-material/Recycling';
 import PublishIcon from '@mui/icons-material/Publish';
 import DownloadIcon from '@mui/icons-material/Download';
 import LibraryAddIcon from '@mui/icons-material/LibraryAdd';
+import CreateIcon from '@mui/icons-material/Create';
 import { Properties } from 'csstype';
 
-type IconName = 'discard' | 'return' | 'play' | 'take' | 'add';
+type IconName = 
+  'add' | 
+  'create' |
+  'discard' | 
+  'play' | 
+  'return' | 
+  'take';
 
 export function Icon(props: { name: IconName }) {
   const icons = {
+    add: <LibraryAddIcon></LibraryAddIcon>,
+    create: <CreateIcon></CreateIcon>,
     discard: <DeleteOutlineIcon></DeleteOutlineIcon>,
-    return: <RecyclingIcon></RecyclingIcon>,
     play: <PublishIcon></PublishIcon>,
+    return: <RecyclingIcon></RecyclingIcon>,
     take: <DownloadIcon></DownloadIcon>,
-    add: <LibraryAddIcon></LibraryAddIcon>
   }
 
   const styles: { [key: string]: Properties<string | number> } = {

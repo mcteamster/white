@@ -8,7 +8,7 @@ export interface GameState {
 }
 
 // Moves
-const pickupCard: Move<GameState> = ({ G, random, playerID }) => {
+const pickupCard: Move<GameState> = ({ G, random, playerID }, focus?: boolean) => {
   let deck = getCardsByLocation(G.cards, "deck");
   if (deck.length === 0) {
     // Reshuffle Pile and Discard into Deck
@@ -35,6 +35,9 @@ const pickupCard: Move<GameState> = ({ G, random, playerID }) => {
   } else {
     // Pickup Card
     const card = deck[random?.Die(deck.length) - 1];
+    if (focus === true) {
+      card.focused = true;
+    }
     card.owner = playerID;
     card.timestamp = Number(Date.now());
     card.location = "hand";

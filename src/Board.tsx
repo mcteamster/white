@@ -21,15 +21,15 @@ declare global {
 // Board
 export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
   const boardStyle: Properties<string | number> = {
-    minHeight: '100vh',
+    minHeight: 'calc(90vh - 70px)',
     width: '97vw',
     display: 'grid',
     gridTemplateColumns: 'auto auto auto auto auto auto auto auto auto',
-    gridTemplateRows: '5vh auto auto auto auto 2vh auto auto auto',
+    gridTemplateRows: '5vh auto auto auto auto auto auto auto 8em',
   };
 
   return (
-    <div id="board" style={boardStyle}>
+    <div style={boardStyle}>
       <ActionSpace {...props} />
       <CommonSpace {...props} />
       <PlayerSpace {...props} />

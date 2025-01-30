@@ -3,11 +3,7 @@
 :root {
   font-family: 'Patrick Hand SC', Arial, Helvetica, sans-serif;
   font-weight: 400;
-
   color-scheme: light;
-  color: 'black';
-  background-color: 'white';
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -15,12 +11,22 @@
 }
 
 body {
+  color: 'black';
+  background-color: #dddddd;
   margin: 0;
   display: flex;
+  flex-direction: column-reverse;
   align-items: center;
-  justify-content: center;
-  place-items: center;
+  justify-content: flex-start;
   min-width: 320px;
-  min-height: 100vh;
+  min-height: calc(100vh - 70px);
   cursor: pointer;
+}
+
+@media only screen and (max-aspect-ratio: 2/3) {
+  body {
+      min-height: calc(90vh - 70px);
+      background-color: white;
+      overflow-x: hidden;
+  }
 }
