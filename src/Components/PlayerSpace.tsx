@@ -18,7 +18,7 @@ export function Hand(props: BoardProps<GameState>) {
     },
   };
 
-  const hand = getCardsByLocation(props.playerID ? getCardsByOwner(props.G.cards, props.playerID) : [], "hand").sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)); // Oldest to Newest
+  const hand = getCardsByLocation(props.playerID ? getCardsByOwner(props.G.cards, props.playerID) : [], "hand").sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // Newest to Oldest
   return (
     <div style={styles.hand}>
       {hand.map((card, i) => {

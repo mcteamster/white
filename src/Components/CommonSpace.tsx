@@ -13,9 +13,11 @@ export function Deck(props: BoardProps<GameState>) {
   const styles: { [key: string]: Properties<string | number> } = {
     deck: {
       width: '100%',
-      height: '100%',
-      gridRow: '9',
-      gridColumn: '1 / 10',
+      height: '7em',
+      position: 'fixed',
+      bottom: '0',
+      left: '0',
+      zIndex: '10',
       display: 'flex',
       flexDirection: 'row',
       justifyContent: 'center',

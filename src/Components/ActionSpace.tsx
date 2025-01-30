@@ -20,16 +20,16 @@ export function ActionSpace(props: BoardProps<GameState>) {
       alignItems: 'center',
     },
     title: {
-      width: 'min(66vw, 45vh)',
+      width: 'min(70vw, 45vh)',
       fontSize: '1.5em',
       fontWeight: 'bold',
     },
     image: {
-      width: 'min(66vw, 45vh)',
+      width: 'min(70vw, 45vh)',
       objectFit: 'cover',
     },
     description: {
-      width: 'min(66vw, 45vh)',
+      width: 'min(70vw, 45vh)',
       height: '8em',
       maxHeight: '20vh',
       fontSize: '1em',
@@ -45,7 +45,7 @@ export function ActionSpace(props: BoardProps<GameState>) {
       justifyContent: 'space-between',
     },
     tray: {
-      width: 'min(66vw, 45vh)',
+      width: 'min(70vw, 45vh)',
       height: '100%',
       display: 'flex',
       flexWrap: 'wrap',
@@ -56,7 +56,7 @@ export function ActionSpace(props: BoardProps<GameState>) {
       height: '3em',
       width: '3em',
       minWidth: '30%',
-      maxWidth: 'min(66vw, 45vh)',
+      maxWidth: 'min(70vw, 45vh)',
       fontWeight: 'bold',
       display: 'flex',
       flexGrow: '1',

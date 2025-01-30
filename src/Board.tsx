@@ -25,7 +25,7 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
     width: '97vw',
     display: 'grid',
     gridTemplateColumns: 'auto auto auto auto auto auto auto auto auto',
-    gridTemplateRows: '5vh auto auto auto auto auto auto auto 6em',
+    gridTemplateRows: '5vh auto auto auto auto auto auto auto 7em',
   };
 
   return (
