@@ -5,7 +5,7 @@ import { Card, getCardByFocus } from '../Cards';
 import { Icon } from './Icons';
 
 export function ActionSpace(props: BoardProps<GameState>) {
-  const focused: Card | undefined = getCardByFocus(props.G.cards);
+  const focused: Card | undefined = getCardByFocus(props.G.cards, props.playerID);
 
   const styles: { [key: string]: Properties<string | number> } = {
     focus: {
@@ -70,7 +70,7 @@ export function ActionSpace(props: BoardProps<GameState>) {
     if (focused.content.date) {
       localDate = new Date(Number(focused.content.date)).toLocaleDateString();
     }
-    let owned = focused.owner == props.playerID;
+    const owned = focused.owner == props.playerID;
     let tray = <></>
     if (owned) {
       tray = <div style={styles.tray}>

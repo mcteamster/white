@@ -6,9 +6,9 @@ import { getCardsByLocation } from '../Cards';
 import { Icon } from './Icons';
 
 export function Deck(props: BoardProps<GameState>) {
-  let deck = getCardsByLocation(props.G.cards, "deck");
-  let pile = getCardsByLocation(props.G.cards, "pile");
-  let discard = getCardsByLocation(props.G.cards, "discard");
+  const deck = getCardsByLocation(props.G.cards, "deck");
+  const pile = getCardsByLocation(props.G.cards, "pile");
+  const discard = getCardsByLocation(props.G.cards, "discard");
 
   const styles: { [key: string]: Properties<string | number> } = {
     deck: {
@@ -44,7 +44,7 @@ export function Deck(props: BoardProps<GameState>) {
 }
 
 export function Pile(props: BoardProps<GameState>) {
-  let pile = getCardsByLocation(props.G.cards, "pile").sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // Newest to Oldest
+  const pile = getCardsByLocation(props.G.cards, "pile").sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // Newest to Oldest
 
   const styles: { [key: string]: Properties<string | number> } = {
     pile: {
@@ -72,6 +72,7 @@ export function Pile(props: BoardProps<GameState>) {
             "description": "Pick up cards. Do what they say. Add your own!",
           },
           "location": "pile",
+          "focused": [],
         }} />}
       </div>
     </div>
@@ -79,7 +80,7 @@ export function Pile(props: BoardProps<GameState>) {
 }
 
 export function Header(props: BoardProps<GameState>) {
-  let deck = getCardsByLocation(props.G.cards, "deck");
+  const deck = getCardsByLocation(props.G.cards, "deck");
 
   const styles: { [key: string]: Properties<string | number> } = {
     header: {

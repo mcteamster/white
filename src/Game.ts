@@ -9,11 +9,11 @@ export interface GameState {
 
 // Moves
 const pickupCard: Move<GameState> = ({ G, random, playerID }, focus?: boolean) => {
-  let deck = getCardsByLocation(G.cards, "deck");
+  const deck = getCardsByLocation(G.cards, "deck");
   if (deck.length === 0) {
     // Reshuffle Pile and Discard into Deck
-    let pile = getCardsByLocation(G.cards, "pile");
-    let discard = getCardsByLocation(G.cards, "discard");
+    const pile = getCardsByLocation(G.cards, "pile");
+    const discard = getCardsByLocation(G.cards, "discard");
     if (pile.length > 0 || discard.length > 0) {
       pile.map(card => {
         card.owner = undefined;
@@ -36,7 +36,7 @@ const pickupCard: Move<GameState> = ({ G, random, playerID }, focus?: boolean) =
     // Pickup Card
     const card = deck[random?.Die(deck.length) - 1];
     if (focus === true) {
-      card.focused = true;
+      card.focused?.push(playerID);
     }
     card.owner = playerID;
     card.timestamp = Number(Date.now());
@@ -44,19 +44,23 @@ const pickupCard: Move<GameState> = ({ G, random, playerID }, focus?: boolean) =
   }
 }
 
-const focusCard: Move<GameState> = ({ G }, id: number, focusState: boolean) => {
-  // Only one card can be focused at any time
+const focusCard: Move<GameState> = ({ G, playerID }, id: number, focusState: boolean) => {
+  // Only one card can be focused at any time per player
   G.cards.forEach(card => {
-    if (card.id == id) {
-      card.focused = focusState
+    if (card.focused.includes(playerID)) {
+      if (card.id !== id || focusState !== true) {
+        card.focused?.splice(card.focused?.indexOf(playerID), 1);
+      }
     } else {
-      card.focused = undefined
+      if (card.id === id && focusState === true) {
+        card.focused.push(playerID)
+      }
     }
   });
 }
 
 const moveCard: Move<GameState> = ({ G, playerID }, id, target, owner) => {
-  let selectedCard = getCardById(getCardsByOwner(G.cards, playerID), id);
+  const selectedCard = getCardById(getCardsByOwner(G.cards, playerID), id);
   if (selectedCard) {
     if (['pile', 'discard', 'deck'].includes(target)) {
       selectedCard.location = target;
@@ -83,7 +87,7 @@ import { initialData } from './data/initialData';
 export const BlankWhiteCards: Game<GameState> = {
   name: 'blank-white-cards',
 
-  // @ts-ignore
+  // @ts-expect-error: Seeding data will vary
   setup: () => (initialData),
 
   moves: {

@@ -9,6 +9,11 @@ do
 done
 echo ']}' >> dump.json
 
-# Transform 
+# Transform
+sed -i '' "s/&#x27;/'/g" dump.json
+sed -i '' "s/&#x2F;/\//g" dump.json
+sed -i '' "s/&amp;/\&/g" dump.json
+sed -i '' "s/&quot;/\'/g" dump.json
+sed -i '' "s/&lt;/\</g" dump.json
 echo 'export const initialData =' > initialData.ts
 node transform.js >> initialData.ts

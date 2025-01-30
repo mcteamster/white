@@ -8,7 +8,7 @@ import { PlayerSpace } from './Components/PlayerSpace.tsx';
 // Web Components from https://wiredjs.com/
 import 'wired-elements';
 declare global {
-  namespace JSX {
+  namespace React.JSX {
     interface IntrinsicElements {
       'wired-button': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & { elevation?: number }, HTMLElement>;
       'wired-card': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & { elevation?: number }, HTMLElement>;
