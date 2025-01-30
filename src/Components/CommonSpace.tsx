@@ -23,22 +23,23 @@ export function Deck(props: BoardProps<GameState>) {
     },
     button: {
       height: '3em',
-      width: '8em',
+      width: '4em',
       margin: '0.25em',
       fontWeight: 'bold',
       textAlign: 'center',
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: 'lightyellow',
+      backgroundColor: '#eeeeee',
       borderRadius: '1em',
     },
   };
 
   return (
     <div style={styles.deck} >
-      {/* <wired-card style={styles.button} onClick={() => props.moves.createCard()} elevation={2}><Icon name='create'/>Create</wired-card> */}
-      <wired-card style={styles.button} onClick={() => { props.moves.pickupCard(true) } } elevation={2}><Icon name='add'/>{deck.length > 0 ? 'Pickup' : `Reshuffle (${pile.length + discard.length})`}</wired-card>
+      <wired-card style={{...styles.button, backgroundColor: '#e8e8e8'}} onClick={() => props.moves.createCard()} elevation={2}><Icon name='settings'/>Settings</wired-card>
+      <wired-card style={{...styles.button, width: '8em', backgroundColor: 'lightyellow'}} onClick={() => { props.moves.pickupCard(true) } } elevation={2}><Icon name='add'/>{deck.length > 0 ? 'Pickup' : `Reshuffle (${pile.length + discard.length})`}</wired-card>
+      <wired-card style={{...styles.button, backgroundColor: '#e8e8e8'}} onClick={() => props.moves.createCard()} elevation={2}><Icon name='create'/>Create</wired-card>
     </div>
   );
 }
@@ -68,8 +69,8 @@ export function Pile(props: BoardProps<GameState>) {
           "id": 0,
           "content": {
             "title": "Blank White Cards",
-            "author": "mcteamster",
-            "description": "Pick up cards. Do what they say. Add your own!",
+            "author": "a game by mcteamster",
+            "description": "Pick up cards. Do what they say. Create your own!",
           },
           "location": "pile",
           "focused": [],
@@ -94,15 +95,20 @@ export function Header(props: BoardProps<GameState>) {
       borderBottom: '0.5pt solid black',
       display: 'flex',
       flexDirection: 'row',
-      justifyContent: 'space-around',
+      justifyContent: 'space-between',
       alignItems: 'center',
     },
+    item: {
+      display: 'flex',
+      flexDirection: 'row',
+      padding: '0 0.5em',
+    }
   };
 
   return (
     <div style={styles.header}>
-      <div>Blank White Cards</div>
-      <div>{`Deck: ${deck.length}/${props.G.cards.length}`}</div>
+      <div style={styles.item}><Icon name='menu'></Icon>&nbsp;Blank White Cards</div>
+      <div style={styles.item}>{`Deck: ${deck.length}/${props.G.cards.length}`}</div>
     </div>
   )
 }

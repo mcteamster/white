@@ -1,27 +1,36 @@
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import AddPhotoAlternateOutlinedIcon from '@mui/icons-material/AddPhotoAlternateOutlined';
+import CollectionsOutlinedIcon from '@mui/icons-material/CollectionsOutlined';
+import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
+import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
+import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined';
+import PresentToAllOutlinedIcon from '@mui/icons-material/PresentToAllOutlined';
 import RecyclingIcon from '@mui/icons-material/Recycling';
-import PublishIcon from '@mui/icons-material/Publish';
-import DownloadIcon from '@mui/icons-material/Download';
-import LibraryAddIcon from '@mui/icons-material/LibraryAdd';
-import CreateIcon from '@mui/icons-material/Create';
+import SaveAltOutlinedIcon from '@mui/icons-material/SaveAltOutlined';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { Properties } from 'csstype';
 
 type IconName = 
   'add' | 
   'create' |
   'discard' | 
+  'display' |
+  'menu' |
   'play' | 
   'return' | 
+  'settings' |
   'take';
 
 export function Icon(props: { name: IconName }) {
   const icons = {
-    add: <LibraryAddIcon></LibraryAddIcon>,
-    create: <CreateIcon></CreateIcon>,
-    discard: <DeleteOutlineIcon></DeleteOutlineIcon>,
-    play: <PublishIcon></PublishIcon>,
+    add: <AddPhotoAlternateOutlinedIcon></AddPhotoAlternateOutlinedIcon>,
+    create: <CreateOutlinedIcon></CreateOutlinedIcon>,
+    discard: <DeleteForeverOutlinedIcon></DeleteForeverOutlinedIcon>,
+    display: <PresentToAllOutlinedIcon></PresentToAllOutlinedIcon>,
+    menu: <MenuOutlinedIcon></MenuOutlinedIcon>,
+    play: <CollectionsOutlinedIcon></CollectionsOutlinedIcon>,
     return: <RecyclingIcon></RecyclingIcon>,
-    take: <DownloadIcon></DownloadIcon>,
+    settings: <SettingsOutlinedIcon></SettingsOutlinedIcon>,
+    take: <SaveAltOutlinedIcon></SaveAltOutlinedIcon>,
   }
 
   const styles: { [key: string]: Properties<string | number> } = {
