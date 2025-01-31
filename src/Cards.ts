@@ -3,7 +3,7 @@ export interface Card {
   id: number,
   content: {
     title: string,
-    description?: string,
+    description: string,
     author?: string,
     date?: string,
     image?: string,

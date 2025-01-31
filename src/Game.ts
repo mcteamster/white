@@ -82,6 +82,11 @@ const moveCard: Move<GameState> = ({ G, playerID }, id, target, owner) => {
   }
 }
 
+const submitCard: Move<GameState> = ({ G }, card: Card) => {
+  // Only one card can be focused at any time per player
+  G.cards.push(card);
+}
+
 // Game
 import { initialData } from './data/initialData';
 export const BlankWhiteCards: Game<GameState> = {
@@ -94,6 +99,7 @@ export const BlankWhiteCards: Game<GameState> = {
     pickupCard,
     focusCard,
     moveCard,
+    submitCard,
   },
 
   turn: {

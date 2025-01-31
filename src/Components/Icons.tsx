@@ -4,6 +4,7 @@ import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
 import DoneOutlinedIcon from '@mui/icons-material/DoneOutlined';
 import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
+import KeyboardBackspaceOutlinedIcon from '@mui/icons-material/KeyboardBackspaceOutlined';
 import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined';
 import PlayCircleFilledWhiteOutlinedIcon from '@mui/icons-material/PlayCircleFilledWhiteOutlined';
 import PresentToAllOutlinedIcon from '@mui/icons-material/PresentToAllOutlined';
@@ -14,6 +15,7 @@ import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
 import { Properties } from 'csstype';
 
 type IconName = 
+  'back' |
   'create' |
   'discard' | 
   'display' |
@@ -30,6 +32,7 @@ type IconName =
 
 export function Icon(props: { name: IconName }) {
   const icons = {
+    back: <KeyboardBackspaceOutlinedIcon></KeyboardBackspaceOutlinedIcon>,
     create: <CreateOutlinedIcon></CreateOutlinedIcon>,
     discard: <DeleteForeverOutlinedIcon></DeleteForeverOutlinedIcon>,
     display: <PresentToAllOutlinedIcon></PresentToAllOutlinedIcon>,

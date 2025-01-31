@@ -34,7 +34,6 @@ body {
   width: 100vw;
   height: 100%;
   background-color: #888888;
-
   z-index: 6;
   display: none;
   flex-direction: column;
