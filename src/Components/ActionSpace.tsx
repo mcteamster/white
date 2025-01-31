@@ -1,97 +1,94 @@
 import type { BoardProps } from 'boardgame.io/react';
 import type { GameState } from '../Game.ts'
+import { Create } from './Create.tsx';
+import { Focus } from './Focus.tsx';
 import type { Properties } from 'csstype';
-import { Card, getCardByFocus } from '../Cards';
+import { getCardsByLocation } from '../Cards';
 import { Icon } from './Icons';
+import { useState, useEffect } from 'react';
+import { sketchpad } from '../Canvas.ts';
 
-export function ActionSpace(props: BoardProps<GameState>) {
-  const focused: Card | undefined = getCardByFocus(props.G.cards, props.playerID);
+// Sketchpad
+sketchpad.recordStrokes = true;
+
+export function Toolbar({ G, moves, mode, setMode }: BoardProps<GameState> & { mode: string, setMode: Function }) {
+  const deck = getCardsByLocation(G.cards, "deck");
+  const pile = getCardsByLocation(G.cards, "pile");
+  const discard = getCardsByLocation(G.cards, "discard");
 
   const styles: { [key: string]: Properties<string | number> } = {
-    focus: {
+    toolbar: {
       width: '100%',
-      height: '100%',
-      gridRow: '1/10',
-      gridColumn: '1/10',
-      textAlign: 'center',
+      height: '7em',
+      position: 'fixed',
+      bottom: '0',
+      left: '0',
+      zIndex: '10',
       display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    title: {
-      width: 'min(70vw, 45vh)',
-      fontSize: '1.5em',
-      fontWeight: 'bold',
-    },
-    image: {
-      width: 'min(70vw, 45vh)',
-      objectFit: 'cover',
-    },
-    description: {
-      width: 'min(70vw, 45vh)',
-      height: '8em',
-      maxHeight: '20vh',
-      fontSize: '1em',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    credit: {
-      fontSize: '0.8em',
-      borderColor: 'white',
-      display: 'flex',
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-    },
-    tray: {
-      width: 'min(70vw, 45vh)',
-      height: '100%',
-      display: 'flex',
-      flexWrap: 'wrap',
       flexDirection: 'row',
       justifyContent: 'space-around',
+      alignItems: 'center',
     },
     button: {
       height: '3em',
-      width: '3em',
-      minWidth: '30%',
-      maxWidth: 'min(70vw, 45vh)',
+      width: '5.5em',
+      margin: '0.25em',
       fontWeight: 'bold',
+      textAlign: 'center',
       display: 'flex',
-      flexGrow: '1',
       justifyContent: 'center',
       alignItems: 'center',
+      backgroundColor: 'white',
+      borderRadius: '1em',
     },
+    active: {
+      backgroundColor: '#ddd',
+    }
   };
 
-  if (focused) {
-    let localDate;
-    if (focused.content.date) {
-      localDate = new Date(Number(focused.content.date)).toLocaleDateString();
+  useEffect(() => {
+    const create = document.getElementById('create');
+    if (mode === 'create') {
+      create && (create.style.display = 'flex');
+    } else {
+      create && (create.style.display = 'none');
     }
-    const owned = focused.owner == props.playerID;
-    let tray = <></>
-    if (owned) {
-      tray = <div style={styles.tray}>
-        {<wired-card style={{...styles.button, color: 'red'}} id="discardButton" onClick={()=> {props.moves.moveCard(focused.id, "discard"); props.moves.focusCard(focused.id, false)}}><Icon name='discard'/>Discard</wired-card>}
-        {<wired-card style={{...styles.button, color: 'black'}} id="tableButton" onClick={()=> {props.moves.moveCard(focused.id, "table"); props.moves.focusCard(focused.id, false)}}><Icon name='display'/>Table</wired-card>}
-        {<wired-card style={{...styles.button, color: 'black'}} id="handButton" onClick={()=> {props.moves.moveCard(focused.id, "hand"); props.moves.focusCard(focused.id, false)}}><Icon name='take'/>Hand</wired-card>}
-        {<wired-card style={{...styles.button, color: 'black'}} id="pileButton" onClick={()=> {props.moves.moveCard(focused.id, "pile"); props.moves.focusCard(focused.id, false)}}><Icon name='play'/>Pile</wired-card>}
-      </div>
-    }
+  }, [mode])
 
-    return (
-      <wired-dialog open onClick={()=>{props.moves.focusCard(focused.id, false)}}>
-        <div style={styles.focus} onClick={e => owned && e.stopPropagation()}>
-          <div style={styles.title}>{focused.content.title}</div>
-          <div style={styles.credit}>by {focused.content.author}</div>
-          <div style={styles.credit}>{localDate ? `${localDate}` : ''}</div>
-          <img style={styles.image} src={focused.content.image}/>
-          <div style={styles.description}>{focused.content.description}</div>
-          {tray}
-        </div>
-      </wired-dialog>
-    );
+  let toolset = <></>
+  if (mode === 'play') {
+    toolset = <>
+      <wired-card style={{ ...styles.button }} onClick={() => { setMode('options') }} elevation={2}><Icon name='settings' />Options</wired-card>
+      <wired-card style={{ ...styles.button, ...styles.active }} onClick={() => { moves.pickupCard(true) }} elevation={2}>{deck.length > 0 ? <Icon name='play' /> : <Icon name='shuffle' />}{deck.length > 0 ? 'Pickup' : `Reshuffle (${pile.length + discard.length})`}</wired-card>
+      <wired-card style={{ ...styles.button }} onClick={() => { setMode('create') }} elevation={2}><Icon name='create' />Create</wired-card>
+    </>
+  } else if (mode === 'create') {
+    toolset = <>
+      <wired-card style={{ ...styles.button }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Close</wired-card>
+      <wired-card style={{ ...styles.button }} onClick={() => { setMode('play') }} elevation={2}><Icon name='undo' />Undo</wired-card>
+      <wired-card style={{ ...styles.button, ...styles.active }} onClick={() => { setMode('create') }} elevation={2}><Icon name='done' />Commit</wired-card>
+    </>
+  } else if (mode === 'options') {
+    toolset = <>
+      <wired-card style={{ ...styles.button, ...styles.active }} onClick={() => { setMode('play') }} elevation={2}><Icon name='done' />Save</wired-card>
+      <wired-card style={{ ...styles.button }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Cancel</wired-card>
+    </>
   }
+
+  return (
+    <div style={styles.toolbar} >
+      {toolset}
+    </div>
+  );
+}
+
+export function ActionSpace(props: BoardProps<GameState>) {
+  const [mode, setMode] = useState('play');
+  return (
+    <>
+      <Focus {...props} />
+      <Create {...props} />
+      <Toolbar {...props} mode={mode} setMode={setMode} />
+    </>
+  )
 }

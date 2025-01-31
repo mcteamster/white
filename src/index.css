@@ -12,7 +12,7 @@
 
 body {
   color: 'black';
-  background-color: #dddddd;
+  background-color: #eee;
   margin: 0;
   display: flex;
   flex-direction: column-reverse;
@@ -21,6 +21,30 @@ body {
   min-width: 320px;
   min-height: calc(100vh - 70px);
   cursor: pointer;
+}
+
+.wired-rendered {
+  font-family: 'Patrick Hand SC', Arial, Helvetica, sans-serif;
+}
+
+#create {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100%;
+  background-color: #888888;
+
+  z-index: 6;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#sketchpad {
+  background-color: white;
+  box-shadow: 5px 5px black;
 }
 
 @media only screen and (max-aspect-ratio: 2/3) {

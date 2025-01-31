@@ -1,36 +1,48 @@
-import AddPhotoAlternateOutlinedIcon from '@mui/icons-material/AddPhotoAlternateOutlined';
+import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import CollectionsOutlinedIcon from '@mui/icons-material/CollectionsOutlined';
 import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
+import DoneOutlinedIcon from '@mui/icons-material/DoneOutlined';
+import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
 import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined';
+import PlayCircleFilledWhiteOutlinedIcon from '@mui/icons-material/PlayCircleFilledWhiteOutlined';
 import PresentToAllOutlinedIcon from '@mui/icons-material/PresentToAllOutlined';
 import RecyclingIcon from '@mui/icons-material/Recycling';
 import SaveAltOutlinedIcon from '@mui/icons-material/SaveAltOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
 import { Properties } from 'csstype';
 
 type IconName = 
-  'add' | 
   'create' |
   'discard' | 
   'display' |
+  'done' |
+  'exit' |
   'menu' |
-  'play' | 
-  'return' | 
+  'play' |
+  'pile' |
   'settings' |
-  'take';
+  'send' |
+  'shuffle' | 
+  'take' |
+  'undo';
 
 export function Icon(props: { name: IconName }) {
   const icons = {
-    add: <AddPhotoAlternateOutlinedIcon></AddPhotoAlternateOutlinedIcon>,
     create: <CreateOutlinedIcon></CreateOutlinedIcon>,
     discard: <DeleteForeverOutlinedIcon></DeleteForeverOutlinedIcon>,
     display: <PresentToAllOutlinedIcon></PresentToAllOutlinedIcon>,
+    done: <DoneOutlinedIcon></DoneOutlinedIcon>,
+    exit: <CloseOutlinedIcon></CloseOutlinedIcon>,
     menu: <MenuOutlinedIcon></MenuOutlinedIcon>,
-    play: <CollectionsOutlinedIcon></CollectionsOutlinedIcon>,
-    return: <RecyclingIcon></RecyclingIcon>,
+    play: <PlayCircleFilledWhiteOutlinedIcon></PlayCircleFilledWhiteOutlinedIcon>,
+    pile: <CollectionsOutlinedIcon></CollectionsOutlinedIcon>,
     settings: <SettingsOutlinedIcon></SettingsOutlinedIcon>,
+    send: <ForwardOutlinedIcon></ForwardOutlinedIcon>,
+    shuffle: <RecyclingIcon></RecyclingIcon>,
     take: <SaveAltOutlinedIcon></SaveAltOutlinedIcon>,
+    undo: <UndoOutlinedIcon></UndoOutlinedIcon>,
   }
 
   const styles: { [key: string]: Properties<string | number> } = {
