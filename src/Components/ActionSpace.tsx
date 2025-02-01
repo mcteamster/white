@@ -58,7 +58,7 @@ export function Toolbar({ G, playerID, moves, mode, setMode }: BoardProps<GameSt
   }, [mode])
 
   // Submit Card Wrapper
-  const submitCard = () => {
+  const submitCard = async () => {
     if (playerID) {
       const title = (document.getElementById('titleInput') as HTMLInputElement);
       const description = (document.getElementById('descriptionInput') as HTMLInputElement);
@@ -92,7 +92,20 @@ export function Toolbar({ G, playerID, moves, mode, setMode }: BoardProps<GameSt
           description.value = '';
           author.value = '';
 
-          // TODO: Persistence for Global Deck
+          // Asynchronously Submit to Global Deck
+          const submitEndpoint = import.meta.env.MODE === 'development' ? '/submit' : 'https://api.mcteamster.com/white/submit'
+          await fetch(submitEndpoint, {
+            method: "POST",
+            body: JSON.stringify({
+              title: createdCard.content.title,
+              description: createdCard.content.description,
+              author: createdCard.content.author,
+              image,
+            }),
+            headers: {
+              "Content-Type": "application/json",
+            },
+          })
       } else {
         if (title.value === '') {
           title.style.color = 'red';

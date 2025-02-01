@@ -91,12 +91,12 @@ const submitCard: Move<GameState> = ({ G }, card: Card) => {
 export const BlankWhiteCards: Game<GameState> = {
   name: 'blank-white-cards',
 
-  setup: () => ({cards: []}),
+  setup: ({}, setupData) => (setupData || {cards: []}),
 
   moves: {
-    pickupCard,
     focusCard,
     moveCard,
+    pickupCard,
     submitCard,
   },
 
