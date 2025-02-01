@@ -64,7 +64,7 @@ export function Finalise() {
           <textarea id="descriptionInput" style={styles.description} placeholder="Description" maxLength={140} required></textarea>
         </wired-card>
         <wired-input id="authorInput" style={styles.author} placeholder="Author" maxlength={25}></wired-input>
-        <div style={styles.author}>Creative Commons CC-BY 4.0 applied to submissions</div>
+        <div style={styles.author}>Creative Commons CC-BY 4.0 Applies</div>
       </wired-card>
     </div>
   );

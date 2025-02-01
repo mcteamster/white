@@ -23,5 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
-# Temp Files
+# Card Files
 dump.json
+public/card

@@ -8,7 +8,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "serve": "ts-node ./src/server.ts",
-    "deploy": "./ci/deploy.sh"
+    "deploy": "./ci/deploy.sh",
+    "data": "cd ./data; ./etl.sh"
   },
   "dependencies": {
     "@emotion/styled": "^11.14.0",

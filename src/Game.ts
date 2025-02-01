@@ -88,12 +88,10 @@ const submitCard: Move<GameState> = ({ G }, card: Card) => {
 }
 
 // Game
-import { initialData } from './data/initialData';
 export const BlankWhiteCards: Game<GameState> = {
   name: 'blank-white-cards',
 
-  // @ts-expect-error: Seeding data will vary
-  setup: () => (initialData),
+  setup: () => ({cards: []}),
 
   moves: {
     pickupCard,
