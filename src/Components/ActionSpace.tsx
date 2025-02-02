@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 //@ts-expect-error: JS Module
 import { undo, strokes, sketchpad } from '../Canvas.js';
 
-export function Toolbar({ G, playerID, moves, mode, setMode }: BoardProps<GameState> & { mode: string, setMode: Function }) {
+export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer }: BoardProps<GameState> & { mode: string, setMode: Function }) {
   const deck = getCardsByLocation(G.cards, "deck");
   const pile = getCardsByLocation(G.cards, "pile");
   const discard = getCardsByLocation(G.cards, "discard");
@@ -92,20 +92,22 @@ export function Toolbar({ G, playerID, moves, mode, setMode }: BoardProps<GameSt
           description.value = '';
           author.value = '';
 
-          // Asynchronously Submit to Global Deck
-          const submitEndpoint = import.meta.env.MODE === 'development' ? '/submit' : 'https://api.mcteamster.com/white/submit'
-          await fetch(submitEndpoint, {
-            method: "POST",
-            body: JSON.stringify({
-              title: createdCard.content.title,
-              description: createdCard.content.description,
-              author: createdCard.content.author,
-              image,
-            }),
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
+          // Asynchronously Submit to Global Deck - Singleplayer Only
+          if (!isMultiplayer) {
+            const submitEndpoint = import.meta.env.MODE === 'development' ? '/submit' : 'https://api.mcteamster.com/white/submit'
+            await fetch(submitEndpoint, {
+              method: "POST",
+              body: JSON.stringify({
+                title: createdCard.content.title,
+                description: createdCard.content.description,
+                author: createdCard.content.author,
+                image,
+              }),
+              headers: {
+                "Content-Type": "application/json",
+              },
+            })
+          }
       } else {
         if (title.value === '') {
           title.style.color = 'red';

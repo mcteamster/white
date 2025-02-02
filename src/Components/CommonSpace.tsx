@@ -68,14 +68,14 @@ export function Header(props: BoardProps<GameState>) {
 
   return (
     <div style={styles.header}>
-      <div style={styles.item}><Icon name='menu'></Icon>&nbsp;Blank White Cards</div>
+      <div style={styles.item}><Icon name='menu'/>&nbsp;Blank White Cards</div>
       <div style={styles.item}>{`${deck.length}/${props.G.cards.length}`}</div>
+      <div style={styles.item}>{props.matchID !== 'default' && <Icon name='copy'></Icon>}{props.matchID !== 'default' ? `Room Code: ${props.matchID}` : 'Global Deck'}</div>
     </div>
   )
 }
 
 export function CommonSpace(props: BoardProps<GameState>) {
-
   return (
     <>
       <Header {...props} />

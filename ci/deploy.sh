@@ -19,3 +19,6 @@ aws s3 sync "./dist" "$bucket"
 
 # invalidation
 aws cloudfront create-invalidation --distribution-id=$distribution --path="/*"
+
+# server deploy
+ssh ubuntu@blankwhitecards.mcteamster.com "~/white/update"

@@ -1,11 +1,13 @@
 // Blank White Cards React App
 import { Game } from 'boardgame.io';
-import { Client, Lobby } from 'boardgame.io/react';
+import { Client } from 'boardgame.io/react';
+import { SocketIO } from 'boardgame.io/multiplayer';
 import { BlankWhiteCards, GameState } from './Game';
 import { BlankWhiteCardsBoard } from './Board';
 import { useState } from 'react';
+import { Lobby } from './Components/Lobby';
 
-// Seeding Data
+// Global Deck Singleplayer
 let SetupGame: Game = BlankWhiteCards;
 let startingDeck: GameState;
 try {
@@ -16,33 +18,32 @@ try {
 } catch (e) {
   console.error(e)
 }
-
-// Singleplayer
-const BlankWhiteCardsClient = Client({
+const GlobalBlankWhiteCardsClient = Client({
   game: SetupGame,
   board: BlankWhiteCardsBoard,
-  debug: import.meta.env.MODE === 'development',
+  debug: false,
 });
 
-// Server Hosted Multiplayer
-const LobbyClient = () => (
-  <Lobby
-    gameServer={`http://localhost:8000`}
-    lobbyServer={`http://localhost:8000`}
-    gameComponents={[
-      { game: SetupGame, board: BlankWhiteCardsBoard }
-    ]}
-  />
-)
+// Multiplayer Custom Rooms
+const serverUrl = import.meta.env.MODE === 'development' ? 'http://localhost:8000' : 'https://blankwhitecards.mcteamster.com';
+const MultiplayerBlankWhiteCardsClient = Client({
+  game: BlankWhiteCards,
+  board: BlankWhiteCardsBoard,
+  debug: false,
+  multiplayer: SocketIO({ server: serverUrl }),
+});
 
 // Landing Page
 const App = () => {
-  const [variant, _setVariant] = useState('singleplayer');
-  
+  const [lobbyOpen, setLobbyOpen] = useState(true);
+  const [playerID, setPlayerID] = useState();
+  const [matchID, setMatchID] = useState();
+  const [credentials, setCredentials] = useState();
+
   return (
     <div id="gameContainer">
-      {variant === 'singleplayer' && <BlankWhiteCardsClient playerID='0' />}
-      {variant === 'multiplayer' && <LobbyClient></LobbyClient>}
+      <Lobby {...{lobbyOpen, setLobbyOpen, playerID, setPlayerID, matchID, setMatchID, credentials, setCredentials}}></Lobby>
+      {credentials ? <MultiplayerBlankWhiteCardsClient playerID={playerID} matchID={matchID} credentials={credentials} /> : <GlobalBlankWhiteCardsClient playerID='0'/>}
     </div>
   )
 };

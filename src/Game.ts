@@ -91,7 +91,9 @@ const submitCard: Move<GameState> = ({ G }, card: Card) => {
 export const BlankWhiteCards: Game<GameState> = {
   name: 'blank-white-cards',
 
-  setup: ({}, setupData) => (setupData || {cards: []}),
+  setup: ({}, setupData) => {
+    return setupData || {cards: []};
+  },
 
   moves: {
     focusCard,
