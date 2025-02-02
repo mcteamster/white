@@ -16,9 +16,11 @@ bucket="s3://white-customresourcestack-1jnvtik9vz8-s3bucketroot-ywxqmnekzlpf"
 npm ci
 npm run build
 aws s3 sync "./dist" "$bucket"
+aws s3 cp "./dist/index.html" "$bucket/403.html" # overrride cloudfront error responses
+aws s3 cp "./dist/index.html" "$bucket/404.html" # overrride cloudfront error responses
 
 # invalidation
 aws cloudfront create-invalidation --distribution-id=$distribution --path="/*"
 
 # server deploy
-ssh ubuntu@blankwhitecards.mcteamster.com "~/white/update"
+# ssh ubuntu@blankwhitecards.mcteamster.com "~/white/update"
