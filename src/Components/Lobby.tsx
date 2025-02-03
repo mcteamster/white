@@ -1,7 +1,7 @@
 import { Properties } from 'csstype';
 import { Icon } from './Icons';
 import { LobbyClient } from 'boardgame.io/client';
-const lobbyClient = new LobbyClient({ server: (import.meta.env.MODE === 'development' ? 'http://localhost:8000' : 'https://blankwhitecards.mcteamster.com') });
+const lobbyClient = new LobbyClient({ server: (import.meta.env.VITE_LOBBY_SERVER) });
 
 export function Lobby(props: any) {
   const enterSinglePlayer = () => {
@@ -120,7 +120,6 @@ export function Lobby(props: any) {
       flexDirection: 'column',
       justifyContent: 'center',
       alignItems: 'center',
-      fontSize: '1.25em',
     },
     mode: {
       width: 'min(35vh, 90vw)',
@@ -135,7 +134,13 @@ export function Lobby(props: any) {
       display: 'flex',
       flexDirection: 'row',
       justifyContent: 'center',
-      fontSize: "1.5em",
+      fontSize: "2em",
+    },
+    subheading: {
+      display: 'flex',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      fontSize: "1.25em",
     },
     name: {
       width: '90%',
@@ -148,11 +153,11 @@ export function Lobby(props: any) {
       textAlign: 'center',
     },
     code: {
-      width: '4.5em',
+      width: '4.75em',
     },
     enter: {
-      width: "1em",
-      height: '1em',
+      width: "1.5em",
+      height: '1.5em',
       margin: '0.25em',
       backgroundColor: '#eee',
       borderRadius: '0.5em',
@@ -160,7 +165,16 @@ export function Lobby(props: any) {
     create: {
       backgroundColor: '#eee',
       borderRadius: '0.5em',
+      fontSize: '1.25em',
     },
+    terms: {
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      textAlign: 'center',
+      fontSize: '0.75em',
+    }
   }
 
   return (
@@ -172,16 +186,21 @@ export function Lobby(props: any) {
           <div>and</div>
           <div style={styles.rooms}>
             <wired-input style={styles.code} id="roomInput" placeholder="Room Code" maxlength={4} value={parsePathCode()}></wired-input>
-            <wired-card style={styles.enter} onClick={joinGame}><Icon name="done"/></wired-card>
+            <wired-card style={styles.enter} onClick={joinGame}><Icon name="send"/></wired-card>
           </div>
           <div>or</div>
           <wired-card style={styles.create} onClick={createGame}>Create Game</wired-card>
         </wired-card>
         <wired-card style={styles.mode} onClick={enterSinglePlayer}>
-          <Icon name="single"/>
-          <div style={styles.heading}>Singleplayer</div>
-          (or local pass-and-play)
+          <div style={styles.heading}><Icon name="single"/>&nbsp;Singleplayer</div>
+          <div style={styles.heading}>[&nbsp;{props.globalSize}&nbsp;]</div>
+          <div style={styles.subheading}>Cards in the Global Deck</div>
+          <div style={styles.subheading}>Draw and add your own!</div>
         </wired-card>
+      </div>
+      <div style={styles.terms}>
+        <div>by continuing you confirm you are over 18</div>
+        <div>and accept our <u>Terms of Service</u></div> 
       </div>
     </wired-dialog>
   );

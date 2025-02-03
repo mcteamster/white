@@ -25,7 +25,7 @@ const GlobalBlankWhiteCardsClient = Client({
 });
 
 // Multiplayer Custom Rooms
-const serverUrl = import.meta.env.MODE === 'development' ? 'http://localhost:8000' : 'https://blankwhitecards.mcteamster.com';
+const serverUrl = import.meta.env.VITE_GAME_SERVER;
 const MultiplayerBlankWhiteCardsClient = Client({
   game: BlankWhiteCards,
   board: BlankWhiteCardsBoard,
@@ -42,7 +42,7 @@ const App = () => {
 
   return (
     <div id="gameContainer">
-      <Lobby {...{lobbyOpen, setLobbyOpen, playerID, setPlayerID, matchID, setMatchID, credentials, setCredentials}}></Lobby>
+      <Lobby {...{lobbyOpen, setLobbyOpen, playerID, setPlayerID, matchID, setMatchID, credentials, setCredentials, globalSize: startingDeck.cards.length}}></Lobby>
       {credentials ? <MultiplayerBlankWhiteCardsClient playerID={playerID} matchID={matchID} credentials={credentials} /> : <GlobalBlankWhiteCardsClient playerID='0'/>}
     </div>
   )

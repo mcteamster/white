@@ -9,8 +9,9 @@ import KeyboardBackspaceOutlinedIcon from '@mui/icons-material/KeyboardBackspace
 import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined';
 import PeopleIcon from '@mui/icons-material/People';
 import PersonIcon from '@mui/icons-material/Person';
-import PlayCircleFilledWhiteOutlinedIcon from '@mui/icons-material/PlayCircleFilledWhiteOutlined';
+import PlayArrowOutlinedIcon from '@mui/icons-material/PlayArrowOutlined';
 import PresentToAllOutlinedIcon from '@mui/icons-material/PresentToAllOutlined';
+import QuestionMarkOutlinedIcon from '@mui/icons-material/QuestionMarkOutlined';
 import RecyclingIcon from '@mui/icons-material/Recycling';
 import SaveAltOutlinedIcon from '@mui/icons-material/SaveAltOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
@@ -18,6 +19,7 @@ import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
 import { Properties } from 'csstype';
 
 type IconName = 
+  'about' |
   'back' |
   'copy' |
   'create' |
@@ -38,6 +40,7 @@ type IconName =
 
 export function Icon(props: { name: IconName }) {
   const icons = {
+    about: <QuestionMarkOutlinedIcon></QuestionMarkOutlinedIcon>,
     back: <KeyboardBackspaceOutlinedIcon></KeyboardBackspaceOutlinedIcon>,
     copy: <ContentCopyOutlinedIcon></ContentCopyOutlinedIcon>,
     create: <CreateOutlinedIcon></CreateOutlinedIcon>,
@@ -47,7 +50,7 @@ export function Icon(props: { name: IconName }) {
     exit: <CloseOutlinedIcon></CloseOutlinedIcon>,
     menu: <MenuOutlinedIcon></MenuOutlinedIcon>,
     multi: <PeopleIcon></PeopleIcon>,
-    play: <PlayCircleFilledWhiteOutlinedIcon></PlayCircleFilledWhiteOutlinedIcon>,
+    play: <PlayArrowOutlinedIcon></PlayArrowOutlinedIcon>,
     pile: <CollectionsOutlinedIcon></CollectionsOutlinedIcon>,
     settings: <SettingsOutlinedIcon></SettingsOutlinedIcon>,
     send: <ForwardOutlinedIcon></ForwardOutlinedIcon>,

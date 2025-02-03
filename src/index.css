@@ -6,6 +6,7 @@
   color-scheme: light;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  user-select: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -48,8 +49,8 @@ body {
 
 @media only screen and (max-aspect-ratio: 2/3) {
   body {
-      min-height: calc(90vh - 70px);
-      background-color: white;
-      overflow-x: hidden;
+    min-height: calc(90vh - 70px);
+    background-color: white;
+    overflow-x: hidden;
   }
 }

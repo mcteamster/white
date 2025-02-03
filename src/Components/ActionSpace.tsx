@@ -9,48 +9,21 @@ import { useState, useEffect } from 'react';
 //@ts-expect-error: JS Module
 import { undo, strokes, sketchpad } from '../Canvas.js';
 
-export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer }: BoardProps<GameState> & { mode: string, setMode: Function }) {
+export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer, reset }: BoardProps<GameState> & { mode: string, setMode: Function }) {
   const deck = getCardsByLocation(G.cards, "deck");
   const pile = getCardsByLocation(G.cards, "pile");
   const discard = getCardsByLocation(G.cards, "discard");
 
-  const styles: { [key: string]: Properties<string | number> } = {
-    toolbar: {
-      width: '100%',
-      height: '7em',
-      position: 'fixed',
-      bottom: '0',
-      left: '0',
-      zIndex: '10',
-      display: 'flex',
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      alignItems: 'center',
-    },
-    button: {
-      height: '3em',
-      width: '5.5em',
-      margin: '0.25em',
-      fontWeight: 'bold',
-      textAlign: 'center',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: '#eee',
-      borderRadius: '1em',
-    },
-  };
-
   useEffect(() => {
     const create = (document.getElementById('create') as HTMLElement);
-    if (mode === 'sketch' || mode === 'finalise') {
+    if (mode === 'create-sketch' || mode === 'create-finalise') {
       create.style.display = 'flex'
     } else {
       create.style.display = 'none'
     }
 
     const finalise = (document.getElementById('finalise') as HTMLElement);
-    if (mode === 'finalise') {
+    if (mode === 'create-finalise') {
       finalise.style.display = 'flex'
     } else {
       finalise.style.display = 'none'
@@ -94,7 +67,7 @@ export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer }: Bo
 
           // Asynchronously Submit to Global Deck - Singleplayer Only
           if (!isMultiplayer) {
-            const submitEndpoint = import.meta.env.MODE === 'development' ? '/submit' : 'https://api.mcteamster.com/white/submit'
+            const submitEndpoint = import.meta.env.MODE === 'development' ? '/submit' : `${import.meta.env.VITE_API_SERVER}/white/submit`
             await fetch(submitEndpoint, {
               method: "POST",
               body: JSON.stringify({
@@ -128,28 +101,75 @@ export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer }: Bo
 
   }
 
+  const styles: { [key: string]: Properties<string | number> } = {
+    toolbar: {
+      width: '100%',
+      height: '7em',
+      position: 'fixed',
+      bottom: '0',
+      left: '0',
+      zIndex: '10',
+      display: 'flex',
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      alignItems: 'center',
+    },
+    button: {
+      height: '3em',
+      width: '5.5em',
+      margin: '0.25em',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#eee',
+      borderRadius: '1em',
+    },
+  };
+
   let toolset = <></>
   if (mode === 'play') {
     toolset = <>
-      <wired-card style={{ ...styles.button }} onClick={() => { setMode('options') }} elevation={2}><Icon name='settings' />Options</wired-card>
-      <wired-card style={{ ...styles.button }} onClick={() => { moves.pickupCard(true) }} elevation={2}>{deck.length > 0 ? <Icon name='play' /> : <Icon name='shuffle' />}{deck.length > 0 ? 'Pickup' : `Reshuffle (${pile.length + discard.length})`}</wired-card>
-      <wired-card style={{ ...styles.button }} onClick={() => { setMode('sketch') }} elevation={2}><Icon name='create' />Create</wired-card>
+      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='menu' />Menu</wired-card>
+      <wired-card style={{ ...styles.button, width: '10em', margin: '0' }} onClick={() => { moves.pickupCard(true) }} elevation={2}>{deck.length > 0 ? <Icon name='play' /> : <Icon name='shuffle' />}{deck.length > 0 ? `Pickup [${deck.length}]` : `Reshuffle [${pile.length + discard.length}]`}</wired-card>
+      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('create-sketch') }} elevation={2}><Icon name='create' />Create</wired-card>
     </>
-  } else if (mode === 'sketch') {
+  } else if (mode === 'create-sketch') {
     toolset = <>
       <wired-card style={{ ...styles.button }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Close</wired-card>
       <wired-card style={{ ...styles.button }} onClick={() => { undo() }} elevation={2}><Icon name='undo' />Undo</wired-card>
-      <wired-card style={{ ...styles.button }} onClick={() => { setMode('finalise') }} elevation={2}><Icon name='send' />Next</wired-card>
+      <wired-card style={{ ...styles.button }} onClick={() => { setMode('create-finalise') }} elevation={2}><Icon name='send' />Next</wired-card>
     </>
-  } else if (mode === 'finalise') {
+  } else if (mode === 'create-finalise') {
     toolset = <>
-      <wired-card style={{ ...styles.button }} onClick={() => { setMode('sketch') }} elevation={2}><Icon name='back' />Back</wired-card>
+      <wired-card style={{ ...styles.button }} onClick={() => { setMode('create-sketch') }} elevation={2}><Icon name='back' />Back</wired-card>
       <wired-card style={{ ...styles.button }} onClick={() => { submitCard() }} elevation={2}><Icon name='done' />Submit</wired-card>
     </>
-  } else if (mode === 'options') {
+  } else if (mode === 'menu') {
     toolset = <>
-      <wired-card style={{ ...styles.button }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Cancel</wired-card>
-      <wired-card style={{ ...styles.button }} onClick={() => { setMode('play') }} elevation={2}><Icon name='done' />Confirm</wired-card>
+      <wired-card style={{ ...styles.button }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Close</wired-card>
+      <wired-card style={{ ...styles.button }} onClick={() => { setMode('menu-settings') }} elevation={2}><Icon name='settings' />Options</wired-card>
+      <wired-card style={{ ...styles.button }} onClick={() => { setMode('menu-about') }} elevation={2}><Icon name='about' />About</wired-card>
+    </>
+  } else if (mode === 'menu-settings') {
+    toolset = <>
+      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='back' />Back</wired-card>
+      <wired-card style={{ ...styles.button, 
+        width: '3.5em', 
+        color: 'grey',
+        // color: (isMultiplayer ? undefined : 'grey'),
+      }} onClick={() => { }} elevation={2}><Icon name='display' />Import</wired-card>
+      <wired-card style={{ ...styles.button, 
+        width: '3.5em', 
+        color: 'grey',
+        // color: (isMultiplayer ? undefined : 'grey'),
+      }} onClick={() => { }} elevation={2}><Icon name='take' />Export</wired-card>
+      <wired-card style={{ ...styles.button, width: '3.5em', color: 'red', backgroundColor: 'pink' }} onClick={() => { reset(); setMode('play') }} elevation={2}><Icon name='discard' />Reset</wired-card>
+    </>
+  } else if (mode === 'menu-about') {
+    toolset = <>
+      <wired-card style={{ ...styles.button }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Close</wired-card>
     </>
   }
 

@@ -42,7 +42,7 @@ export function Pile(props: BoardProps<GameState>) {
 }
 
 export function Header(props: BoardProps<GameState>) {
-  const deck = getCardsByLocation(props.G.cards, "deck");
+  const playerName = props.isMultiplayer && props.matchData?.find((player) => player.id == Number(props.playerID))?.name?.toUpperCase() || ""
 
   const styles: { [key: string]: Properties<string | number> } = {
     header: {
@@ -62,15 +62,20 @@ export function Header(props: BoardProps<GameState>) {
     item: {
       display: 'flex',
       flexDirection: 'row',
-      padding: '0 0.5em',
-    }
+      padding: '0 0.25em',
+    },
+    displayname: {
+      fontSize: '1em',
+    },
+    match: {
+      fontSize: '1.25em',
+    },
   };
 
   return (
     <div style={styles.header}>
-      <div style={styles.item}><Icon name='menu'/>&nbsp;Blank White Cards</div>
-      <div style={styles.item}>{`${deck.length}/${props.G.cards.length}`}</div>
-      <div style={styles.item}>{props.matchID !== 'default' && <Icon name='copy'></Icon>}{props.matchID !== 'default' ? `Room Code: ${props.matchID}` : 'Global Deck'}</div>
+      <div style={{...styles.item, ...styles.match}}><Icon name='copy'/>&nbsp;{props.matchID !== 'default' ? `${props.matchID}` : "Blank White Cards"}</div>
+      <div style={{...styles.item, ...styles.displayname}}>{playerName}{props.matchID !== 'default' && <Icon name='single' />}</div>
     </div>
   )
 }
