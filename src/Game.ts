@@ -87,6 +87,11 @@ const submitCard: Move<GameState> = ({ G }, card: Card) => {
   G.cards.push(card);
 }
 
+const shuffleCards: Move<GameState> = ({ G }) => {
+  // Return all cards to the deck
+  G.cards.forEach(card => card.location = 'deck');
+}
+
 // Game
 export const BlankWhiteCards: Game<GameState> = {
   name: 'blank-white-cards',
@@ -100,6 +105,7 @@ export const BlankWhiteCards: Game<GameState> = {
     moveCard,
     pickupCard,
     submitCard,
+    shuffleCards,
   },
 
   turn: {

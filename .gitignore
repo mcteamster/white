@@ -26,3 +26,4 @@ dist-ssr
 # Card Files
 dump.json
 public/card
+db

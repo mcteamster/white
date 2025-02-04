@@ -35,14 +35,28 @@ const MultiplayerBlankWhiteCardsClient = Client({
 
 // Landing Page
 const App = () => {
+  // TODO turn this into a provider context
   const [lobbyOpen, setLobbyOpen] = useState(true);
-  const [playerID, setPlayerID] = useState();
-  const [matchID, setMatchID] = useState();
-  const [credentials, setCredentials] = useState();
+  const [playerID, setPlayerIDState] = useState(localStorage.getItem("playerID") || undefined);
+  const [matchID, setMatchIDState] = useState(localStorage.getItem("matchID") || undefined);
+  const [credentials, setCredentialsState] = useState(localStorage.getItem("credentials") || undefined);
+
+  const setPlayerID = (id: any) => {
+    id ? localStorage.setItem("playerID", id) : localStorage.removeItem("playerID");
+    setPlayerIDState(id)
+  }
+  const setMatchID = (id: any) => {
+    id ? localStorage.setItem("matchID", id) : localStorage.removeItem("matchID");
+    setMatchIDState(id)
+  }
+  const setCredentials = (creds: any) => {
+    creds ? localStorage.setItem("credentials", creds) : localStorage.removeItem("credentials");
+    setCredentialsState(creds)
+  }
 
   return (
     <div id="gameContainer">
-      <Lobby {...{lobbyOpen, setLobbyOpen, playerID, setPlayerID, matchID, setMatchID, credentials, setCredentials, globalSize: startingDeck.cards.length}}></Lobby>
+      {!credentials && <Lobby {...{lobbyOpen, setLobbyOpen, playerID, setPlayerID, matchID, setMatchID, credentials, setCredentials, globalSize: startingDeck.cards.length}}></Lobby>}
       {credentials ? <MultiplayerBlankWhiteCardsClient playerID={playerID} matchID={matchID} credentials={credentials} /> : <GlobalBlankWhiteCardsClient playerID='0'/>}
     </div>
   )

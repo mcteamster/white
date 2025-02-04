@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 //@ts-expect-error: JS Module
 import { undo, strokes, sketchpad } from '../Canvas.js';
 
-export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer, reset }: BoardProps<GameState> & { mode: string, setMode: Function }) {
+export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer }: BoardProps<GameState> & { mode: string, setMode: Function }) {
   const deck = getCardsByLocation(G.cards, "deck");
   const pile = getCardsByLocation(G.cards, "pile");
   const discard = getCardsByLocation(G.cards, "discard");
@@ -98,7 +98,14 @@ export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer, rese
         }
       }
     }
+  }
 
+  const leaveGame = () => {
+    // Is there any point leaving gracefully?
+    localStorage.removeItem("playerID");
+    localStorage.removeItem("matchID");
+    localStorage.removeItem("credentials");
+    window.location.href = window.location.origin;
   }
 
   const styles: { [key: string]: Properties<string | number> } = {
@@ -148,9 +155,10 @@ export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer, rese
     </>
   } else if (mode === 'menu') {
     toolset = <>
-      <wired-card style={{ ...styles.button }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Close</wired-card>
-      <wired-card style={{ ...styles.button }} onClick={() => { setMode('menu-settings') }} elevation={2}><Icon name='settings' />Options</wired-card>
-      <wired-card style={{ ...styles.button }} onClick={() => { setMode('menu-about') }} elevation={2}><Icon name='about' />About</wired-card>
+      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Close</wired-card>
+      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu-settings') }} elevation={2}><Icon name='settings' />Options</wired-card>
+      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu-about') }} elevation={2}><Icon name='about' />About</wired-card>
+      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { leaveGame() }} elevation={2}><Icon name='multi' />Leave</wired-card>
     </>
   } else if (mode === 'menu-settings') {
     toolset = <>
@@ -165,7 +173,7 @@ export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer, rese
         color: 'grey',
         // color: (isMultiplayer ? undefined : 'grey'),
       }} onClick={() => { }} elevation={2}><Icon name='take' />Export</wired-card>
-      <wired-card style={{ ...styles.button, width: '3.5em', color: 'red', backgroundColor: 'pink' }} onClick={() => { reset(); setMode('play') }} elevation={2}><Icon name='discard' />Reset</wired-card>
+      <wired-card style={{ ...styles.button, width: '3.5em', color: 'red', backgroundColor: 'pink' }} onClick={() => { moves.shuffleCards(); setMode('play') }} elevation={2}><Icon name='shuffle' />Reset</wired-card>
     </>
   } else if (mode === 'menu-about') {
     toolset = <>
