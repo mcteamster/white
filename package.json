@@ -12,6 +12,7 @@
     "data": "cd ./data; ./etl.sh"
   },
   "dependencies": {
+    "@boardgame.io/storage-cache": "^0.6.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.1",
     "atrament": "^4.6.0",
