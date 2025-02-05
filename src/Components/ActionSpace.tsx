@@ -196,7 +196,7 @@ export function ActionSpace(props: BoardProps<GameState>) {
   return (
     <>
       <Focus {...props} />
-      <Finalise />
+      <Finalise multiplayer={props.isMultiplayer} />
       <Toolbar {...props} mode={mode} setMode={setMode} />
     </>
   )

@@ -1,6 +1,10 @@
 import type { Properties } from 'csstype';
 
-export function Finalise() {
+interface FinaliseProps {
+  multiplayer: boolean;
+}
+
+export function Finalise({ multiplayer }: FinaliseProps) {
   const styles: { [key: string]: Properties<string | number> } = {
     finalise: {
       width: '100%',
@@ -64,7 +68,8 @@ export function Finalise() {
           <textarea id="descriptionInput" style={styles.description} placeholder="Description" maxLength={140} required></textarea>
         </wired-card>
         <wired-input id="authorInput" style={styles.author} placeholder="Author" maxlength={25}></wired-input>
-        <div style={styles.author}>Creative Commons CC-BY 4.0 Applies</div>
+        <div style={styles.author}>Cards created under Creative Commons CC-BY 4.0.</div>
+        <div style={styles.author}>{multiplayer ? 'Multiplayer match data deleted after 24 hours' : 'Persistently published to the Global Deck'}</div>
       </wired-card>
     </div>
   );
