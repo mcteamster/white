@@ -2,7 +2,7 @@ import { Properties } from 'csstype';
 import { Icon } from './Icons';
 import { LobbyClient } from 'boardgame.io/client';
 
-const lobbyClient = new LobbyClient({ server: (import.meta.env.VITE_LOBBY_SERVER) });
+export const lobbyClient = new LobbyClient({ server: (import.meta.env.VITE_LOBBY_SERVER) });
 
 export function Lobby(props: any) {
   const enterSinglePlayer = () => {

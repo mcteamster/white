@@ -4,8 +4,8 @@ import { Client } from 'boardgame.io/react';
 import { SocketIO } from 'boardgame.io/multiplayer';
 import { BlankWhiteCards, GameState } from './Game';
 import { BlankWhiteCardsBoard } from './Board';
-import { useState } from 'react';
-import { Lobby } from './Components/Lobby';
+import { useEffect, useState } from 'react';
+import { Lobby, lobbyClient } from './Components/Lobby';
 
 // Global Deck Singleplayer
 let SetupGame: Game = BlankWhiteCards;
@@ -54,10 +54,34 @@ const App = () => {
     setCredentialsState(creds)
   }
 
+  useEffect(() => {
+    if (matchID) {
+      try {
+        lobbyClient.getMatch('blank-white-cards', matchID);
+        setLobbyOpen(false);
+      } catch (e) {
+        setLobbyOpen(true);
+        console.log(e)
+      }
+    }
+  }, [playerID, matchID, credentials])
+
+  const lobbyProps = {
+    lobbyOpen, 
+    setLobbyOpen, 
+    playerID, 
+    setPlayerID, 
+    matchID, 
+    setMatchID, 
+    credentials, 
+    setCredentials, 
+    globalSize: startingDeck.cards.length
+  }
+
   return (
     <div id="gameContainer">
-      {!credentials && <Lobby {...{lobbyOpen, setLobbyOpen, playerID, setPlayerID, matchID, setMatchID, credentials, setCredentials, globalSize: startingDeck.cards.length}}></Lobby>}
-      {credentials ? <MultiplayerBlankWhiteCardsClient playerID={playerID} matchID={matchID} credentials={credentials} /> : <GlobalBlankWhiteCardsClient playerID='0'/>}
+      {<Lobby {...lobbyProps}></Lobby>}
+      {(playerID && matchID && credentials) ? <MultiplayerBlankWhiteCardsClient playerID={playerID} matchID={matchID} credentials={credentials} /> : <GlobalBlankWhiteCardsClient playerID='0'/>}
     </div>
   )
 };

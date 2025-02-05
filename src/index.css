@@ -11,6 +11,8 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
