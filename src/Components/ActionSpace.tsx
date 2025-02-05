@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 //@ts-expect-error: JS Module
 import { undo, strokes, sketchpad } from '../Canvas.js';
 
-export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer }: BoardProps<GameState> & { mode: string, setMode: Function }) {
+export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer, matchData }: BoardProps<GameState> & { mode: string, setMode: Function }) {
   const deck = getCardsByLocation(G.cards, "deck");
   const pile = getCardsByLocation(G.cards, "pile");
   const discard = getCardsByLocation(G.cards, "discard");
@@ -25,6 +25,10 @@ export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer }: Bo
     const finalise = (document.getElementById('finalise') as HTMLElement);
     if (mode === 'create-finalise') {
       finalise.style.display = 'flex'
+      const author = (document.getElementById('authorInput') as HTMLInputElement);
+      if (isMultiplayer && author.value == '') {
+        author.value = matchData?.find((player) => player.id == Number(playerID))?.name?.toUpperCase() || ""
+      }
     } else {
       finalise.style.display = 'none'
     }
@@ -63,7 +67,6 @@ export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer }: Bo
           strokes.length = 0; // Stroke History
           title.value = '';
           description.value = '';
-          author.value = '';
 
           // Asynchronously Submit to Global Deck - Singleplayer Only
           if (!isMultiplayer) {
