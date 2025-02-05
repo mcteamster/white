@@ -10,6 +10,7 @@ export const sketchpad = new Atrament(canvas, {
   color: 'black',
   smoothing: 0.1,
   adaptiveStroke: true,
+  weight: 5,
 });
 
 // Stroke History and Undo: https://github.com/jakubfiala/atrament/issues/71#issuecomment-1214261577
@@ -20,7 +21,7 @@ sketchpad.addEventListener('strokerecorded', (obj) => {
     obj.stroke.type = "stroke";
 
     // Compensate for dots
-    if (obj.stroke.segments.length === 1) {
+    if (obj.stroke.segments.length < 3) {
       const pseudoSegment = {
         point: {
           x: obj.stroke.segments[0].point.x,
