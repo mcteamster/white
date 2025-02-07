@@ -21,6 +21,3 @@ aws s3 cp "./dist/index.html" "$bucket/404.html" # overrride cloudfront error re
 
 # invalidation
 aws cloudfront create-invalidation --distribution-id=$distribution --path="/*"
-
-# server deploy
-# ssh ubuntu@blankwhitecards.mcteamster.com "~/white/update"

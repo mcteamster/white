@@ -19,4 +19,9 @@ const server = Server({
   generateCredentials: () => nanoid(),
 });
 
-server.run(8000);
+server.run(80);
+
+process.on('SIGTERM', () => {
+  console.error("Exiting due to SIGTERM");
+  process.exit(1);
+})

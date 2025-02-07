@@ -8,7 +8,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "serve": "ts-node ./src/server.ts",
-    "deploy": "./ci/deploy.sh",
+    "deploy": "./ci/deploy-service.sh; ./ci/deploy-client.sh",
+    "deploy:client": "./ci/deploy-client.sh",
+    "deploy:service": "./ci/deploy-service.sh",
     "data": "cd ./data; ./etl.sh"
   },
   "dependencies": {
