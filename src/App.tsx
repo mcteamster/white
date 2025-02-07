@@ -5,7 +5,7 @@ import { SocketIO } from 'boardgame.io/multiplayer';
 import { BlankWhiteCards, GameState } from './Game';
 import { BlankWhiteCardsBoard } from './Board';
 import { useEffect, useState } from 'react';
-import { Lobby, lobbyClient } from './Components/Lobby';
+import { Lobby, lobbyClient, parsePathCode } from './Components/Lobby';
 
 // Global Deck Singleplayer
 let SetupGame: Game = BlankWhiteCards;
@@ -38,7 +38,7 @@ const App = () => {
   // TODO turn this into a provider context
   const [lobbyOpen, setLobbyOpen] = useState(true);
   const [playerID, setPlayerIDState] = useState(localStorage.getItem("playerID") || undefined);
-  const [matchID, setMatchIDState] = useState(localStorage.getItem("matchID") || undefined);
+  const [matchID, setMatchIDState] = useState(parsePathCode() || localStorage.getItem("matchID") || undefined);
   const [credentials, setCredentialsState] = useState(localStorage.getItem("credentials") || undefined);
 
   const setPlayerID = (id: any) => {
@@ -57,11 +57,12 @@ const App = () => {
   useEffect(() => {
     if (matchID) {
       try {
-        lobbyClient.getMatch('blank-white-cards', matchID);
-        setLobbyOpen(false);
+        lobbyClient.getMatch('blank-white-cards', matchID).then(() => {
+          setLobbyOpen(false);
+        });
       } catch (e) {
-        setLobbyOpen(true);
         console.log(e)
+        setLobbyOpen(true);
       }
     }
   }, [playerID, matchID, credentials])

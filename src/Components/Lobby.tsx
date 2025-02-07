@@ -4,6 +4,17 @@ import { LobbyClient } from 'boardgame.io/client';
 
 export const lobbyClient = new LobbyClient({ server: (import.meta.env.VITE_LOBBY_SERVER) });
 
+export const parsePathCode = () => {
+  const pathname = window.location.pathname;
+  if (pathname.match(/^\/[A-Za-z]{4}$/)) {
+    const room = pathname.slice(1,5).toUpperCase();
+    localStorage.setItem("matchID", room)
+    return room
+  } else {
+    return
+  }
+}
+
 export function Lobby(props: any) {
   const enterSinglePlayer = () => {
     props.setMatchID(undefined);
@@ -104,15 +115,6 @@ export function Lobby(props: any) {
 
   const closeLobby = () => {
     props.setLobbyOpen(false)
-  }
-
-  const parsePathCode = () => {
-    const pathname = window.location.pathname;
-    if (pathname.match(/^\/[A-Za-z]{4}$/)) {
-      return pathname.slice(1,5).toUpperCase();
-    } else {
-      return
-    }
   }
   
   const styles: { [key: string]: Properties<string | number> } = {
