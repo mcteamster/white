@@ -4,6 +4,7 @@ import { BlankWhiteCards } from './Game';
 import { customAlphabet, nanoid } from 'nanoid';
 const roomCodeGen = customAlphabet('BCDFGHJKLMNPQRSTVWXYZ', 4);
 
+// Database
 const db = new FlatFile({
   dir: './db',
   logging: false,
@@ -13,7 +14,7 @@ const dbWithCaching = new StorageCache(db, { cacheSize: 200 });
 
 const server = Server({
   games: [BlankWhiteCards],
-  db: dbWithCaching,
+  // db: dbWithCaching,
   origins: [Origins.LOCALHOST_IN_DEVELOPMENT, 'https://white.mcteamster.com'],
   uuid: roomCodeGen,
   generateCredentials: () => nanoid(),
