@@ -10,10 +10,6 @@
   color-scheme: light;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  touch-action: manipulation;
-  user-select: none;
-  -ms-user-select: none;
-  -webkit-user-select: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -29,6 +25,10 @@ body {
   min-width: 320px;
   min-height: calc(100vh - 70px);
   cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
 }
 
 .wired-rendered {

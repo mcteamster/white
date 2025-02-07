@@ -10,45 +10,49 @@ export const sketchpad = new Atrament(canvas, {
   color: 'black',
   smoothing: 0.1,
   adaptiveStroke: true,
-  weight: 5,
+  weight: 4,
 });
 
 // Stroke History and Undo: https://github.com/jakubfiala/atrament/issues/71#issuecomment-1214261577
 export const strokes = [];
 sketchpad.recordStrokes = true;
-sketchpad.addEventListener('strokerecorded', (obj) => {
+sketchpad.addEventListener('strokerecorded', (obj) => { 
   if (!sketchpad.recordPaused) {
     obj.stroke.type = "stroke";
-
-    // Compensate for dots
-    if (obj.stroke.segments.length < 3) {
-      const pseudoSegment = {
-        point: {
-          x: obj.stroke.segments[0].point.x,
-          y: obj.stroke.segments[0].point.y + 1,
-        },
-        time: obj.stroke.segments[0].time
-      }
-      obj.stroke.segments.push(pseudoSegment);
-
-      sketchpad.draw(
-        pseudoSegment.point.x,
-        pseudoSegment.point.y,
-        pseudoSegment.point.x,
-        pseudoSegment.point.y - 1,
-      );
-    }
+    obj.stroke.segments = obj.stroke.segments.filter((segment) => !Number.isNaN(segment?.time))
     strokes.push(obj.stroke);
   }
 });
-sketchpad.addEventListener('fillstart', ({ x, y }) => {
-  var obj = {};
-  obj.type = "fill";
-  obj.fillColor = sketchpad.color;
-  obj.x = x;
-  obj.y = y;
-  strokes.push(obj);
-});
+
+// Compensate for Dots
+canvas.addEventListener('click', (e) => {
+  const bounds = sketchpad.canvas.getBoundingClientRect();
+  const clickPoint = {
+    x: e.clientX,
+    y: e.clientY,
+  }
+  if (strokes[strokes.length - 1].segments.length < 3) {
+    const strokePoints = [
+      {
+        point: {
+          x: Math.floor(clickPoint.x - bounds.x),
+          y: Math.floor(clickPoint.y - bounds.y),
+        },
+        time: 1,
+      },
+      {
+        point: {
+          x: Math.floor(clickPoint.x - bounds.x),
+          y: Math.floor(clickPoint.y - bounds.y + 1),
+        },
+        time: 2,
+      },
+    ]
+    sketchpad.draw(strokePoints[0].point.x, strokePoints[0].point.y, strokePoints[1].point.x, strokePoints[1].point.y);
+    strokes[strokes.length - 1].segments = (strokePoints);
+  }
+})
+
 export const undo = () => {
   // Store original brush settings
   const original = {
