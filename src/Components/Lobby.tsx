@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router";
 import { Properties } from 'csstype';
 import { Icon } from './Icons';
 import { LobbyClient } from 'boardgame.io/client';
@@ -16,11 +17,13 @@ export const parsePathCode = () => {
 }
 
 export function Lobby(props: any) {
+  const navigate = useNavigate();
+
   const enterSinglePlayer = () => {
     props.setMatchID(undefined);
     props.setPlayerID(undefined);
     props.setCredentials(undefined);
-    closeLobby();
+    navigate('/app');
   }
 
   const createGame = async () => {
@@ -49,8 +52,7 @@ export function Lobby(props: any) {
         );
         props.setPlayerID("0");
         props.setCredentials(playerCredentials);
-        window.history.replaceState(null, "Blank White Cards", `/${matchID}`)
-        closeLobby();
+        navigate(`/${matchID}`);
       }
     }
   }
@@ -72,8 +74,7 @@ export function Lobby(props: any) {
           );
           props.setPlayerID(playerID);
           props.setCredentials(playerCredentials);
-          window.history.replaceState(null, "Blank White Cards", `/${roomCode.value.toUpperCase()}`);
-          closeLobby();
+          navigate(`/${roomCode.value.toUpperCase()}`);
         } catch (e) {
           console.error(e);
           roomCodeError();
@@ -111,10 +112,6 @@ export function Lobby(props: any) {
       roomCode.style.color = 'black';
       (document.getElementById('flavourbox') as HTMLElement).style.color = 'black';
     }, 500)
-  }
-
-  const closeLobby = () => {
-    props.setLobbyOpen(false)
   }
   
   const styles: { [key: string]: Properties<string | number> } = {
@@ -181,7 +178,7 @@ export function Lobby(props: any) {
   }
 
   return (
-    <wired-dialog open={props.lobbyOpen || undefined}>
+    <wired-dialog open>
       <div style={styles.dialog}>
         <wired-card style={styles.mode}>
           <div style={styles.heading}><Icon name="multi"/>&nbsp;Multiplayer</div>
@@ -203,7 +200,7 @@ export function Lobby(props: any) {
       </div>
       <div style={styles.terms}>
         <div>by continuing you confirm you are over 18</div>
-        <div>and accept our <u>Terms of Service</u></div> 
+        <div>and accept our <a href='/about' target="_blank"><u>Terms of Service</u></a></div> 
       </div>
     </wired-dialog>
   );

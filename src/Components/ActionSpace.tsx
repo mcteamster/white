@@ -8,8 +8,11 @@ import { Icon } from './Icons';
 import { useState, useEffect } from 'react';
 //@ts-expect-error: JS Module
 import { undo, strokes, sketchpad } from '../Canvas.js';
+import { Link, useNavigate } from 'react-router';
 
 export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer, matchData }: BoardProps<GameState> & { mode: string, setMode: Function }) {
+  const navigate = useNavigate();
+
   const deck = getCardsByLocation(G.cards, "deck");
   const pile = getCardsByLocation(G.cards, "pile");
   const discard = getCardsByLocation(G.cards, "discard");
@@ -43,47 +46,47 @@ export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer, matc
       const image = strokes.length > 0 ? (document.getElementById("sketchpad") as HTMLCanvasElement).toDataURL("image/png") : undefined;
 
       if (title.value && description.value) {
-          const createdCard: Card = {
-            id: G.cards.length + 1,
-            content: {
-              title: title.value,
-              description: description.value,
-              author: author.value || 'anon',
-              image: image,
-              date: String(Number(new Date())),
+        const createdCard: Card = {
+          id: G.cards.length + 1,
+          content: {
+            title: title.value,
+            description: description.value,
+            author: author.value || 'anon',
+            image: image,
+            date: String(Number(new Date())),
+          },
+          location: 'hand',
+          focused: [playerID],
+          owner: playerID,
+          timestamp: Number(new Date()),
+        }
+
+        // Update Gamestate
+        moves.submitCard(createdCard);
+        setMode('play');
+
+        // Cleanup Creation Elements
+        sketchpad.clear(); // Image
+        strokes.length = 0; // Stroke History
+        title.value = '';
+        description.value = '';
+
+        // Asynchronously Submit to Global Deck - Singleplayer Only
+        if (!isMultiplayer) {
+          const submitEndpoint = import.meta.env.MODE === 'development' ? '/submit' : `${import.meta.env.VITE_API_SERVER}/white/submit`
+          await fetch(submitEndpoint, {
+            method: "POST",
+            body: JSON.stringify({
+              title: createdCard.content.title,
+              description: createdCard.content.description,
+              author: createdCard.content.author,
+              image,
+            }),
+            headers: {
+              "Content-Type": "application/json",
             },
-            location: 'hand',
-            focused: [playerID],
-            owner: playerID,
-            timestamp: Number(new Date()),
-          }
-
-          // Update Gamestate
-          moves.submitCard(createdCard);
-          setMode('play');
-
-          // Cleanup Creation Elements
-          sketchpad.clear(); // Image
-          strokes.length = 0; // Stroke History
-          title.value = '';
-          description.value = '';
-
-          // Asynchronously Submit to Global Deck - Singleplayer Only
-          if (!isMultiplayer) {
-            const submitEndpoint = import.meta.env.MODE === 'development' ? '/submit' : `${import.meta.env.VITE_API_SERVER}/white/submit`
-            await fetch(submitEndpoint, {
-              method: "POST",
-              body: JSON.stringify({
-                title: createdCard.content.title,
-                description: createdCard.content.description,
-                author: createdCard.content.author,
-                image,
-              }),
-              headers: {
-                "Content-Type": "application/json",
-              },
-            })
-          }
+          })
+        }
       } else {
         if (title.value === '') {
           title.style.color = 'red';
@@ -105,10 +108,11 @@ export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer, matc
 
   const leaveGame = () => {
     // Is there any point leaving gracefully?
+    // Need to reset authentication state too - TODO context
     localStorage.removeItem("playerID");
     localStorage.removeItem("matchID");
     localStorage.removeItem("credentials");
-    window.location.href = window.location.origin;
+    navigate('/');
   }
 
   const styles: { [key: string]: Properties<string | number> } = {
@@ -159,28 +163,26 @@ export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer, matc
   } else if (mode === 'menu') {
     toolset = <>
       <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Close</wired-card>
+      <Link to="/about" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3.5em' }} elevation={2}><Icon name='about' />About</wired-card></Link>
       <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu-settings') }} elevation={2}><Icon name='settings' />Options</wired-card>
-      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu-about') }} elevation={2}><Icon name='about' />About</wired-card>
-      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { leaveGame() }} elevation={2}><Icon name='multi' />Leave</wired-card>
+      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { leaveGame() }} elevation={2}><Icon name='logout' />{isMultiplayer ? 'Leave' : 'Lobby'}</wired-card>
     </>
   } else if (mode === 'menu-settings') {
     toolset = <>
       <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='back' />Back</wired-card>
-      <wired-card style={{ ...styles.button, 
-        width: '3.5em', 
+      <wired-card style={{
+        ...styles.button,
+        width: '3.5em',
         color: 'grey',
         // color: (isMultiplayer ? undefined : 'grey'),
       }} onClick={() => { }} elevation={2}><Icon name='display' />Import</wired-card>
-      <wired-card style={{ ...styles.button, 
-        width: '3.5em', 
+      <wired-card style={{
+        ...styles.button,
+        width: '3.5em',
         color: 'grey',
         // color: (isMultiplayer ? undefined : 'grey'),
       }} onClick={() => { }} elevation={2}><Icon name='take' />Export</wired-card>
       <wired-card style={{ ...styles.button, width: '3.5em', color: 'red', backgroundColor: 'pink' }} onClick={() => { moves.shuffleCards(); setMode('play') }} elevation={2}><Icon name='shuffle' />Reset</wired-card>
-    </>
-  } else if (mode === 'menu-about') {
-    toolset = <>
-      <wired-card style={{ ...styles.button }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Close</wired-card>
     </>
   }
 

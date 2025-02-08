@@ -69,7 +69,10 @@ export function Finalise({ multiplayer }: FinaliseProps) {
         </wired-card>
         <wired-input id="authorInput" style={styles.author} placeholder="Author" maxlength={25}></wired-input>
         <div style={styles.author}>Cards created under Creative Commons CC-BY 4.0.</div>
-        <div style={{ ...styles.author, color: multiplayer ? 'black' : 'red' }}>{multiplayer ? 'Multiplayer match data is deleted periodically' : 'Persistently published to the Global Deck'}</div>
+        <div style={{ ...styles.author, color: multiplayer ? 'black' : 'red' }}>
+          {multiplayer ? 'Multiplayer data deleted periodically. ' : 'Published to the Global Deck. '}
+          <a href='/about' target='_blank' style={{ color: multiplayer ? 'black' : 'red' }}>Privacy Policy</a>
+        </div>
       </wired-card>
     </div>
   );

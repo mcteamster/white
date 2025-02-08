@@ -1,4 +1,5 @@
 // Blank White Cards React App
+import { BrowserRouter, Routes, Route } from "react-router";
 import { Game } from 'boardgame.io';
 import { Client } from 'boardgame.io/react';
 import { SocketIO } from 'boardgame.io/multiplayer';
@@ -6,6 +7,7 @@ import { BlankWhiteCards, GameState } from './Game';
 import { BlankWhiteCardsBoard } from './Board';
 import { useEffect, useState } from 'react';
 import { Lobby, lobbyClient, parsePathCode } from './Components/Lobby';
+import { About } from "./Components/About";
 
 // Global Deck Singleplayer
 let SetupGame: Game = BlankWhiteCards;
@@ -36,7 +38,6 @@ const MultiplayerBlankWhiteCardsClient = Client({
 // Landing Page
 const App = () => {
   // TODO turn this into a provider context
-  const [lobbyOpen, setLobbyOpen] = useState(true);
   const [playerID, setPlayerIDState] = useState(localStorage.getItem("playerID") || undefined);
   const [matchID, setMatchIDState] = useState(parsePathCode() || localStorage.getItem("matchID") || undefined);
   const [credentials, setCredentialsState] = useState(localStorage.getItem("credentials") || undefined);
@@ -58,32 +59,37 @@ const App = () => {
     if (matchID) {
       try {
         lobbyClient.getMatch('blank-white-cards', matchID).then(() => {
-          setLobbyOpen(false);
         });
       } catch (e) {
         console.log(e)
-        setLobbyOpen(true);
       }
     }
   }, [playerID, matchID, credentials])
 
   const lobbyProps = {
-    lobbyOpen, 
-    setLobbyOpen, 
+    globalSize: startingDeck.cards.length,
     playerID, 
-    setPlayerID, 
     matchID, 
-    setMatchID, 
     credentials, 
+    setPlayerID, 
+    setMatchID, 
     setCredentials, 
-    globalSize: startingDeck.cards.length
   }
 
   return (
-    <div id="gameContainer">
-      {<Lobby {...lobbyProps}></Lobby>}
-      {(playerID && matchID && credentials) ? <MultiplayerBlankWhiteCardsClient playerID={playerID} matchID={matchID} credentials={credentials} /> : <GlobalBlankWhiteCardsClient playerID='0'/>}
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<>
+          <Lobby {...lobbyProps}></Lobby>
+          <GlobalBlankWhiteCardsClient />
+        </>}/>
+        <Route path="/about" element={<About />} />
+        <Route path="/app" element={<GlobalBlankWhiteCardsClient playerID='0'/>} />
+        <Route path="/*" element={<>
+          {(playerID && matchID && credentials) ? <MultiplayerBlankWhiteCardsClient playerID={playerID} matchID={matchID} credentials={credentials} /> : <Lobby {...lobbyProps}></Lobby>}
+        </>}></Route>
+      </Routes>
+    </BrowserRouter>
   )
 };
 

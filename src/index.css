@@ -31,6 +31,10 @@ body {
   -webkit-user-select: none;
 }
 
+a {
+  color: black;
+}
+
 .wired-rendered {
   font-family: 'Patrick Hand SC', Arial, Helvetica, sans-serif;
 }
