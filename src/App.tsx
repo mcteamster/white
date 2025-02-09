@@ -57,7 +57,7 @@ const App = () => {
 
   return (
     <AuthContext.Provider value={{ auth, setAuth }}>
-      {(dimensions.height > 640) ?
+      {(dimensions.height > 540) ?
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<>
