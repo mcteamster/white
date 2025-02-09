@@ -58,7 +58,7 @@ export function About() {
           A social party game where you make the rules. Best played with friends around a table or on video call.
         </p>
         <p>
-          Connect to the same Multiplayer Room to draw cards together using a common Deck.
+          Connect to the same Multiplayer Room to draw cards together using a common Deck*.
           Put your cards on the Pile for everyone to see in real-time!
           Or maybe keep them hidden in your Hand, or even displayed on the Table in front of you.
         </p>
@@ -66,10 +66,9 @@ export function About() {
           Browse the Global Deck in Singleplayer mode for a local pass-and-play experience.
           Create a card here to submit your own masterpiece for the whole world to see!
         </p>
-        {/* <p>
-          You can also save and re-use custom decks. Relive the memories - view and edit your collection offline for next time.
-          There's even a "suck box" system for the global deck so the latest and greatest cards appear more often!
-        </p> */}
+        <p>
+          *Note: Multiplayer card Import/Export will be coming (back) soon.
+        </p>
       </div>
       <div style={styles.paragraph}>
         <h2 style={styles.subheading} id='guidelines'>Guidelines</h2>

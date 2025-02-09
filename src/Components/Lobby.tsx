@@ -2,27 +2,17 @@ import { useNavigate } from "react-router";
 import { Properties } from 'csstype';
 import { Icon } from './Icons';
 import { LobbyClient } from 'boardgame.io/client';
+import { useContext } from "react";
+import { AuthContext } from "../App";
 
 export const lobbyClient = new LobbyClient({ server: (import.meta.env.VITE_LOBBY_SERVER) });
 
-export const parsePathCode = () => {
-  const pathname = window.location.pathname;
-  if (pathname.match(/^\/[A-Za-z]{4}$/)) {
-    const room = pathname.slice(1,5).toUpperCase();
-    localStorage.setItem("matchID", room)
-    return room
-  } else {
-    return
-  }
-}
-
-export function Lobby(props: any) {
+export function Lobby(props: { globalSize: number }) {
   const navigate = useNavigate();
+  const { auth, setAuth } = useContext(AuthContext)
 
   const enterSinglePlayer = () => {
-    props.setMatchID(undefined);
-    props.setPlayerID(undefined);
-    props.setCredentials(undefined);
+    setAuth({});
     navigate('/app');
   }
 
@@ -38,7 +28,6 @@ export function Lobby(props: any) {
         numPlayers: 1000,
         setupData: startingDeck,
       });
-      props.setMatchID(matchID);
 
       if (matchID.match(/^[BCDFGHJKLMNPQRSTVWXYZ]{4}$/)) {
         // Join Match as playerID 0
@@ -50,8 +39,12 @@ export function Lobby(props: any) {
             playerName,
           }
         );
-        props.setPlayerID("0");
-        props.setCredentials(playerCredentials);
+        setAuth({
+          matchID: matchID,
+          playerID: "0",
+          credentials: playerCredentials,
+          playerName: playerName,
+        });
         navigate(`/${matchID}`);
       }
     }
@@ -61,9 +54,7 @@ export function Lobby(props: any) {
     const playerName = checkForPlayerName();
     if (playerName) {
       const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
-
       if (roomCode.value.toUpperCase().match(/^[BCDFGHJKLMNPQRSTVWXYZ]{4}$/)) {
-        props.setMatchID(roomCode.value.toUpperCase());
         try {
           const { playerID, playerCredentials } = await lobbyClient.joinMatch(
             'blank-white-cards',
@@ -72,8 +63,12 @@ export function Lobby(props: any) {
               playerName,
             }
           );
-          props.setPlayerID(playerID);
-          props.setCredentials(playerCredentials);
+          setAuth({
+            matchID: roomCode.value.toUpperCase(),
+            playerID: playerID,
+            credentials: playerCredentials,
+            playerName: playerName,
+          })
           navigate(`/${roomCode.value.toUpperCase()}`);
         } catch (e) {
           console.error(e);
@@ -101,10 +96,8 @@ export function Lobby(props: any) {
   }
 
   const roomCodeError = () => {
+    setAuth({});
     const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
-    props.setMatchID(undefined);
-    props.setPlayerID(undefined);
-    props.setCredentials(undefined);
     roomCode.value = "";
     roomCode.style.color = 'red';
     (document.getElementById('flavourbox') as HTMLElement).style.color = 'red';
@@ -113,7 +106,7 @@ export function Lobby(props: any) {
       (document.getElementById('flavourbox') as HTMLElement).style.color = 'black';
     }, 500)
   }
-  
+
   const styles: { [key: string]: Properties<string | number> } = {
     dialog: {
       display: 'flex',
@@ -181,18 +174,18 @@ export function Lobby(props: any) {
     <wired-dialog open>
       <div style={styles.dialog}>
         <wired-card style={styles.mode}>
-          <div style={styles.heading}><Icon name="multi"/>&nbsp;Multiplayer</div>
-          <wired-input style={styles.name} id="nameInput" placeholder="Player Name" maxlength={25}></wired-input>
+          <div style={styles.heading}><Icon name="multi" />&nbsp;Multiplayer</div>
+          <wired-input style={styles.name} id="nameInput" placeholder="Player Name" maxlength={25} value={auth.playerName}></wired-input>
           <div>and</div>
           <div style={styles.rooms}>
-            <wired-input style={styles.code} id="roomInput" placeholder="Room Code" maxlength={4} value={parsePathCode()}></wired-input>
-            <wired-card style={styles.enter} onClick={joinGame}><Icon name="send"/></wired-card>
+            <wired-input style={styles.code} id="roomInput" placeholder="Room Code" maxlength={4} value={auth.matchID}></wired-input>
+            <wired-card style={styles.enter} onClick={joinGame}><Icon name="send" /></wired-card>
           </div>
           <div>or</div>
           <wired-card style={styles.create} onClick={createGame}>Create Game</wired-card>
         </wired-card>
         <wired-card style={styles.mode} onClick={enterSinglePlayer}>
-          <div style={styles.heading}><Icon name="single"/>&nbsp;Singleplayer</div>
+          <div style={styles.heading}><Icon name="single" />&nbsp;Singleplayer</div>
           <div style={styles.heading}>[&nbsp;{props.globalSize}&nbsp;]</div>
           <div style={styles.subheading}>Cards in the Global Deck</div>
           <div style={styles.subheading}>Draw and add your own!</div>
@@ -200,7 +193,7 @@ export function Lobby(props: any) {
       </div>
       <div style={styles.terms}>
         <div>by continuing you confirm you are over 18</div>
-        <div>and accept our <a href='/about' target="_blank"><u>Terms of Service</u></a></div> 
+        <div>and accept our <a href='/about' target="_blank"><u>Terms of Service</u></a></div>
       </div>
     </wired-dialog>
   );

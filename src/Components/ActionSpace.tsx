@@ -5,13 +5,15 @@ import { Focus } from './Focus.tsx';
 import type { Properties } from 'csstype';
 import { Card, getCardsByLocation } from '../Cards';
 import { Icon } from './Icons';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 //@ts-expect-error: JS Module
 import { undo, strokes, sketchpad } from '../Canvas.js';
 import { Link, useNavigate } from 'react-router';
+import { AuthContext } from '../App.tsx';
 
 export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer, matchData }: BoardProps<GameState> & { mode: string, setMode: Function }) {
   const navigate = useNavigate();
+  const { setAuth } = useContext(AuthContext);
 
   const deck = getCardsByLocation(G.cards, "deck");
   const pile = getCardsByLocation(G.cards, "pile");
@@ -107,11 +109,8 @@ export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer, matc
   }
 
   const leaveGame = () => {
-    // Is there any point leaving gracefully?
-    // Need to reset authentication state too - TODO context
-    localStorage.removeItem("playerID");
-    localStorage.removeItem("matchID");
-    localStorage.removeItem("credentials");
+    // Is there any point leaving gracefully via Lobby API?
+    setAuth({});
     navigate('/');
   }
 
@@ -146,7 +145,9 @@ export function Toolbar({ G, playerID, moves, mode, setMode, isMultiplayer, matc
   if (mode === 'play') {
     toolset = <>
       <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='menu' />Menu</wired-card>
-      <wired-card style={{ ...styles.button, width: '10em', margin: '0' }} onClick={() => { moves.pickupCard(true) }} elevation={2}>{deck.length > 0 ? <Icon name='play' /> : <Icon name='shuffle' />}{deck.length > 0 ? `Pickup [${deck.length}]` : `Reshuffle [${pile.length + discard.length}]`}</wired-card>
+      <wired-card style={{ ...styles.button, width: '10em', margin: '0' }} onClick={() => { G.cards.length > 0 ? moves.pickupCard(true) : setMode('create-sketch') }} elevation={2}>
+        {deck.length > 0 ? <Icon name='play' /> : G.cards.length == 0 ? <Icon name='create' /> : <Icon name='shuffle' />}
+        {deck.length > 0 ? `Pickup [${deck.length}]` : G.cards.length == 0 ? "Add cards to start" : `Reshuffle [${pile.length + discard.length}]`}</wired-card>
       <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('create-sketch') }} elevation={2}><Icon name='create' />Create</wired-card>
     </>
   } else if (mode === 'create-sketch') {
