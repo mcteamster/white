@@ -6,6 +6,8 @@ import { Lobby } from './Components/Lobby';
 import { About } from "./Components/About";
 import { AuthContext, AuthType } from "./constants/contexts";
 import { GlobalBlankWhiteCardsClient, lobbyClient, MultiplayerBlankWhiteCardsClient, parsePathCode, startingDeck } from "./constants/clients";
+import { Rotate } from "./Components/Icons";
+import { useWindowDimensions } from "./constants/hooks";
 
 // Landing Page
 const App = () => {
@@ -50,26 +52,32 @@ const App = () => {
     }
   }, [auth, setAuth])
 
+  // Check Screen Size
+  const dimensions = useWindowDimensions();
+
   return (
     <AuthContext.Provider value={{ auth, setAuth }}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<>
-            <Lobby globalSize={ startingDeck.cards.length || 0 } />
-            <GlobalBlankWhiteCardsClient />
-          </>} />
-          <Route path="/about" element={<About />} />
-          <Route path="/app" element={<GlobalBlankWhiteCardsClient playerID='0' />} />
-          <Route path="/*" element={<>
-            {(validMatch) ?
-              <MultiplayerBlankWhiteCardsClient playerID={auth.playerID} matchID={auth.matchID} credentials={auth.credentials} /> :
-              <>
-                <Lobby globalSize={ startingDeck.cards.length || 0 } />
-                <GlobalBlankWhiteCardsClient />
-              </>}
-          </>}></Route>
-        </Routes>
-      </BrowserRouter>
+      {(dimensions.height > 640) ?
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<>
+              <Lobby globalSize={ startingDeck.cards.length || 0 } />
+              <GlobalBlankWhiteCardsClient />
+            </>} />
+            <Route path="/about" element={<About />} />
+            <Route path="/app" element={<GlobalBlankWhiteCardsClient playerID='0' />} />
+            <Route path="/*" element={<>
+              {(validMatch) ?
+                <MultiplayerBlankWhiteCardsClient playerID={auth.playerID} matchID={auth.matchID} credentials={auth.credentials} /> :
+                <>
+                  <Lobby globalSize={ startingDeck.cards.length || 0 } />
+                  <GlobalBlankWhiteCardsClient />
+                </>}
+            </>}></Route>
+          </Routes>
+        </BrowserRouter> :
+        <Rotate />
+      }
     </AuthContext.Provider>
   )
 };

@@ -16,6 +16,7 @@ import PresentToAllOutlinedIcon from '@mui/icons-material/PresentToAllOutlined';
 import QuestionMarkOutlinedIcon from '@mui/icons-material/QuestionMarkOutlined';
 import RecyclingIcon from '@mui/icons-material/Recycling';
 import SaveAltOutlinedIcon from '@mui/icons-material/SaveAltOutlined';
+import ScreenRotationOutlinedIcon from '@mui/icons-material/ScreenRotationOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
 import { Properties } from 'csstype';
@@ -77,6 +78,31 @@ export function Icon(props: { name: IconName }) {
   return (
     <div style={styles.icon}>
       {icons[props.name]}
+    </div>
+  )
+}
+
+export function Rotate() {
+  const styles: { [key: string]: Properties<string | number> } = {
+    rotate: {
+      height: '80vh',
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    icon: {
+      fontSize: '6em',
+      margin: '0.25em',
+    }
+  }
+
+  return (
+    <div style={styles.rotate}>
+      Adjust
+      <ScreenRotationOutlinedIcon style={styles.icon} />
+      Screen
     </div>
   )
 }
