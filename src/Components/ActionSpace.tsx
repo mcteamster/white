@@ -126,7 +126,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
       position: 'fixed',
       bottom: '0',
       left: '0',
-      zIndex: '10',
+      zIndex: '8',
       display: 'flex',
       flexDirection: 'row',
       justifyContent: 'space-around',

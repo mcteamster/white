@@ -39,6 +39,22 @@ a {
   font-family: 'Patrick Hand SC', Arial, Helvetica, sans-serif;
 }
 
+.clickedLink {
+  animation: clickedLink 0.25s 1;
+}
+
+@keyframes clickedLink {
+  0% {
+    font-size: 1em;
+  }
+  50% {
+    font-size: 1.25em;
+  }
+  100% {
+    font-size: 1em;
+  }
+}
+
 #create {
   position: fixed;
   top: 0;

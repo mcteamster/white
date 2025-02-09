@@ -9,7 +9,6 @@ export function About() {
     about: {
       width: '100%',
       minHeight: '100vh',
-      zIndex: '10',
       padding: '1em 0',
       position: 'absolute',
       top: '0',
