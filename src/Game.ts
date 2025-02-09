@@ -96,8 +96,8 @@ const shuffleCards: Move<GameState> = ({ G }) => {
 export const BlankWhiteCards: Game<GameState> = {
   name: 'blank-white-cards',
 
-  setup: ({}, setupData) => {
-    return setupData || {cards: []};
+  setup: (_, setupData) => {
+    return setupData || { cards: [] };
   },
 
   moves: {

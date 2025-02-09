@@ -1,11 +1,9 @@
 import { useNavigate } from "react-router";
 import { Properties } from 'csstype';
 import { Icon } from './Icons';
-import { LobbyClient } from 'boardgame.io/client';
 import { useContext } from "react";
-import { AuthContext } from "../App";
-
-export const lobbyClient = new LobbyClient({ server: (import.meta.env.VITE_LOBBY_SERVER) });
+import { AuthContext } from "../constants/contexts";
+import { lobbyClient } from "../constants/clients";
 
 export function Lobby(props: { globalSize: number }) {
   const navigate = useNavigate();
@@ -175,10 +173,10 @@ export function Lobby(props: { globalSize: number }) {
       <div style={styles.dialog}>
         <wired-card style={styles.mode}>
           <div style={styles.heading}><Icon name="multi" />&nbsp;Multiplayer</div>
-          <wired-input style={styles.name} id="nameInput" placeholder="Player Name" maxlength={25} value={auth.playerName}></wired-input>
+          <wired-input style={styles.name} id="nameInput" placeholder="Player Name" maxlength={25} value={auth?.playerName}></wired-input>
           <div>and</div>
           <div style={styles.rooms}>
-            <wired-input style={styles.code} id="roomInput" placeholder="Room Code" maxlength={4} value={auth.matchID}></wired-input>
+            <wired-input style={styles.code} id="roomInput" placeholder="Room Code" maxlength={4} value={auth?.matchID}></wired-input>
             <wired-card style={styles.enter} onClick={joinGame}><Icon name="send" /></wired-card>
           </div>
           <div>or</div>

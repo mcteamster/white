@@ -1,55 +1,11 @@
 // Blank White Cards React App
 import { BrowserRouter, Routes, Route } from "react-router";
-import { Game } from 'boardgame.io';
-import { Client } from 'boardgame.io/react';
-import { SocketIO } from 'boardgame.io/multiplayer';
-import { BlankWhiteCards, GameState } from './Game';
-import { BlankWhiteCardsBoard } from './Board';
-import { useEffect, useState, createContext } from 'react';
-import { Lobby, lobbyClient } from './Components/Lobby';
+
+import { useCallback, useEffect, useState } from 'react';
+import { Lobby } from './Components/Lobby';
 import { About } from "./Components/About";
-
-// Global Deck Singleplayer
-let SetupGame: Game = BlankWhiteCards;
-let startingDeck: GameState;
-try {
-  startingDeck = await (await fetch('/decks/global.json')).json();
-  if (startingDeck.cards && startingDeck.cards.length > 0) {
-    SetupGame = { ...BlankWhiteCards, setup: () => (startingDeck) }
-  }
-} catch (e) {
-  console.error(e)
-}
-const GlobalBlankWhiteCardsClient = Client({
-  game: SetupGame,
-  board: BlankWhiteCardsBoard,
-  debug: false,
-});
-
-// Multiplayer Custom Rooms
-const serverUrl = import.meta.env.VITE_GAME_SERVER;
-const MultiplayerBlankWhiteCardsClient = Client({
-  game: BlankWhiteCards,
-  board: BlankWhiteCardsBoard,
-  debug: false,
-  multiplayer: SocketIO({ server: serverUrl }),
-});
-
-interface AuthContextType {
-  auth?: any,
-  setAuth: (auth: any) => void;
-}
-export const AuthContext = createContext<AuthContextType>({ setAuth: () => {} });
-
-const parsePathCode = () => {
-  const pathname = window.location.pathname;
-  if (pathname.match(/^\/[A-Za-z]{4}$/)) {
-    const room = pathname.slice(1,5).toUpperCase();
-    return room
-  } else {
-    return
-  }
-}
+import { AuthContext, AuthType } from "./constants/contexts";
+import { GlobalBlankWhiteCardsClient, lobbyClient, MultiplayerBlankWhiteCardsClient, parsePathCode, startingDeck } from "./constants/clients";
 
 // Landing Page
 const App = () => {
@@ -60,13 +16,13 @@ const App = () => {
     credentials: localStorage.getItem("credentials") || undefined,
     playerName: localStorage.getItem("playerName") || undefined,
   })
-  const setAuth = ({ matchID, playerID, credentials, playerName }: any) => {
-    matchID ? localStorage.setItem("matchID", matchID) : localStorage.removeItem("matchID");
-    playerID ? localStorage.setItem("playerID", playerID) : localStorage.removeItem("playerID");
-    credentials ? localStorage.setItem("credentials", credentials) : localStorage.removeItem("credentials");
-    playerName && localStorage.setItem("playerName", playerName); // Player Name persists indefinitely
-    setAuthState({ matchID, playerID, credentials, playerName: playerName || auth.playerName });
-  }
+  const setAuth = useCallback(({ matchID, playerID, credentials, playerName }: AuthType) => {
+    if (matchID) { localStorage.setItem("matchID", matchID) } else { localStorage.removeItem("matchID") };
+    if (playerID) { localStorage.setItem("playerID", playerID) } else { localStorage.removeItem("playerID") };
+    if (credentials) { localStorage.setItem("credentials", credentials) } else { localStorage.removeItem("credentials") };
+    if (playerName) { localStorage.setItem("playerName", playerName) }; // Player Name persists indefinitely
+    setAuthState({ matchID, playerID, credentials, playerName: playerName || localStorage.getItem("playerName") || undefined });
+  }, [])
 
   // Check Credential Validity
   const [validMatch, setValidMatch] = useState(false);
@@ -87,12 +43,12 @@ const App = () => {
             setValidMatch(true);
           }
         })
-      } catch (e) {
+      } catch {
         setValidMatch(false);
         setAuth({});
       }
     }
-  }, [auth])
+  }, [auth, setAuth])
 
   return (
     <AuthContext.Provider value={{ auth, setAuth }}>
