@@ -52,18 +52,18 @@ export function About() {
       <div>a game by mcteamster</div>
       <div style={styles.paragraph} id='about'>
         <h2 style={styles.subheading}>About</h2>
-        <p>This is <a href="https://en.wikipedia.org/wiki/1000_Blank_White_Cards" target="_blank"><u>1000 Blank White Cards</u></a> for the internet.</p>
+        <p>This is <a href="https://en.wikipedia.org/wiki/1000_Blank_White_Cards" target="_blank"><u>1000 Blank White Cards</u></a> online.</p>
         <p>
           A social party game where you make the rules. Best played with friends around a table or on video call.
         </p>
         <p>
-          Connect to the same Multiplayer Room to draw cards together using a common Deck*.
-          Put your cards on the Pile for everyone to see in real-time!
-          Or maybe keep them hidden in your Hand, or even displayed on the Table in front of you.
+          Connect to the same Multiplayer Room to draw cards together using a common DECK.*
+          Put your cards on the PILE for everyone to see in real-time!
+          Or maybe keep them hidden in your HAND, or even displayed on the TABLE in front of you.
         </p>
         <p>
           Browse the Global Deck in Singleplayer mode for a local pass-and-play experience.
-          Create a card here to submit your own masterpiece for the whole world to see!
+          Create and submit cards here for the whole world to see!
         </p>
         <p>
           *Note: Multiplayer card Import/Export will be coming (back) soon.
@@ -82,7 +82,7 @@ export function About() {
         </p>
         <p>
           - Be safe and mindful, you are responsible for your own actions!<br />
-          - Beware that anything you submit becomes public, even in custom rooms<br />
+          - Beware that anything you submit becomes public, even in Multiplayer rooms<br />
           - Be original, inclusive & avoid in-jokes
         </p>
         <p>
