@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router";
 import type { Properties } from 'csstype';
-import { Browse } from './Icons';
+import { Browse, Icon } from './Icons';
 import { startingDeck } from '../constants/clients';
 
 export function Gallery() {
@@ -93,8 +93,8 @@ export function Gallery() {
 
     return (
       <>
-        {`${window.location}`}
         <wired-dialog open>
+          <Permalink />
           <div style={styles.focus}>
             <div style={styles.title}>{viewedCard.content.title}</div>
             <div style={styles.credit}>by {viewedCard.content.author}</div>
@@ -102,6 +102,7 @@ export function Gallery() {
             <img style={styles.image} src={viewedCard.content.image} />
             <div style={styles.description}>{viewedCard.content.description}</div>
             {browse}
+            <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { navigate('/') }} elevation={2}><Icon name='multi' />Home</wired-card>
           </div>
         </wired-dialog>
       </>
@@ -113,4 +114,56 @@ export function Gallery() {
       </div>
     );
   }
+}
+
+export function Permalink() {
+  const url = `${window.location.origin}${window.location.pathname}`
+
+  const copyPermalink = () => {
+    let sharePermalink = document.getElementById('sharePermalink');
+    if (sharePermalink) {
+      sharePermalink.classList.remove('clickedLink');
+      sharePermalink.classList.add('clickedLink');
+      setTimeout(() => {
+        sharePermalink.classList.remove('clickedLink');
+      }, 250);
+      try {
+        window.navigator.clipboard.writeText(url);
+      } catch (err) {
+        console.error("Unable to Copy to Clipboard", err)
+      }
+    }
+  }
+
+  const styles: { [key: string]: Properties<string | number> } = {
+    copybutton: {
+      width: '100%',
+      position: 'fixed',
+      top: '0',
+      left: '0',
+      display: 'flex',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    permalink: {
+      padding: '0.25em 0.5em',
+      display: 'flex',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      textDecoration: 'underline',
+      backgroundColor: 'rgba(255, 255, 255, 0.5)',
+      borderRadius: '0 0 1em 1em',
+    }
+  }
+
+  return (
+    <div style={styles.copybutton}>
+      <div id="sharePermalink" style={styles.permalink} onClick={copyPermalink}>
+        <Icon name="copy" />
+        {url}
+      </div>
+    </div>
+  )
 }
