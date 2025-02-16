@@ -39,12 +39,16 @@ export const getCardsByOwner = (cards: Card[], playerID: string) => {
 
 export const getAdjacentCard = (cards: Card[], id: number, direction: 'prev' | 'next') => {
   const position = cards.find((card) => card.id == id)?.location;
+  const owner = cards.find((card) => card.id == id)?.owner;
   if (position) {
     const directionSort = {
       prev: (a: Card, b: Card) => (a.timestamp || 0) - (b.timestamp || 0), // Oldest to Newest
       next: (a: Card, b: Card) => (b.timestamp || 0) - (a.timestamp || 0), // Newest to Oldest
     }
-    const cardList = cards.filter(card => card.location === position).sort(directionSort[direction])
+    let cardList = cards.filter(card => card.location === position).sort(directionSort[direction])
+    if (position == 'hand' || position == 'table') {
+      cardList = cardList.filter(card => card?.owner === owner); // Filter for same ownership
+    }
     const currentIndex = cardList.findIndex((card) => card.id == id);
     if (currentIndex > 0) {
       return cardList[currentIndex - 1];
