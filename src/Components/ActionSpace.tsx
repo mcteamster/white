@@ -149,8 +149,8 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
   let toolset = <></>
   if (mode === 'play') {
     toolset = <>
-      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='menu' />Menu</wired-card>
-      <wired-card style={{ ...styles.button, width: '10em', margin: '0' }} onClick={() => {
+      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='menu' />Menu</wired-card>
+      <wired-card style={{ ...styles.button, width: '9em', margin: '0' }} onClick={() => {
           if (G.cards.length > 0) {
             moves.pickupCard(true)
           } else {
@@ -159,7 +159,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
         }} elevation={2}>
         {deck.length > 0 ? <Icon name='play' /> : G.cards.length == 0 ? <Icon name='create' /> : <Icon name='shuffle' />}
         {deck.length > 0 ? `Pickup [${deck.length}]` : G.cards.length == 0 ? "Add cards to start" : `Reshuffle [${pile.length + discard.length}]`}</wired-card>
-      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('create-sketch') }} elevation={2}><Icon name='create' />Create</wired-card>
+      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('create-sketch') }} elevation={2}><Icon name='create' />Create</wired-card>
     </>
   } else if (mode === 'create-sketch') {
     toolset = <>

@@ -106,6 +106,42 @@ export function CardFace(card: Card) {
       </wired-card>
     );
   } else {
-    return <></>
+    const styles: {[key: string]: Properties<string | number>} = {
+      card: {
+        width: '9em',
+        height: '9em',
+        borderRadius: '0.5em',
+        backgroundColor: 'white',
+        textAlign: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      title: {
+        fontSize: '1em',
+        fontWeight: 'bold',
+      },
+      image: {
+        width: '4em',
+        height: '4em',
+      },
+      credit: {
+        fontSize: '0.75em',
+        textAlign: 'center',
+      },
+    };
+
+    const content = <>
+        <div style={styles.title}>{card.content.title}</div>
+        <div style={styles.credit}>{card.content.author && `${card.content.author}`}</div>
+        <div style={styles.credit}>{card.content.date && `${localDate}`}</div>
+    </>
+
+    return (
+      <wired-card style={{...styles.card}} elevation={1}>
+        {card.id != 0 && <img style={styles.image} src={card.content.image ?? "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="}></img>}
+        {content}
+      </wired-card>
+    )
   }
 }

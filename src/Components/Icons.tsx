@@ -19,6 +19,7 @@ import QuestionMarkOutlinedIcon from '@mui/icons-material/QuestionMarkOutlined';
 import RecyclingIcon from '@mui/icons-material/Recycling';
 import SaveAltOutlinedIcon from '@mui/icons-material/SaveAltOutlined';
 import ScreenRotationOutlinedIcon from '@mui/icons-material/ScreenRotationOutlined';
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
 import { Properties } from 'csstype';
@@ -38,6 +39,7 @@ type IconName =
   'multi' |
   'play' |
   'pile' |
+  'search' |
   'settings' |
   'send' |
   'shuffle' | 
@@ -63,6 +65,7 @@ export function Icon(props: { name: IconName }) {
     multi: <PeopleIcon></PeopleIcon>,
     play: <PlayArrowOutlinedIcon></PlayArrowOutlinedIcon>,
     pile: <CollectionsOutlinedIcon></CollectionsOutlinedIcon>,
+    search: <SearchOutlinedIcon></SearchOutlinedIcon>,
     settings: <SettingsOutlinedIcon></SettingsOutlinedIcon>,
     send: <ForwardOutlinedIcon></ForwardOutlinedIcon>,
     shuffle: <RecyclingIcon></RecyclingIcon>,
