@@ -122,12 +122,12 @@ export function Gallery() {
     </>
 
     const tray = <div style={styles.tray}>
-      <wired-card style={styles.button} onClick={() => { navigate('/') }} elevation={2}><Icon name='multi' />Home</wired-card>
-      <wired-card style={styles.button} onClick={() => { navigate('/card') }} elevation={2}><Icon name='search' />Explore</wired-card>
+      <wired-card style={styles.button} onClick={(e) => { navigate('/'); e.stopPropagation() }} elevation={2}><Icon name='multi' />Home</wired-card>
+      <wired-card style={styles.button} onClick={(e) => { navigate('/card'); e.stopPropagation() }} elevation={2}><Icon name='search' />Explore</wired-card>
     </div>
 
     viewDialog = <>
-      <wired-dialog open onClick={() => navigate('/card')}>
+      <wired-dialog open onClick={(e) => { navigate('/card'); e.stopPropagation() }}>
         <Permalink />
         <div style={styles.focus}>
           <div style={styles.title}>{viewedCard.content.title}</div>
@@ -143,10 +143,10 @@ export function Gallery() {
   }
 
   // Show All Cards Matching Filter
-  const [filteredCards, setFilteredCards] = useState(globalDeck.cards)
+  const [filteredCards, _setFilteredCards] = useState(globalDeck.cards)
   const shownCards = <div style={styles.cards}>
     {filteredCards.map((card) => {
-      return <div key={`gallery-${card.id}`} onClick={() => navigate(`/card/${card.id}`)}>
+      return <div key={`gallery-${card.id}`} onClick={(e) => { navigate(`/card/${card.id}`); e.stopPropagation() }}>
         {CardFace(card)}
       </div>
     })}
@@ -205,7 +205,7 @@ export function Permalink() {
 
   return (
     <div style={styles.copybutton}>
-      <div id="sharePermalink" style={styles.permalink} onClick={copyPermalink}>
+      <div id="sharePermalink" style={styles.permalink} onClick={(e) => { copyPermalink(); e.stopPropagation() }}>
         <Icon name="copy" />
         {url}
       </div>
