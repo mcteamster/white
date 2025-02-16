@@ -89,7 +89,7 @@ const submitCard: Move<GameState> = ({ G }, card: Card) => {
 
 const shuffleCards: Move<GameState> = ({ G }) => {
   // Return all cards to the deck
-  G.cards.forEach(card => card.location = 'deck');
+  G.cards.forEach(card => { card.location = 'deck'; card.timestamp = undefined});
 }
 
 // Game

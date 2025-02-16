@@ -1,3 +1,5 @@
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import CollectionsOutlinedIcon from '@mui/icons-material/CollectionsOutlined';
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
@@ -42,6 +44,8 @@ type IconName =
   'single' |
   'take' |
   'undo';
+
+type BrowseType = 'prev' | 'next'
 
 export function Icon(props: { name: IconName }) {
   const icons = {
@@ -103,6 +107,47 @@ export function Rotate() {
       Adjust
       <ScreenRotationOutlinedIcon style={styles.icon} />
       Screen
+    </div>
+  )
+}
+
+export function Browse(props: { type: BrowseType }) {
+  const styles: { [key: string]: Properties<string | number> } = {
+    browse: {
+      height: '100%',
+      width: '3em',
+      position: 'fixed',
+      top: '0',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+    },
+    prev: {
+      left: '0',
+      alignItems: 'flex-start',
+      borderRadius: '0 1em 1em 0',
+    },
+    next: {
+      right: '0',
+      alignItems: 'flex-end',
+      borderRadius: '1em 0 0 1em',
+    },
+    icon: {
+      height: '4em',
+      backgroundColor: 'rgba(255, 255, 255, 0.5)',
+      padding: '0.25em',
+      fontSize: '1.25em',
+    }
+  }
+
+  const browseIcons = {
+    prev: <ArrowBackIosNewIcon style={{...styles.icon, ...styles[props.type]}}></ArrowBackIosNewIcon>,
+    next: <ArrowForwardIosIcon style={{...styles.icon, ...styles[props.type]}}></ArrowForwardIosIcon>,
+  }
+
+  return (
+    <div style={{...styles.browse, ...styles[props.type]}}>
+      {browseIcons[props.type]}
     </div>
   )
 }

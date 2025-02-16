@@ -8,6 +8,7 @@ import { AuthContext, AuthType } from "./constants/contexts";
 import { GlobalBlankWhiteCardsClient, lobbyClient, MultiplayerBlankWhiteCardsClient, parsePathCode, startingDeck } from "./constants/clients";
 import { Rotate } from "./Components/Icons";
 import { useWindowDimensions } from "./constants/hooks";
+import { Gallery } from "./Components/Gallery";
 
 // Landing Page
 const App = () => {
@@ -66,6 +67,9 @@ const App = () => {
             </>} />
             <Route path="/about" element={<About />} />
             <Route path="/app" element={<GlobalBlankWhiteCardsClient playerID='0' />} />
+            <Route path="/card" element={<Gallery />}>
+              <Route path=":cardID" element={<Gallery />} />
+            </Route>
             <Route path="/*" element={<>
               {(validMatch) ?
                 <MultiplayerBlankWhiteCardsClient playerID={auth.playerID} matchID={auth.matchID} credentials={auth.credentials} /> :

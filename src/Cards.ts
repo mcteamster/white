@@ -36,3 +36,18 @@ export const getCardsByLocation = (cards: Card[], position: string) => {
 export const getCardsByOwner = (cards: Card[], playerID: string) => {
   return cards.filter(card => card.owner === playerID);
 }
+
+export const getAdjacentCard = (cards: Card[], id: number, direction: 'prev' | 'next') => {
+  const position = cards.find((card) => card.id == id)?.location;
+  if (position) {
+    const directionSort = {
+      prev: (a: Card, b: Card) => (a.timestamp || 0) - (b.timestamp || 0), // Oldest to Newest
+      next: (a: Card, b: Card) => (b.timestamp || 0) - (a.timestamp || 0), // Newest to Oldest
+    }
+    const cardList = cards.filter(card => card.location === position).sort(directionSort[direction])
+    const currentIndex = cardList.findIndex((card) => card.id == id);
+    if (currentIndex > 0) {
+      return cardList[currentIndex - 1];
+    }
+  }
+}
