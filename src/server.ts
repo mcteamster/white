@@ -2,7 +2,7 @@ import { Server, Origins, /*FlatFile*/ } from 'boardgame.io/server';
 // import { StorageCache } from '@boardgame.io/storage-cache';
 import { BlankWhiteCards } from './Game';
 import { customAlphabet, nanoid } from 'nanoid';
-const roomCodeGen = customAlphabet('BCDFGHJKLMNPQRSTVWXYZ', 4);
+const roomCodeGen = customAlphabet('BCDFGHJKLMNPQRSTVWXZ', 4);
 
 // Database
 // const db = new FlatFile({

@@ -8,6 +8,7 @@ import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined
 import DoneOutlinedIcon from '@mui/icons-material/DoneOutlined';
 import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
 import GitHubIcon from '@mui/icons-material/GitHub';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import KeyboardBackspaceOutlinedIcon from '@mui/icons-material/KeyboardBackspaceOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined';
@@ -34,6 +35,7 @@ type IconName =
   'done' |
   'exit' |
   'github' |
+  'info' |
   'logout' |
   'menu' |
   'multi' |
@@ -60,6 +62,7 @@ export function Icon(props: { name: IconName }) {
     done: <DoneOutlinedIcon></DoneOutlinedIcon>,
     exit: <CloseOutlinedIcon></CloseOutlinedIcon>,
     github: <GitHubIcon></GitHubIcon>,
+    info: <InfoOutlinedIcon></InfoOutlinedIcon>,
     logout: <LogoutIcon></LogoutIcon>,
     menu: <MenuOutlinedIcon></MenuOutlinedIcon>,
     multi: <PeopleIcon></PeopleIcon>,

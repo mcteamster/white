@@ -150,7 +150,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
   if (mode === 'play') {
     toolset = <>
       <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='menu' />Menu</wired-card>
-      <wired-card style={{ ...styles.button, width: '9em', margin: '0' }} onClick={() => {
+      <wired-card style={{ ...styles.button, width: '9.75em', margin: '0' }} onClick={() => {
           if (G.cards.length > 0) {
             moves.pickupCard(true)
           } else {
@@ -175,9 +175,16 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
   } else if (mode === 'menu') {
     toolset = <>
       <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Close</wired-card>
-      <Link to="/about" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3.5em' }} elevation={2}><Icon name='about' />About</wired-card></Link>
       <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu-settings') }} elevation={2}><Icon name='settings' />Options</wired-card>
+      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu-info') }} elevation={2}><Icon name='info' />Info</wired-card>
       <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { leaveGame() }} elevation={2}><Icon name='logout' />{isMultiplayer ? 'Leave' : 'Lobby'}</wired-card>
+    </>
+  } else if (mode === 'menu-info') {
+    toolset = <>
+      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='back' />Back</wired-card>
+      <Link to="/card" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3.5em' }} elevation={2}><Icon name='pile' />Gallery</wired-card></Link>
+      <Link to="/about" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3.5em' }} elevation={2}><Icon name='about' />About</wired-card></Link>
+      <Link to="https://mcteamster.com" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3.5em' }} elevation={2}><Icon name='single' />Contact</wired-card></Link>
     </>
   } else if (mode === 'menu-settings') {
     toolset = <>

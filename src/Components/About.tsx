@@ -120,7 +120,7 @@ export function About() {
           <p>v2.0.0</p>
         </a>
       </div>
-      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { navigate('/') }} elevation={2}><Icon name='multi' />Lobby</wired-card>
+      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { navigate('/') }} elevation={2}><Icon name='logout' />Lobby</wired-card>
     </div>
   );
 }

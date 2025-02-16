@@ -27,7 +27,7 @@ export function Lobby(props: { globalSize: number }) {
         setupData: startingDeck,
       });
 
-      if (matchID.match(/^[BCDFGHJKLMNPQRSTVWXYZ]{4}$/)) {
+      if (matchID.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
         // Join Match as playerID 0
         const { playerCredentials } = await lobbyClient.joinMatch(
           'blank-white-cards',
@@ -52,7 +52,7 @@ export function Lobby(props: { globalSize: number }) {
     const playerName = checkForPlayerName();
     if (playerName) {
       const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
-      if (roomCode.value.toUpperCase().match(/^[BCDFGHJKLMNPQRSTVWXYZ]{4}$/)) {
+      if (roomCode.value.toUpperCase().match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
         try {
           const { playerID, playerCredentials } = await lobbyClient.joinMatch(
             'blank-white-cards',

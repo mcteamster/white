@@ -4,6 +4,7 @@ import { Browse, Icon } from './Icons';
 import { startingDeck } from '../constants/clients';
 import { CardFace } from "./CardFace";
 import { useState } from "react";
+import { Card } from "../Cards";
 
 export function Gallery() {
   const navigate = useNavigate();
@@ -67,17 +68,13 @@ export function Gallery() {
       justifyContent: 'space-around',
     },
     button: {
-      height: '3em',
       width: '3em',
-      minWidth: '25%',
-      maxWidth: 'min(70vw, 45vh)',
-      borderRadius: '1em',
-      fontWeight: 'bold',
+      padding: '1em',
+      textAlign: 'center',
       display: 'flex',
-      flexGrow: '1',
+      flexDirection: 'column',
       justifyContent: 'center',
       alignItems: 'center',
-      color: '#333',
     },
     footer: {
       width: '100%',
@@ -90,14 +87,14 @@ export function Gallery() {
       borderTop: '0.5pt solid black',
       display: 'flex',
       flexDirection: 'row',
-      justifyContent: 'center',
+      justifyContent: 'space-between',
       alignItems: 'center',
     },
   };
 
   const globalDeck = startingDeck;
   const params = useParams();
-  let viewedCard = globalDeck.cards.find((card) => card.id == Number(params.cardID));
+  const viewedCard = globalDeck.cards.find((card) => card.id == Number(params.cardID));
   let localDate;
   let viewDialog = <></>;
 
@@ -121,11 +118,6 @@ export function Gallery() {
       }
     </>
 
-    const tray = <div style={styles.tray}>
-      <wired-card style={styles.button} onClick={(e) => { navigate('/'); e.stopPropagation() }} elevation={2}><Icon name='multi' />Home</wired-card>
-      <wired-card style={styles.button} onClick={(e) => { navigate('/card'); e.stopPropagation() }} elevation={2}><Icon name='search' />Explore</wired-card>
-    </div>
-
     viewDialog = <>
       <wired-dialog open onClick={(e) => { navigate('/card'); e.stopPropagation() }}>
         <Permalink />
@@ -136,14 +128,13 @@ export function Gallery() {
           <img style={styles.image} src={viewedCard.content.image} />
           <div style={styles.description}>{viewedCard.content.description}</div>
           {browse}
-          {tray}
         </div>
       </wired-dialog>
     </>
   }
 
   // Show All Cards Matching Filter
-  const [filteredCards, _setFilteredCards] = useState(globalDeck.cards)
+  const [filteredCards, setFilteredCards] = useState(globalDeck.cards)
   const shownCards = <div style={styles.cards}>
     {filteredCards.map((card) => {
       return <div key={`gallery-${card.id}`} onClick={(e) => { navigate(`/card/${card.id}`); e.stopPropagation() }}>
@@ -156,16 +147,91 @@ export function Gallery() {
     <div>
       {shownCards}
       {viewedCard && viewDialog}
-      <div style={styles.footer}>Card Gallery</div>
+      <div style={styles.footer}>
+        <div style={styles.button} onClick={() => { navigate('/') }}>
+            <Icon name='logout' />
+            Lobby
+        </div>
+        <Search allCards={globalDeck.cards} setFilteredCards={setFilteredCards} />
+        <div style={styles.button}>
+          {filteredCards.length}<br></br>
+          Cards
+        </div>
+      </div>
     </div>
   );
+}
+
+interface SearchProps {
+  allCards: Card[];
+  setFilteredCards: (cards: Card[]) => void;
+}
+
+export function Search(props: SearchProps) {
+  const styles: { [key: string]: Properties<string | number> } = {
+    search: {
+      display: 'flex',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    searchbox: {
+      fontFamily: "'Patrick Hand SC', Arial, Helvetica, sans-serif",
+      fontSize: "1.5em",
+      width: '7.25em',
+      margin: '0.25em',
+      border: 'none',
+      textAlign: 'left',
+      display: 'flex',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  }
+
+  const searchCards = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const query = e.target.value;
+    const matchedCards = props.allCards.filter((card) => {
+      if (card.id == Number(query)) {
+        return true
+      }
+      if (card.content.title.toUpperCase().includes(query.toUpperCase())) {
+        return true
+      }
+      if (card.content.author?.toUpperCase().includes(query.toUpperCase())) {
+        return true
+      }    
+      if (card.content.description.toUpperCase().includes(query.toUpperCase())) {
+        return true
+      }
+      return false
+    });
+    props.setFilteredCards(matchedCards);
+  }
+
+  const clearSearch = () => {
+    const queryInput = document.querySelector('#searchInput') as HTMLInputElement
+    if (queryInput) {
+      queryInput.value = '';
+      props.setFilteredCards(props.allCards);
+    }
+  }
+
+  return <div style={styles.search}>
+    <Icon name="search" />
+    <input type='text' style={styles.searchbox} id="searchInput" placeholder="Search Card Gallery" onChange={searchCards}/>
+    <div onClick={clearSearch}>
+      <Icon name="exit" />
+    </div>
+  </div>
 }
 
 export function Permalink() {
   const url = `${window.location.origin}${window.location.pathname}`
 
   const copyPermalink = () => {
-    let sharePermalink = document.getElementById('sharePermalink');
+    const sharePermalink = document.getElementById('sharePermalink');
     if (sharePermalink) {
       sharePermalink.classList.remove('clickedLink');
       sharePermalink.classList.add('clickedLink');

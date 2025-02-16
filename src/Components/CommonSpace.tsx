@@ -95,7 +95,7 @@ export function ShareRoom(props: { matchID: string, setShowShare: React.Dispatch
     if (room == 'default') {
       room = 'app'
     }
-    let shareUrl = document.getElementById('shareUrl');
+    const shareUrl = document.getElementById('shareUrl');
     if (shareUrl) {
       shareUrl.classList.remove('clickedLink');
       shareUrl.classList.add('clickedLink');

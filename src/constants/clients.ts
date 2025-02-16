@@ -38,7 +38,7 @@ export const MultiplayerBlankWhiteCardsClient = Client({
 
 export const parsePathCode = () => {
   const pathname = window.location.pathname;
-  if (pathname.match(/^\/[A-Za-z]{4}$/)) {
+  if (pathname.match(/^\/[BCDFGHJKLMNPQRSTVWXZ]{4}$/i)) {
     const room = pathname.slice(1,5).toUpperCase();
     return room
   } else {

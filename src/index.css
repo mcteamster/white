@@ -35,6 +35,10 @@ a {
   color: black;
 }
 
+input:focus {
+  outline: none;
+}
+
 .wired-rendered {
   font-family: 'Patrick Hand SC', Arial, Helvetica, sans-serif;
 }
