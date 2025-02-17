@@ -4,7 +4,7 @@ import { Browse, Icon } from './Icons';
 import { startingDeck } from '../constants/clients';
 import { CardFace } from "./CardFace";
 import { useState } from "react";
-import { Card } from "../Cards";
+import { Card, getAdjacentCard } from "../Cards";
 
 export function Gallery() {
   const navigate = useNavigate();
@@ -98,21 +98,38 @@ export function Gallery() {
   let localDate;
   let viewDialog = <></>;
 
+  // Show All Cards Matching Filter
+  const [filteredCards, setFilteredCards] = useState(globalDeck.cards)
+  const shownCards = <div style={styles.cards}>
+    {filteredCards.map((card) => {
+      return <div key={`gallery-${card.id}`} onClick={(e) => { navigate(`/card/${card.id}`); e.stopPropagation() }}>
+        {CardFace(card)}
+      </div>
+    })}
+  </div>
+
   if (viewedCard) {
     if (viewedCard.content.date) {
       localDate = new Date(Number(viewedCard.content.date)).toLocaleDateString();
     }
 
+    const changeViewed = (direction: 'old' | 'new') => {
+      const adjacentCard = getAdjacentCard(filteredCards, viewedCard.id, direction);
+      if (adjacentCard) {
+        navigate(`/card/${Number(adjacentCard.id)}`)
+      }
+    }
+
     const browse = <>
       {
-        Number(params.cardID) > 1 &&
-        <div onClick={(e) => { navigate(`/card/${Number(params.cardID) - 1}`); e.stopPropagation() }}>
+        filteredCards.findIndex((card) => card.id == viewedCard.id) > 0 &&
+        <div onClick={(e) => { changeViewed('old'); e.stopPropagation() }}>
           <Browse type="prev" />
         </div>
       }
       {
-        Number(params.cardID) < globalDeck.cards.length &&
-        <div onClick={(e) => { navigate(`/card/${Number(params.cardID) + 1}`); e.stopPropagation() }}>
+        filteredCards.findIndex((card) => card.id == viewedCard.id) < (filteredCards.length - 1) &&
+        <div onClick={(e) => { changeViewed('new'); e.stopPropagation() }}>
           <Browse type="next" />
         </div>
       }
@@ -132,16 +149,6 @@ export function Gallery() {
       </wired-dialog>
     </>
   }
-
-  // Show All Cards Matching Filter
-  const [filteredCards, setFilteredCards] = useState(globalDeck.cards)
-  const shownCards = <div style={styles.cards}>
-    {filteredCards.map((card) => {
-      return <div key={`gallery-${card.id}`} onClick={(e) => { navigate(`/card/${card.id}`); e.stopPropagation() }}>
-        {CardFace(card)}
-      </div>
-    })}
-  </div>
 
   return (
     <div>
