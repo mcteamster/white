@@ -7,7 +7,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "serve": "ts-node ./src/server.ts",
+    "serve": "ts-node --transpile-only ./src/server.ts",
     "deploy": "../infra/deploy-white-service.sh; ../infra/deploy-white.sh",
     "deploy:client": "../infra/deploy-white.sh",
     "deploy:service": "../infra/deploy-white-service.sh",
