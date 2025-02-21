@@ -13,6 +13,7 @@ export const sanitiseCard = (inputCard: any) => {
     focused: [],
   };
 
+  // Support for v2 and v1 card schemas
   outputCard.content = {
     title: inputCard?.content?.title || inputCard.title,
     description: inputCard?.content?.description || inputCard.description,
@@ -32,7 +33,7 @@ export const sanitiseCard = (inputCard: any) => {
 
 // Download Deck Data
 export const downloadDeck = (G: GameState) => {
-  // Format Cards into HTML for display
+  // Format Cards into HTML for display - TODO: HTML Injection Unsafe
   let deckHTML = "";
   G.cards.forEach((card) => {
     let imageHTML = '';

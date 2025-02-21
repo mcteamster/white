@@ -224,7 +224,7 @@ export function ActionSpace(props: BoardProps<GameState>) {
       <Focus {...props} />
       <Finalise multiplayer={props.isMultiplayer} />
       <Toolbar {...props} mode={mode} setMode={setMode} />
-      <Loader submitCard={props.moves.submitCard} mode={mode} setMode={setMode}></Loader>
+      <Loader {...props} mode={mode} setMode={setMode}></Loader>
     </>
   )
 }

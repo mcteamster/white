@@ -17,8 +17,7 @@ export function Lobby(props: { globalSize: number }) {
   const createGame = async () => {
     const playerName = checkForPlayerName();
     if (playerName) {
-      // TODO: Custom Deck Uploads
-      let startingDeck;
+      let startingDeck; // TODO: select preset decks at creation
 
       // Create Match on Server
       const { matchID } = await lobbyClient.createMatch('blank-white-cards', {

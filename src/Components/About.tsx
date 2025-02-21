@@ -66,7 +66,7 @@ export function About() {
           Create and submit cards here for the whole world to see!
         </p>
         <p>
-          *Note: Multiplayer card Import/Export will be coming (back) soon.
+          *The Save / Load Tools for Multiplayer Decks are now availble (with backwards compatibility)!
         </p>
       </div>
       <div style={styles.paragraph}>
@@ -75,7 +75,7 @@ export function About() {
           Blank White Cards has no rules...
         </p>
         <p>
-          aside from any illegal or malicious content and actions being prohibited.
+          aside from  illegal or malicious content and actions being prohibited.
           This includes text, links, images, and anything else related to the game.
           We reserve the right to remove content at our discretion.
           Please follow the guidelines below for the best experience:
