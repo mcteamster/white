@@ -24,7 +24,7 @@ import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
 import { Properties } from 'csstype';
-import { useWindowDimensions } from '../constants/hooks';
+import { useWindowDimensions } from '../lib/hooks';
 
 type IconName = 
   'about' |

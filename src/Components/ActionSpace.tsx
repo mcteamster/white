@@ -9,7 +9,7 @@ import { useState, useEffect, useContext } from 'react';
 //@ts-expect-error: JS Module
 import { undo, strokes, sketchpad } from '../Canvas.js';
 import { Link, useNavigate } from 'react-router';
-import { AuthContext } from '../constants/contexts.ts';
+import { AuthContext } from '../lib/contexts.ts';
 
 interface ToolbarProps extends BoardProps<GameState> {
   mode: string;

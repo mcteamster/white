@@ -1,12 +1,12 @@
 import { useNavigate, useParams } from "react-router";
 import type { Properties } from 'csstype';
 import { Browse, Icon } from './Icons';
-import { startingDeck } from '../constants/clients';
+import { startingDeck } from '../lib/clients';
 import { CardFace } from "./CardFace";
 import { useContext, useState } from "react";
 import { Card, getAdjacentCard } from "../Cards";
-import { HotkeysContext } from "../constants/contexts";
-import { useWindowDimensions } from "../constants/hooks";
+import { HotkeysContext } from "../lib/contexts";
+import { useWindowDimensions } from "../lib/hooks";
 
 export function Gallery() {
   const navigate = useNavigate();

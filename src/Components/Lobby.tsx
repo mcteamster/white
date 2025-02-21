@@ -2,8 +2,8 @@ import { useNavigate } from "react-router";
 import { Properties } from 'csstype';
 import { Icon } from './Icons';
 import { useContext } from "react";
-import { AuthContext } from "../constants/contexts";
-import { lobbyClient } from "../constants/clients";
+import { AuthContext } from "../lib/contexts";
+import { lobbyClient } from "../lib/clients";
 
 export function Lobby(props: { globalSize: number }) {
   const navigate = useNavigate();

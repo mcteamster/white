@@ -4,7 +4,7 @@ import type { Properties } from 'csstype';
 import { Card, getAdjacentCard, getCardByFocus } from '../Cards';
 import { Icon, Browse } from './Icons';
 import { useContext } from 'react';
-import { HotkeysContext } from '../constants/contexts.ts';
+import { HotkeysContext } from '../lib/contexts.ts';
 
 export function Focus(props: BoardProps<GameState>) {
   const focused: Card | undefined = getCardByFocus(props.G.cards, props.playerID);

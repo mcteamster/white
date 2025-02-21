@@ -4,10 +4,10 @@ import { BrowserRouter, Routes, Route } from "react-router";
 import { useCallback, useEffect, useState } from 'react';
 import { Lobby } from './Components/Lobby';
 import { About } from "./Components/About";
-import { AuthContext, AuthType, HotkeysContext } from "./constants/contexts";
-import { GlobalBlankWhiteCardsClient, lobbyClient, MultiplayerBlankWhiteCardsClient, parsePathCode, startingDeck } from "./constants/clients";
+import { AuthContext, AuthType, HotkeysContext } from "./lib/contexts";
+import { GlobalBlankWhiteCardsClient, lobbyClient, MultiplayerBlankWhiteCardsClient, parsePathCode, startingDeck } from "./lib/clients";
 import { Rotate } from "./Components/Icons";
-import { useHotkeys, useWindowDimensions } from "./constants/hooks";
+import { useHotkeys, useWindowDimensions } from "./lib/hooks";
 import { Gallery } from "./Components/Gallery";
 
 // Landing Page
