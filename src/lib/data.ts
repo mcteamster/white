@@ -1,4 +1,34 @@
+import { Card } from "../Cards";
 import { GameState } from "../Game";
+
+// Sanitise Cards
+export const sanitiseCard = (inputCard: any) => {
+  const outputCard: Card = {
+    id: 0,
+    content: {
+      title: '',
+      description: '',
+    },
+    location: 'deck',
+    focused: [],
+  };
+
+  outputCard.content = {
+    title: inputCard?.content?.title || inputCard.title,
+    description: inputCard?.content?.description || inputCard.description,
+    author: inputCard?.content?.author || inputCard.author,
+    image: inputCard?.content?.image || inputCard.picture,
+    // @ts-expect-error crazy legacy date parsing
+    date: inputCard?.content?.date || Date.parse(new Date(Number(inputCard.date.split('.')[2]), Number(inputCard.date.split('.')[1]) - 1, Number(inputCard.date.split('.')[0]), 12)),
+  };  
+
+  // These cards are to be hidden
+  if (inputCard.location == 'box' || inputCard.reports == 1) {
+    outputCard.location = 'box'
+  }
+
+  return outputCard;
+}
 
 // Download Deck Data
 export const downloadDeck = (G: GameState) => {
@@ -202,5 +232,3 @@ export const downloadDeck = (G: GameState) => {
   dltemp.click();
   document.body.removeChild(dltemp);
 }
-
-// Upload Deck Data
