@@ -10,6 +10,7 @@ import { useState, useEffect, useContext } from 'react';
 import { undo, strokes, sketchpad } from '../Canvas.js';
 import { Link, useNavigate } from 'react-router';
 import { AuthContext } from '../lib/contexts.ts';
+import { downloadDeck } from '../lib/data.ts';
 
 interface ToolbarProps extends BoardProps<GameState> {
   mode: string;
@@ -175,7 +176,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
   } else if (mode === 'menu') {
     toolset = <>
       <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Close</wired-card>
-      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu-settings') }} elevation={2}><Icon name='settings' />Options</wired-card>
+      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu-settings') }} elevation={2}><Icon name='settings' />Tools</wired-card>
       <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu-info') }} elevation={2}><Icon name='info' />Info</wired-card>
       <wired-card style={{ ...styles.button, width: '3.5em', color: 'red' }} onClick={() => { leaveGame() }} elevation={2}><Icon name='logout' />{isMultiplayer ? 'Leave' : 'Lobby'}</wired-card>
     </>
@@ -183,24 +184,28 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
     toolset = <>
       <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='back' />Back</wired-card>
       <Link to="/about" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3.5em' }} elevation={2}><Icon name='about' />About</wired-card></Link>
-      <Link to="/card" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3.5em' }} elevation={2}><Icon name='pile' />Gallery</wired-card></Link>
-      <Link to="https://mcteamster.com" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3.5em' }} elevation={2}><Icon name='single' />Contact</wired-card></Link>
+      <Link to="https://mcteamster.com" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3.5em' }} elevation={2}><Icon name='game' />Games</wired-card></Link>
+      <Link to="https://www.buymeacoffee.com/mcteamster" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3.5em' }} elevation={2}><Icon name='coffee' />Support</wired-card></Link>
     </>
   } else if (mode === 'menu-settings') {
     toolset = <>
       <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='back' />Back</wired-card>
-      <wired-card style={{
-        ...styles.button,
-        width: '3.5em',
-        color: 'grey',
-        // color: (isMultiplayer ? undefined : 'grey'),
-      }} onClick={() => { }} elevation={2}><Icon name='display' />Import</wired-card>
-      <wired-card style={{
-        ...styles.button,
-        width: '3.5em',
-        color: 'grey',
-        // color: (isMultiplayer ? undefined : 'grey'),
-      }} onClick={() => { }} elevation={2}><Icon name='take' />Export</wired-card>
+      {
+        isMultiplayer ?
+        <>
+          <wired-card style={{
+            ...styles.button,
+            width: '3.5em',
+            color: ((G.cards.length > 0) ? undefined : 'grey'),
+          }} onClick={() => { isMultiplayer && G.cards.length > 0 && downloadDeck(G) }} elevation={2}><Icon name='take' />Save</wired-card>
+          <wired-card style={{
+            ...styles.button,
+            width: '3.5em',
+            color: 'grey',
+          }} onClick={() => { }} elevation={2}><Icon name='display' />Load</wired-card>
+        </> :
+        <Link to="/card" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3.5em' }} elevation={2}><Icon name='pile' />Gallery</wired-card></Link>
+      }
       <wired-card style={{ ...styles.button, width: '3.5em', color: 'red' }} onClick={() => { moves.shuffleCards(); setMode('play') }} elevation={2}><Icon name='shuffle' />Reset</wired-card>
     </>
   }

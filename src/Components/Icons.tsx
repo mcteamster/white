@@ -10,6 +10,7 @@ import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import KeyboardBackspaceOutlinedIcon from '@mui/icons-material/KeyboardBackspaceOutlined';
+import LocalCafeOutlinedIcon from '@mui/icons-material/LocalCafeOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined';
 import PeopleIcon from '@mui/icons-material/People';
@@ -22,6 +23,7 @@ import SaveAltOutlinedIcon from '@mui/icons-material/SaveAltOutlined';
 import ScreenRotationOutlinedIcon from '@mui/icons-material/ScreenRotationOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import SportsEsportsOutlinedIcon from '@mui/icons-material/SportsEsportsOutlined';
 import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
 import { Properties } from 'csstype';
 import { useWindowDimensions } from '../lib/hooks';
@@ -29,12 +31,14 @@ import { useWindowDimensions } from '../lib/hooks';
 type IconName = 
   'about' |
   'back' |
+  'coffee' |
   'copy' |
   'create' |
   'discard' | 
   'display' |
   'done' |
   'exit' |
+  'game' |
   'github' |
   'info' |
   'logout' |
@@ -56,12 +60,14 @@ export function Icon(props: { name: IconName }) {
   const icons = {
     about: <QuestionMarkOutlinedIcon></QuestionMarkOutlinedIcon>,
     back: <KeyboardBackspaceOutlinedIcon></KeyboardBackspaceOutlinedIcon>,
+    coffee: <LocalCafeOutlinedIcon></LocalCafeOutlinedIcon>,
     copy: <ContentCopyOutlinedIcon></ContentCopyOutlinedIcon>,
     create: <CreateOutlinedIcon></CreateOutlinedIcon>,
     discard: <DeleteForeverOutlinedIcon></DeleteForeverOutlinedIcon>,
     display: <PresentToAllOutlinedIcon></PresentToAllOutlinedIcon>,
     done: <DoneOutlinedIcon></DoneOutlinedIcon>,
     exit: <CloseOutlinedIcon></CloseOutlinedIcon>,
+    game: <SportsEsportsOutlinedIcon></SportsEsportsOutlinedIcon>,
     github: <GitHubIcon></GitHubIcon>,
     info: <InfoOutlinedIcon></InfoOutlinedIcon>,
     logout: <LogoutIcon></LogoutIcon>,

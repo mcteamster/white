@@ -8,7 +8,7 @@ export interface Card {
     date?: string,
     image?: string,
   },
-  location: string, // 'deck' | 'pile' | 'discard' | 'hand' | 'table',
+  location: string, // 'deck' | 'pile' | 'discard' | 'hand' | 'table' | 'box',
   focused: string[], // viewing players
   owner?: string, // playerID
   previousOwner?: string, // playerID, used for tracking ownership changes
