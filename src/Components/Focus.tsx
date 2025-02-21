@@ -3,9 +3,12 @@ import type { GameState } from '../Game.ts'
 import type { Properties } from 'csstype';
 import { Card, getAdjacentCard, getCardByFocus } from '../Cards';
 import { Icon, Browse } from './Icons';
+import { useContext } from 'react';
+import { HotkeysContext } from '../constants/contexts.ts';
 
 export function Focus(props: BoardProps<GameState>) {
   const focused: Card | undefined = getCardByFocus(props.G.cards, props.playerID);
+  const { hotkeys } = useContext(HotkeysContext);
 
   const styles: { [key: string]: Properties<string | number> } = {
     focus: {
@@ -76,9 +79,9 @@ export function Focus(props: BoardProps<GameState>) {
     let tray = <></>
     if (owned) {
       tray = <div style={styles.tray}>
-        {<wired-card style={{ ...styles.button }} id="discardButton" onClick={() => { props.moves.moveCard(focused.id, "deck"); props.moves.focusCard(focused.id, false) }}><Icon name='shuffle' />Deck</wired-card>}
+        {<wired-card style={{ ...styles.button }} id="returnButton" onClick={() => { props.moves.moveCard(focused.id, "deck"); props.moves.focusCard(focused.id, false) }}><Icon name='shuffle' />Deck</wired-card>}
         {<wired-card style={{ ...styles.button, color: 'red' }} id="discardButton" onClick={() => { props.moves.moveCard(focused.id, "discard"); props.moves.focusCard(focused.id, false) }}><Icon name='discard' />Discard</wired-card>}
-        {<wired-card style={{ ...styles.button, color: 'lightgrey' }} id="discardButton" onClick={() => { /* props.moves.moveCard(focused.id, "hand", props.playerID); props.moves.focusCard(focused.id, false) */ }}><Icon name='send' />Send</wired-card>}
+        {<wired-card style={{ ...styles.button, color: 'lightgrey' }} id="sendButton" onClick={() => { /* props.moves.moveCard(focused.id, "hand", props.playerID); props.moves.focusCard(focused.id, false) */ }}><Icon name='send' />Send</wired-card>}
         {<wired-card style={{ ...styles.button }} id="handButton" onClick={() => { props.moves.moveCard(focused.id, "hand"); props.moves.focusCard(focused.id, false) }}><Icon name='take' />Hand</wired-card>}
         {<wired-card style={{ ...styles.button }} id="pileButton" onClick={() => { props.moves.moveCard(focused.id, "pile"); props.moves.focusCard(focused.id, false) }}><Icon name='pile' />Pile</wired-card>}
         {<wired-card style={{ ...styles.button }} id="tableButton" onClick={() => { props.moves.moveCard(focused.id, "table"); props.moves.focusCard(focused.id, false) }}><Icon name='display' />Table</wired-card>}
@@ -93,19 +96,66 @@ export function Focus(props: BoardProps<GameState>) {
     }
 
     const browse = <>
-      { 
+      {
         getAdjacentCard(props.G.cards, focused.id, 'prev') &&
         <div onClick={(e) => { changeFocus('prev'); e.stopPropagation() }}>
           <Browse type="prev" />
         </div>
       }
-      { 
+      {
         getAdjacentCard(props.G.cards, focused.id, 'next') &&
         <div onClick={(e) => { changeFocus('next'); e.stopPropagation() }}>
           <Browse type="next" />
         </div>
       }
     </>
+
+    const unfocusCards = () => {
+      setTimeout(() => {
+        props.moves.focusCard(0, false);
+      }, 0)
+    }
+
+    // Hotkeys
+    if (hotkeys.escape) {
+      unfocusCards();
+    } else if (hotkeys.left && focused.id) {
+      setTimeout(() => {
+        changeFocus('prev');
+      }, 0)
+    } else if (hotkeys.right && focused.id) {
+      setTimeout(() => {
+        changeFocus('next');
+      }, 0)
+    } else if (owned && hotkeys.up) {
+      if (focused.location != "table") {
+        setTimeout(() => {
+          const adjacentCard = getAdjacentCard(props.G.cards, focused.id, 'prev') || getAdjacentCard(props.G.cards, focused.id, 'next');
+          props.moves.moveCard(focused.id, "table");
+          if (adjacentCard) {
+            props.moves.focusCard(adjacentCard.id, true);
+          } else {
+            unfocusCards();
+          }
+        }, 0)
+      } else {
+        unfocusCards();
+      }
+    } else if (owned && hotkeys.down) {
+      if (focused.location != "hand") {
+        setTimeout(() => {
+          const adjacentCard = getAdjacentCard(props.G.cards, focused.id, 'prev') || getAdjacentCard(props.G.cards, focused.id, 'next');
+          props.moves.moveCard(focused.id, "hand");
+          if (adjacentCard) {
+            props.moves.focusCard(adjacentCard.id, true);
+          } else {
+            unfocusCards();
+          }
+        }, 0)
+      } else {
+        unfocusCards();
+      }
+    }
 
     return (
       <wired-dialog open onClick={() => { props.moves.focusCard(focused.id, false) }}>

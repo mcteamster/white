@@ -3,11 +3,13 @@ import type { Properties } from 'csstype';
 import { Browse, Icon } from './Icons';
 import { startingDeck } from '../constants/clients';
 import { CardFace } from "./CardFace";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Card, getAdjacentCard } from "../Cards";
+import { HotkeysContext } from "../constants/contexts";
 
 export function Gallery() {
   const navigate = useNavigate();
+  const { hotkeys } = useContext(HotkeysContext);
 
   const styles: { [key: string]: Properties<string | number> } = {
     cards: {
@@ -119,6 +121,20 @@ export function Gallery() {
         navigate(`/card/${Number(adjacentCard.id)}`)
       }
     }
+
+    if (hotkeys.left) {
+      setTimeout(() => {
+        changeViewed('old');
+      }, 0)
+    } else if (hotkeys.right) {
+      setTimeout(() => {
+        changeViewed('new');
+      }, 0)
+    } else if (hotkeys.escape) {
+      setTimeout(() => {
+        navigate('/card');
+      }, 0)
+    } 
 
     const browse = <>
       {

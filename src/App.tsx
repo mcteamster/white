@@ -4,10 +4,10 @@ import { BrowserRouter, Routes, Route } from "react-router";
 import { useCallback, useEffect, useState } from 'react';
 import { Lobby } from './Components/Lobby';
 import { About } from "./Components/About";
-import { AuthContext, AuthType } from "./constants/contexts";
+import { AuthContext, AuthType, HotkeysContext } from "./constants/contexts";
 import { GlobalBlankWhiteCardsClient, lobbyClient, MultiplayerBlankWhiteCardsClient, parsePathCode, startingDeck } from "./constants/clients";
 import { Rotate } from "./Components/Icons";
-import { useWindowDimensions } from "./constants/hooks";
+import { useHotkeys, useWindowDimensions } from "./constants/hooks";
 import { Gallery } from "./Components/Gallery";
 
 // Landing Page
@@ -53,35 +53,41 @@ const App = () => {
     }
   }, [auth, setAuth])
 
+  // Hotkeys
+  const [hotkeys, setHotkeys] = useState({});
+  useHotkeys({ hotkeys, setHotkeys });
+
   // Check Screen Size
   const dimensions = useWindowDimensions();
 
   return (
     <AuthContext.Provider value={{ auth, setAuth }}>
-      {(dimensions.height > 540) ?
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<>
-              <Lobby globalSize={ startingDeck.cards.length || 0 } />
-              <GlobalBlankWhiteCardsClient />
-            </>} />
-            <Route path="/about" element={<About />} />
-            <Route path="/app" element={<GlobalBlankWhiteCardsClient playerID='0' />} />
-            <Route path="/card" element={<Gallery />}>
-              <Route path=":cardID" element={<Gallery />} />
-            </Route>
-            <Route path="/*" element={<>
-              {(validMatch) ?
-                <MultiplayerBlankWhiteCardsClient playerID={auth.playerID} matchID={auth.matchID} credentials={auth.credentials} /> :
-                <>
-                  <Lobby globalSize={ startingDeck.cards.length || 0 } />
-                  <GlobalBlankWhiteCardsClient />
-                </>}
-            </>}></Route>
-          </Routes>
-        </BrowserRouter> :
-        <Rotate />
-      }
+      <HotkeysContext.Provider value={{ hotkeys, setHotkeys }}>
+        {(dimensions.height > 540) ?
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<>
+                <Lobby globalSize={startingDeck.cards.length || 0} />
+                <GlobalBlankWhiteCardsClient />
+              </>} />
+              <Route path="/about" element={<About />} />
+              <Route path="/app" element={<GlobalBlankWhiteCardsClient playerID='0' />} />
+              <Route path="/card" element={<Gallery />}>
+                <Route path=":cardID" element={<Gallery />} />
+              </Route>
+              <Route path="/*" element={<>
+                {(validMatch) ?
+                  <MultiplayerBlankWhiteCardsClient playerID={auth.playerID} matchID={auth.matchID} credentials={auth.credentials} /> :
+                  <>
+                    <Lobby globalSize={startingDeck.cards.length || 0} />
+                    <GlobalBlankWhiteCardsClient />
+                  </>}
+              </>}></Route>
+            </Routes>
+          </BrowserRouter> :
+          <Rotate />
+        }
+      </HotkeysContext.Provider>
     </AuthContext.Provider>
   )
 };

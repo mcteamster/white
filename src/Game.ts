@@ -83,7 +83,7 @@ const moveCard: Move<GameState> = ({ G, playerID }, id, target, owner) => {
 }
 
 const submitCard: Move<GameState> = ({ G }, card: Card) => {
-  // Only one card can be focused at any time per player
+  card.id = G.cards.length + 1; // Commit ID sequentially to GameState
   G.cards.push(card);
 }
 

@@ -48,7 +48,6 @@ export const getAdjacentCard = (cards: Card[], id: number, direction: 'prev' | '
       new: (a: Card, b: Card) => Number(b.id) - Number(a.id), // Newest to Oldest by ID
     }
     let cardList = cards.filter(card => card.location === position).sort(directionSort[direction])
-    console.log(cardList)
     if (position == 'hand' || position == 'table') {
       cardList = cardList.filter(card => card?.owner === owner); // Filter for same ownership
     }

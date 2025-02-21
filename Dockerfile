@@ -1,6 +1,6 @@
 FROM node:22
 WORKDIR /white
-COPY .. /white
+COPY . /white
 RUN npm ci
 EXPOSE 80
 ENV TZ="Australia/Melbourne"
