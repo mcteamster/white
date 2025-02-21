@@ -64,27 +64,29 @@ const App = () => {
     <AuthContext.Provider value={{ auth, setAuth }}>
       <HotkeysContext.Provider value={{ hotkeys, setHotkeys }}>
         {(dimensions.height > 540) ?
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<>
-                <Lobby globalSize={startingDeck.cards.length || 0} />
-                <GlobalBlankWhiteCardsClient />
-              </>} />
-              <Route path="/about" element={<About />} />
-              <Route path="/app" element={<GlobalBlankWhiteCardsClient playerID='0' />} />
-              <Route path="/card" element={<Gallery />}>
-                <Route path=":cardID" element={<Gallery />} />
-              </Route>
-              <Route path="/*" element={<>
-                {(validMatch) ?
-                  <MultiplayerBlankWhiteCardsClient playerID={auth.playerID} matchID={auth.matchID} credentials={auth.credentials} /> :
-                  <>
-                    <Lobby globalSize={startingDeck.cards.length || 0} />
-                    <GlobalBlankWhiteCardsClient />
-                  </>}
-              </>}></Route>
-            </Routes>
-          </BrowserRouter> :
+          <div style={{backgroundColor: (dimensions.width/dimensions.height) < (2/3) ? 'white' : '#eee'}}>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<>
+                  <Lobby globalSize={startingDeck.cards.length || 0} />
+                  <GlobalBlankWhiteCardsClient />
+                </>} />
+                <Route path="/about" element={<About />} />
+                <Route path="/app" element={<GlobalBlankWhiteCardsClient playerID='0' />} />
+                <Route path="/card" element={<Gallery />}>
+                  <Route path=":cardID" element={<Gallery />} />
+                </Route>
+                <Route path="/*" element={<>
+                  {(validMatch) ?
+                    <MultiplayerBlankWhiteCardsClient playerID={auth.playerID} matchID={auth.matchID} credentials={auth.credentials} /> :
+                    <>
+                      <Lobby globalSize={startingDeck.cards.length || 0} />
+                      <GlobalBlankWhiteCardsClient />
+                    </>}
+                </>}></Route>
+              </Routes>
+            </BrowserRouter>
+          </div> :
           <Rotate />
         }
       </HotkeysContext.Provider>

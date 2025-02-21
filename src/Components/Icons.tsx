@@ -24,6 +24,7 @@ import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
 import { Properties } from 'csstype';
+import { useWindowDimensions } from '../constants/hooks';
 
 type IconName = 
   'about' |
@@ -93,10 +94,13 @@ export function Icon(props: { name: IconName }) {
 }
 
 export function Rotate() {
+  const { width, height } = useWindowDimensions();
+
   const styles: { [key: string]: Properties<string | number> } = {
     rotate: {
-      height: '80vh',
-      width: '100%',
+      width: width,
+      height: height,
+      backgroundColor: (width/height) < (2/3) ? 'white' : '#eee',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center',

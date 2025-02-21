@@ -1,11 +1,4 @@
-@font-face{
-  font-family: "Patrick Hand SC";
-  src:local("PatrickHandSC-Regular"),
-  url('./fonts/PatrickHandSC-Regular.ttf') 
-}
-
 :root {
-  font-family: 'Patrick Hand SC', Arial, Helvetica, sans-serif;
   font-weight: 400;
   color-scheme: light;
   font-synthesis: none;

@@ -6,18 +6,24 @@ import { CardFace } from "./CardFace";
 import { useContext, useState } from "react";
 import { Card, getAdjacentCard } from "../Cards";
 import { HotkeysContext } from "../constants/contexts";
+import { useWindowDimensions } from "../constants/hooks";
 
 export function Gallery() {
   const navigate = useNavigate();
   const { hotkeys } = useContext(HotkeysContext);
-
+  const { height } = useWindowDimensions();
+  
   const styles: { [key: string]: Properties<string | number> } = {
+    gallery: {
+      width: '100%',
+      minHeight: height,
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
     cards: {
       width: '100%',
-      height: '100%',
       padding: '1em 0 5em 0',
-      gridRow: '1/10',
-      gridColumn: '1/10',
       textAlign: 'center',
       display: 'flex',
       flexDirection: 'row',
@@ -167,7 +173,7 @@ export function Gallery() {
   }
 
   return (
-    <div>
+    <div style={styles.gallery}>
       {shownCards}
       {viewedCard && viewDialog}
       <div style={styles.footer}>
