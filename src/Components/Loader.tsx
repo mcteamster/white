@@ -142,6 +142,7 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
       flexDirection: 'column',
       justifyContent: 'center',
       alignItems: 'center',
+      textDecoration: 'underline',
     },
     preview: {
       minWidth: '10em',
@@ -194,7 +195,11 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
           loaded.length > 0 ?
             <wired-card>
               <div style={styles.info}>
-                {`${getCardsByLocation(loaded, 'deck').length}/${loaded.length} Selected - ${(progress[0] == -1) ? 0 : ((progress[0]/progress[1])*100).toFixed(0)}% Complete`}
+                {
+                  (progress[0] == -1) ?
+                  `${getCardsByLocation(loaded, 'deck').length}/${loaded.length} Selected` :
+                  `${((progress[0]/progress[1])*100).toFixed(0)}% Complete`
+                }
               </div>
               <ol style={styles.preview}>
                 {loadedPreview}
