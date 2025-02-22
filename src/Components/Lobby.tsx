@@ -2,28 +2,108 @@ import { useNavigate } from "react-router";
 import { Properties } from 'csstype';
 import { Icon } from './Icons';
 import { useContext } from "react";
-import { AuthContext } from "../lib/contexts";
+import { AuthContext, AuthType } from "../lib/contexts";
 import { lobbyClient } from "../lib/clients";
+
+const styles: { [key: string]: Properties<string | number> } = {
+  dialog: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  multiplayer: {
+    width: 'min(35vh, 85vw)',
+    height: 'min(45vh, 85vw)',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    textAlign: 'center',
+  },
+  singleplayer: {
+    width: 'min(35vh, 85vw)',
+    height: 'min(25vh, 85vw)',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    textAlign: 'center',
+  },
+  heading: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    fontSize: "2em",
+  },
+  subheading: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    fontSize: "1.25em",
+  },
+  name: {
+    width: '90%',
+  },
+  rooms: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    textAlign: 'center',
+  },
+  code: {
+    width: '4.75em',
+  },
+  enter: {
+    width: "3.5em",
+    height: '1.5em',
+    margin: '0.25em',
+    backgroundColor: '#eee',
+    borderRadius: '0.5em',
+  },
+  presets: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    textAlign: 'center',
+  },
+  create: {
+    margin: '0.25em',
+    backgroundColor: '#eee',
+    borderRadius: '0.5em',
+    fontSize: '1.25em',
+  },
+  terms: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    textAlign: 'center',
+    fontSize: '0.75em',
+  }
+}
 
 export function Lobby(props: { globalSize: number }) {
   const navigate = useNavigate();
-  const { auth, setAuth } = useContext(AuthContext)
+  const { auth, setAuth } = useContext(AuthContext);
 
   const enterSinglePlayer = () => {
     setAuth({});
     navigate('/app');
   }
 
-  const createGame = async () => {
+  const createGame = async (preset: string) => {
     const playerName = checkForPlayerName();
     if (playerName) {
-      let startingDeck; // TODO: select preset decks at creation
-
       // Create Match on Server
       const { matchID } = await lobbyClient.createMatch('blank-white-cards', {
         unlisted: true,
         numPlayers: 1000,
-        setupData: startingDeck,
+        setupData: {
+          presetDeck: preset || 'blank',
+        }
       });
 
       if (matchID.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
@@ -104,84 +184,11 @@ export function Lobby(props: { globalSize: number }) {
     }, 500)
   }
 
-  const styles: { [key: string]: Properties<string | number> } = {
-    dialog: {
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    mode: {
-      width: 'min(35vh, 90vw)',
-      height: 'min(35vh, 90vw)',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      textAlign: 'center',
-    },
-    heading: {
-      display: 'flex',
-      flexDirection: 'row',
-      justifyContent: 'center',
-      fontSize: "2em",
-    },
-    subheading: {
-      display: 'flex',
-      flexDirection: 'row',
-      justifyContent: 'center',
-      fontSize: "1.25em",
-    },
-    name: {
-      width: '90%',
-    },
-    rooms: {
-      display: 'flex',
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-      textAlign: 'center',
-    },
-    code: {
-      width: '4.75em',
-    },
-    enter: {
-      width: "1.5em",
-      height: '1.5em',
-      margin: '0.25em',
-      backgroundColor: '#eee',
-      borderRadius: '0.5em',
-    },
-    create: {
-      backgroundColor: '#eee',
-      borderRadius: '0.5em',
-      fontSize: '1.25em',
-    },
-    terms: {
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      textAlign: 'center',
-      fontSize: '0.75em',
-    }
-  }
-
   return (
     <wired-dialog open>
       <div style={styles.dialog}>
-        <wired-card style={styles.mode}>
-          <div style={styles.heading}><Icon name="multi" />&nbsp;Multiplayer</div>
-          <wired-input style={styles.name} id="nameInput" placeholder="Player Name" maxlength={25} value={auth?.playerName}></wired-input>
-          <div>and</div>
-          <div style={styles.rooms}>
-            <wired-input style={styles.code} id="roomInput" placeholder="Room Code" maxlength={4} value={auth?.matchID}></wired-input>
-            <wired-card style={styles.enter} onClick={joinGame}><Icon name="send" /></wired-card>
-          </div>
-          <div>or</div>
-          <wired-card style={styles.create} onClick={createGame}>Create Game</wired-card>
-        </wired-card>
-        <wired-card style={styles.mode} onClick={enterSinglePlayer}>
+        <MultiplayerLobby createGame={createGame} joinGame={joinGame} auth={auth}></MultiplayerLobby>
+        <wired-card style={styles.singleplayer} onClick={enterSinglePlayer}>
           <div style={styles.heading}><Icon name="single" />&nbsp;Singleplayer</div>
           <div style={styles.heading}>[&nbsp;{props.globalSize}&nbsp;]</div>
           <div style={styles.subheading}>Cards in the Global Deck</div>
@@ -194,4 +201,34 @@ export function Lobby(props: { globalSize: number }) {
       </div>
     </wired-dialog>
   );
+}
+
+interface MultiplayerLobbyProps {
+  createGame: (preset: string ) => void;
+  joinGame: () => void;
+  auth: AuthType | undefined;
+}
+
+export function MultiplayerLobby({ createGame, joinGame, auth }: MultiplayerLobbyProps) {
+  return (
+    <wired-card style={styles.multiplayer}>
+      <div style={styles.heading}><Icon name="multi" />&nbsp;Multiplayer</div>
+      <wired-input style={styles.name} id="nameInput" placeholder="Player Name" maxlength={25} value={auth?.playerName}></wired-input>
+      <div>and</div>
+      <div style={styles.rooms}>
+        <wired-input style={styles.code} id="roomInput" placeholder="Room Code" maxlength={4} value={auth?.matchID}></wired-input>
+        <wired-card style={styles.enter} onClick={joinGame}>Join</wired-card>
+      </div>
+      <div>or</div>
+      <div style={styles.presets}>
+        <div style={styles.subheading}>Create a New Game from</div>
+        <wired-card style={styles.create} onClick={ () => { createGame('blank'); }}>
+          Blank White Cards
+        </wired-card>
+        <wired-card style={styles.create} onClick={ () => { createGame('global'); }}>
+          Global Deck Cards
+        </wired-card>
+      </div>
+    </wired-card>
+  )
 }

@@ -1,6 +1,7 @@
 import type { Game, Move } from "boardgame.io";
 import { INVALID_MOVE, Stage } from 'boardgame.io/core';
 import { Card, getCardById, getCardsByLocation, getCardsByOwner } from './Cards';
+import { presetDecks } from "./lib/constants";
 
 // Game State
 export interface GameState {
@@ -107,8 +108,21 @@ const shuffleCards: Move<GameState> = ({ G }) => {
 export const BlankWhiteCards: Game<GameState> = {
   name: 'blank-white-cards',
 
-  setup: () => {
-    return { cards: [] };
+  setup: (_, setupData) => {
+    const preset = (setupData?.presetDeck || 'blank') as string;
+    if (preset == 'blank') {
+      return { cards: [] }; // Blank White Deck
+    } else {
+      try {
+        const deck = presetDecks[preset] // Look for a matching preset deck
+        if (deck) {
+          return deck;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+      return { cards: [] }; // Blank White Deck as fallback
+    }
   },
 
   moves: {
