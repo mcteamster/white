@@ -63,7 +63,7 @@ const App = () => {
   return (
     <AuthContext.Provider value={{ auth, setAuth }}>
       <HotkeysContext.Provider value={{ hotkeys, setHotkeys }}>
-        {(dimensions.height > 540) ?
+        {(dimensions.height > 480) ?
           <div style={{backgroundColor: (dimensions.width/dimensions.height) < (2/3) ? 'white' : '#eee'}}>
             <BrowserRouter>
               <Routes>

@@ -9,10 +9,18 @@ export const presetDecks: {[key: string]: GameState} = {
   standard: { cards: [] },
 }
 
-try {
-  (fetch(`${WEB_SERVER}/decks/global.json`)).then(async (res) => {
-    presetDecks['global'] = (((await res.json())) as GameState);
+const refreshDeck = (deck: string) => {
+  (fetch(`${WEB_SERVER}/decks/${deck}.json`)).then(async (res) => {
+    presetDecks[deck] = (((await res.json())) as GameState);
   });
+}
+
+try {
+  refreshDeck('global');
+  setInterval(() => {
+    console.debug(`${new Date()} Refreshing Decks`);
+    refreshDeck('global');
+  }, 1000 * 60 * 10);
 } catch (e) {
   console.error(e)
 }
