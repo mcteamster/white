@@ -1,7 +1,7 @@
 import { Properties } from "csstype";
 import { useWindowDimensions } from "../lib/hooks";
 import { sanitiseCard } from "../lib/data";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card, getCardsByLocation } from "../Cards";
 import { Icon } from "./Icons";
 import { BoardProps } from "boardgame.io/dist/types/packages/react";
@@ -14,40 +14,27 @@ interface LoaderProps extends BoardProps<GameState> {
 
 export function Loader({ moves, mode, setMode }: LoaderProps) {
   const { width, height } = useWindowDimensions();
-  const [preset, setPreset] = useState('' as PresetDecks); // Which kind of deck to load
   const [loaded, setLoaded] = useState([] as Card[]); // List of cards staged for submitting
-  const [submitting, setSubmitting] = useState(0); // Tracker of currently processed load
-  const loadedLength = useRef(loaded.length) // Length of deck to be uploaded
-  
-  // Select deck to upload
-  type PresetDecks = 'custom' | 'global' | 'standard' | '';
+  const [progress, setProgress] = useState([-1, 0]); // Progress index of currently processing load: [currentIndex, endIndex]. -1 means no processing
+  const fileSelector = document.getElementById('fileselector') as HTMLInputElement;
 
-  const selectDeck = useCallback(async (preset: PresetDecks) => {
-    const radios = document.getElementsByClassName('radioPreset');
-    for(let i = 0; i < radios.length; i++) {
-      const button = radios[i] as HTMLInputElement;
-      if(button.value != preset) {
-        button.checked = false;
-      }
-    }
+  // Leave and clear
+  const leaveLoader = useCallback(() => {
+    fileSelector.value = '';
+    setMode('play');
+  }, [fileSelector, setMode])
 
-    if (preset != 'custom') {
-      let deck: Card[] = [];
-      if (preset == 'global') {
-        deck = (await (await fetch('/decks/global.json')).json()).cards;
-        setLoaded(deck);
-        loadedLength.current = deck.length;
-      } else if (preset == 'standard') {
-        deck = (await (await fetch('/decks/standard.json')).json()).cards;
-        setLoaded(deck);
-        loadedLength.current = deck.length;
-      }
-      setLoaded(deck);
-      loadedLength.current = deck.length;
-    }
-  }, [setLoaded])
-
+  // Handle File Upload
   const uploadDeck = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadWarning = () => {
+      const fileCard = document.getElementById('fileCard') as HTMLElement;
+      fileCard.style.color = 'red';
+      setTimeout(() => {
+        fileCard.style.color = 'black';
+        fileSelector.value = '';
+      }, 500)
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
@@ -59,12 +46,16 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
           const deck = cards.map((card) => {
             return sanitiseCard(card);
           });
-          setPreset('custom');
-          setLoaded(deck);
-          loadedLength.current = loaded.length;
+          if (deck.length > 0) {
+            setLoaded(deck);
+            setProgress([-1, deck.length])
+          }
         }
       } catch (err) {
-        console.error(err)
+        uploadWarning();
+        console.error(err);
+        setLoaded([]);
+        setProgress([-1, 0])
       }
     }
 
@@ -75,32 +66,28 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
         reader.readAsText(deckFile);
       }
     } catch (err) {
-      console.error(err)
+      uploadWarning();
+      console.error(err);
+      setLoaded([]);
+      setProgress([-1, 0])
     }
   }
 
+  // Batch Submissions
   useEffect(() => {
-    selectDeck(preset)
-  }, [preset, selectDeck])
-
-  // Submit loaded cards to server
-  const submitLoaded = () => {
-    setSubmitting(1); // Start submitting from the first card
-  }
-
-  useEffect(() => {
-    if (submitting > 0 && submitting < loadedLength.current + 1) {
-      const bounds = [ submitting - 1, Math.min((submitting + 14), loadedLength.current) ] // 15 cards per second
+    // In Progress
+    if (progress[0] >= 0 && progress[0] < progress[1]) {
+      const bounds = [ progress[0], Math.min((progress[0] + 15), progress[1]) ] // 15 cards per second
       const cards = loaded.slice(...bounds).filter((card) => card.location == 'deck');
       if (cards.length == 0) {
         // Skip immediately
         setTimeout(() => {
-          setSubmitting(bounds[1] + 1);
+          setProgress([bounds[1], progress[1]]); // Start next batch
         }, 0)
       } else {
         const createdCards: Card[] = cards.map((card) => { 
           return {
-            id: 0, // ID Assignment handled by move
+            id: 0, // ID Assignment handled by the loadCards move
             content: card.content,
             location: 'deck',
             focused: [],
@@ -110,23 +97,29 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
         moves.loadCards(createdCards);
         // Wait a moment before submitting again
         setTimeout(() => {
-          setSubmitting(bounds[1] + 1);
+          setProgress([bounds[1], progress[1]]); // Start next batch
         }, 1000);
       }
-    } else {
+    } else if (progress[0] >= progress[1]) {
+      // Finish processing
       setTimeout(() => {
-        setSubmitting(0); // 0 means not submitting anything
-        setPreset(''); // Clear loaded preview
-        setMode('play');
+        setLoaded([]); // Clear buffer
+        setProgress([-1, 0]); // Stop processing, reset tracker
+        leaveLoader();
       }, 0)
-    }
-  }, [submitting, setSubmitting, moves, setMode, setPreset])
+    }    
+  }, [progress, setProgress, moves, setMode, loaded, leaveLoader])
+
+  // Submit loaded cards to server
+  const submitLoaded = () => {
+    setProgress([0, progress[1]]); // Begin submitting from the start
+  }
 
   const loadedPreview = <>
     {loaded.length > 0 && loaded.map((card: Card, i) => {
       // TODO: toggle cards here
       return (<li key={`loader-preview-${i}`} style={{ color: card.location == 'box' ? 'grey' : 'black' }}>
-        {card.content.title}{card.location == 'deck' && (i < submitting - 1) && '*'}
+        {card.content.title}{card.location == 'deck' && (i < progress[0]) && '*'}
       </li>)
     })}
   </>
@@ -138,7 +131,7 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
       padding: '1em',
       display: 'flex',
       flexDirection: 'column',
-      justifyContent: 'space-around',
+      justifyContent: 'space-between',
       alignItems: 'center',
     },
     title: {
@@ -153,7 +146,7 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
     preview: {
       minWidth: '10em',
       margin: '0',
-      maxHeight: '35vh',
+      maxHeight: '25vh',
       overflowY: 'scroll',
     },
     instructions: {
@@ -165,13 +158,6 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-around',
-      alignItems: 'center',
-    },
-    presets: {
-      padding: '1em',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
       alignItems: 'center',
     },
     uploader: {
@@ -199,7 +185,7 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
   }
 
   return (
-    <wired-dialog open={mode == 'menu-tools-loader' ? true : undefined} onClick={() => { setMode('menu-tools') }}>
+    <wired-dialog open={mode == 'menu-tools-loader' ? true : undefined} onClick={(e) => { setMode('menu-tools'); e.stopPropagation() }}>
       <div style={styles.loader} onClick={(e) => e.stopPropagation()}>
         <div style={styles.title}>
           Deck Loader
@@ -208,31 +194,19 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
           loaded.length > 0 ?
             <wired-card>
               <div style={styles.info}>
-                {`${getCardsByLocation(loaded, 'deck').length}/${loaded.length} Selected - ${(100*submitting/loaded.length).toFixed(0)}% Complete` }
+                {`${getCardsByLocation(loaded, 'deck').length}/${loaded.length} Selected - ${(progress[0] == -1) ? 0 : ((progress[0]/progress[1])*100).toFixed(0)}% Complete`}
               </div>
               <ol style={styles.preview}>
                 {loadedPreview}
               </ol>
             </wired-card> :
             <div style={styles.instructions}>
-              Load cards into the game from Preset Decks or Import your previously Downloaded Decks!
+              Load cards into the game from your previously Downloaded Decks!
             </div>
         }
         <div style={styles.selection}>
-          <div style={styles.presets}>
-            <div>
-              <input type="checkbox" className="radioPreset" value="global" onChange={(e) => { if (e.target.checked) { setPreset('global') } else { setPreset('') }}} />
-              Global Deck
-            </div>
-            <div>
-              <input type="checkbox" className="radioPreset" value="standard" onChange={(e) => { if (e.target.checked) { setPreset('standard') } else { setPreset('') }}} />
-              Standard Cards
-              <input type="checkbox" id="radioJokers" />
-              Jokers
-            </div>
-          </div>
-          or Upload from File
-          <wired-card>
+          Upload from File
+          <wired-card id="fileCard">
             <input style={styles.uploader} type="file" id="fileselector" accept=".html" onChange={uploadDeck} />
           </wired-card>
         </div>
@@ -240,11 +214,11 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
           <wired-card style={styles.button} onClick={() => { setMode('play') }}>
             <Icon name='exit' />Close
           </wired-card>
-          <wired-card style={{ ...styles.button, color: (loaded.length > 0) ? 'red' : 'grey' }} onClick={() => { if (loaded.length > 0) { setPreset(''); setMode('play') } }}>
-            <Icon name='discard' />{(submitting == 0) ? 'Cancel' : 'Stop'}
+          <wired-card style={{ ...styles.button, color: (loaded.length > 0) ? 'red' : 'grey' }} onClick={() => { if (loaded.length > 0) { setLoaded([]); leaveLoader() } }}>
+            <Icon name='discard' />{(progress[0] == -1) ? 'Cancel' : 'Stop'}
           </wired-card>
-          <wired-card style={{ ...styles.button, color: ((submitting == 0) && (getCardsByLocation(loaded, 'deck').length > 0)) ? undefined : 'grey' }} onClick={() => { if (submitting == 0) { submitLoaded() }}}>
-            <Icon name='done' />{(submitting == 0) ? 'Upload' : 'Uploading'}
+          <wired-card style={{ ...styles.button, color: ((progress[0] == -1) && (getCardsByLocation(loaded, 'deck').length > 0)) ? undefined : 'grey' }} onClick={() => { if (progress[0] == -1) { submitLoaded() }}}>
+            <Icon name='done' />{(progress[0] == -1) ? 'Upload' : 'Uploading'}
           </wired-card>
         </div>
       </div>
