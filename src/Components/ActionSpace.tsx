@@ -198,7 +198,11 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
             ...styles.button,
             width: '3.5em',
             color: ((G.cards.length > 0) ? undefined : 'grey'),
-          }} onClick={() => { G.cards.length > 0 && downloadDeck(G) }} elevation={2}><Icon name='take' />Save</wired-card>
+          }} onClick={() => { 
+            if (G.cards.length > 0) {
+              downloadDeck(G)
+            }
+          }} elevation={2}><Icon name='take' />Save</wired-card>
           <wired-card style={{
             ...styles.button,
             width: '3.5em',

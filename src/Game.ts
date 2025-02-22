@@ -87,6 +87,17 @@ const submitCard: Move<GameState> = ({ G }, card: Card) => {
   G.cards.push(card);
 }
 
+const loadCards: Move<GameState> = ({ G }, cards: Card[]) => {
+  // Bulk load batches of cards
+  const loadBuffer: Card[] = [];
+  const startingID = G.cards.length + 1;
+  cards.forEach((card: Card, i: number) => {
+    card.id = startingID + i;
+    loadBuffer.push(card);
+  })
+  G.cards.push(...loadBuffer);
+}
+
 const shuffleCards: Move<GameState> = ({ G }) => {
   // Return all cards to the deck
   G.cards.forEach(card => { card.location = 'deck'; card.timestamp = undefined});
@@ -105,6 +116,7 @@ export const BlankWhiteCards: Game<GameState> = {
     moveCard,
     pickupCard,
     submitCard,
+    loadCards,
     shuffleCards,
   },
 

@@ -1,7 +1,7 @@
 import { Properties } from "csstype";
 import { useWindowDimensions } from "../lib/hooks";
 import { sanitiseCard } from "../lib/data";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Card, getCardsByLocation } from "../Cards";
 import { Icon } from "./Icons";
 import { BoardProps } from "boardgame.io/dist/types/packages/react";
@@ -12,15 +12,17 @@ interface LoaderProps extends BoardProps<GameState> {
   setMode: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export function Loader({ G, moves, mode, setMode }: LoaderProps) {
+export function Loader({ moves, mode, setMode }: LoaderProps) {
   const { width, height } = useWindowDimensions();
-  const [preset, setPreset] = useState('' as PresetDecks);
-  const [loaded, setLoaded] = useState([] as Card[]);
-  const [submitting, setSubmitting] = useState(0);
+  const [preset, setPreset] = useState('' as PresetDecks); // Which kind of deck to load
+  const [loaded, setLoaded] = useState([] as Card[]); // List of cards staged for submitting
+  const [submitting, setSubmitting] = useState(0); // Tracker of currently processed load
+  const loadedLength = useRef(loaded.length) // Length of deck to be uploaded
   
+  // Select deck to upload
   type PresetDecks = 'custom' | 'global' | 'standard' | '';
 
-  const selectDeck = async (preset: PresetDecks) => {
+  const selectDeck = useCallback(async (preset: PresetDecks) => {
     const radios = document.getElementsByClassName('radioPreset');
     for(let i = 0; i < radios.length; i++) {
       const button = radios[i] as HTMLInputElement;
@@ -29,30 +31,38 @@ export function Loader({ G, moves, mode, setMode }: LoaderProps) {
       }
     }
 
-    if (preset == 'global') {
-      setLoaded((await (await fetch('/decks/global.json')).json()).cards);
-    } else if (preset == 'standard') {
-      setLoaded((await (await fetch('/decks/standard.json')).json()).cards);
-    } else if (preset != 'custom') {
-      setLoaded([]);
+    if (preset != 'custom') {
+      let deck: Card[] = [];
+      if (preset == 'global') {
+        deck = (await (await fetch('/decks/global.json')).json()).cards;
+        setLoaded(deck);
+        loadedLength.current = deck.length;
+      } else if (preset == 'standard') {
+        deck = (await (await fetch('/decks/standard.json')).json()).cards;
+        setLoaded(deck);
+        loadedLength.current = deck.length;
+      }
+      setLoaded(deck);
+      loadedLength.current = deck.length;
     }
-  }
-
-  useEffect(() => {
-    selectDeck(preset)
-  }, [preset])
+  }, [setLoaded])
 
   const uploadDeck = (e: React.ChangeEvent<HTMLInputElement>) => {
     const reader = new FileReader();
-    reader.onload = (event: any) => {
+    reader.onload = (event) => {
       try {
-        const dataLine = event.target.result.split("\n")[1]; // Read 2nd Line
-        const cards = JSON.parse(dataLine.substring(0, dataLine.length - 1)); // Remove Trailing Semicolon and parse
-        const deck = cards.map((card: any) => {
-          return sanitiseCard(card);
-        });
-        selectDeck('custom');
-        setLoaded(deck);
+        if (event.target && event.target.result) {
+          const result = event.target.result as string;
+          const dataLine = result.split("\n")[1]; // Read 2nd Line
+          const cards = JSON.parse(dataLine.substring(0, dataLine.length - 1)); // Remove Trailing Semicolon and parse
+          // @ts-expect-error Legacy Card Input Compatibiity
+          const deck = cards.map((card) => {
+            return sanitiseCard(card);
+          });
+          setPreset('custom');
+          setLoaded(deck);
+          loadedLength.current = loaded.length;
+        }
       } catch (err) {
         console.error(err)
       }
@@ -69,36 +79,48 @@ export function Loader({ G, moves, mode, setMode }: LoaderProps) {
     }
   }
 
-  const submitLoaded = (): any => {
-    setSubmitting(1); // Start submitting from the first index
+  useEffect(() => {
+    selectDeck(preset)
+  }, [preset, selectDeck])
+
+  // Submit loaded cards to server
+  const submitLoaded = () => {
+    setSubmitting(1); // Start submitting from the first card
   }
 
   useEffect(() => {
-    if (submitting > 0 && submitting < loaded.length + 1) {
-      const card = loaded[submitting - 1];
-      if (card.location == 'box') {
+    if (submitting > 0 && submitting < loadedLength.current + 1) {
+      const bounds = [ submitting - 1, Math.min((submitting + 14), loadedLength.current) ] // 15 cards per second
+      const cards = loaded.slice(...bounds).filter((card) => card.location == 'deck');
+      if (cards.length == 0) {
         // Skip immediately
-        setSubmitting(submitting + 1);
-      } else if (card.location == 'deck') {
-        const createdCard: Card = {
-          id: G.cards.length + 1,
-          content: card.content,
-          location: 'deck',
-          focused: [],
-          timestamp: Number(new Date()),
-        }
-        moves.submitCard(createdCard);
+        setTimeout(() => {
+          setSubmitting(bounds[1] + 1);
+        }, 0)
+      } else {
+        const createdCards: Card[] = cards.map((card) => { 
+          return {
+            id: 0, // ID Assignment handled by move
+            content: card.content,
+            location: 'deck',
+            focused: [],
+            timestamp: Number(new Date()),
+          }
+        });
+        moves.loadCards(createdCards);
         // Wait a moment before submitting again
         setTimeout(() => {
-          setSubmitting(submitting + 1);
-        }, 250);
+          setSubmitting(bounds[1] + 1);
+        }, 1000);
       }
     } else {
-      setSubmitting(0); // 0 means not submitting anything
-      setLoaded([]);
-      setMode('play');
+      setTimeout(() => {
+        setSubmitting(0); // 0 means not submitting anything
+        setPreset(''); // Clear loaded preview
+        setMode('play');
+      }, 0)
     }
-  }, [submitting, setSubmitting])
+  }, [submitting, setSubmitting, moves, setMode, setPreset])
 
   const loadedPreview = <>
     {loaded.length > 0 && loaded.map((card: Card, i) => {
@@ -199,11 +221,11 @@ export function Loader({ G, moves, mode, setMode }: LoaderProps) {
         <div style={styles.selection}>
           <div style={styles.presets}>
             <div>
-              <input type="checkbox" className="radioPreset" value="global" onChange={(e) => { e.target.checked ? setPreset('global') : setPreset('') }} />
+              <input type="checkbox" className="radioPreset" value="global" onChange={(e) => { if (e.target.checked) { setPreset('global') } else { setPreset('') }}} />
               Global Deck
             </div>
             <div>
-              <input type="checkbox" className="radioPreset" value="standard" onChange={(e) => { e.target.checked ? setPreset('standard') : setPreset('') }} />
+              <input type="checkbox" className="radioPreset" value="standard" onChange={(e) => { if (e.target.checked) { setPreset('standard') } else { setPreset('') }}} />
               Standard Cards
               <input type="checkbox" id="radioJokers" />
               Jokers
@@ -219,10 +241,10 @@ export function Loader({ G, moves, mode, setMode }: LoaderProps) {
             <Icon name='exit' />Close
           </wired-card>
           <wired-card style={{ ...styles.button, color: (loaded.length > 0) ? 'red' : 'grey' }} onClick={() => { if (loaded.length > 0) { setPreset(''); setMode('play') } }}>
-            <Icon name='discard' />Cancel
+            <Icon name='discard' />{(submitting == 0) ? 'Cancel' : 'Stop'}
           </wired-card>
-          <wired-card style={{ ...styles.button, color: ((submitting == 0) && (getCardsByLocation(loaded, 'deck').length > 0)) ? undefined : 'grey' }} onClick={() => { (submitting == 0) && submitLoaded() }}>
-            <Icon name='done' />Upload
+          <wired-card style={{ ...styles.button, color: ((submitting == 0) && (getCardsByLocation(loaded, 'deck').length > 0)) ? undefined : 'grey' }} onClick={() => { if (submitting == 0) { submitLoaded() }}}>
+            <Icon name='done' />{(submitting == 0) ? 'Upload' : 'Uploading'}
           </wired-card>
         </div>
       </div>

@@ -28,18 +28,18 @@ export const useWindowDimensions = () => {
 
 // Hotkeys
 export const useHotkeys = ({ hotkeys, setHotkeys}: HotkeysContextType) => {
-  const hotkeyMapping = {
-    ArrowUp: 'up',
-    ArrowDown: 'down',
-    ArrowLeft: 'left',
-    ArrowRight: 'right',
-    Backspace: 'backspace',
-    Enter: 'enter',
-    Escape: 'escape',
-    Space: 'space',
-  }
-
   useEffect(() => {
+    const hotkeyMapping = {
+      ArrowUp: 'up',
+      ArrowDown: 'down',
+      ArrowLeft: 'left',
+      ArrowRight: 'right',
+      Backspace: 'backspace',
+      Enter: 'enter',
+      Escape: 'escape',
+      Space: 'space',
+    }
+
     const keyDownHandler = (event: globalThis.KeyboardEvent) => {
       if (hotkeyMapping[event.code as keyof typeof hotkeyMapping]) {
         const hotkeyEvent: { [key: string]: boolean } = {};

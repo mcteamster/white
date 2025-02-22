@@ -2,7 +2,8 @@ import { Card } from "../Cards";
 import { GameState } from "../Game";
 
 // Sanitise Cards
-export const sanitiseCard = (inputCard: any) => {
+// @ts-expect-error Legacy Card Input Compatibiity
+export const sanitiseCard = (inputCard) => {
   const outputCard: Card = {
     id: 0,
     content: {
@@ -21,7 +22,7 @@ export const sanitiseCard = (inputCard: any) => {
     image: inputCard?.content?.image || inputCard.picture,
     // @ts-expect-error crazy legacy date parsing
     date: inputCard?.content?.date || Date.parse(new Date(Number(inputCard.date.split('.')[2]), Number(inputCard.date.split('.')[1]) - 1, Number(inputCard.date.split('.')[0]), 12)),
-  };  
+  };
 
   // These cards are to be hidden
   if (inputCard.location == 'box' || inputCard.reports == 1) {
