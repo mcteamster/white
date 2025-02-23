@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router";
 import { Properties } from 'csstype';
 import { Icon } from './Icons';
-import { useContext } from "react";
-import { AuthContext, AuthType } from "../lib/contexts";
+import { useContext, useState } from "react";
+import { AuthContext } from "../lib/contexts";
 import { lobbyClient } from "../lib/clients";
 
 const styles: { [key: string]: Properties<string | number> } = {
@@ -14,7 +14,7 @@ const styles: { [key: string]: Properties<string | number> } = {
   },
   multiplayer: {
     width: 'min(35vh, 85vw)',
-    height: 'min(45vh, 85vw)',
+    height: 'min(40vh, 85vw)',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
@@ -37,15 +37,16 @@ const styles: { [key: string]: Properties<string | number> } = {
     fontSize: "2em",
   },
   subheading: {
+    margin: '0.25em 0 0 0',
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'center',
     fontSize: "1.25em",
   },
   name: {
-    width: '90%',
+    width: '12em',
   },
-  rooms: {
+  textentry: {
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'center',
@@ -53,23 +54,29 @@ const styles: { [key: string]: Properties<string | number> } = {
     textAlign: 'center',
   },
   code: {
-    width: '4.75em',
+    fontSize: '1.25em',
+    width: '5em',
   },
-  enter: {
-    width: "3.5em",
+  button: {
+    fontSize: '1.25em',
+    width: "2em",
     height: '1.5em',
     margin: '0.25em',
     backgroundColor: '#eee',
     borderRadius: '0.5em',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   presets: {
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     textAlign: 'center',
   },
-  create: {
+  action: {
+    minWidth: '3.5em',
     margin: '0.25em',
     backgroundColor: '#eee',
     borderRadius: '0.5em',
@@ -82,12 +89,14 @@ const styles: { [key: string]: Properties<string | number> } = {
     alignItems: 'center',
     textAlign: 'center',
     fontSize: '0.75em',
-  }
+  },
 }
 
 export function Lobby(props: { globalSize: number }) {
   const navigate = useNavigate();
   const { auth, setAuth } = useContext(AuthContext);
+  const [stage, setStage] = useState('landing');
+  const [preset, setPreset] = useState('blank');
 
   const enterSinglePlayer = () => {
     setAuth({});
@@ -184,10 +193,62 @@ export function Lobby(props: { globalSize: number }) {
     }, 500)
   }
 
+  const checkForRoomCode = () => {
+    const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
+    if (roomCode.value && roomCode.value.toUpperCase().match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
+      lobbyClient.getMatch('blank-white-cards', roomCode.value.toUpperCase()).then(async () => {
+        setAuth({ ...auth, matchID: roomCode.value.toUpperCase() });
+        setStage('join');
+      }).catch(() => {
+        roomCodeError();
+      });
+    } else {
+      roomCodeError();
+    }
+  }
+
   return (
     <wired-dialog open>
       <div style={styles.dialog}>
-        <MultiplayerLobby createGame={createGame} joinGame={joinGame} auth={auth}></MultiplayerLobby>
+        <wired-card style={styles.multiplayer}>
+          <div style={{ display: (stage == 'landing') ? undefined : 'none' }}>
+            <div style={styles.heading}><Icon name="multi" />&nbsp;Multiplayer</div>
+            <div style={styles.subheading}>Join by Room Code</div>
+            <div style={styles.textentry}>
+              <wired-input style={styles.code} id="roomInput" placeholder="Room Code" maxlength={4} value={auth?.matchID}></wired-input>
+              <wired-card style={styles.button} onClick={() => { checkForRoomCode() }}><Icon name='send' /></wired-card>
+            </div>
+            <div>or</div>
+            <wired-card style={{...styles.action, fontSize: '1.5em'}} onClick={() => { setStage('create') }}>
+              Create New Game
+            </wired-card>
+          </div>
+
+          <div style={{ display: (stage == 'join') ? undefined : 'none' }}>
+            <div style={styles.subheading}>Joining Room</div>
+            <wired-card style={{ ...styles.code, color: 'grey' }}>{auth?.matchID}</wired-card>
+          </div>
+
+          <div style={{ ...styles.presets, display: (stage == 'create') ? undefined : 'none' }}>
+            <wired-card style={{...styles.action, backgroundColor: (preset == 'blank') ? '#eee' : undefined }} onClick={() => { setPreset('blank'); }}><Icon name="copy" />Blank</wired-card>
+            <wired-card style={{...styles.action, backgroundColor: (preset == 'global') ? '#eee' : undefined }} onClick={() => { setPreset('global'); }}><Icon name="multi" />Global</wired-card>
+          </div>
+
+          <div style={{ display: (stage == 'landing') ? 'none' : undefined }}>
+            <div style={styles.subheading}>Who's Playing?</div>
+            <wired-input style={{ ...styles.name, display: (stage == 'landing') ? 'none' : undefined }} id="nameInput" placeholder="Player Name" maxlength={25} value={auth?.playerName}></wired-input>
+            <div style={{ ...styles.presets}}>
+              <wired-card style={styles.action} onClick={() => { setStage('landing') }}><Icon name="back" />Back</wired-card>
+              <wired-card style={styles.action} onClick={() => {
+                if (stage == 'join') {
+                  joinGame(); 
+                } else if (stage == 'create') {
+                  createGame(preset);
+                };
+              }}><Icon name="play" />Play</wired-card>
+            </div>
+          </div>
+        </wired-card>
         <wired-card style={styles.singleplayer} onClick={enterSinglePlayer}>
           <div style={styles.heading}><Icon name="single" />&nbsp;Singleplayer</div>
           <div style={styles.heading}>[&nbsp;{props.globalSize}&nbsp;]</div>
@@ -201,34 +262,4 @@ export function Lobby(props: { globalSize: number }) {
       </div>
     </wired-dialog>
   );
-}
-
-interface MultiplayerLobbyProps {
-  createGame: (preset: string ) => void;
-  joinGame: () => void;
-  auth: AuthType | undefined;
-}
-
-export function MultiplayerLobby({ createGame, joinGame, auth }: MultiplayerLobbyProps) {
-  return (
-    <wired-card style={styles.multiplayer}>
-      <div style={styles.heading}><Icon name="multi" />&nbsp;Multiplayer</div>
-      <wired-input style={styles.name} id="nameInput" placeholder="Player Name" maxlength={25} value={auth?.playerName}></wired-input>
-      <div>and</div>
-      <div style={styles.rooms}>
-        <wired-input style={styles.code} id="roomInput" placeholder="Room Code" maxlength={4} value={auth?.matchID}></wired-input>
-        <wired-card style={styles.enter} onClick={joinGame}>Join</wired-card>
-      </div>
-      <div>or</div>
-      <div style={styles.presets}>
-        <div style={styles.subheading}>Create a New Game from</div>
-        <wired-card style={styles.create} onClick={ () => { createGame('blank'); }}>
-          Blank White Cards
-        </wired-card>
-        <wired-card style={styles.create} onClick={ () => { createGame('global'); }}>
-          Global Deck Cards
-        </wired-card>
-      </div>
-    </wired-card>
-  )
 }
