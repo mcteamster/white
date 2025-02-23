@@ -34,62 +34,13 @@ export const sanitiseCard = (inputCard) => {
 
 // Download Deck Data
 export const downloadDeck = (G: GameState) => {
-  // Format Cards into HTML for display - TODO: HTML Injection Unsafe
-  let deckHTML = "";
-  G.cards.forEach((card) => {
-    let imageHTML = '';
-    if (card.content.image) {
-      imageHTML += `<div class="picture center" style="background-image: url(${card.content.image})"></div>`;
-    }
-
-    let localDate;
-    if (card.content.date) {
-      localDate = new Date(Number(card.content.date)).toLocaleDateString();
-    }
-
-    const cardHTML = `
-    <div class='card drawn' id="${card.id}" onclick='toggleCard("${card.id}")'>
-      ${imageHTML}
-      <div class='details'>
-        <div class="title center">${card.content.title}</div>
-        <div class="credit">by ${card.content.author} on ${localDate}</div>
-        <div class="description">${card.content.description}</div>
-      </div>
-      <div class='number'>#${card.id}</div>
-    </div>`;
-
-    deckHTML += cardHTML;
-  })
+  // Create Data String
+  const rawData = btoa(encodeURI(JSON.stringify(G.cards)));
 
   // Format Deck
-  const outputHTML = `<!DOCTYPE html><html><head><script>const cards = 
-      ${JSON.stringify(G.cards)};
-      // Toggle Inclusion
-      const toggleCard = (id) => {
-        const card = document.getElementById(id);
-        card.classList.toggle("exclude");
-        const index = cards.findIndex(card => card.id == id);
-        (cards[index].location == 'box') ? (cards[index].location = 'deck') : (cards[index].location = 'box'); // Cards in the Box are not imported
-        window.onbeforeunload = () => { return true }; // Warn about leaving without saving changes
-      }
-
-      // Save
-      const saveDeck = () => {
-        const currentDeck = document.documentElement.outerHTML
-        const splitDeck = currentDeck.split('\\n');
-        splitDeck[1] = JSON.stringify(cards)+";";
-        const newDeck = splitDeck.join('\\n');
-        const today = new Date();
-        const datetime = today.getFullYear()+'-'+(today.getMonth()+1).toString().padStart(2, "0")+'-'+today.getDate()+"_"+today.getHours()+today.getMinutes()+today.getSeconds();
-        const dltemp = document.createElement('a');
-        dltemp.setAttribute("href", 'data:text/html;charset=utf-8,'+encodeURIComponent(newDeck));
-        dltemp.setAttribute("download","BlankWhiteCards_"+datetime);
-        dltemp.style.display = "none";
-        document.body.append(dltemp);
-        dltemp.click();
-        document.body.removeChild(dltemp);
-        window.onbeforeunload = null;
-      }
+  const outputHTML = `<!DOCTYPE html><html><head><script>const rawData =
+      '${rawData}';
+      const cards = JSON.parse(decodeURI(atob(rawData)));
       </script>
       <title>Blank White Cards</title>
       <link rel="icon" type="image/png" href="https://white.mcteamster.com/favicon.png"/>
@@ -104,7 +55,7 @@ export const downloadDeck = (G: GameState) => {
           margin: 0;
           font-family: "Patrick Hand SC", Arial, Helvetica, sans-serif;
           color: black;
-          background: #333;
+          background: grey;
           user-select: none;
           -webkit-user-select: none;
           touch-action: manipulation;
@@ -186,6 +137,10 @@ export const downloadDeck = (G: GameState) => {
         #header {
           background: white;
           text-align: center;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-direction: column;
         }
 
         #table {
@@ -195,16 +150,23 @@ export const downloadDeck = (G: GameState) => {
         }
 
         #saveIcon {
+          height: 3em;
+          width: 3em;
+          margin: 0.5em;
+          padding: 1em;
           position: fixed;
-          top: 0;
-          left: 0;
-          margin: 0.25em 0.5em;
-          color: grey;
+          bottom: 0;
+          right: 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          text-align: center;
+          font-weight: bold;
+          background: white;
           cursor: pointer;
         }
 
         #tip {
-          color: grey;
           text-align: center;
           padding: 0 1em;
           margin: 1em 0 0;
@@ -212,18 +174,112 @@ export const downloadDeck = (G: GameState) => {
       </style>
     </head>
     <body>
-      <div id="header" class="center"><h1>Saved deck from <a href="https://white.mcteamster.com"><u>white.mcteamster.com</u></a><h1></div>
-      <p id="tip" class="center">Tap a card to toggle inclusion in future uploads. Remember to SAVE the deck when you're done making changes!</p>
-      <div id="table" class="center">
-        ${deckHTML}
+      <div id="header" class="center">
+        <h1>Blank White Cards - Deck Downloaded from <a href="https://white.mcteamster.com"><u>white.mcteamster.com</u></a><h1>
+        <p id="tip" class="center">Tap a card to toggle inclusion in future uploads. Remember to SAVE the deck when you're done making changes!</p>
       </div>
-      <div id="saveIcon" onclick="saveDeck()">SAVE</div>
+      <div id="table" class="center"></div>
+      <div id="footer" class="center">
+        <p>Deck downloaded from <a href="https://white.mcteamster.com"><u>white.mcteamster.com</u></a></p>
+        <div id="saveIcon" class="drawn" onclick="saveDeck()">SAVE<br>&#8595;</div>
+      </div>
+      <script>
+        // Toggle Inclusion
+        const toggleCard = (id) => {
+          const card = document.getElementById(id);
+          card.classList.toggle("exclude");
+          const index = cards.findIndex(card => card.id == id);
+          (cards[index].location == 'box') ? (cards[index].location = 'deck') : (cards[index].location = 'box'); // Cards in the Box are not imported
+          window.onbeforeunload = () => { return true }; // Warn about leaving without saving changes
+        }
+
+        // Render Cards
+        const renderCards = (filterText) => {
+          const table = document.getElementById('table');
+          table.innerHTML = '';
+          cards.forEach(card => {
+            // Filter
+            if (filterText && !card.content.title.toLowerCase().includes(filterText.toLowerCase()) && !card.content.description.toLowerCase().includes(filterText.toLowerCase())) {
+              return;
+            }
+
+            // Create new div for card
+            const cardDiv = document.createElement("div");
+            cardDiv.classList.add("card");
+            cardDiv.classList.add("drawn");
+            if (card.location == 'box') {
+              cardDiv.classList.add("exclude");
+            }
+            cardDiv.id = Number(card.id);
+            cardDiv.onclick = () => toggleCard(Number(card.id));
+            table.appendChild(cardDiv);
+
+            // Mount Image
+            const imgDiv = document.createElement("div");
+            imgDiv.classList.add("picture");
+            imgDiv.classList.add("center");
+            if (card.content.image) {
+              imgDiv.style.backgroundImage = 'url('+card.content.image+')';
+            }
+            cardDiv.appendChild(imgDiv);
+
+            // Mount Details
+            const detailsDiv = document.createElement("div");
+            detailsDiv.classList.add("details");
+            cardDiv.appendChild(detailsDiv);
+
+            // Mount Title
+            const titleDiv = document.createElement("div");
+            titleDiv.classList.add("title");
+            titleDiv.classList.add("center");
+            titleDiv.innerText = card.content.title;
+            detailsDiv.appendChild(titleDiv);
+
+            // Mount Credit
+            const creditDiv = document.createElement("div");
+            creditDiv.classList.add("credit");
+            creditDiv.innerText = 'by '+card.content.author+' on '+new Date(Number(card.content.date)).toLocaleDateString();
+            detailsDiv.appendChild(creditDiv);
+
+            // Mount Description
+            const descriptionDiv = document.createElement("div");
+            descriptionDiv.classList.add("description");
+            descriptionDiv.innerText = card.content.description;
+            detailsDiv.appendChild(descriptionDiv);
+
+            // Mount Number
+            const numberDiv = document.createElement("div");
+            numberDiv.classList.add("number");
+            numberDiv.innerText = '#'+card.id;
+            cardDiv.appendChild(numberDiv);
+          });
+        };
+        renderCards();
+        
+        // Save Deck
+        const saveDeck = () => {
+          const currentDeck = document.documentElement.outerHTML
+          const splitDeck = currentDeck.split('\\n');
+          splitDeck[1] = '"'+btoa(encodeURI(JSON.stringify(cards)))+'";';
+          const newDeck = splitDeck.join('\\n');
+          const today = new Date();
+          const datetime = today.getFullYear()+'-'+(today.getMonth()+1).toString().padStart(2, "0")+'-'+today.getDate().toString().padStart(2, "0")+"_"+today.getHours().toString().padStart(2, "0")+today.getMinutes().toString().padStart(2, "0")+today.getSeconds().toString().padStart(2, "0");
+          const dltemp = document.createElement('a');
+          dltemp.setAttribute("href", 'data:text/html;charset=utf-8,'+encodeURIComponent(newDeck));
+          dltemp.setAttribute("download","BlankWhiteCards_"+datetime);
+          dltemp.style.display = "none";
+          document.body.append(dltemp);
+          dltemp.click();
+          document.body.removeChild(dltemp);
+          window.onbeforeunload = null;
+        }
+      </script>
     </body>
   </html>`
 
   // Set Timestamp
   const today = new Date();
-  const datetime = today.getFullYear() + '-' + (today.getMonth() + 1).toString().padStart(2, "0") + '-' + today.getDate() + "_" + today.getHours() + today.getMinutes() + today.getSeconds(); // Use string concatenation for consistency
+  const datetime = today.getFullYear() + '-' + (today.getMonth() + 1).toString().padStart(2, "0") + '-' + today.getDate().toString().padStart(2, "0") + "_" + today.getHours().toString().padStart(2, "0") + today.getMinutes().toString().padStart(2, "0") + today.getSeconds().toString().padStart(2, "0"); // Use string concatenation for consistency
 
   // Create Download Element
   const dltemp = document.createElement('a');

@@ -41,7 +41,19 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
         if (event.target && event.target.result) {
           const result = event.target.result as string;
           const dataLine = result.split("\n")[1]; // Read 2nd Line
-          const cards = JSON.parse(dataLine.substring(0, dataLine.length - 1)); // Remove Trailing Semicolon and parse
+          let cards;
+          try {
+            // v2 Deck Data Format
+            const trimmedData = dataLine.trim() // Remove excess whitespace
+            const base64Data = trimmedData.substring(1, trimmedData.length - 2); // Remove excess whitespace, trailing semicolon, and quotes
+            const decodedData = atob(base64Data); // Base 64 decode
+            const jsonData = decodeURI(decodedData); // URI decode
+            cards = JSON.parse(jsonData); // JSON parse
+          } catch (err) {
+            console.error(err);
+            // v1 Deck Data Format
+            cards = JSON.parse(dataLine.substring(0, dataLine.length - 1)); // Remove Trailing Semicolon and parse
+          }
           // @ts-expect-error Legacy Card Input Compatibiity
           const deck = cards.map((card) => {
             return sanitiseCard(card);
