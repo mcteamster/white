@@ -50,7 +50,6 @@ export const downloadDeck = (G: GameState) => {
 
         body {
           width: 100%;
-          height: 100%;
           padding: 0;
           margin: 0;
           font-family: "Patrick Hand SC", Arial, Helvetica, sans-serif;
@@ -134,8 +133,21 @@ export const downloadDeck = (G: GameState) => {
           opacity: 0.5;
         }
 
-        #header {
+        .button {
+          font-size: 1.25em;
+          height: 3em;
+          width: 3em;
+          margin: 0.5em;
+          text-align: center;
+          font-weight: bold;
           background: white;
+          cursor: pointer;
+        }
+
+        #header {
+          padding: 0.5em;
+          background: white;
+          border-bottom: 0.25em black solid;
           text-align: center;
           display: flex;
           justify-content: center;
@@ -143,45 +155,58 @@ export const downloadDeck = (G: GameState) => {
           flex-direction: column;
         }
 
-        #table {
-          height: 100%;
-          padding: 1em;
-          flex-wrap: wrap;
-        }
-
-        #saveIcon {
-          height: 3em;
-          width: 3em;
-          margin: 0.5em;
-          padding: 1em;
-          position: fixed;
-          bottom: 0;
-          right: 0;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          text-align: center;
+        #heading {
+          font-size: 2em;
           font-weight: bold;
-          background: white;
-          cursor: pointer;
         }
 
         #tip {
           text-align: center;
-          padding: 0 1em;
-          margin: 1em 0 0;
+          padding: 0.5em;
+        }
+
+        #table {
+          padding: 1em;
+          margin-bottom: 6em;
+          flex-wrap: wrap;
+        }
+
+        #footer {
+          width: 100%;
+          position: fixed;
+          bottom: 0;
+          background: white;
+          border-top: 0.25em black solid;
+          text-align: center;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-direction: row;
+        }
+
+        #saveIcon {
+          background-color: #eee;
+        }
+
+        #filter {
+          font-family: "Patrick Hand SC", Arial, Helvetica, sans-serif;
+          font-size: 1.5em;
+          max-width: 8em;
+          margin: 0.5em;
+          padding: 0.5em;
+          flex-grow: 1;
         }
       </style>
     </head>
     <body>
       <div id="header" class="center">
-        <h1>Blank White Cards - Deck Downloaded from <a href="https://white.mcteamster.com"><u>white.mcteamster.com</u></a><h1>
-        <p id="tip" class="center">Tap a card to toggle inclusion in future uploads. Remember to SAVE the deck when you're done making changes!</p>
+        <div id="heading">Blank White Cards Deck<br><a href="https://white.mcteamster.com"><u>white.mcteamster.com</u></a></div>
+        <p id="tip" class="center">Tap to Include/Exclude when importing.<br></br>Remember to SAVE THE DECK when you're finished!</p>
       </div>
       <div id="table" class="center"></div>
-      <div id="footer" class="center">
-        <p>Deck downloaded from <a href="https://white.mcteamster.com"><u>white.mcteamster.com</u></a></p>
-        <div id="saveIcon" class="drawn" onclick="saveDeck()">SAVE<br>&#8595;</div>
+      <div id="footer">
+        <input type="text" id="filter" class="drawn" placeholder="Search Cards" oninput="renderCards(this.value)">
+        <div id="saveIcon" class="drawn button center" onclick="saveDeck()">&#8595;<br>SAVE</div>
       </div>
       <script>
         // Toggle Inclusion
@@ -196,10 +221,10 @@ export const downloadDeck = (G: GameState) => {
         // Render Cards
         const renderCards = (filterText) => {
           const table = document.getElementById('table');
-          table.innerHTML = '';
+          table.textContent = '';
           cards.forEach(card => {
             // Filter
-            if (filterText && !card.content.title.toLowerCase().includes(filterText.toLowerCase()) && !card.content.description.toLowerCase().includes(filterText.toLowerCase())) {
+            if (filterText && !card.content.title.toLowerCase().includes(filterText.toLowerCase()) && !card.content.author.toLowerCase().includes(filterText.toLowerCase()) && !card.content.description.toLowerCase().includes(filterText.toLowerCase())) {
               return;
             }
 
