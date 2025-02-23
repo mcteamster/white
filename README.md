@@ -2,9 +2,49 @@
 ### Play Now: https://white.mcteamster.com
 
 ## About
+This is [1000 Blank White Cards](https://en.wikipedia.org/wiki/1000_Blank_White_Cards) online. A social party game where you make the rules. Best played with friends around a table or on video call.
+
+Connect to the same Multiplayer Room to draw cards together using a common DECK.
+Put your cards on the PILE for everyone to see in real-time!
+Or maybe keep them hidden in your HAND, or even displayed on the TABLE in front of you.
+
+Browse the Global Deck in Singleplayer mode for a local pass-and-play experience.
+Create and submit cards there for the whole world to see!
+
+### History
+Version `1.x` of this game was originally made in late 2019 and enjoyed at house parties - hotseat style - before the pandemic. Online multiplayer was added in 2020. With lots of time on their hands, players from around the world published hundreds of cards to the Global Deck (and made many more in custom games)!
+
+The first version was written MVC style with a HTML `jQuery` based frontend, `express` REST API on `nodejs12.x`, and `mongodb`. Full-stack development has come a long way since then and the game needed a well-deserved refresh.
+
+It's honestly amazing that so many people have contributed so far, and even more impressive that the quality of content remains high. Over time some themes in the cards emerged like:
+- Gaining Points
+- Drinking Shots
+- Annoying Your Friends
+- Making Weird Noises
+
+### What's New
+Some meta-actions which were previously bound by the technical limitations of the game are now in Version `2.x` with features like:
+- Hand: Picking Up and Discarding
+- Table: Placing cards in front of you (e.g. for long-lived/dormant/persistent actions/buffs/debuffs)
+- Card creation on demand: Blanks no longer show up randomly. New cards go into your hand.
+
+Other quality of life improvements include:
+- The Deck draws without replacement (can be reshuffled)
+- Browse the main Pile's history (and general browsing UI)
+- A separate Discard Pile (hidden from view)
+- Card ownership: and the ability to transfer between locations
+
+Other noteworthy features:
+- [Card Gallery](https://white.mcteamster.com/card): now with search!
+- New Save / Load format: with backwards compatibility for decks made in `1.x`!
+- A new Multiplayer Lobby experience: share and join links with QR codes
+- Session memory and pesistence
+- Overall performance improvements
+
+This new version is made in React TypeScript and uses [`boardgame.io`](https://boardgame.io/) as the game engine and networking framework. Writing [your own multiplayer networking code](https://github.com/mcteamster/twinge?tab=readme-ov-file#twinge-service) is tricky, and `bgio` made it a breeze.
 
 ## Self-Hosting
-The internet is a big scary place to send your precious creations. You're welcome to run your own instance of `Blank White Cards` locally if you wish. Here's how to get the local server set up:
+The internet can be too big and scary of a place to send your precious creations. You're welcome to run your own instance of `Blank White Cards` locally if you wish. Here's how to get the local server set up:
 
 ### 1. Download the Game
 ```
@@ -35,7 +75,7 @@ This will run a hosted `vite` preview site at http://localhost:4173 and [http://
 Congratulations! You can now start playing or extending `Blank White Cards` to your heart's content!
 
 ### 4. [OPTIONAL] Production Builds
-This section assumes you have web servers set up and properly configured for production network traffic.
+This section assumes you have web servers set up and properly configured for production network traffic (see sample architecture below)
 
 Update `.env.production` with the details of your hosting setup:
 ```
@@ -58,6 +98,13 @@ Copy the game files onto your Lobby and Game Server(s) and run:
 ```
 npm run serve
 ```
+
+## Hosting Architecture
+The game is hosted on AWS using the following services:
+- CloudFront for the Web App
+- EC2 for the `boardgame.io` Lobby
+- EC2/ECS Fargate for the `boardgame.io` Server
+- API Gateway & Lambda for the Global Card Creation API
 
 ## Credits
 Package | Source | License | Attribution
