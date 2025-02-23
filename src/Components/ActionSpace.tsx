@@ -21,6 +21,7 @@ interface ToolbarProps extends BoardProps<GameState> {
 export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, setMode }: ToolbarProps) {
   const navigate = useNavigate();
   const { setAuth } = useContext(AuthContext);
+  const [debounced, setDebounced] = useState(false);
 
   const deck = getCardsByLocation(G.cards, "deck");
   const pile = getCardsByLocation(G.cards, "pile");
@@ -154,13 +155,29 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
       <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='menu' />Menu</wired-card>
       <wired-card style={{ ...styles.button, width: '9.75em', margin: '0' }} onClick={() => {
           if (G.cards.length > 0) {
-            moves.pickupCard(true)
+            // Limit Pickup to once every half second
+            if (!debounced) { 
+              setDebounced(true);
+              moves.pickupCard(true);
+              setTimeout(() => {
+                setDebounced(false);
+              }, 500)
+            }
           } else {
             setMode('create-sketch') 
           }
         }} elevation={2}>
-        {deck.length > 0 ? <Icon name='play' /> : G.cards.length == 0 ? <Icon name='create' /> : <Icon name='shuffle' />}
-        {deck.length > 0 ? `Pickup [${deck.length}]` : G.cards.length == 0 ? "Add cards to start" : `Reshuffle [${pile.length + discard.length}]`}</wired-card>
+        {
+          deck.length > 0 ? 
+            (debounced) ? 
+              <Icon name='loading' /> : 
+              <Icon name='play' /> : 
+          G.cards.length == 0 ? 
+            <Icon name='create' /> : 
+            <Icon name='shuffle' />
+        }
+        {deck.length > 0 ? `Pickup [${deck.length}]` : G.cards.length == 0 ? "Add cards to start" : `Reshuffle [${pile.length + discard.length}]`}
+      </wired-card>
       <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('create-sketch') }} elevation={2}><Icon name='create' />Create</wired-card>
     </>
   } else if (mode === 'create-sketch') {

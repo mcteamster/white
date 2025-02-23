@@ -24,6 +24,7 @@ import ScreenRotationOutlinedIcon from '@mui/icons-material/ScreenRotationOutlin
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import SportsEsportsOutlinedIcon from '@mui/icons-material/SportsEsportsOutlined';
+import SyncOutlinedIcon from '@mui/icons-material/SyncOutlined';
 import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
 import { Properties } from 'csstype';
 import { useWindowDimensions } from '../lib/hooks';
@@ -41,6 +42,7 @@ type IconName =
   'game' |
   'github' |
   'info' |
+  'loading' |
   'logout' |
   'menu' |
   'multi' |
@@ -70,6 +72,7 @@ export function Icon(props: { name: IconName }) {
     game: <SportsEsportsOutlinedIcon></SportsEsportsOutlinedIcon>,
     github: <GitHubIcon></GitHubIcon>,
     info: <InfoOutlinedIcon></InfoOutlinedIcon>,
+    loading: <SyncOutlinedIcon></SyncOutlinedIcon>,
     logout: <LogoutIcon></LogoutIcon>,
     menu: <MenuOutlinedIcon></MenuOutlinedIcon>,
     multi: <PeopleIcon></PeopleIcon>,
