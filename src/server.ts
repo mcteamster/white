@@ -6,12 +6,12 @@ const roomCodeGen = customAlphabet('BCDFGHJKLMNPQRSTVWXZ', 4);
 // Initialise Server
 const server = Server({
   games: [BlankWhiteCards],
-  origins: [Origins.LOCALHOST_IN_DEVELOPMENT, 'https://white.mcteamster.com'],
+  origins: [process.env.ORIGIN || Origins.LOCALHOST_IN_DEVELOPMENT],
   uuid: roomCodeGen,
   generateCredentials: () => nanoid(),
 });
 
-server.run(80);
+server.run(Number(process.env.PORT));
 
 process.on('SIGTERM', () => {
   console.error("Exiting due to SIGTERM");

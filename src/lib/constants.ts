@@ -1,7 +1,7 @@
 import { GameState } from "../Game";
 
 // Config Constants
-export const WEB_SERVER = 'https://white.mcteamster.com';
+export const ORIGIN = 'https://white.mcteamster.com';
 
 // Preload Preset Decks
 export const presetDecks: {[key: string]: GameState} = {
@@ -10,7 +10,7 @@ export const presetDecks: {[key: string]: GameState} = {
 }
 
 const refreshDeck = (deck: string) => {
-  (fetch(`${WEB_SERVER}/decks/${deck}.json`)).then(async (res) => {
+  (fetch(`${ORIGIN}/decks/${deck}.json`)).then(async (res) => {
     presetDecks[deck] = (((await res.json())) as GameState);
   });
 }

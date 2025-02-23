@@ -83,7 +83,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
 
         // Asynchronously Submit to Global Deck - Singleplayer Only
         if (!isMultiplayer) {
-          const submitEndpoint = import.meta.env.MODE === 'development' ? '/submit' : `${import.meta.env.VITE_API_SERVER}/white/submit`
+          const submitEndpoint = import.meta.env.MODE === 'development' ? '' : `${import.meta.env.VITE_API_SERVER}/white/submit`
           await fetch(submitEndpoint, {
             method: "POST",
             body: JSON.stringify({

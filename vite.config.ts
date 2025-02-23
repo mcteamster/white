@@ -7,14 +7,4 @@ export default defineConfig({
     target: 'es2022',
   },
   plugins: [react()],
-  server: {
-    proxy: {
-      '/submit': {
-        target: 'https://api.mcteamster.com/white/submit',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/submit/, '')
-      },
-    },
-  },
 })
