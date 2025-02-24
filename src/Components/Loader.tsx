@@ -127,15 +127,6 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
     setProgress([0, progress[1]]); // Begin submitting from the start
   }
 
-  const loadedPreview = <>
-    {loaded.length > 0 && loaded.map((card: Card, i) => {
-      // TODO: toggle cards here
-      return (<li key={`loader-preview-${i}`} style={{ color: card.location == 'box' ? 'grey' : 'black' }}>
-        {card.content.title}{card.location == 'deck' && (i < progress[0]) && '*'}
-      </li>)
-    })}
-  </>
-
   const styles: { [key: string]: Properties<string | number> } = {
     loader: {
       width: width * 0.75,
@@ -157,10 +148,35 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
       textDecoration: 'underline',
     },
     preview: {
+      width: '100%',
       minWidth: '10em',
       margin: '0',
       maxHeight: '25vh',
       overflowY: 'scroll',
+      display: 'flex',
+      flexDirection: 'row',
+      justifyContent: 'flex-start',
+      alignItems: 'flex-start',
+      flexWrap: 'wrap',
+    },
+    previewNumber: {
+      width: '1.5em',
+      textAlign: 'right',
+    },
+    previewItem: {
+      width: '15em',
+      borderRadius: '0.25em',
+      margin: '0.25em',
+      display: 'flex',
+      justifyContent: 'flex-start',
+      alignItems: 'center',
+      flexGrow: 1,
+    },
+    previewImage: {
+      margin: '0.25em 0.5em',
+      width: '2em',
+      height: '2em',
+      border: '0.1pt solid black',
     },
     instructions: {
       width: '12em',
@@ -197,6 +213,21 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
     },
   }
 
+  const loadedPreview = <>
+    {loaded.length > 0 && loaded.map((card: Card, i) => {
+      return (<div key={`loader-preview-${i}`} style={{ ...styles.previewItem, color: card.location == 'box' ? 'grey' : 'black', backgroundColor: card.location == 'box' ? '#eee' : 'white' }} onClick={() => {
+        if (progress[0] == -1) {
+          loaded[i].location = (card.location == 'deck') ? 'box' : 'deck'; setLoaded([...loaded])
+        }}}>
+        <div style={styles.previewNumber}>
+          {card.location == 'deck' && (i < progress[0]) && '*'}{i + 1}
+        </div>
+        <img style={styles.previewImage} src={card.content.image}></img>
+        {card.content.title}
+      </div>)
+    })}
+  </>
+
   return (
     <wired-dialog open={mode == 'menu-tools-loader' ? true : undefined} onClick={(e) => { setMode('menu-tools'); e.stopPropagation() }}>
       <div style={styles.loader} onClick={(e) => e.stopPropagation()}>
@@ -207,15 +238,15 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
           loaded.length > 0 ?
             <wired-card>
               <div style={styles.info}>
-                {
-                  (progress[0] == -1) ?
-                  `${getCardsByLocation(loaded, 'deck').length}/${loaded.length} Selected` :
-                  `${((progress[0]/progress[1])*100).toFixed(0)}% Complete`
-                }
+              {
+                (progress[0] == -1) ?
+                `${getCardsByLocation(loaded, 'deck').length}/${loaded.length} Selected` :
+                `${((progress[0]/progress[1])*100).toFixed(0)}% Complete`
+              }
               </div>
-              <ol style={styles.preview}>
+              <div style={styles.preview}>
                 {loadedPreview}
-              </ol>
+              </div>           
             </wired-card> :
             <div style={styles.instructions}>
               Load cards into this game session from your previously Downloaded Decks!
