@@ -12,6 +12,7 @@ import { Link, useNavigate } from 'react-router';
 import { AuthContext } from '../lib/contexts.ts';
 import { downloadDeck } from '../lib/data.ts';
 import { Loader } from './Loader.tsx';
+import { submitGlobalCard } from '../lib/clients.ts';
 
 interface ToolbarProps extends BoardProps<GameState> {
   mode: string;
@@ -83,19 +84,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
 
         // Asynchronously Submit to Global Deck - Singleplayer Only
         if (!isMultiplayer) {
-          const submitEndpoint = import.meta.env.MODE === 'development' ? '' : `${import.meta.env.VITE_API_SERVER}/white/submit`
-          await fetch(submitEndpoint, {
-            method: "POST",
-            body: JSON.stringify({
-              title: createdCard.content.title,
-              description: createdCard.content.description,
-              author: createdCard.content.author,
-              image,
-            }),
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
+          submitGlobalCard(createdCard);
         }
       } else {
         if (title.value === '') {

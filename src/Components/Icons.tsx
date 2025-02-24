@@ -10,6 +10,8 @@ import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import KeyboardBackspaceOutlinedIcon from '@mui/icons-material/KeyboardBackspaceOutlined';
+import LanguageOutlinedIcon from '@mui/icons-material/LanguageOutlined';
+import LibraryAddCheckOutlinedIcon from '@mui/icons-material/LibraryAddCheckOutlined';
 import LocalCafeOutlinedIcon from '@mui/icons-material/LocalCafeOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined';
@@ -32,6 +34,7 @@ import { useWindowDimensions } from '../lib/hooks';
 type IconName = 
   'about' |
   'back' |
+  'checklist' |
   'coffee' |
   'copy' |
   'create' |
@@ -41,6 +44,7 @@ type IconName =
   'exit' |
   'game' |
   'github' |
+  'global' |
   'info' |
   'loading' |
   'logout' |
@@ -62,6 +66,7 @@ export function Icon(props: { name: IconName }) {
   const icons = {
     about: <QuestionMarkOutlinedIcon></QuestionMarkOutlinedIcon>,
     back: <KeyboardBackspaceOutlinedIcon></KeyboardBackspaceOutlinedIcon>,
+    checklist: <LibraryAddCheckOutlinedIcon></LibraryAddCheckOutlinedIcon>,
     coffee: <LocalCafeOutlinedIcon></LocalCafeOutlinedIcon>,
     copy: <ContentCopyOutlinedIcon></ContentCopyOutlinedIcon>,
     create: <CreateOutlinedIcon></CreateOutlinedIcon>,
@@ -71,6 +76,7 @@ export function Icon(props: { name: IconName }) {
     exit: <CloseOutlinedIcon></CloseOutlinedIcon>,
     game: <SportsEsportsOutlinedIcon></SportsEsportsOutlinedIcon>,
     github: <GitHubIcon></GitHubIcon>,
+    global: <LanguageOutlinedIcon></LanguageOutlinedIcon>,
     info: <InfoOutlinedIcon></InfoOutlinedIcon>,
     loading: <SyncOutlinedIcon></SyncOutlinedIcon>,
     logout: <LogoutIcon></LogoutIcon>,

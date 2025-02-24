@@ -5,6 +5,7 @@ import { Client } from 'boardgame.io/react';
 import { SocketIO } from 'boardgame.io/multiplayer';
 import { BlankWhiteCards, GameState } from '../Game';
 import { BlankWhiteCardsBoard } from '../Board';
+import { Card } from '../Cards';
 
 // Lobby
 export const lobbyClient = new LobbyClient({ server: (import.meta.env.VITE_LOBBY_SERVER) });
@@ -44,4 +45,21 @@ export const parsePathCode = () => {
   } else {
     return
   }
+}
+
+// Submit API Client
+const submitEndpoint = import.meta.env.MODE === 'development' ? '' : `${import.meta.env.VITE_API_SERVER}/white/submit`
+export const submitGlobalCard = async (createdCard: Card) => {
+  await fetch(submitEndpoint, {
+    method: "POST",
+    body: JSON.stringify({
+      title: createdCard.content.title,
+      description: createdCard.content.description,
+      author: createdCard.content.author,
+      image: createdCard.content.image,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
 }

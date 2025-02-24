@@ -6,14 +6,16 @@ import { Card, getCardsByLocation } from "../Cards";
 import { Icon } from "./Icons";
 import { BoardProps } from "boardgame.io/dist/types/packages/react";
 import { GameState } from "../Game";
+import { submitGlobalCard } from "../lib/clients";
 
 interface LoaderProps extends BoardProps<GameState> {
   mode: string;
   setMode: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export function Loader({ moves, mode, setMode }: LoaderProps) {
+export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
   const { width, height } = useWindowDimensions();
+  const [globalSubmit, setGlobalSubmit] = useState(false); // Global Submission Mode - Only one card can be uploaded
   const [loaded, setLoaded] = useState([] as Card[]); // List of cards staged for submitting
   const [progress, setProgress] = useState([-1, 0]); // Progress index of currently processing load: [currentIndex, endIndex]. -1 means no processing
   const fileSelector = document.getElementById('fileselector') as HTMLInputElement;
@@ -56,7 +58,11 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
           }
           // @ts-expect-error Legacy Card Input Compatibiity
           const deck = cards.map((card) => {
-            return sanitiseCard(card);
+            const sanitisedCard = sanitiseCard(card);
+            if (globalSubmit) {
+              sanitisedCard.location = 'box'; // Start with all cards deselected when uploading to global
+            }
+            return sanitisedCard;
           });
           if (deck.length > 0) {
             setLoaded(deck);
@@ -141,11 +147,14 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
       fontSize: '2em',
     },
     info: {
+      width: '100%',
       display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
       alignItems: 'center',
-      textDecoration: 'underline',
+    },
+    listbutton: {
+      padding: '0.5em',
     },
     preview: {
       width: '100%',
@@ -178,9 +187,15 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
       height: '2em',
       border: '0.1pt solid black',
     },
+    instructionsContainer: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexDirection: 'column',
+    },
     instructions: {
-      width: '12em',
-      maxHeight: '35vh',
+      width: '15em',
+      margin: '0.5em',
       textAlign: 'center',
     },
     selection: {
@@ -215,7 +230,7 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
 
   const loadedPreview = <>
     {loaded.length > 0 && loaded.map((card: Card, i) => {
-      return (<div key={`loader-preview-${i}`} style={{ ...styles.previewItem, color: card.location == 'box' ? 'grey' : 'black', backgroundColor: card.location == 'box' ? '#eee' : 'white' }} onClick={() => {
+      return (<div key={`loader-preview-${i}`} style={{ ...styles.previewItem, color: card.location == 'box' ? 'grey' : 'black', backgroundColor: card.location == 'box' ? 'white' : '#eee' }} onClick={() => {
         if (progress[0] == -1) {
           loaded[i].location = (card.location == 'deck') ? 'box' : 'deck'; setLoaded([...loaded])
         }}}>
@@ -238,22 +253,42 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
           loaded.length > 0 ?
             <wired-card>
               <div style={styles.info}>
-              {
-                (progress[0] == -1) ?
-                `${getCardsByLocation(loaded, 'deck').length}/${loaded.length} Selected` :
-                `${((progress[0]/progress[1])*100).toFixed(0)}% Complete`
-              }
+                <div style={styles.listbutton} onClick={() => { setLoaded(loaded.map((card) => { card.location = 'deck'; return card })); }}>
+                  <Icon name='checklist' />
+                </div>
+                {
+                  (progress[0] == -1) ?
+                  <div style={{ color: (globalSubmit && (getCardsByLocation(loaded, 'deck').length != 1)) ? 'red' : 'black' }}>
+                    {`${getCardsByLocation(loaded, 'deck').length} / ${loaded.length}`}
+                  </div> :
+                  <div>
+                    {`${((progress[0]/progress[1])*100).toFixed(0)}% Complete`}
+                  </div>
+                }
+                <div style={styles.listbutton} onClick={() => { setLoaded(loaded.map((card) => { card.location = 'box'; return card })); }}>
+                  <Icon name='exit' />
+                </div>
               </div>
               <div style={styles.preview}>
                 {loadedPreview}
               </div>           
             </wired-card> :
-            <div style={styles.instructions}>
-              Load cards into this game session from your previously Downloaded Decks!
+            <div style={styles.instructionsContainer} >
+              {
+                !isMultiplayer &&
+                <wired-card style={{...styles.instructions, backgroundColor: globalSubmit ? '#eee' : undefined }} onClick={() => { setGlobalSubmit(true) }}>
+                  <Icon name='global' />
+                  Submit ONE card to the Global Deck
+                </wired-card>
+              }
+              <wired-card style={{...styles.instructions, backgroundColor: globalSubmit ? undefined : '#eee' }} onClick={() => { setGlobalSubmit(false) }}>
+                <Icon name='display' />
+                Load cards into this session
+              </wired-card>
             </div>
         }
         <div style={styles.selection}>
-          Upload from File
+          Upload a Saved Deck File
           <wired-card id="fileCard">
             <input disabled={progress[0] != -1} style={styles.uploader} type="file" id="fileselector" accept=".html" onChange={uploadDeck} />
           </wired-card>
@@ -265,7 +300,17 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
           <wired-card style={{ ...styles.button, color: (loaded.length > 0) ? 'red' : 'grey' }} onClick={() => { if (loaded.length > 0) { setLoaded([]); leaveLoader() } }}>
             <Icon name='discard' />{(progress[0] == -1) ? 'Cancel' : 'Stop'}
           </wired-card>
-          <wired-card style={{ ...styles.button, color: ((progress[0] == -1) && (getCardsByLocation(loaded, 'deck').length > 0)) ? undefined : 'grey' }} onClick={() => { if (progress[0] == -1) { submitLoaded() }}}>
+          <wired-card style={{ ...styles.button, color: ((progress[0] == -1) && (getCardsByLocation(loaded, 'deck').length > 0)) ? undefined : 'grey' }} onClick={() => {
+            if (progress[0] == -1 && getCardsByLocation(loaded, 'deck').length > 0) {
+              if (globalSubmit) {
+                if (!isMultiplayer && getCardsByLocation(loaded, 'deck').length == 1) {
+                  submitGlobalCard(getCardsByLocation(loaded, 'deck')[0]); // Only one card can be submitted to the global deck at a time
+                  submitLoaded(); // Also upload straight to gamestate
+                }
+              } else {
+                submitLoaded();
+              }
+            }}}>
             <Icon name='done' />{(progress[0] == -1) ? 'Upload' : 'Uploading'}
           </wired-card>
         </div>

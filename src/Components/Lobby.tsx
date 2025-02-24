@@ -231,7 +231,7 @@ export function Lobby(props: { globalSize: number }) {
 
           <div style={{ ...styles.presets, display: (stage == 'create') ? undefined : 'none' }}>
             <wired-card style={{...styles.action, backgroundColor: (preset == 'blank') ? '#eee' : undefined }} onClick={() => { setPreset('blank'); }}><Icon name="copy" />Blank</wired-card>
-            <wired-card style={{...styles.action, backgroundColor: (preset == 'global') ? '#eee' : undefined }} onClick={() => { setPreset('global'); }}><Icon name="multi" />Global</wired-card>
+            <wired-card style={{...styles.action, backgroundColor: (preset == 'global') ? '#eee' : undefined }} onClick={() => { setPreset('global'); }}><Icon name="global" />Global</wired-card>
           </div>
 
           <div style={{ display: (stage == 'landing') ? 'none' : undefined }}>
