@@ -88,7 +88,9 @@ const submitCard: Move<GameState> = ({ G }, card: Card) => {
   G.cards.push(card);
 }
 
-const loadCards: Move<GameState> = ({ G }, cards: Card[]) => {
+const loadCards: Move<GameState> = ({ G, playerID }, cards: Card[]) => {
+  if(playerID !== '0') return INVALID_MOVE; // Only the host can bulk load cards
+
   // Bulk load batches of cards
   const loadBuffer: Card[] = [];
   const startingID = G.cards.length + 1;
@@ -99,7 +101,9 @@ const loadCards: Move<GameState> = ({ G }, cards: Card[]) => {
   G.cards.push(...loadBuffer);
 }
 
-const shuffleCards: Move<GameState> = ({ G }) => {
+const shuffleCards: Move<GameState> = ({ G, playerID }) => {
+  if(playerID !== '0') return INVALID_MOVE; // Only the host can reset the game
+
   // Return all cards to the deck
   G.cards.forEach(card => { card.location = 'deck'; card.timestamp = undefined});
 }

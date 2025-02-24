@@ -163,7 +163,7 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
       overflowY: 'scroll',
     },
     instructions: {
-      width: '10em',
+      width: '12em',
       maxHeight: '35vh',
       textAlign: 'center',
     },
@@ -218,13 +218,13 @@ export function Loader({ moves, mode, setMode }: LoaderProps) {
               </ol>
             </wired-card> :
             <div style={styles.instructions}>
-              Load cards into the game from your previously Downloaded Decks!
+              Load cards into this game session from your previously Downloaded Decks!
             </div>
         }
         <div style={styles.selection}>
           Upload from File
           <wired-card id="fileCard">
-            <input style={styles.uploader} type="file" id="fileselector" accept=".html" onChange={uploadDeck} />
+            <input disabled={progress[0] != -1} style={styles.uploader} type="file" id="fileselector" accept=".html" onChange={uploadDeck} />
           </wired-card>
         </div>
         <div style={styles.confirmation}>

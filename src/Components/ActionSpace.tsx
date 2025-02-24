@@ -149,10 +149,34 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
     },
   };
 
+  // Initialise Buttons
   let toolset = <></>
   if (mode === 'play') {
+    let mainButtonIcon = <></>
+    let mainButtonText = ''
+    if (deck.length > 0) {
+      if (debounced) {
+        mainButtonIcon = <Icon name='loading' />
+        mainButtonText = `Pickup [${deck.length}]`
+      } else {
+        mainButtonIcon = <Icon name='play' />
+        mainButtonText = `Pickup [${deck.length}]`
+      }
+    } else if (G.cards.length == 0) {
+      if (playerID == '0') {
+        mainButtonIcon = <Icon name='display' />
+        mainButtonText = 'Load Saved Deck?'
+      } else {
+        mainButtonIcon = <Icon name='create' />
+        mainButtonText = 'Create Cards to Begin'
+      }
+    } else {
+      mainButtonIcon = <Icon name='shuffle' />
+      mainButtonText = `Reshuffle [${pile.length + discard.length}]`
+    }
+
     toolset = <>
-      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='menu' />Menu</wired-card>
+      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='menu' />Menu</wired-card>
       <wired-card style={{ ...styles.button, width: '9.75em', margin: '0' }} onClick={() => {
           if (G.cards.length > 0) {
             // Limit Pickup to once every half second
@@ -163,22 +187,16 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
                 setDebounced(false);
               }, 500)
             }
+          } else if (playerID == '0') {
+            setMode('menu-tools-loader')
           } else {
             setMode('create-sketch') 
           }
         }} elevation={2}>
-        {
-          deck.length > 0 ? 
-            (debounced) ? 
-              <Icon name='loading' /> : 
-              <Icon name='play' /> : 
-          G.cards.length == 0 ? 
-            <Icon name='create' /> : 
-            <Icon name='shuffle' />
-        }
-        {deck.length > 0 ? `Pickup [${deck.length}]` : G.cards.length == 0 ? "Add cards to start" : `Reshuffle [${pile.length + discard.length}]`}
+        {mainButtonIcon}
+        {mainButtonText}
       </wired-card>
-      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('create-sketch') }} elevation={2}><Icon name='create' />Create</wired-card>
+      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('create-sketch') }} elevation={2}><Icon name='create' />Create</wired-card>
     </>
   } else if (mode === 'create-sketch') {
     toolset = <>
@@ -193,41 +211,60 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
     </>
   } else if (mode === 'menu') {
     toolset = <>
-      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Close</wired-card>
-      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu-tools') }} elevation={2}><Icon name='settings' />Tools</wired-card>
-      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu-info') }} elevation={2}><Icon name='info' />Info</wired-card>
-      <wired-card style={{ ...styles.button, width: '3.5em', color: 'red' }} onClick={() => { leaveGame() }} elevation={2}><Icon name='logout' />{isMultiplayer ? 'Leave' : 'Lobby'}</wired-card>
+      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Close</wired-card>
+      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu-tools') }} elevation={2}><Icon name='settings' />Tools</wired-card>
+      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu-info') }} elevation={2}><Icon name='info' />Info</wired-card>
+      <wired-card style={{ ...styles.button, width: '3em', color: 'red' }} onClick={() => { setMode('menu-leave') }} elevation={2}><Icon name='logout' />{isMultiplayer ? 'Leave' : 'Lobby'}</wired-card>
     </>
   } else if (mode === 'menu-info') {
     toolset = <>
-      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='back' />Back</wired-card>
-      <Link to="/about" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3.5em' }} elevation={2}><Icon name='about' />About</wired-card></Link>
-      <Link to="https://mcteamster.com" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3.5em' }} elevation={2}><Icon name='game' />Games</wired-card></Link>
-      <Link to="https://www.buymeacoffee.com/mcteamster" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3.5em' }} elevation={2}><Icon name='coffee' />Support</wired-card></Link>
+      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='back' />Back</wired-card>
+      <Link to="/about" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='about' />About</wired-card></Link>
+      <Link to="https://mcteamster.com" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='game' />Games</wired-card></Link>
+      <Link to="https://www.buymeacoffee.com/mcteamster" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='coffee' />Support</wired-card></Link>
     </>
   } else if (mode === 'menu-tools') {
     toolset = <>
-      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='back' />Back</wired-card>
+      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='back' />Back</wired-card>
       {
+        // Show Save Button if Multiplayer, else Gallery Button
         isMultiplayer ?
-        <>
-          <wired-card style={{
+        <wired-card style={{
             ...styles.button,
-            width: '3.5em',
+            width: '3em',
             color: ((G.cards.length > 0) ? undefined : 'grey'),
-          }} onClick={() => { 
+          }} 
+          onClick={() => { 
             if (G.cards.length > 0) {
               downloadDeck(G)
             }
-          }} elevation={2}><Icon name='take' />Save</wired-card>
-          <wired-card style={{
-            ...styles.button,
-            width: '3.5em',
-          }} onClick={() => { setMode('menu-tools-loader') }} elevation={2}><Icon name='display' />Load</wired-card>
-        </> :
-        <Link to="/card" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3.5em' }} elevation={2}><Icon name='pile' />Gallery</wired-card></Link>
+          }} elevation={2}>
+          <Icon name='take' />Save
+        </wired-card> :
+        <Link to="/card" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='pile' />Gallery</wired-card></Link>
       }
-      <wired-card style={{ ...styles.button, width: '3.5em', color: 'red' }} onClick={() => { moves.shuffleCards(); setMode('play') }} elevation={2}><Icon name='shuffle' />Reset</wired-card>
+      <wired-card style={{
+          ...styles.button,
+          width: '3em',
+          color: ((playerID == '0') ? undefined : 'grey'), // Only the host can load cards
+        }} onClick={() => { if (playerID == '0') { setMode('menu-tools-loader') }}} elevation={2}>
+        <Icon name='display' />Load
+      </wired-card>
+      <wired-card style={{ 
+        ...styles.button, 
+        width: '3em', 
+        color: ((playerID == '0' && G.cards.length > 0) ? undefined : 'grey') // Only the host can reset the game
+      }} onClick={() => { if (playerID == '0' && G.cards.length > 0) { setMode('menu-tools-reset') }}} elevation={2}><Icon name='shuffle' />Reset</wired-card>
+    </>
+  } else if (mode === 'menu-tools-reset') {
+    toolset = <>
+      <wired-card style={{ ...styles.button, width: '14em', color: 'red' }} onClick={() => { moves.shuffleCards(); setMode('play') }} elevation={2}><Icon name='shuffle' />Reshuffle all cards{isMultiplayer && " for ALL PLAYERS"}</wired-card>
+      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Cancel</wired-card>
+    </>
+  } else if (mode === 'menu-leave') {
+    toolset = <>
+      <wired-card style={{ ...styles.button, width: '14em', color: 'red' }} onClick={() => { leaveGame() }} elevation={2}><Icon name='logout' />Exit to Lobby - Are you sure? </wired-card>
+      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='back' />Back</wired-card>
     </>
   }
 
