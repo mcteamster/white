@@ -23,13 +23,14 @@ It's honestly amazing that so many people have contributed so far, and even more
 - Making Weird Noises
 
 ### What's New
-Some meta-actions which were previously bound by the technical limitations of the game are now in Version `2.x` with features like:
+Some meta-actions which were previously bound by the technical limitations of the game are now in version `2.x` with features like:
 - Hand: Picking Up and Discarding
 - Table: Placing cards in front of you (e.g. for long-lived/dormant/persistent actions/buffs/debuffs)
 - Card creation on demand: Blanks no longer show up randomly. New cards go into your hand.
 
 Other quality of life improvements include:
 - The Deck draws without replacement (can be reshuffled)
+- Improved RNG: card popularity no longer affects chance of appearance
 - Browse the main Pile's history (and general browsing UI)
 - A separate Discard Pile (hidden from view)
 - Card ownership: and the ability to transfer between locations
@@ -46,13 +47,14 @@ This new version is made in React TypeScript and uses [`boardgame.io`](https://b
 ## Self-Hosting
 The internet can be too big and scary of a place to send your precious creations. You're welcome to run your own instance of `Blank White Cards` locally if you wish. Here's how to get the local server set up:
 
-### 1. Download the Game
+### 1. Download and Install the Game
 ```
 mkdir blank-white-cards
 git clone https://github.com/mcteamster/white.git ./blank-white-cards
 cd blank-white-cards
+npm ci
 ```
-Optionally, if you'd like to fetch the latest Global Deck, run:
+[Optional] Whenever you'd like to fetch the latest Global Deck, run:
 ```
 npm run update
 ```
@@ -105,6 +107,13 @@ The game is hosted on AWS using the following services:
 - EC2 for the `boardgame.io` Lobby
 - EC2/ECS Fargate for the `boardgame.io` Server
 - API Gateway & Lambda for the Global Card Creation API
+
+![AWS Hosting Architecture](./docs/aws.svg)
+
+## License
+Blank White Cards game software code freely available under [MIT License](./LICENSE.md)
+
+Cards submitted to the Global Deck published under [Creative Commons CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 ## Credits
 Package | Source | License | Attribution

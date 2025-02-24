@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite --host",
     "build": "tsc -b && vite build",
-    "host": "npm ci; tsc -b && vite build --mode development; vite preview --host",
+    "host": "tsc -b && vite build --mode development; vite preview --host",
     "lint": "eslint .",
     "preview": "vite preview",
     "update": "curl https://white.mcteamster.com/decks/global.json > ./public/decks/global.json",
