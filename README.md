@@ -39,7 +39,7 @@ Other noteworthy features:
 - [Card Gallery](https://white.mcteamster.com/card): now with search!
 - New Save / Load format: with backwards compatibility for decks made in `1.x`!
 - A new Multiplayer Lobby experience: share and join links with QR codes
-- Session memory and pesistence
+- Session memory and persistence
 - Overall performance improvements
 
 This new version is made in React TypeScript and uses [`boardgame.io`](https://boardgame.io/) as the game engine and networking framework. Writing [your own multiplayer networking code](https://github.com/mcteamster/twinge?tab=readme-ov-file#twinge-service) is tricky, and `bgio` made it a breeze.
@@ -81,7 +81,7 @@ This section assumes you have web servers set up and properly configured for pro
 
 Update `.env.production` with the details of your hosting setup:
 ```
-# Client Side Envrionment
+# Client Side Environment
 VITE_API_SERVER='' # For Global Deck Cards - leave this empty
 VITE_LOBBY_SERVER='<LOBBY_SERVER>' # Boardgame.io Lobby
 VITE_GAME_SERVER='<GAME_SERVER>' # Boardgame.io Game Server (can be the same as the Lobby)
