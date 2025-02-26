@@ -157,7 +157,12 @@ export function Players(props: BoardProps<GameState>) {
   )
 }
 
-export function Header(props: BoardProps<GameState>) {
+interface HeaderProps extends BoardProps<GameState> {
+  showPlayers: boolean;
+  setShowPlayers: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export function Header(props: HeaderProps) {
   const [showShare, setShowShare] = useState(false);
 
   const playerName = props.isMultiplayer && props.matchData?.find((player) => player.id == Number(props.playerID))?.name?.toUpperCase() || ""
@@ -194,7 +199,7 @@ export function Header(props: BoardProps<GameState>) {
     <>
       <div style={styles.header}>
         <div style={{ ...styles.item, ...styles.match }} onClick={ () => setShowShare(true) }><Icon name='copy' />&nbsp;{props.matchID !== 'default' ? `${props.matchID}` : "Blank White Cards"}</div>
-        <div style={{ ...styles.item, ...styles.displayname }}>{playerName}&nbsp;{props.matchID !== 'default' && <Icon name='multi' />}</div>
+        <div style={{ ...styles.item, ...styles.displayname }} onClick={() => { props.setShowPlayers(!props.showPlayers) }}>{playerName}&nbsp;{props.matchID !== 'default' && <Icon name='multi' />}</div>
       </div>
       {showShare && <ShareRoom matchID={props.matchID} setShowShare={setShowShare} />}
     </>
@@ -268,10 +273,13 @@ export function ShareRoom(props: { matchID: string, setShowShare: React.Dispatch
 }
 
 export function CommonSpace(props: BoardProps<GameState>) {
+  const dimensions = useWindowDimensions();
+  const [showPlayers, setShowPlayers] = useState((dimensions.width/dimensions.height) > (2/3));
+
   return (
     <>
-      <Header {...props} />
-      { props.isMultiplayer && <Players {...props} /> }
+      <Header {...props} showPlayers={showPlayers} setShowPlayers={setShowPlayers} />
+      { props.isMultiplayer && showPlayers && <Players {...props} /> }
       <Pile {...props} />
     </>
   );
