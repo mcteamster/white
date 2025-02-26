@@ -26,6 +26,7 @@ It's honestly amazing that so many people have contributed so far, and even more
 Some meta-actions which were previously bound by the technical limitations of the game are now in version `2.x` with features like:
 - Hand: Picking Up and Discarding
 - Table: Placing cards in front of you (e.g. for long-lived/dormant/persistent actions/buffs/debuffs)
+- Sending cards between players: you can only send cards in your Hand or on your Table
 - Card creation on demand: Blanks no longer show up randomly. New cards go into your hand.
 
 Other quality of life improvements include:

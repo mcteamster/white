@@ -59,14 +59,14 @@ export function About() {
         <p>
           Connect to the same Multiplayer Room to draw cards together using a common DECK.*
           Put your cards on the PILE for everyone to see in real-time!
-          Or maybe keep them hidden in your HAND, or even displayed on the TABLE in front of you.
+          Or maybe keep them hidden in your HAND, displayed on the TABLE in front of you, or even SEND them to someone else!
         </p>
         <p>
           Browse the Global Deck in Singleplayer mode for a local pass-and-play experience.
           Create and submit cards here for the whole world to see!
         </p>
         <p>
-          *The Save / Load Tools for Multiplayer Decks are now availble (with backwards compatibility)!
+          *The Save / Load tools for Multiplayer Decks are now availble (with backwards compatibility)!
         </p>
       </div>
       <div style={styles.paragraph}>

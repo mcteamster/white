@@ -126,7 +126,7 @@ export function Players(props: BoardProps<GameState>) {
       
       return (
         <div key={`player-avatar-${i}`} style={styles.avatarBox}>
-          <wired-card style={styles.avatar} onClick={() => { playerTable.length > 0 && toggleOpenPlayers(player.id) }}>
+          <wired-card style={styles.avatar} onClick={() => { if (playerTable.length > 0) { toggleOpenPlayers(player.id) }}}>
               <div style={styles.stats}>
                 {(playerTable.length > 0) && ((!openPlayers.includes(player.id)) ? <Icon name='prev' /> : <Icon name='next' />)}
                 <Icon name='single' />

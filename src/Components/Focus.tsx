@@ -3,12 +3,13 @@ import type { GameState } from '../Game.ts'
 import type { Properties } from 'csstype';
 import { Card, getAdjacentCard, getCardByFocus } from '../Cards';
 import { Icon, Browse } from './Icons';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { HotkeysContext } from '../lib/contexts.ts';
 
 export function Focus(props: BoardProps<GameState>) {
   const focused: Card | undefined = getCardByFocus(props.G.cards, props.playerID);
   const { hotkeys } = useContext(HotkeysContext);
+  const [sendCardMode, setSendCardMode] = useState(false);
 
   const styles: { [key: string]: Properties<string | number> } = {
     focus: {
@@ -25,7 +26,6 @@ export function Focus(props: BoardProps<GameState>) {
     title: {
       width: 'min(70vw, 45vh)',
       fontSize: '1.5em',
-      fontWeight: 'bold',
     },
     image: {
       width: 'min(65vw, 45vh)',
@@ -62,7 +62,6 @@ export function Focus(props: BoardProps<GameState>) {
       maxWidth: 'min(70vw, 45vh)',
       margin: '0.1em',
       borderRadius: '1em',
-      fontWeight: 'bold',
       display: 'flex',
       flexGrow: '1',
       justifyContent: 'center',
@@ -70,6 +69,31 @@ export function Focus(props: BoardProps<GameState>) {
       color: '#333',
       backgroundColor: '#eee'
     },
+    sendmenu: {
+      height: '60vh',
+      width: '90vw',
+      maxWidth: '40em',
+      textAlign: 'center',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    sendlist: {
+      maxHeight: '40vh',
+      overflowY: 'scroll',
+    },
+    sendbutton: {
+      height: '3em',
+      width: '15em',
+      margin: '0.5em',
+      borderRadius: '1em',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      color: '#333',
+      backgroundColor: '#eee'
+    }
   };
 
   if (focused) {
@@ -78,10 +102,11 @@ export function Focus(props: BoardProps<GameState>) {
       localDate = new Date(Number(focused.content.date)).toLocaleDateString();
     }
     const owned = focused.owner == props.playerID;
+    
     let tray = <></>
     if (owned) {
       tray = <div style={styles.tray}>
-        {<wired-card style={{ ...styles.button, color: 'grey' }} id="sendButton" onClick={() => { /* props.moves.moveCard(focused.id, "hand", props.playerID); props.moves.focusCard(focused.id, false) */ }}><Icon name='send' />Send</wired-card>}
+        {<wired-card style={{ ...styles.button, color: props.isMultiplayer ? undefined : 'grey' }} id="sendButton" onClick={() => { if (props.isMultiplayer) { setSendCardMode(true) }}}><Icon name='send' />Send</wired-card>}
         {<wired-card style={{ ...styles.button }} id="returnButton" onClick={() => { props.moves.moveCard(focused.id, "deck"); props.moves.focusCard(focused.id, false) }}><Icon name='shuffle' />Reshuffle</wired-card>}
         {<wired-card style={{ ...styles.button, color: 'red' }} id="discardButton" onClick={() => { props.moves.moveCard(focused.id, "discard"); props.moves.focusCard(focused.id, false) }}><Icon name='discard' />Discard</wired-card>}
         {<wired-card style={{ ...styles.button }} id="handButton" onClick={() => { props.moves.moveCard(focused.id, "hand"); props.moves.focusCard(focused.id, false) }}><Icon name='take' />Hand</wired-card>}
@@ -159,6 +184,29 @@ export function Focus(props: BoardProps<GameState>) {
       }
     }
 
+    const sendMenu = <wired-dialog open={sendCardMode === true || undefined}>
+      <div style={styles.sendmenu} onClick={(e) => e.stopPropagation() }>
+        <div>
+          <div style={styles.title}>Send to Another Player</div>
+          <div>Card will be placed on their Table</div>
+        </div>
+        <wired-card>
+          <div style={styles.sendlist}>
+            {props.matchData?.map((player) => {
+              if (player.isConnected && player.name && player.id != Number(props.playerID)) {
+                return (
+                  <wired-card style={styles.sendbutton} onClick={() => { props.moves.moveCard(focused.id, "table", String(player.id)); setSendCardMode(false); props.moves.focusCard(focused.id, false) }}>
+                    {player.name}
+                  </wired-card>
+                )
+              }
+            })}
+          </div>
+        </wired-card>
+        <wired-card style={{ ...styles.sendbutton }} id="backButton" onClick={() => { setSendCardMode(false) }}><Icon name='back' />Back</wired-card>
+      </div>
+    </wired-dialog>
+
     return (
       <wired-dialog open onClick={() => { props.moves.focusCard(focused.id, false) }}>
         <div style={styles.focus} onClick={e => owned && e.stopPropagation()}>
@@ -169,6 +217,7 @@ export function Focus(props: BoardProps<GameState>) {
           <div style={styles.description}>{focused.content.description}</div>
           {tray}
           {browse}
+          {sendMenu}
         </div>
       </wired-dialog>
     );
