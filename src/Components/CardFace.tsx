@@ -75,9 +75,9 @@ export function CardFace(card: Card) {
       },
       image: {
         width: '100%',
-        maxWidth: '20em',
+        maxWidth: '18em',
         height: '100%',
-        maxHeight: '20em',
+        maxHeight: '18em',
         objectFit: 'cover',
       },
       description: {

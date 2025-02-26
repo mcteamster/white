@@ -50,8 +50,10 @@ type IconName =
   'logout' |
   'menu' |
   'multi' |
+  'next' |
   'play' |
   'pile' |
+  'prev' |
   'search' |
   'settings' |
   'send' |
@@ -82,8 +84,10 @@ export function Icon(props: { name: IconName }) {
     logout: <LogoutIcon></LogoutIcon>,
     menu: <MenuOutlinedIcon></MenuOutlinedIcon>,
     multi: <PeopleIcon></PeopleIcon>,
+    next: <ArrowForwardIosIcon></ArrowForwardIosIcon>,
     play: <PlayArrowOutlinedIcon></PlayArrowOutlinedIcon>,
     pile: <CollectionsOutlinedIcon></CollectionsOutlinedIcon>,
+    prev: <ArrowBackIosNewIcon></ArrowBackIosNewIcon>,
     search: <SearchOutlinedIcon></SearchOutlinedIcon>,
     settings: <SettingsOutlinedIcon></SettingsOutlinedIcon>,
     send: <ForwardOutlinedIcon></ForwardOutlinedIcon>,
