@@ -13,7 +13,7 @@ const styles: { [key: string]: Properties<string | number> } = {
     alignItems: 'center',
   },
   multiplayer: {
-    width: 'min(35vh, 85vw)',
+    width: 'min(40vh, 85vw)',
     height: 'min(40vh, 85vw)',
     display: 'flex',
     flexDirection: 'column',
@@ -22,8 +22,8 @@ const styles: { [key: string]: Properties<string | number> } = {
     textAlign: 'center',
   },
   singleplayer: {
-    width: 'min(35vh, 85vw)',
-    height: 'min(25vh, 85vw)',
+    width: 'min(40vh, 85vw)',
+    height: 'min(30vh, 85vw)',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
@@ -249,11 +249,13 @@ export function Lobby(props: { globalSize: number }) {
             </div>
           </div>
         </wired-card>
-        <wired-card style={styles.singleplayer} onClick={enterSinglePlayer}>
+        <wired-card style={styles.singleplayer}>
           <div style={styles.heading}><Icon name="single" />&nbsp;Singleplayer</div>
-          <div style={styles.heading}>[&nbsp;{props.globalSize}&nbsp;]</div>
-          <div style={styles.subheading}>Cards in the Global Deck</div>
-          <div style={styles.subheading}>Draw and add your own!</div>
+          <div style={styles.subheading}>Draw and add your own cards!</div>
+          <wired-card style={styles.action} onClick={enterSinglePlayer}>
+            <Icon name='global' />
+            <div style={styles.subheading}>Global Deck: {props.globalSize}</div>
+          </wired-card>
         </wired-card>
       </div>
       <div style={styles.terms}>

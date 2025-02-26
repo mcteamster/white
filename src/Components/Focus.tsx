@@ -28,7 +28,7 @@ export function Focus(props: BoardProps<GameState>) {
       fontWeight: 'bold',
     },
     image: {
-      width: 'min(70vw, 45vh)',
+      width: 'min(65vw, 45vh)',
       objectFit: 'cover',
     },
     description: {
@@ -58,8 +58,9 @@ export function Focus(props: BoardProps<GameState>) {
     button: {
       height: '3em',
       width: '3em',
-      minWidth: '25%',
+      minWidth: '22.5%',
       maxWidth: 'min(70vw, 45vh)',
+      margin: '0.1em',
       borderRadius: '1em',
       fontWeight: 'bold',
       display: 'flex',
@@ -67,6 +68,7 @@ export function Focus(props: BoardProps<GameState>) {
       justifyContent: 'center',
       alignItems: 'center',
       color: '#333',
+      backgroundColor: '#eee'
     },
   };
 
@@ -79,9 +81,9 @@ export function Focus(props: BoardProps<GameState>) {
     let tray = <></>
     if (owned) {
       tray = <div style={styles.tray}>
-        {<wired-card style={{ ...styles.button }} id="returnButton" onClick={() => { props.moves.moveCard(focused.id, "deck"); props.moves.focusCard(focused.id, false) }}><Icon name='shuffle' />Deck</wired-card>}
+        {<wired-card style={{ ...styles.button, color: 'grey' }} id="sendButton" onClick={() => { /* props.moves.moveCard(focused.id, "hand", props.playerID); props.moves.focusCard(focused.id, false) */ }}><Icon name='send' />Send</wired-card>}
+        {<wired-card style={{ ...styles.button }} id="returnButton" onClick={() => { props.moves.moveCard(focused.id, "deck"); props.moves.focusCard(focused.id, false) }}><Icon name='shuffle' />Reshuffle</wired-card>}
         {<wired-card style={{ ...styles.button, color: 'red' }} id="discardButton" onClick={() => { props.moves.moveCard(focused.id, "discard"); props.moves.focusCard(focused.id, false) }}><Icon name='discard' />Discard</wired-card>}
-        {<wired-card style={{ ...styles.button, color: 'lightgrey' }} id="sendButton" onClick={() => { /* props.moves.moveCard(focused.id, "hand", props.playerID); props.moves.focusCard(focused.id, false) */ }}><Icon name='send' />Send</wired-card>}
         {<wired-card style={{ ...styles.button }} id="handButton" onClick={() => { props.moves.moveCard(focused.id, "hand"); props.moves.focusCard(focused.id, false) }}><Icon name='take' />Hand</wired-card>}
         {<wired-card style={{ ...styles.button }} id="pileButton" onClick={() => { props.moves.moveCard(focused.id, "pile"); props.moves.focusCard(focused.id, false) }}><Icon name='pile' />Pile</wired-card>}
         {<wired-card style={{ ...styles.button }} id="tableButton" onClick={() => { props.moves.moveCard(focused.id, "table"); props.moves.focusCard(focused.id, false) }}><Icon name='display' />Table</wired-card>}

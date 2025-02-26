@@ -276,10 +276,13 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
             <div style={styles.instructionsContainer} >
               {
                 !isMultiplayer &&
-                <wired-card style={{...styles.instructions, backgroundColor: globalSubmit ? '#eee' : undefined }} onClick={() => { setGlobalSubmit(true) }}>
-                  <Icon name='global' />
-                  Submit ONE card to the Global Deck
-                </wired-card>
+                <>
+                  <wired-card style={{...styles.instructions, backgroundColor: globalSubmit ? '#eee' : undefined }} onClick={() => { setGlobalSubmit(true) }}>
+                    <Icon name='global' />
+                    Submit to the Global Deck
+                  </wired-card>
+                  or
+                </>
               }
               <wired-card style={{...styles.instructions, backgroundColor: globalSubmit ? undefined : '#eee' }} onClick={() => { setGlobalSubmit(false) }}>
                 <Icon name='display' />
@@ -288,10 +291,11 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
             </div>
         }
         <div style={styles.selection}>
-          Upload a Saved Deck File
+          Select a Saved Deck File
           <wired-card id="fileCard">
             <input disabled={progress[0] != -1} style={styles.uploader} type="file" id="fileselector" accept=".html" onChange={uploadDeck} />
           </wired-card>
+          <div>*{globalSubmit ? 'maximum of ONE card per submission' : 'one deck per upload'} </div>
         </div>
         <div style={styles.confirmation}>
           <wired-card style={styles.button} onClick={() => { setMode('play') }}>
@@ -300,7 +304,11 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
           <wired-card style={{ ...styles.button, color: (loaded.length > 0) ? 'red' : 'grey' }} onClick={() => { if (loaded.length > 0) { setLoaded([]); leaveLoader() } }}>
             <Icon name='discard' />{(progress[0] == -1) ? 'Cancel' : 'Stop'}
           </wired-card>
-          <wired-card style={{ ...styles.button, color: ((progress[0] == -1) && (getCardsByLocation(loaded, 'deck').length > 0)) ? undefined : 'grey' }} onClick={() => {
+          <wired-card style={{ 
+              ...styles.button, 
+              color: ((globalSubmit && !isMultiplayer && getCardsByLocation(loaded, 'deck').length == 1)) ? undefined : ((progress[0] == -1) && (getCardsByLocation(loaded, 'deck').length > 0)) ? undefined : 'grey',
+            }} 
+            onClick={() => {
             if (progress[0] == -1 && getCardsByLocation(loaded, 'deck').length > 0) {
               if (globalSubmit) {
                 if (!isMultiplayer && getCardsByLocation(loaded, 'deck').length == 1) {
