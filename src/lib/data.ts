@@ -11,7 +11,6 @@ export const sanitiseCard = (inputCard) => {
       description: '',
     },
     location: 'deck',
-    focused: [],
   };
 
   // Support for v2 and v1 card schemas

@@ -1,13 +1,21 @@
 import type { BoardProps } from 'boardgame.io/react';
 import type { GameState } from '../Game.ts'
 import type { Properties } from 'csstype';
-import { Card, getAdjacentCard, getCardByFocus } from '../Cards';
+import { Card, getAdjacentCard, getCardById } from '../Cards';
 import { Icon, Browse } from './Icons';
 import { useContext, useState } from 'react';
-import { HotkeysContext } from '../lib/contexts.ts';
+import { FocusContext, HotkeysContext } from '../lib/contexts.ts';
+import { useFocus } from '../lib/hooks.ts';
 
 export function Focus(props: BoardProps<GameState>) {
-  const focused: Card | undefined = getCardByFocus(props.G.cards, props.playerID);
+  const { focus, setFocus } = useContext(FocusContext);
+  const focusCard = (id: number, focusState: boolean) => {
+    useFocus(focus, setFocus, id, focusState);
+  }
+  let focused: Card | undefined;
+  if (focus?.id) {
+    focused = getCardById(props.G.cards, focus?.id)
+  };
   const { hotkeys } = useContext(HotkeysContext);
   const [sendCardMode, setSendCardMode] = useState(false);
 
@@ -102,23 +110,23 @@ export function Focus(props: BoardProps<GameState>) {
       localDate = new Date(Number(focused.content.date)).toLocaleDateString();
     }
     const owned = focused.owner == props.playerID;
-    
+
     let tray = <></>
     if (owned) {
       tray = <div style={styles.tray}>
-        {<wired-card style={{ ...styles.button, color: props.isMultiplayer ? undefined : 'grey' }} id="sendButton" onClick={() => { if (props.isMultiplayer) { setSendCardMode(true) }}}><Icon name='send' />Send</wired-card>}
-        {<wired-card style={{ ...styles.button }} id="returnButton" onClick={() => { props.moves.moveCard(focused.id, "deck"); props.moves.focusCard(focused.id, false) }}><Icon name='shuffle' />Reshuffle</wired-card>}
-        {<wired-card style={{ ...styles.button, color: 'red' }} id="discardButton" onClick={() => { props.moves.moveCard(focused.id, "discard"); props.moves.focusCard(focused.id, false) }}><Icon name='discard' />Discard</wired-card>}
-        {<wired-card style={{ ...styles.button }} id="handButton" onClick={() => { props.moves.moveCard(focused.id, "hand"); props.moves.focusCard(focused.id, false) }}><Icon name='take' />Hand</wired-card>}
-        {<wired-card style={{ ...styles.button }} id="pileButton" onClick={() => { props.moves.moveCard(focused.id, "pile"); props.moves.focusCard(focused.id, false) }}><Icon name='pile' />Pile</wired-card>}
-        {<wired-card style={{ ...styles.button }} id="tableButton" onClick={() => { props.moves.moveCard(focused.id, "table"); props.moves.focusCard(focused.id, false) }}><Icon name='display' />Table</wired-card>}
+        {<wired-card style={{ ...styles.button, color: props.isMultiplayer ? undefined : 'grey' }} id="sendButton" onClick={() => { if (props.isMultiplayer) { setSendCardMode(true) } }}><Icon name='send' />Send</wired-card>}
+        {<wired-card style={{ ...styles.button }} id="returnButton" onClick={() => { props.moves.moveCard(focused.id, "deck"); focusCard(focused.id, false) }}><Icon name='shuffle' />Reshuffle</wired-card>}
+        {<wired-card style={{ ...styles.button, color: 'red' }} id="discardButton" onClick={() => { props.moves.moveCard(focused.id, "discard"); focusCard(focused.id, false) }}><Icon name='discard' />Discard</wired-card>}
+        {<wired-card style={{ ...styles.button }} id="handButton" onClick={() => { props.moves.moveCard(focused.id, "hand"); focusCard(focused.id, false) }}><Icon name='take' />Hand</wired-card>}
+        {<wired-card style={{ ...styles.button }} id="pileButton" onClick={() => { props.moves.moveCard(focused.id, "pile"); focusCard(focused.id, false) }}><Icon name='pile' />Pile</wired-card>}
+        {<wired-card style={{ ...styles.button }} id="tableButton" onClick={() => { props.moves.moveCard(focused.id, "table"); focusCard(focused.id, false) }}><Icon name='display' />Table</wired-card>}
       </div>
     }
 
     const changeFocus = (direction: 'prev' | 'next') => {
       const adjacentCard = getAdjacentCard(props.G.cards, focused.id, direction)
       if (adjacentCard) {
-        props.moves.focusCard(adjacentCard.id, true);
+        focusCard(adjacentCard.id, true);
       }
     }
 
@@ -139,7 +147,7 @@ export function Focus(props: BoardProps<GameState>) {
 
     const unfocusCards = () => {
       setTimeout(() => {
-        props.moves.focusCard(0, false);
+        focusCard(0, false);
       }, 0)
     }
 
@@ -160,7 +168,7 @@ export function Focus(props: BoardProps<GameState>) {
           const adjacentCard = getAdjacentCard(props.G.cards, focused.id, 'prev') || getAdjacentCard(props.G.cards, focused.id, 'next');
           props.moves.moveCard(focused.id, "table");
           if (adjacentCard) {
-            props.moves.focusCard(adjacentCard.id, true);
+            focusCard(adjacentCard.id, true);
           } else {
             unfocusCards();
           }
@@ -174,7 +182,7 @@ export function Focus(props: BoardProps<GameState>) {
           const adjacentCard = getAdjacentCard(props.G.cards, focused.id, 'prev') || getAdjacentCard(props.G.cards, focused.id, 'next');
           props.moves.moveCard(focused.id, "hand");
           if (adjacentCard) {
-            props.moves.focusCard(adjacentCard.id, true);
+            focusCard(adjacentCard.id, true);
           } else {
             unfocusCards();
           }
@@ -185,17 +193,18 @@ export function Focus(props: BoardProps<GameState>) {
     }
 
     const sendMenu = <wired-dialog open={sendCardMode === true || undefined}>
-      <div style={styles.sendmenu} onClick={(e) => e.stopPropagation() }>
+      <div style={styles.sendmenu} onClick={(e) => e.stopPropagation()}>
         <div>
           <div style={styles.title}>Send to Another Player</div>
           <div>Card will be placed on their Table</div>
         </div>
         <wired-card>
+          <div>Connected Players</div>
           <div style={styles.sendlist}>
             {props.matchData?.map((player) => {
               if (player.isConnected && player.name && player.id != Number(props.playerID)) {
                 return (
-                  <wired-card style={styles.sendbutton} onClick={() => { props.moves.moveCard(focused.id, "table", String(player.id)); setSendCardMode(false); props.moves.focusCard(focused.id, false) }}>
+                  <wired-card style={styles.sendbutton} onClick={() => { props.moves.moveCard(focused.id, "table", String(player.id)); setSendCardMode(false); focusCard(focused.id, false) }}>
                     {player.name}
                   </wired-card>
                 )
@@ -208,7 +217,7 @@ export function Focus(props: BoardProps<GameState>) {
     </wired-dialog>
 
     return (
-      <wired-dialog open onClick={() => { props.moves.focusCard(focused.id, false) }}>
+      <wired-dialog open onClick={() => { focusCard(focused.id, false) }}>
         <div style={styles.focus} onClick={e => owned && e.stopPropagation()}>
           <div style={styles.title}>{focused.content.title}</div>
           <div style={styles.credit}>by {focused.content.author}</div>

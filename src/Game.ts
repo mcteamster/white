@@ -9,7 +9,7 @@ export interface GameState {
 }
 
 // Moves
-const pickupCard: Move<GameState> = ({ G, random, playerID }, focus?: boolean) => {
+const pickupCard: Move<GameState> = ({ G, random, playerID }) => {
   const deck = getCardsByLocation(G.cards, "deck");
   if (deck.length === 0) {
     // Reshuffle Pile and Discard into Deck
@@ -36,28 +36,10 @@ const pickupCard: Move<GameState> = ({ G, random, playerID }, focus?: boolean) =
   } else {
     // Pickup Card
     const card = deck[random?.Die(deck.length) - 1];
-    if (focus === true) {
-      card.focused?.push(playerID);
-    }
     card.owner = playerID;
     card.timestamp = Number(Date.now());
     card.location = "hand";
   }
-}
-
-const focusCard: Move<GameState> = ({ G, playerID }, id: number, focusState: boolean) => {
-  // Only one card can be focused at any time per player
-  G.cards.forEach(card => {
-    if (card.focused.includes(playerID)) {
-      if (card.id !== id || focusState !== true) {
-        card.focused?.splice(card.focused?.indexOf(playerID), 1);
-      }
-    } else {
-      if (card.id === id && focusState === true) {
-        card.focused.push(playerID)
-      }
-    }
-  });
 }
 
 const moveCard: Move<GameState> = ({ G, playerID }, id, target, owner) => {
@@ -130,7 +112,6 @@ export const BlankWhiteCards: Game<GameState> = {
   },
 
   moves: {
-    focusCard,
     moveCard,
     pickupCard,
     submitCard,

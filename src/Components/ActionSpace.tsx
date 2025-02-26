@@ -3,16 +3,17 @@ import type { GameState } from '../Game.ts'
 import { Finalise } from './Finalise.tsx';
 import { Focus } from './Focus.tsx';
 import type { Properties } from 'csstype';
-import { Card, getCardsByLocation } from '../Cards';
+import { Card, getCardsByLocation, getCardsByOwner } from '../Cards';
 import { Icon } from './Icons';
 import { useState, useEffect, useContext } from 'react';
 //@ts-expect-error: JS Module
 import { undo, strokes, sketchpad } from '../Canvas.js';
 import { Link, useNavigate } from 'react-router';
-import { AuthContext } from '../lib/contexts.ts';
+import { AuthContext, FocusContext } from '../lib/contexts.ts';
 import { downloadDeck } from '../lib/data.ts';
 import { Loader } from './Loader.tsx';
 import { submitGlobalCard } from '../lib/clients.ts';
+import { useFocus } from '../lib/hooks.ts';
 
 interface ToolbarProps extends BoardProps<GameState> {
   mode: string;
@@ -67,7 +68,6 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
             date: String(Number(new Date())),
           },
           location: 'hand',
-          focused: [playerID],
           owner: playerID,
           timestamp: Number(new Date()),
         }

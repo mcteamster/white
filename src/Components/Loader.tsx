@@ -108,7 +108,6 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
             id: 0, // ID Assignment handled by the loadCards move
             content: card.content,
             location: 'deck',
-            focused: [],
             timestamp: Number(new Date()),
           }
         });

@@ -1,6 +1,6 @@
 // Hooks
 import { useState, useEffect } from 'react';
-import { HotkeysContextType } from './contexts';
+import { FocusType, HotkeysContextType } from './contexts';
 
 // Dimensions
 const getWindowDimensions = () => {
@@ -26,6 +26,15 @@ export const useWindowDimensions = () => {
   return windowDimensions;
 }
 
+// Focus
+export const useFocus = (focus: FocusType, setFocus: (focus: FocusType) => void, id: number, focusState: boolean) => {
+  if (focus?.id != id && focusState == true) {
+    setFocus({ id });
+  } else {
+    setFocus({});
+  }
+};
+
 // Hotkeys
 export const useHotkeys = ({ hotkeys, setHotkeys}: HotkeysContextType) => {
   useEffect(() => {
@@ -44,7 +53,7 @@ export const useHotkeys = ({ hotkeys, setHotkeys}: HotkeysContextType) => {
       if (hotkeyMapping[event.code as keyof typeof hotkeyMapping]) {
         const hotkeyEvent: { [key: string]: boolean } = {};
         hotkeyEvent[hotkeyMapping[event.code as keyof typeof hotkeyMapping]] = true;
-        setHotkeys(hotkeyEvent);
+        // setHotkeys(hotkeyEvent); // TODO: Debounce Hotkeys for Performance
       }
       setTimeout(() => {
         setHotkeys({});

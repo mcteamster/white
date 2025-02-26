@@ -3,8 +3,16 @@ import type { GameState } from '../Game.ts'
 import type { Properties } from 'csstype';
 import { getCardsByLocation, getCardsByOwner } from '../Cards';
 import { CardFace } from './CardFace.tsx';
+import { useContext } from 'react';
+import { FocusContext } from '../lib/contexts.ts';
+import { useFocus } from '../lib/hooks.ts';
 
 export function Hand(props: BoardProps<GameState>) {
+  const { focus, setFocus } = useContext(FocusContext);
+  const focusCard = (id: number, focusState: boolean) => {
+    useFocus(focus, setFocus, id, focusState);
+  }
+
   const styles: { [key: string]: Properties<string | number> } = {
     hand: {
       width: '100%',
@@ -22,7 +30,7 @@ export function Hand(props: BoardProps<GameState>) {
   return (
     <div style={styles.hand}>
       {hand.map((card, i) => {
-        return <div key={`${props.playerID}-hand-${i}`} onClick={() => props.moves.focusCard(card.id, true)}>
+        return <div key={`${props.playerID}-hand-${i}`} onClick={() => focusCard(card.id, true)}>
           <CardFace {...card} />
         </div>
       })}
@@ -31,6 +39,11 @@ export function Hand(props: BoardProps<GameState>) {
 }
 
 export function Table(props: BoardProps<GameState>) {
+  const { focus, setFocus } = useContext(FocusContext);
+  const focusCard = (id: number, focusState: boolean) => {
+    useFocus(focus, setFocus, id, focusState);
+  }
+
   const styles: { [key: string]: Properties<string | number> } = {
     table: {
       width: '100%',
@@ -48,7 +61,7 @@ export function Table(props: BoardProps<GameState>) {
   return (
     <div style={styles.table}>
       {table.map((card, i) => {
-        return <div key={`${props.playerID}-table-${i}`} onClick={() => props.moves.focusCard(card.id, true)}>
+        return <div key={`${props.playerID}-table-${i}`} onClick={() => focusCard(card.id, true)}>
           <CardFace {...card} />
         </div>
       })}

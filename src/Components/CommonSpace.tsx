@@ -5,10 +5,16 @@ import type { Properties } from 'csstype';
 import { CardFace } from './CardFace.tsx';
 import { getCardsByLocation, getCardsByOwner } from '../Cards';
 import { Icon } from './Icons';
-import { useState } from 'react';
-import { useWindowDimensions } from '../lib/hooks.ts';
+import { useContext, useState } from 'react';
+import { useFocus, useWindowDimensions } from '../lib/hooks.ts';
+import { FocusContext } from '../lib/contexts.ts';
 
 export function Pile(props: BoardProps<GameState>) {
+  const { focus, setFocus } = useContext(FocusContext);
+  const focusCard = (id: number, focusState: boolean) => {
+    useFocus(focus, setFocus, id, focusState);
+  }
+
   const pile = getCardsByLocation(props.G.cards, "pile").sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // Newest to Oldest
 
   const styles: { [key: string]: Properties<string | number> } = {
@@ -26,7 +32,7 @@ export function Pile(props: BoardProps<GameState>) {
 
   return (
     <div style={styles.pile}>
-      <div onClick={() => props.moves.focusCard(pile[0].id, true)}>
+      <div onClick={() => focusCard(pile[0].id, true)}>
         {pile.length > 0 ?
           <CardFace {...pile[0]} /> :
           <CardFace {...{
@@ -37,7 +43,6 @@ export function Pile(props: BoardProps<GameState>) {
               "description": "Pick up cards. Do what they say. Create your own!",
             },
             "location": "pile",
-            "focused": [],
           }} />}
       </div>
     </div>
@@ -53,6 +58,10 @@ export function Players(props: BoardProps<GameState>) {
     }
   } 
   const [openPlayers, setOpenPlayers] = useState<number[]>(initialOpenPlayers); // List of players with open table trays
+  const { focus, setFocus } = useContext(FocusContext);
+  const focusCard = (id: number, focusState: boolean) => {
+    useFocus(focus, setFocus, id, focusState);
+  }  
 
   const styles: { [key: string]: Properties<string | number> } = {
     players: {
@@ -137,7 +146,7 @@ export function Players(props: BoardProps<GameState>) {
             openPlayers.includes(player.id) &&
             <div style={styles.tableBox}>
               {playerTable.map((tableCard, j) => {
-                return <div key={`player-avatar-${i}-table-${j}`} onClick={() => props.moves.focusCard(tableCard.id, true)}>
+                return <div key={`player-avatar-${i}-table-${j}`} onClick={() => focusCard(tableCard.id, true)}>
                   <CardFace {...tableCard} />
                 </div>
               })}

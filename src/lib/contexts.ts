@@ -16,6 +16,18 @@ export interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType>({ setAuth: () => {} });
 
+// Focus
+export interface FocusType {
+  id?: number,
+}
+
+export interface FocusContextType {
+  focus: FocusType,
+  setFocus: (focus: FocusType) => void;
+}
+
+export const FocusContext = createContext<FocusContextType>({ focus: {}, setFocus: () => {} });
+
 // Hotkeys
 export interface HotkeysType {
   up?: boolean | undefined,
