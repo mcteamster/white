@@ -54,7 +54,7 @@ export function About() {
         <h2 style={styles.subheading}>About</h2>
         <p>This is <a href="https://en.wikipedia.org/wiki/1000_Blank_White_Cards" target="_blank"><u>1000 Blank White Cards</u></a> online.</p>
         <p>
-          A social party game where you make the rules. Best played with friends around a table or on video call.
+          A social party game sandbox where you make the rules. Best played with friends around a table or on video call.
         </p>
         <p>
           Connect to the same Multiplayer Room to draw cards together using a common DECK.*
