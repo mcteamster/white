@@ -24,6 +24,5 @@ dist-ssr
 *.sw?
 
 # Card Files
-dump.json
 public/card
-db
+public/decks/global.json
