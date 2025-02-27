@@ -112,11 +112,31 @@ export const BlankWhiteCards: Game<GameState> = {
   },
 
   moves: {
-    moveCard,
-    pickupCard,
-    submitCard,
-    loadCards,
-    shuffleCards,
+    moveCard: {
+      move: moveCard,
+      client: false,
+      ignoreStaleStateID: true,
+    },
+    pickupCard: {
+      move: pickupCard,
+      client: false,
+      ignoreStaleStateID: true,
+    },
+    submitCard: {
+      move: submitCard,
+      client: false,
+      ignoreStaleStateID: true,
+    },
+    loadCards: {
+      move: loadCards,
+      client: false,
+      ignoreStaleStateID: true,
+    },
+    shuffleCards: {
+      move: shuffleCards,
+      client: false,
+      ignoreStaleStateID: true,
+    },
   },
 
   turn: {

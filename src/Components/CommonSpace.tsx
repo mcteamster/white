@@ -5,11 +5,19 @@ import type { Properties } from 'csstype';
 import { CardFace } from './CardFace.tsx';
 import { getCardsByLocation, getCardsByOwner } from '../Cards';
 import { Icon } from './Icons';
-import { useCallback, useState } from 'react';
-import { useFocus, useWindowDimensions } from '../lib/hooks.ts';
+import { useCallback, useContext, useState } from 'react';
+import { useWindowDimensions } from '../lib/hooks.ts';
+import { FocusContext } from '../lib/contexts.ts';
 
 export function Pile(props: BoardProps<GameState>) {
-  const focusCard = useCallback(useFocus, []);
+  const { focus, setFocus } = useContext(FocusContext);
+  const focusCard = useCallback(((id: number, focusState: boolean) => {
+    if (focus?.id != id && focusState == true) {
+      setFocus({ id });
+    } else {
+      setFocus({});
+    }
+  }), [focus, setFocus]);
   const pile = getCardsByLocation(props.G.cards, "pile").sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // Newest to Oldest
 
   const styles: { [key: string]: Properties<string | number> } = {
@@ -46,7 +54,14 @@ export function Pile(props: BoardProps<GameState>) {
 
 export function Players(props: BoardProps<GameState>) {
   const dimensions = useWindowDimensions();
-  const focusCard = useCallback(useFocus, []);
+  const { focus, setFocus } = useContext(FocusContext);
+  const focusCard = useCallback(((id: number, focusState: boolean) => {
+    if (focus?.id != id && focusState == true) {
+      setFocus({ id });
+    } else {
+      setFocus({});
+    }
+  }), [focus, setFocus]);
   const initialOpenPlayers: number[] = [];
   if (props.isMultiplayer && props.matchData) {
     if ((dimensions.width/dimensions.height) > (2/3)) {

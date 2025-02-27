@@ -5,11 +5,16 @@ import { Card, getAdjacentCard, getCardById } from '../Cards';
 import { Icon, Browse } from './Icons';
 import { useCallback, useContext, useState } from 'react';
 import { FocusContext, HotkeysContext } from '../lib/contexts.ts';
-import { useFocus } from '../lib/hooks.ts';
 
 export function Focus(props: BoardProps<GameState>) {
-  const { focus } = useContext(FocusContext);
-  const focusCard = useCallback(useFocus, []);
+  const { focus, setFocus } = useContext(FocusContext);
+  const focusCard = useCallback(((id: number, focusState: boolean) => {
+    if (focus?.id != id && focusState == true) {
+      setFocus({ id });
+    } else {
+      setFocus({});
+    }
+  }), [focus, setFocus]);
   let focused: Card | undefined;
   if (focus?.id) {
     focused = getCardById(props.G.cards, focus?.id)

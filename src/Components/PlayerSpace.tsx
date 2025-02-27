@@ -3,11 +3,18 @@ import type { GameState } from '../Game.ts'
 import type { Properties } from 'csstype';
 import { getCardsByLocation, getCardsByOwner } from '../Cards';
 import { CardFace } from './CardFace.tsx';
-import { useFocus } from '../lib/hooks.ts';
-import { useCallback } from 'react';
+import { useCallback, useContext } from 'react';
+import { FocusContext } from '../lib/contexts.ts';
 
 export function Hand(props: BoardProps<GameState>) {
-  const focusCard = useCallback(useFocus, []);
+  const { focus, setFocus } = useContext(FocusContext);
+  const focusCard = useCallback(((id: number, focusState: boolean) => {
+    if (focus?.id != id && focusState == true) {
+      setFocus({ id });
+    } else {
+      setFocus({});
+    }
+  }), [focus, setFocus]);
 
   const styles: { [key: string]: Properties<string | number> } = {
     hand: {
@@ -35,9 +42,14 @@ export function Hand(props: BoardProps<GameState>) {
 }
 
 export function Table(props: BoardProps<GameState>) {
-  const focusCard = (id: number, focusState: boolean) => {
-    focusCard(id, focusState);
-  }
+  const { focus, setFocus } = useContext(FocusContext);
+  const focusCard = useCallback(((id: number, focusState: boolean) => {
+    if (focus?.id != id && focusState == true) {
+      setFocus({ id });
+    } else {
+      setFocus({});
+    }
+  }), [focus, setFocus]);
 
   const styles: { [key: string]: Properties<string | number> } = {
     table: {
