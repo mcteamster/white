@@ -35,6 +35,7 @@ export interface HotkeysType {
   left?: boolean | undefined,
   right?: boolean | undefined,
   backspace?: boolean | undefined,
+  delete?: boolean | undefined,
   enter?: boolean | undefined,
   escape?: boolean | undefined,
   space?: boolean | undefined,

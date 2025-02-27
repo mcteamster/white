@@ -114,7 +114,6 @@ export const BlankWhiteCards: Game<GameState> = {
   moves: {
     moveCard: {
       move: moveCard,
-      client: false,
       ignoreStaleStateID: true,
     },
     pickupCard: {

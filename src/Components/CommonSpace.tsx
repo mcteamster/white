@@ -72,7 +72,7 @@ export function Players(props: BoardProps<GameState>) {
   const styles: { [key: string]: Properties<string | number> } = {
     players: {
       width: '100vw',
-      height: '70vh',
+      maxHeight: '70vh',
       position: 'fixed',
       top: '2.5em',
       right: '0',

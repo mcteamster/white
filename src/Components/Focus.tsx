@@ -151,12 +151,17 @@ export function Focus(props: BoardProps<GameState>) {
     const unfocusCards = () => {
       setTimeout(() => {
         focusCard(0, false);
+        setSendCardMode(false);
       }, 0)
     }
 
     // Hotkeys
     if (hotkeys.escape) {
       unfocusCards();
+    } else if (owned && hotkeys.enter) {
+      setTimeout(() => {
+        setSendCardMode(true);
+      }, 0)
     } else if (hotkeys.left && focused.id) {
       setTimeout(() => {
         changeFocus('prev');
@@ -193,6 +198,31 @@ export function Focus(props: BoardProps<GameState>) {
       } else {
         unfocusCards();
       }
+    } else if (owned && hotkeys.delete) {
+      setTimeout(() => {
+        const adjacentCard = getAdjacentCard(props.G.cards, focused.id, 'prev') || getAdjacentCard(props.G.cards, focused.id, 'next');
+        props.moves.moveCard(focused.id, "discard");
+        if (adjacentCard) {
+          focusCard(adjacentCard.id, true);
+        } else {
+          unfocusCards();
+        }
+      }, 0)
+    } else if (owned && hotkeys.backspace) {
+      setTimeout(() => {
+        const adjacentCard = getAdjacentCard(props.G.cards, focused.id, 'prev') || getAdjacentCard(props.G.cards, focused.id, 'next');
+        props.moves.moveCard(focused.id, "deck");
+        if (adjacentCard) {
+          focusCard(adjacentCard.id, true);
+        } else {
+          unfocusCards();
+        }
+      }, 0)
+    } else if (owned && hotkeys.space) {
+      setTimeout(() => {
+        props.moves.moveCard(focused.id, "pile");
+        unfocusCards();
+      }, 0)
     }
 
     const sendMenu = <wired-dialog open={sendCardMode === true || undefined}>
