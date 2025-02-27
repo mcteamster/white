@@ -3,15 +3,13 @@ import type { GameState } from '../Game.ts'
 import type { Properties } from 'csstype';
 import { Card, getAdjacentCard, getCardById } from '../Cards';
 import { Icon, Browse } from './Icons';
-import { useContext, useState } from 'react';
+import { useCallback, useContext, useState } from 'react';
 import { FocusContext, HotkeysContext } from '../lib/contexts.ts';
 import { useFocus } from '../lib/hooks.ts';
 
 export function Focus(props: BoardProps<GameState>) {
-  const { focus, setFocus } = useContext(FocusContext);
-  const focusCard = (id: number, focusState: boolean) => {
-    useFocus(focus, setFocus, id, focusState);
-  }
+  const { focus } = useContext(FocusContext);
+  const focusCard = useCallback(useFocus, []);
   let focused: Card | undefined;
   if (focus?.id) {
     focused = getCardById(props.G.cards, focus?.id)
@@ -201,10 +199,10 @@ export function Focus(props: BoardProps<GameState>) {
         <wired-card>
           <div>Connected Players</div>
           <div style={styles.sendlist}>
-            {props.matchData?.map((player) => {
+            {props.matchData?.map((player, i) => {
               if (player.isConnected && player.name && player.id != Number(props.playerID)) {
                 return (
-                  <wired-card style={styles.sendbutton} onClick={() => { props.moves.moveCard(focused.id, "table", String(player.id)); setSendCardMode(false); focusCard(focused.id, false) }}>
+                  <wired-card key={`player-connected-${i}`} style={styles.sendbutton} onClick={() => { props.moves.moveCard(focused.id, "table", String(player.id)); setSendCardMode(false); focusCard(focused.id, false) }}>
                     {player.name}
                   </wired-card>
                 )

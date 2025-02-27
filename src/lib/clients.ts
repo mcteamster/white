@@ -14,7 +14,7 @@ export const lobbyClient = new LobbyClient({ server: (import.meta.env.VITE_LOBBY
 export let startingDeck: GameState;
 let SetupGame: Game = BlankWhiteCards;
 try {
-  startingDeck = await (await fetch('/decks/global.json')).json();
+  startingDeck = await (await fetch(`${import.meta.env.VITE_ORIGIN}/decks/global.json`)).json();
   if (startingDeck.cards && startingDeck.cards.length > 0) {
     SetupGame = { ...BlankWhiteCards, setup: () => (startingDeck) }
   }

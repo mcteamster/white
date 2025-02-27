@@ -5,16 +5,11 @@ import type { Properties } from 'csstype';
 import { CardFace } from './CardFace.tsx';
 import { getCardsByLocation, getCardsByOwner } from '../Cards';
 import { Icon } from './Icons';
-import { useContext, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useFocus, useWindowDimensions } from '../lib/hooks.ts';
-import { FocusContext } from '../lib/contexts.ts';
 
 export function Pile(props: BoardProps<GameState>) {
-  const { focus, setFocus } = useContext(FocusContext);
-  const focusCard = (id: number, focusState: boolean) => {
-    useFocus(focus, setFocus, id, focusState);
-  }
-
+  const focusCard = useCallback(useFocus, []);
   const pile = getCardsByLocation(props.G.cards, "pile").sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // Newest to Oldest
 
   const styles: { [key: string]: Properties<string | number> } = {
@@ -51,6 +46,7 @@ export function Pile(props: BoardProps<GameState>) {
 
 export function Players(props: BoardProps<GameState>) {
   const dimensions = useWindowDimensions();
+  const focusCard = useCallback(useFocus, []);
   const initialOpenPlayers: number[] = [];
   if (props.isMultiplayer && props.matchData) {
     if ((dimensions.width/dimensions.height) > (2/3)) {
@@ -58,11 +54,6 @@ export function Players(props: BoardProps<GameState>) {
     }
   } 
   const [openPlayers, setOpenPlayers] = useState<number[]>(initialOpenPlayers); // List of players with open table trays
-  const { focus, setFocus } = useContext(FocusContext);
-  const focusCard = (id: number, focusState: boolean) => {
-    useFocus(focus, setFocus, id, focusState);
-  }  
-
   const styles: { [key: string]: Properties<string | number> } = {
     players: {
       width: '100vw',

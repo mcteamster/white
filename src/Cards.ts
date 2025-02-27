@@ -9,7 +9,7 @@ export interface Card {
     image?: string,
   },
   location: string, // 'deck' | 'pile' | 'discard' | 'hand' | 'table' | 'box',
-  focused?: string[], // DEPRECATED: viewing players
+  focused?: string[], // DEPRECATED: list of viewing player IDs, causes too much noise in move traffic
   owner?: string, // playerID
   previousOwner?: string, // playerID, used for tracking ownership changes
   timestamp?: number, // epoch of last move

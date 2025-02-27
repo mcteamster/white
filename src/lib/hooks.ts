@@ -1,6 +1,6 @@
 // Hooks
-import { useState, useEffect } from 'react';
-import { FocusType, HotkeysContextType } from './contexts';
+import { useState, useEffect, useContext } from 'react';
+import { FocusContext, HotkeysContextType } from './contexts';
 
 // Dimensions
 const getWindowDimensions = () => {
@@ -27,13 +27,14 @@ export const useWindowDimensions = () => {
 }
 
 // Focus
-export const useFocus = (focus: FocusType, setFocus: (focus: FocusType) => void, id: number, focusState: boolean) => {
+export const useFocus = ((id: number, focusState: boolean) => {
+  const { focus, setFocus } = useContext(FocusContext);
   if (focus?.id != id && focusState == true) {
     setFocus({ id });
   } else {
     setFocus({});
   }
-};
+});
 
 // Hotkeys
 export const useHotkeys = ({ hotkeys, setHotkeys}: HotkeysContextType) => {
