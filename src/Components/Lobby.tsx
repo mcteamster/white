@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
 import { Properties } from 'csstype';
 import { Icon } from './Icons';
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../lib/contexts";
 import { lobbyClient } from "../lib/clients";
 
@@ -207,10 +207,25 @@ export function Lobby(props: { globalSize: number }) {
     }
   }
 
+  const checkLobbyConnection = () => {
+    lobbyClient.listMatches('blank-white-cards').then(() => {
+      setStage('landing');
+    }).catch(() => {
+      setStage('down');
+      setTimeout(checkLobbyConnection, 30000);
+    });
+  }
+  useEffect(checkLobbyConnection, [checkLobbyConnection]);
+
   return (
     <wired-dialog open>
       <div style={styles.dialog}>
         <wired-card style={styles.multiplayer}>
+          <div style={{ display: (stage == 'down') ? undefined : 'none' }}>
+            <div style={styles.heading}><Icon name="multi" />&nbsp;Multiplayer</div>
+            <div style={styles.subheading}>Server Currently Unavailable</div>
+          </div>
+
           <div style={{ display: (stage == 'landing') ? undefined : 'none' }}>
             <div style={styles.heading}><Icon name="multi" />&nbsp;Multiplayer</div>
             <div style={styles.subheading}>Join by Room Code</div>
@@ -234,9 +249,9 @@ export function Lobby(props: { globalSize: number }) {
             <wired-card style={{...styles.action, backgroundColor: (preset == 'global') ? '#eee' : undefined }} onClick={() => { setPreset('global'); }}><Icon name="global" />Global</wired-card>
           </div>
 
-          <div style={{ display: (stage == 'landing') ? 'none' : undefined }}>
+          <div style={{ display: (['join', 'create'].includes(stage)) ? undefined : 'none' }}>
             <div style={styles.subheading}>Who's Playing?</div>
-            <wired-input style={{ ...styles.name, display: (stage == 'landing') ? 'none' : undefined }} id="nameInput" placeholder="Player Name" maxlength={25} value={auth?.playerName}></wired-input>
+            <wired-input style={{ ...styles.name, display: (['join', 'create'].includes(stage)) ? undefined : 'none' }} id="nameInput" placeholder="Player Name" maxlength={25} value={auth?.playerName}></wired-input>
             <div style={{ ...styles.presets}}>
               <wired-card style={styles.action} onClick={() => { setStage('landing') }}><Icon name="back" />Back</wired-card>
               <wired-card style={styles.action} onClick={() => {
