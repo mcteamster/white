@@ -215,7 +215,7 @@ export function Lobby(props: { globalSize: number }) {
       setTimeout(checkLobbyConnection, 30000);
     });
   }
-  useEffect(checkLobbyConnection, [checkLobbyConnection]);
+  useEffect(checkLobbyConnection);
 
   return (
     <wired-dialog open>
