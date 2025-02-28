@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
 import { Properties } from 'csstype';
 import { Icon } from './Icons';
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { AuthContext } from "../lib/contexts";
 import { lobbyClient } from "../lib/clients";
 
@@ -207,15 +207,15 @@ export function Lobby(props: { globalSize: number }) {
     }
   }
 
-  const checkLobbyConnection = () => {
+  const checkLobbyConnection = useCallback(() => {
     lobbyClient.listMatches('blank-white-cards').then(() => {
       setStage('landing');
     }).catch(() => {
       setStage('down');
       setTimeout(checkLobbyConnection, 30000);
     });
-  }
-  useEffect(checkLobbyConnection);
+  }, [setStage])
+  useEffect(checkLobbyConnection, [checkLobbyConnection]);
 
   return (
     <wired-dialog open>
