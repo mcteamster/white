@@ -10,7 +10,7 @@ import { useState, useEffect, useContext } from 'react';
 import { undo, strokes, sketchpad } from '../Canvas.js';
 import { Link, useNavigate } from 'react-router';
 import { AuthContext } from '../lib/contexts.ts';
-import { downloadDeck } from '../lib/data.ts';
+import { downloadDeck, resizeImage } from '../lib/data.ts';
 import { Loader } from './Loader.tsx';
 import { submitGlobalCard } from '../lib/clients.ts';
 
@@ -63,7 +63,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
             title: title.value,
             description: description.value,
             author: author.value || 'anon',
-            image: image,
+            image: image ? await resizeImage(image) : undefined,
             date: String(Number(new Date())),
           },
           location: 'hand',

@@ -8,7 +8,7 @@
     "host": "tsc -b && vite build --mode development; vite preview --host",
     "lint": "eslint .",
     "preview": "vite preview",
-    "update": "curl https://white.mcteamster.com/decks/global.json > ./public/decks/global.json",
+    "pull:global": "curl https://white.mcteamster.com/decks/global.json > ./public/decks/global.json",
     "serve": "node --env-file=.env.production -r ts-node/register ./src/server.ts",
     "serve:local": "node --env-file=.env.development -r ts-node/register ./src/server.ts",
     "deploy": "../infra/deploy-white-service.sh; ../infra/deploy-white.sh",
