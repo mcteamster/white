@@ -173,7 +173,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
               moves.pickupCard(true);
               setTimeout(() => {
                 setDebounced(false);
-              }, 500)
+              }, 1000)
             }
           } else if (playerID == '0') {
             setMode('menu-tools-loader')

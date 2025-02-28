@@ -8,7 +8,7 @@ Connect to the same Multiplayer Room to draw cards together using a common DECK.
 Put your cards on the PILE for everyone to see in real-time!
 Or maybe keep them hidden in your HAND, or even displayed on the TABLE in front of you.
 
-Browse the Global Deck in Singleplayer mode for a local pass-and-play experience.
+Browse the Global Deck in Single Device mode for a local pass-and-play experience.
 Create and submit cards there for the whole world to see!
 
 ### History

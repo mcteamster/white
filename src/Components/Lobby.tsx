@@ -250,7 +250,7 @@ export function Lobby(props: { globalSize: number }) {
           </div>
         </wired-card>
         <wired-card style={styles.singleplayer}>
-          <div style={styles.heading}><Icon name="single" />&nbsp;Singleplayer</div>
+          <div style={styles.heading}><Icon name="single" />&nbsp;Single Device</div>
           <div style={styles.subheading}>Draw and add your own cards!</div>
           <wired-card style={styles.action} onClick={enterSinglePlayer}>
             <Icon name='global' />

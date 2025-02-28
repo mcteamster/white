@@ -62,7 +62,7 @@ export function About() {
           Or maybe keep them hidden in your HAND, displayed on the TABLE in front of you, or even SEND them to someone else!
         </p>
         <p>
-          Browse the Global Deck in Singleplayer mode for a local pass-and-play experience.
+          Browse the Global Deck in Single Device mode for a local pass-and-play experience.
           Create and submit cards here for the whole world to see!
         </p>
         <p>
