@@ -68,7 +68,7 @@ const App = () => {
       <FocusContext.Provider value={{ focus, setFocus }}>
         <HotkeysContext.Provider value={{ hotkeys, setHotkeys }}>
           {(dimensions.height > 480) ?
-            <div style={{backgroundColor: (dimensions.width/dimensions.height) < (2/3) ? 'white' : '#eee'}}>
+            <div style={{backgroundColor: (dimensions.upright) ? 'white' : '#eee'}}>
               <BrowserRouter>
                 <Routes>
                   <Route path="/" element={<>

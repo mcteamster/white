@@ -64,29 +64,31 @@ export function Players(props: BoardProps<GameState>) {
   }), [focus, setFocus]);
   const initialOpenPlayers: number[] = [];
   if (props.isMultiplayer && props.matchData) {
-    if ((dimensions.width/dimensions.height) > (2/3)) {
-      props.matchData?.forEach((player) => initialOpenPlayers.push(player.id));
+    if (!dimensions.upright) {
+      props.matchData?.forEach((player) => {
+        initialOpenPlayers.push(player.id)
+      });
     }
   } 
   const [openPlayers, setOpenPlayers] = useState<number[]>(initialOpenPlayers); // List of players with open table trays
   const styles: { [key: string]: Properties<string | number> } = {
     players: {
-      width: '100vw',
-      maxHeight: '70vh',
+      maxWidth: '100vw',
+      maxHeight: '60vh',
+      overflowY: 'scroll',
+      scrollbarWidth: 'none',
       position: 'fixed',
-      top: '2.5em',
+      top: '2em',
       right: '0',
       zIndex: '4',
+      borderRadius: '0 0 0 1em',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'flex-start',
       alignItems: 'flex-end',
-      flexWrap: 'wrap',
     },
     avatarBox: {
-      width: '100vw',
-      position: 'relative',
-      right: '-0.5em',
+      maxWidth: '50em',
       display: 'flex',
       flexDirection: 'row-reverse',
       justifyContent: 'flex-start',
@@ -97,23 +99,28 @@ export function Players(props: BoardProps<GameState>) {
       minHeight: '3em',
       width: '3em',
       minWidth: '3em',
-      margin: '0.25em 0',
+      margin: '0.5em 0.25em',
       backgroundColor: '#eee',
       borderRadius: '0.5em',
+      textAlign: 'center',
       display: 'flex',
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
     },
     tableBox: {
-      padding: '0 0.25em',
+      maxHeight: '60vh',
+      overflowY: 'scroll',
+      scrollbarWidth: 'none',
+      margin: '0.25em',
       borderRadius: '0.5em',
-      position: 'absolute',
-      right: '5.5em',
       zIndex: '5',
+      position: (dimensions.upright) ? 'fixed' : 'relative',
+      right: (dimensions.upright) ? '4.5em' : undefined,
+      backgroundColor: (dimensions.upright) ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.5)',
       display: 'flex',
       flexDirection: 'row',
-      justifyContent: 'flex-end',
+      justifyContent: 'center',
       alignItems: 'center',
       flexWrap: 'wrap',
     },
@@ -128,7 +135,7 @@ export function Players(props: BoardProps<GameState>) {
   const toggleOpenPlayers = (id: number) => {
     if (openPlayers.includes(id)) {
       setOpenPlayers(openPlayers.filter((player) => player != id));
-    } else if ((dimensions.width/dimensions.height) < (2/3)) {
+    } else if (dimensions.upright) {
       setOpenPlayers([id]);
     } else {
       setOpenPlayers([...openPlayers, id]);
@@ -142,11 +149,11 @@ export function Players(props: BoardProps<GameState>) {
       return (
         <div key={`player-avatar-${i}`} style={styles.avatarBox}>
           <wired-card style={styles.avatar} onClick={() => { if (playerTable.length > 0) { toggleOpenPlayers(player.id) }}}>
-              <div style={styles.stats}>
-                {(playerTable.length > 0) && ((!openPlayers.includes(player.id)) ? <Icon name='prev' /> : <Icon name='next' />)}
-                <Icon name='single' />
-              </div>
-            {(player.name).slice(0, 6)}{(player.name.length > 6) && '...'}      
+            <div style={styles.stats}>
+              {(playerTable.length > 0) && ((!openPlayers.includes(player.id)) ? <Icon name='prev' /> : <Icon name='next' />)}
+              <Icon name='single' />
+            </div>
+            {(player.name).slice(0, 6)}{(player.name.length > 6) && '.'}
           </wired-card>
           {
             openPlayers.includes(player.id) &&
@@ -214,7 +221,10 @@ export function Header(props: HeaderProps) {
     <>
       <div style={styles.header}>
         <div style={{ ...styles.item, ...styles.match }} onClick={ () => setShowShare(true) }><Icon name='copy' />&nbsp;{props.matchID !== 'default' ? `${props.matchID}` : "Blank White Cards"}</div>
-        <div style={{ ...styles.item, ...styles.displayname }} onClick={() => { props.setShowPlayers(!props.showPlayers) }}>{playerName}&nbsp;{props.matchID !== 'default' && <Icon name='multi' />}</div>
+        <div style={{ ...styles.item, ...styles.displayname }} onClick={() => { props.setShowPlayers(!props.showPlayers) }}>
+          {playerName}&nbsp;{props.matchID !== 'default' && <Icon name='multi' />}
+          {(props.matchID !== 'default' && props.showPlayers) ? <Icon name='less' /> : <Icon name='more' />}
+        </div>
       </div>
       {showShare && <ShareRoom matchID={props.matchID} setShowShare={setShowShare} />}
     </>
@@ -289,7 +299,7 @@ export function ShareRoom(props: { matchID: string, setShowShare: React.Dispatch
 
 export function CommonSpace(props: BoardProps<GameState>) {
   const dimensions = useWindowDimensions();
-  const [showPlayers, setShowPlayers] = useState((dimensions.width/dimensions.height) > (2/3));
+  const [showPlayers, setShowPlayers] = useState(!(dimensions.upright));
 
   return (
     <>

@@ -6,6 +6,8 @@ import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
 import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
 import DoneOutlinedIcon from '@mui/icons-material/DoneOutlined';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -46,9 +48,11 @@ type IconName =
   'github' |
   'global' |
   'info' |
+  'less' |
   'loading' |
   'logout' |
   'menu' |
+  'more' |
   'multi' |
   'next' |
   'play' |
@@ -80,9 +84,11 @@ export function Icon(props: { name: IconName }) {
     github: <GitHubIcon></GitHubIcon>,
     global: <LanguageOutlinedIcon></LanguageOutlinedIcon>,
     info: <InfoOutlinedIcon></InfoOutlinedIcon>,
+    less: <ExpandLessIcon></ExpandLessIcon>,
     loading: <SyncOutlinedIcon></SyncOutlinedIcon>,
     logout: <LogoutIcon></LogoutIcon>,
     menu: <MenuOutlinedIcon></MenuOutlinedIcon>,
+    more: <ExpandMoreIcon></ExpandMoreIcon>,
     multi: <PeopleIcon></PeopleIcon>,
     next: <ArrowForwardIosIcon></ArrowForwardIosIcon>,
     play: <PlayArrowOutlinedIcon></PlayArrowOutlinedIcon>,
@@ -119,7 +125,7 @@ export function Rotate() {
     rotate: {
       width: width,
       height: height,
-      backgroundColor: (width/height) < (2/3) ? 'white' : '#eee',
+      backgroundColor: 'white',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center',
