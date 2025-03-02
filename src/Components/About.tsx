@@ -1,6 +1,9 @@
 import type { Properties } from 'csstype';
 import { Icon } from './Icons';
 import { useNavigate } from 'react-router';
+import { useState } from 'react';
+import { BoardProps } from 'boardgame.io/dist/types/packages/react';
+import { GameState } from '../Game';
 
 export function About() {
   const navigate = useNavigate();
@@ -115,7 +118,7 @@ export function About() {
         </p>
       </div>
       <div>
-        <a style={styles.subheading}href='https://github.com/mcteamster/white' target='_blank'>
+        <a style={styles.subheading} href='https://github.com/mcteamster/white' target='_blank'>
           <Icon name='github' />
           <p>v2.0.0</p>
         </a>
@@ -123,4 +126,130 @@ export function About() {
       <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { navigate('/') }} elevation={2}><Icon name='logout' />Lobby</wired-card>
     </div>
   );
+}
+
+export function Tutorial(props: BoardProps<GameState>) {
+  const [showTutorial, setShowTutorial] = useState(!sessionStorage.getItem("hideTutorial"));
+  const [dismiss, setDismiss] = useState(false);
+
+  const styles: { [key: string]: Properties<string | number> } = {
+    tutorial: {
+      maxHeight: '75vh',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    buttonBox: {
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    button: {
+      height: '3em',
+      width: '6em',
+      margin: '0.25em',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#eee',
+      borderRadius: '1em',
+    },
+    dismissBox: {
+      display: 'flex',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    dismiss: {
+      height: '1em',
+      width: '1em',
+      margin: '0.25em',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#eee',
+      borderRadius: '1em',
+    },
+    heading: {
+      fontSize: '1.5em',
+      textAlign: 'center',
+    },
+    subheading: {
+      textAlign: 'center',
+    },
+    paragraph: {
+      overflowY: 'scroll',
+      scrollbarWidth: 'none',
+      padding: '0.5em',
+      textAlign: 'justify',
+      width: '25em',
+      maxWidth: '80vw',
+    }
+  };
+
+  const tutorialText = <>
+    <div style={styles.paragraph}>
+      <p>This is a sandbox game that has no exact rules. However, there are some conventional card game concepts:</p>
+      <p>The <u>Deck</u>: All the cards that can be <u>Picked Up</u></p>
+      <p>The <u>Pile</u>: A central area where cards can be <u>Played</u></p>
+      <p>Your <u>Hand</u>: Your hidden collection of cards</p>
+      <p>The <u>Table</u>: Your displayed collection of cards</p>
+      <p>The <u>Discard</u>: Cards removed and hidden from play</p>
+      {
+        props.isMultiplayer ?
+        <>
+          <p>You can <u>Move</u> your cards between these locations and even <u>Send</u> them to other players</p>
+          <p><u>Create</u> new cards and <u>Save</u> them for next time!</p>
+          <h3 style={styles.subheading}>Game Suggestions:</h3>
+          <p>Multiplayer tends to work better with a "Gamemaster" - usually the host, as they have the ability to <u>Load</u> cards and <u>Reset</u> the game.</p>
+          <p>Spend some time creating new cards at the start of the game - about 2 or 3 per player. <u>Reset</u> to shuffle all cards into the deck.</p>
+          <p>If playing for points, find somewhere to take notes. Points get complicated very fast!</p>
+          <p>If playing with drinks, drink-responsibly :)</p>
+          <p>Remember to <u>Save</u> the deck. You can edit it offline and reuse it later.</p>
+          <p>Or just play Free-for-All. Anyone can do anything at any time. Embrace the chaos!</p>
+        </> :
+        <>
+          <p>You can <u>Move</u> your cards between these locations</p>
+          <p><u>Create</u> and <u>Submit</u> new cards to the Global Deck!</p>
+          <h3 style={styles.subheading}>Game Suggestions:</h3>
+          <p>Hotseat Mode. Take turns to pick up a card, do the action (or not), and pass to the next player</p>
+          <p style={styles.subheading}>(Try Multiplayer for more possibilities!)</p>
+        </>
+      }
+    </div>
+  </>
+
+  if (props.isMultiplayer || props.playerID == "0") {
+    return (
+      <wired-dialog open={showTutorial || undefined}>
+        <div style={styles.tutorial}>
+          <div style={styles.heading}>How to Play</div>
+          {tutorialText}
+          <div style={styles.buttonBox}>
+            <div style={styles.dismissBox}>
+              Don't Show Again
+              <wired-card style={styles.dismiss} onClick={() => { setDismiss(!dismiss) }}>
+                {dismiss && <Icon name="exit" />}
+              </wired-card>
+            </div>
+            <wired-card style={styles.button} onClick={() => {
+              if (dismiss) {
+                sessionStorage.setItem('hideTutorial', "1")
+              }
+              setShowTutorial(false);
+            }}>
+              <Icon name="done" />
+              Let's Play!
+            </wired-card>
+          </div>
+        </div>
+      </wired-dialog>
+    )
+  }
 }

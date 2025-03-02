@@ -35,15 +35,15 @@ export function Pile(props: BoardProps<GameState>) {
 
   return (
     <div style={styles.pile}>
-      <div onClick={() => focusCard(pile[0].id, true)}>
+      <div onClick={() => { if (pile.length > 0) { focusCard(pile[0].id, true) }}}>
         {pile.length > 0 ?
           <CardFace {...pile[0]} /> :
           <CardFace {...{
             "id": 0,
             "content": {
-              "title": "Blank White Cards",
-              "author": "a game by mcteamster",
-              "description": "Pick up cards. Do what they say. Create your own!",
+              "title": "",
+              "author": "",
+              "description": "",
             },
             "location": "pile",
           }} />}
@@ -228,7 +228,6 @@ export function Header(props: HeaderProps) {
       </div>
       {showShare && <ShareRoom matchID={props.matchID} setShowShare={setShowShare} />}
     </>
-
   )
 }
 

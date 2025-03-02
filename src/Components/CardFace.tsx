@@ -1,5 +1,6 @@
 import type { Properties } from 'csstype';
 import type { Card } from '../Cards.ts';
+import { Link } from 'react-router';
 
 export function CardFace(card: Card) {
   const baseStyles: {[key: string]: Properties<string | number>} = {
@@ -71,7 +72,6 @@ export function CardFace(card: Card) {
       },
       title: {
         fontSize: '1.5em',
-        fontWeight: 'bold',
       },
       image: {
         width: '100%',
@@ -93,12 +93,28 @@ export function CardFace(card: Card) {
         textAlign: 'center',
       },
     };
-    const content = <>
-        {card.id != 0 && <img style={styles.image} src={card.content.image ?? "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="}></img>}
+
+    let content = <></>;
+    if (card.id == 0) {
+      content = <>
+        <div style={{fontSize: '2.5em'}}>Blank White Cards</div>
+        <div style={{...styles.description, fontSize: '1.5em'}}>
+          Pick up cards.<br></br>
+          Do what they say.<br></br>
+          Create your own!
+        </div>
+        <div>
+          a game by <Link to="https://mcteamster.com" target='_blank' rel="noreferrer">mcteamster</Link>
+        </div>
+      </>
+    } else {
+      content = <>
+        {<img style={styles.image} src={card.content.image ?? "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="}></img>}
         <div style={styles.title}>{card.content.title}</div>
         <div style={styles.description}>{card.content.description}</div>
         <div style={styles.credit}>{card.content.author && `${card.content.author}`}{card.content.date && ` - ${localDate}`}</div>
-    </>
+      </>
+    }
 
     return (
       <wired-card style={{...baseStyles.card, ...styles.card}} elevation={1}>
