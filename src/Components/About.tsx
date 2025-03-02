@@ -60,9 +60,9 @@ export function About() {
           A social party game sandbox where you make the rules. Best played with friends around a table or on video call.
         </p>
         <p>
-          Connect to the same Multiplayer Room to draw cards together using a common DECK.*
-          Put your cards on the PILE for everyone to see in real-time!
-          Or maybe keep them hidden in your HAND, displayed on the TABLE in front of you, or even SEND them to someone else!
+          Connect to the same Multiplayer Room to draw cards together using a common Deck.*
+          Put your cards on the Pile for everyone to see in real-time!
+          Or maybe keep them hidden in your Hand, displayed on the Table in front of you, or even Send them to someone else!
         </p>
         <p>
           Browse the Global Deck in Single Device mode for a local pass-and-play experience.
