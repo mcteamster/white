@@ -122,16 +122,16 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
   // Track number of moves made by the player to debounce button
   const prevNumMoves = useRef({ numMoves: 0, timestamp: new Date() });
   useEffect(() => {
-    if (debounced) {
-      const activePlayersNumMoves = ctx._activePlayersNumMoves
-      if (playerID && activePlayersNumMoves) {
-        if (activePlayersNumMoves[playerID] > prevNumMoves.current.numMoves) {
-          prevNumMoves.current = {
-            numMoves: activePlayersNumMoves[playerID],
-            timestamp: new Date(),
-          };
-  
-          // Focus the top-decked card
+    const activePlayersNumMoves = ctx._activePlayersNumMoves
+    if (playerID && activePlayersNumMoves) {
+      if (activePlayersNumMoves[playerID] > prevNumMoves.current.numMoves) {
+        prevNumMoves.current = {
+          numMoves: activePlayersNumMoves[playerID],
+          timestamp: new Date(),
+        };
+
+        if (debounced) {
+          // Focus the top-decked card and debounce
           if (hand.length > 0) {
             const justPickedUpCard = hand.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))[0]; // Newest to Oldest
             focusCard(justPickedUpCard.id, true)
