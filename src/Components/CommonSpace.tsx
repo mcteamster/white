@@ -223,7 +223,7 @@ export function Header(props: HeaderProps) {
         <div style={{ ...styles.item, ...styles.match }} onClick={ () => setShowShare(true) }><Icon name='copy' />&nbsp;{props.matchID !== 'default' ? `${props.matchID}` : "Blank White Cards"}</div>
         <div style={{ ...styles.item, ...styles.displayname }} onClick={() => { props.setShowPlayers(!props.showPlayers) }}>
           {playerName}&nbsp;{props.matchID !== 'default' && <Icon name='multi' />}
-          {(props.matchID !== 'default' && props.showPlayers) ? <Icon name='less' /> : <Icon name='more' />}
+          {props.matchID !== 'default' && ((props.showPlayers) ? <Icon name='less' /> : <Icon name='more' />)}
         </div>
       </div>
       {showShare && <ShareRoom matchID={props.matchID} setShowShare={setShowShare} />}

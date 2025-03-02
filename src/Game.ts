@@ -118,6 +118,7 @@ export const BlankWhiteCards: Game<GameState> = {
     },
     pickupCard: {
       move: pickupCard,
+      client: false,
       ignoreStaleStateID: true,
     },
     submitCard: {
