@@ -77,7 +77,6 @@ export function Focus(props: BoardProps<GameState>) {
       flexGrow: '1',
       justifyContent: 'center',
       alignItems: 'center',
-      color: '#333',
       backgroundColor: '#eee'
     },
     sendmenu: {
@@ -102,7 +101,6 @@ export function Focus(props: BoardProps<GameState>) {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      color: '#333',
       backgroundColor: '#eee'
     }
   };

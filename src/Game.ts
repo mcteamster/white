@@ -1,6 +1,6 @@
 import type { Game, Move } from "boardgame.io";
 import { INVALID_MOVE, Stage } from 'boardgame.io/core';
-import { Card, getCardById, getCardsByLocation, getCardsByOwner } from './Cards';
+import { Card, getCardById, getCardsByLocation } from './Cards';
 import { presetDecks } from "./lib/constants";
 
 // Game State
@@ -43,7 +43,7 @@ const pickupCard: Move<GameState> = ({ G, random, playerID }) => {
 }
 
 const moveCard: Move<GameState> = ({ G, playerID }, id, target, owner) => {
-  const selectedCard = getCardById(getCardsByOwner(G.cards, playerID), id);
+  const selectedCard = getCardById(G.cards, id);
   if (selectedCard) {
     if (['pile', 'discard', 'deck'].includes(target)) {
       selectedCard.location = target;

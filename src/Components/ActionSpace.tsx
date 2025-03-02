@@ -3,13 +3,13 @@ import type { GameState } from '../Game.ts'
 import { Finalise } from './Finalise.tsx';
 import { Focus } from './Focus.tsx';
 import type { Properties } from 'csstype';
-import { Card, getCardsByLocation } from '../Cards';
+import { Card, getCardsByLocation, getCardsByOwner } from '../Cards';
 import { Icon } from './Icons';
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef, useCallback } from 'react';
 //@ts-expect-error: JS Module
 import { undo, strokes, sketchpad } from '../Canvas.js';
 import { Link, useNavigate } from 'react-router';
-import { AuthContext } from '../lib/contexts.ts';
+import { AuthContext, FocusContext } from '../lib/contexts.ts';
 import { downloadDeck, resizeImage } from '../lib/data.ts';
 import { Loader } from './Loader.tsx';
 import { submitGlobalCard } from '../lib/clients.ts';
@@ -19,14 +19,23 @@ interface ToolbarProps extends BoardProps<GameState> {
   setMode: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, setMode }: ToolbarProps) {
+export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, setMode, ctx }: ToolbarProps) {
   const navigate = useNavigate();
   const { setAuth } = useContext(AuthContext);
   const [debounced, setDebounced] = useState(false);
+  const { focus, setFocus } = useContext(FocusContext);
+  const focusCard = useCallback(((id: number, focusState: boolean) => {
+    if (focus?.id != id && focusState == true) {
+      setFocus({ id });
+    } else {
+      setFocus({});
+    }
+  }), [focus, setFocus]);
 
   const deck = getCardsByLocation(G.cards, "deck");
   const pile = getCardsByLocation(G.cards, "pile");
   const discard = getCardsByLocation(G.cards, "discard");
+  const hand = getCardsByLocation(getCardsByOwner(G.cards, playerID || "0"), "hand");
 
   useEffect(() => {
     const create = (document.getElementById('create') as HTMLElement);
@@ -110,6 +119,31 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
     navigate('/');
   }
 
+  // Track number of moves made by the player to debounce button
+  const prevNumMoves = useRef({ numMoves: 0, timestamp: new Date() });
+  useEffect(() => {
+    if (debounced) {
+      const activePlayersNumMoves = ctx._activePlayersNumMoves
+      if (playerID && activePlayersNumMoves) {
+        if (activePlayersNumMoves[playerID] > prevNumMoves.current.numMoves) {
+          prevNumMoves.current = {
+            numMoves: activePlayersNumMoves[playerID],
+            timestamp: new Date(),
+          };
+  
+          // Focus the top-decked card
+          if (hand.length > 0) {
+            const justPickedUpCard = hand.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))[0]; // Newest to Oldest
+            focusCard(justPickedUpCard.id, true)
+            setTimeout(() => {
+              setDebounced(false);
+            }, 500);
+          }
+        }
+      }
+    }
+  }, [ctx, playerID, debounced, focusCard, hand])
+
   const styles: { [key: string]: Properties<string | number> } = {
     toolbar: {
       width: '100%',
@@ -144,7 +178,9 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
     let mainButtonText = ''
     if (deck.length > 0) {
       if (debounced) {
-        mainButtonIcon = <Icon name='loading' />
+        mainButtonIcon = <div className='spin'>
+          <Icon name='loading' />
+        </div>
         mainButtonText = `Pickup [${deck.length}]`
       } else {
         mainButtonIcon = <Icon name='play' />
@@ -167,13 +203,9 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
       <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='menu' />Menu</wired-card>
       <wired-card style={{ ...styles.button, width: '9.75em', margin: '0' }} onClick={() => {
           if (G.cards.length > 0) {
-            // Limit Pickup to once every half second
             if (!debounced) { 
               setDebounced(true);
               moves.pickupCard(true);
-              setTimeout(() => {
-                setDebounced(false);
-              }, 1000)
             }
           } else if (playerID == '0') {
             setMode('menu-tools-loader')

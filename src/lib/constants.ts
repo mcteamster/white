@@ -22,4 +22,4 @@ const refreshDeck = (deck: string) => {
   }
 }
 
-setTimeout(refreshDeck, 1000 * 30, 'global'); // Refresh after first 30 seconds
+setTimeout(refreshDeck, 1000 * 15, 'global'); // Refresh after first 15 seconds
