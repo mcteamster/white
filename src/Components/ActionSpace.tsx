@@ -145,7 +145,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
         }
       }
     }
-  }, [ctx, playerID, debounced, focusCard, hand])
+  }, [ctx, playerID, debounced, focusCard, hand, isMultiplayer])
 
   const styles: { [key: string]: Properties<string | number> } = {
     toolbar: {

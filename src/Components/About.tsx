@@ -218,7 +218,7 @@ export function Tutorial(props: BoardProps<GameState>) {
           <p>You can <u>Move</u> your cards between these locations</p>
           <p><u>Create</u> and <u>Submit</u> new cards to the Global Deck!</p>
           <h3 style={styles.subheading}>Game Suggestions:</h3>
-          <p>Hotseat Mode. Take turns to pick up a card, do the action (or not), and pass to the next player</p>
+          <p>Hotseat Mode - picked up cards are instantly focused. Take turns to pick up, do the action (or not), and pass to the next player.</p>
           <p style={styles.subheading}>(Try Multiplayer for more possibilities!)</p>
         </>
       }
