@@ -13,6 +13,7 @@ import { AuthContext, FocusContext, LoadingContext } from '../lib/contexts.ts';
 import { downloadDeck, resizeImage } from '../lib/data.ts';
 import { Loader } from './Loader.tsx';
 import { submitGlobalCard } from '../lib/clients.ts';
+import { Tutorial } from './About.tsx';
 
 interface ToolbarProps extends BoardProps<GameState> {
   mode: string;
@@ -120,14 +121,15 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
   }
 
   // Track number of moves made by the player to debounce button
-  const prevNumMoves = useRef({ numMoves: 0, timestamp: new Date() });
+  const moveTracker = useRef({ numMoves: 0, timestamp: (new Date()).getTime() });
   useEffect(() => {
     const activePlayersNumMoves = ctx._activePlayersNumMoves
     if (playerID && activePlayersNumMoves) {
-      if (activePlayersNumMoves[playerID] > prevNumMoves.current.numMoves) {
-        prevNumMoves.current = {
+      if (activePlayersNumMoves[playerID] > moveTracker.current.numMoves) {
+        // Update Reference
+        moveTracker.current = {
           numMoves: activePlayersNumMoves[playerID],
-          timestamp: new Date(),
+          timestamp: (new Date()).getTime(),
         };
 
         // Handle Pickup Debounce
@@ -145,6 +147,27 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
               setLoading(false);
             }, 500);
           }
+        }
+      } else {
+        if (loading) {
+          const checkTimeout = () => {
+            // Check if it's been longer than 6 seconds
+            const now = (new Date()).getTime();
+            if ((now - moveTracker.current.timestamp) > 6000) {
+              setTimeout(() => {
+                setLoading(false);
+              }, 0);
+            } else {
+              setTimeout(checkTimeout, 1000)
+            }
+          }
+          checkTimeout();
+        } else {
+          // Update Reference
+          moveTracker.current = {
+            numMoves: activePlayersNumMoves[playerID],
+            timestamp: (new Date()).getTime(),
+          };
         }
       }
     }
@@ -238,15 +261,15 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
   } else if (mode === 'menu') {
     toolset = <>
       <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Close</wired-card>
+      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu-info') }} elevation={2}><Icon name='book' />Info</wired-card>
       <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu-tools') }} elevation={2}><Icon name='settings' />Tools</wired-card>
-      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu-info') }} elevation={2}><Icon name='info' />Info</wired-card>
       <wired-card style={{ ...styles.button, width: '3em', color: 'red' }} onClick={() => { setMode('menu-leave') }} elevation={2}><Icon name='logout' />{isMultiplayer ? 'Leave' : 'Lobby'}</wired-card>
     </>
   } else if (mode === 'menu-info') {
     toolset = <>
       <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='back' />Back</wired-card>
+      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('play-tutorial') }} elevation={2}><Icon name='how' />Tutorial</wired-card>
       <Link to="/about" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='about' />About</wired-card></Link>
-      <Link to="https://mcteamster.com" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='game' />Games</wired-card></Link>
       <Link to="https://www.buymeacoffee.com/mcteamster" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='coffee' />Support</wired-card></Link>
     </>
   } else if (mode === 'menu-tools') {
@@ -302,13 +325,14 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
 }
 
 export function ActionSpace(props: BoardProps<GameState>) {
-  const [mode, setMode] = useState('play');
+  const [mode, setMode] = useState(localStorage.getItem('tutorial') == "true" ? 'play-tutorial' : 'play');
   return (
     <>
       <Focus {...props} />
       <Finalise multiplayer={props.isMultiplayer} />
       <Toolbar {...props} mode={mode} setMode={setMode} />
       <Loader {...props} mode={mode} setMode={setMode}></Loader>
+      <Tutorial {...props} mode={mode} setMode={setMode} />
     </>
   )
 }

@@ -4,7 +4,6 @@ import type { Properties } from 'csstype';
 import { ActionSpace } from './Components/ActionSpace.tsx';
 import { CommonSpace } from './Components/CommonSpace.tsx';
 import { PlayerSpace } from './Components/PlayerSpace.tsx';
-import { Tutorial } from './Components/About.tsx';
 
 // Web Components from https://wiredjs.com/
 import 'wired-elements';
@@ -37,7 +36,6 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
       <ActionSpace {...props} />
       <CommonSpace {...props} />
       <PlayerSpace {...props} />
-      <Tutorial {...props} />
     </div>
   );
 }

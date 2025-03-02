@@ -139,7 +139,7 @@ export function Focus(props: BoardProps<GameState>) {
     }
 
     const changeFocus = (direction: 'prev' | 'next') => {
-      const adjacentCard = getAdjacentCard(props.G.cards, focused.id, direction)
+      const adjacentCard = getAdjacentCard(props.G.cards, focused.id, direction, props.playerID)
       if (adjacentCard) {
         focusCard(adjacentCard.id, true);
       }
@@ -147,13 +147,13 @@ export function Focus(props: BoardProps<GameState>) {
 
     const browse = <>
       {
-        getAdjacentCard(props.G.cards, focused.id, 'prev') &&
+        getAdjacentCard(props.G.cards, focused.id, 'prev', props.playerID) &&
         <div onClick={(e) => { changeFocus('prev'); e.stopPropagation() }}>
           <Browse type="prev" />
         </div>
       }
       {
-        getAdjacentCard(props.G.cards, focused.id, 'next') &&
+        getAdjacentCard(props.G.cards, focused.id, 'next', props.playerID) &&
         <div onClick={(e) => { changeFocus('next'); e.stopPropagation() }}>
           <Browse type="next" />
         </div>
@@ -185,7 +185,7 @@ export function Focus(props: BoardProps<GameState>) {
     } else if (owned && hotkeys.up) {
       if (focused.location != "table") {
         setTimeout(() => {
-          const adjacentCard = getAdjacentCard(props.G.cards, focused.id, 'prev') || getAdjacentCard(props.G.cards, focused.id, 'next');
+          const adjacentCard = getAdjacentCard(props.G.cards, focused.id, 'prev', props.playerID) || getAdjacentCard(props.G.cards, focused.id, 'next', props.playerID);
           props.moves.moveCard(focused.id, "table");
           if (adjacentCard) {
             focusCard(adjacentCard.id, true);
@@ -199,7 +199,7 @@ export function Focus(props: BoardProps<GameState>) {
     } else if (owned && hotkeys.down) {
       if (focused.location != "hand") {
         setTimeout(() => {
-          const adjacentCard = getAdjacentCard(props.G.cards, focused.id, 'prev') || getAdjacentCard(props.G.cards, focused.id, 'next');
+          const adjacentCard = getAdjacentCard(props.G.cards, focused.id, 'prev', props.playerID) || getAdjacentCard(props.G.cards, focused.id, 'next', props.playerID);
           props.moves.moveCard(focused.id, "hand");
           if (adjacentCard) {
             focusCard(adjacentCard.id, true);
@@ -212,7 +212,7 @@ export function Focus(props: BoardProps<GameState>) {
       }
     } else if (owned && hotkeys.delete) {
       setTimeout(() => {
-        const adjacentCard = getAdjacentCard(props.G.cards, focused.id, 'prev') || getAdjacentCard(props.G.cards, focused.id, 'next');
+        const adjacentCard = getAdjacentCard(props.G.cards, focused.id, 'prev', props.playerID) || getAdjacentCard(props.G.cards, focused.id, 'next', props.playerID);
         props.moves.moveCard(focused.id, "discard");
         if (adjacentCard) {
           focusCard(adjacentCard.id, true);
@@ -222,7 +222,7 @@ export function Focus(props: BoardProps<GameState>) {
       }, 0)
     } else if (owned && hotkeys.backspace) {
       setTimeout(() => {
-        const adjacentCard = getAdjacentCard(props.G.cards, focused.id, 'prev') || getAdjacentCard(props.G.cards, focused.id, 'next');
+        const adjacentCard = getAdjacentCard(props.G.cards, focused.id, 'prev', props.playerID) || getAdjacentCard(props.G.cards, focused.id, 'next', props.playerID);
         props.moves.moveCard(focused.id, "deck");
         if (adjacentCard) {
           focusCard(adjacentCard.id, true);

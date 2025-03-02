@@ -1,6 +1,7 @@
 import type { Properties } from 'csstype';
 import type { Card } from '../Cards.ts';
 import { Link } from 'react-router';
+import { Icon } from './Icons.tsx';
 
 export function CardFace(card: Card) {
   const baseStyles: {[key: string]: Properties<string | number>} = {
@@ -103,9 +104,10 @@ export function CardFace(card: Card) {
           Do what they say.<br></br>
           Create your own!
         </div>
-        <div>
-          a game by mcteamster
-        </div>
+        <Link to="https://mcteamster.com" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}>
+          <Icon name='game' />
+          a game by <u>mcteamster</u>
+        </Link>
       </>
     } else {
       content = <>

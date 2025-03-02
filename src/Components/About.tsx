@@ -128,9 +128,13 @@ export function About() {
   );
 }
 
-export function Tutorial(props: BoardProps<GameState>) {
-  const [showTutorial, setShowTutorial] = useState(!sessionStorage.getItem("hideTutorial"));
-  const [dismiss, setDismiss] = useState(false);
+interface TutorialProps extends BoardProps<GameState> {
+  mode: string;
+  setMode: React.Dispatch<React.SetStateAction<string>>;
+}
+
+export function Tutorial(props: TutorialProps) {
+  const [dismiss, setDismiss] = useState(localStorage.getItem('tutorial') == "false");
 
   const styles: { [key: string]: Properties<string | number> } = {
     tutorial: {
@@ -228,22 +232,19 @@ export function Tutorial(props: BoardProps<GameState>) {
 
   if (props.isMultiplayer || props.playerID == "0") {
     return (
-      <wired-dialog open={showTutorial || undefined}>
+      <wired-dialog open={props.mode == 'play-tutorial' || undefined}>
         <div style={styles.tutorial}>
           <div style={styles.heading}>How to Play</div>
           {tutorialText}
           <div style={styles.buttonBox}>
             <div style={styles.dismissBox}>
               Don't Show Again
-              <wired-card style={styles.dismiss} onClick={() => { setDismiss(!dismiss) }}>
+              <wired-card style={styles.dismiss} onClick={() => { setDismiss(!dismiss); localStorage.setItem('tutorial', String(dismiss)) }}>
                 {dismiss && <Icon name="exit" />}
               </wired-card>
             </div>
             <wired-card style={styles.button} onClick={() => {
-              if (dismiss) {
-                sessionStorage.setItem('hideTutorial', "1")
-              }
-              setShowTutorial(false);
+              props.setMode('play');
             }}>
               <Icon name="done" />
               Let's Play!

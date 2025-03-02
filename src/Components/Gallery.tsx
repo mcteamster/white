@@ -122,7 +122,7 @@ export function Gallery() {
     }
 
     const changeViewed = (direction: 'old' | 'new') => {
-      const adjacentCard = getAdjacentCard(filteredCards, viewedCard.id, direction);
+      const adjacentCard = getAdjacentCard(filteredCards, viewedCard.id, direction, null);
       if (adjacentCard) {
         navigate(`/card/${Number(adjacentCard.id)}`)
       }

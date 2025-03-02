@@ -1,5 +1,6 @@
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import BookOutlinedIcon from '@mui/icons-material/BookOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import CollectionsOutlinedIcon from '@mui/icons-material/CollectionsOutlined';
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
@@ -36,6 +37,7 @@ import { useWindowDimensions } from '../lib/hooks';
 type IconName = 
   'about' |
   'back' |
+  'book' |
   'checklist' |
   'coffee' |
   'copy' |
@@ -47,7 +49,7 @@ type IconName =
   'game' |
   'github' |
   'global' |
-  'info' |
+  'how' |
   'less' |
   'loading' |
   'logout' |
@@ -70,8 +72,9 @@ type BrowseType = 'prev' | 'next'
 
 export function Icon(props: { name: IconName }) {
   const icons = {
-    about: <QuestionMarkOutlinedIcon></QuestionMarkOutlinedIcon>,
+    about: <InfoOutlinedIcon></InfoOutlinedIcon>,
     back: <KeyboardBackspaceOutlinedIcon></KeyboardBackspaceOutlinedIcon>,
+    book: <BookOutlinedIcon></BookOutlinedIcon>,
     checklist: <LibraryAddCheckOutlinedIcon></LibraryAddCheckOutlinedIcon>,
     coffee: <LocalCafeOutlinedIcon></LocalCafeOutlinedIcon>,
     copy: <ContentCopyOutlinedIcon></ContentCopyOutlinedIcon>,
@@ -83,7 +86,7 @@ export function Icon(props: { name: IconName }) {
     game: <SportsEsportsOutlinedIcon></SportsEsportsOutlinedIcon>,
     github: <GitHubIcon></GitHubIcon>,
     global: <LanguageOutlinedIcon></LanguageOutlinedIcon>,
-    info: <InfoOutlinedIcon></InfoOutlinedIcon>,
+    how: <QuestionMarkOutlinedIcon></QuestionMarkOutlinedIcon>,
     less: <ExpandLessIcon></ExpandLessIcon>,
     loading: <SyncOutlinedIcon></SyncOutlinedIcon>,
     logout: <LogoutIcon></LogoutIcon>,

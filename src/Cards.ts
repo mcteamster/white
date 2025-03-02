@@ -29,7 +29,7 @@ export const getCardsByOwner = (cards: Card[], playerID: string) => {
   return cards.filter(card => card.owner === playerID);
 }
 
-export const getAdjacentCard = (cards: Card[], id: number, direction: 'prev' | 'next' | 'old' | 'new') => {
+export const getAdjacentCard = (cards: Card[], id: number, direction: 'prev' | 'next' | 'old' | 'new', playerID: string | null) => {
   const position = cards.find((card) => card.id == id)?.location;
   const owner = cards.find((card) => card.id == id)?.owner;
   if (position) {
@@ -42,6 +42,9 @@ export const getAdjacentCard = (cards: Card[], id: number, direction: 'prev' | '
     let cardList = cards.filter(card => card.location === position).sort(directionSort[direction])
     if (position == 'hand' || position == 'table') {
       cardList = cardList.filter(card => card?.owner === owner); // Filter for same ownership
+      if (position == 'hand' && owner != playerID) {
+        return
+      }
     }
     const currentIndex = cardList.findIndex((card) => card.id == id);
     if (currentIndex > 0) {
