@@ -130,11 +130,14 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
           timestamp: new Date(),
         };
 
+        // Handle Pickup Debounce
         if (debounced) {
-          // Focus the top-decked card and debounce
           if (hand.length > 0) {
-            const justPickedUpCard = hand.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))[0]; // Newest to Oldest
-            focusCard(justPickedUpCard.id, true)
+            if (!isMultiplayer) {
+              // Focus the topdecked card in Single Device mode only
+              const justPickedUpCard = hand.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))[0]; // Newest to Oldest
+              focusCard(justPickedUpCard.id, true)
+            }
             setTimeout(() => {
               setDebounced(false);
             }, 500);
