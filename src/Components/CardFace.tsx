@@ -104,7 +104,7 @@ export function CardFace(card: Card) {
           Create your own!
         </div>
         <div>
-          a game by <Link to="https://mcteamster.com" target='_blank' rel="noreferrer">mcteamster</Link>
+          a game by mcteamster
         </div>
       </>
     } else {

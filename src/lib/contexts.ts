@@ -1,6 +1,14 @@
 // Contexts
 import { createContext, Dispatch, SetStateAction } from 'react';
 
+// Loading
+export interface LoadingContextType {
+  loading: boolean,
+  setLoading: (loading: boolean) => void;
+}
+
+export const LoadingContext = createContext<LoadingContextType>({ loading: false, setLoading: () => {} });
+
 // Auth
 export interface AuthType {
   matchID?: string,

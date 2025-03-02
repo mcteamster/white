@@ -195,7 +195,7 @@ export function Tutorial(props: BoardProps<GameState>) {
 
   const tutorialText = <>
     <div style={styles.paragraph}>
-      <p>This is a sandbox game that has no exact rules. However, there are some conventional card game concepts:</p>
+      <p>This is a sandbox game with no exact rules - but it does have conventional card game concepts:</p>
       <p>The <u>Deck</u>: All the cards that can be <u>Picked Up</u></p>
       <p>The <u>Pile</u>: A central area where cards can be <u>Played</u></p>
       <p>Your <u>Hand</u>: Your hidden collection of cards</p>
@@ -208,11 +208,12 @@ export function Tutorial(props: BoardProps<GameState>) {
           <p><u>Create</u> new cards and <u>Save</u> them for next time!</p>
           <h3 style={styles.subheading}>Game Suggestions:</h3>
           <p>Multiplayer tends to work better with a "Gamemaster" - usually the host, as they have the ability to <u>Load</u> cards and <u>Reset</u> the game.</p>
-          <p>Spend some time creating new cards at the start of the game - about 2 or 3 per player. <u>Reset</u> to shuffle all cards into the deck.</p>
+          <p>In the beginning, spend some time creating new cards - about 2 or 3 per player. <u>Reset</u> to shuffle all cards into the deck.</p>
+          <p>A typical game might start with everyone getting a Hand, then taking turns to play and Pick Up more.</p>
           <p>If playing for points, find somewhere to take notes. Points get complicated very fast!</p>
           <p>If playing with drinks, drink-responsibly :)</p>
           <p>Remember to <u>Save</u> the deck. You can edit it offline and reuse it later.</p>
-          <p>Or just play Free-for-All. Anyone can do anything at any time. Embrace the chaos!</p>
+          <p>Or why not just play Free-for-All? Anyone can do anything at any time. Embrace the chaos!</p>
         </> :
         <>
           <p>You can <u>Move</u> your cards between these locations</p>

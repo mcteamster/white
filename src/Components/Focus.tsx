@@ -4,9 +4,10 @@ import type { Properties } from 'csstype';
 import { Card, getAdjacentCard, getCardById } from '../Cards';
 import { Icon, Browse } from './Icons';
 import { useCallback, useContext, useState } from 'react';
-import { FocusContext, HotkeysContext } from '../lib/contexts.ts';
+import { FocusContext, HotkeysContext, LoadingContext } from '../lib/contexts.ts';
 
 export function Focus(props: BoardProps<GameState>) {
+  const { loading, setLoading } = useContext(LoadingContext);
   const { focus, setFocus } = useContext(FocusContext);
   const focusCard = useCallback(((id: number, focusState: boolean) => {
     if (focus?.id != id && focusState == true) {
@@ -121,6 +122,19 @@ export function Focus(props: BoardProps<GameState>) {
         {<wired-card style={{ ...styles.button }} id="handButton" onClick={() => { props.moves.moveCard(focused.id, "hand"); focusCard(focused.id, false) }}><Icon name='take' />Hand</wired-card>}
         {<wired-card style={{ ...styles.button }} id="pileButton" onClick={() => { props.moves.moveCard(focused.id, "pile"); focusCard(focused.id, false) }}><Icon name='pile' />Pile</wired-card>}
         {<wired-card style={{ ...styles.button }} id="tableButton" onClick={() => { props.moves.moveCard(focused.id, "table"); focusCard(focused.id, false) }}><Icon name='display' />Table</wired-card>}
+      </div>
+    } else if (focused.location == 'pile') {
+      tray = <div style={styles.tray}>
+        {<wired-card style={{ ...styles.button }} id="claimButton" onClick={(e) => { props.moves.claimCard(focused.id); setLoading(true); e.stopPropagation() }}>
+          {
+            loading ?
+            <div className='spin'>
+              <Icon name='loading' />
+            </div> : 
+            <Icon name='take' />
+          }
+          Put in Hand
+        </wired-card>}
       </div>
     }
 

@@ -9,7 +9,7 @@ import { useState, useEffect, useContext, useRef, useCallback } from 'react';
 //@ts-expect-error: JS Module
 import { undo, strokes, sketchpad } from '../Canvas.js';
 import { Link, useNavigate } from 'react-router';
-import { AuthContext, FocusContext } from '../lib/contexts.ts';
+import { AuthContext, FocusContext, LoadingContext } from '../lib/contexts.ts';
 import { downloadDeck, resizeImage } from '../lib/data.ts';
 import { Loader } from './Loader.tsx';
 import { submitGlobalCard } from '../lib/clients.ts';
@@ -22,7 +22,7 @@ interface ToolbarProps extends BoardProps<GameState> {
 export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, setMode, ctx }: ToolbarProps) {
   const navigate = useNavigate();
   const { setAuth } = useContext(AuthContext);
-  const [debounced, setDebounced] = useState(false);
+  const { loading, setLoading } = useContext(LoadingContext);
   const { focus, setFocus } = useContext(FocusContext);
   const focusCard = useCallback(((id: number, focusState: boolean) => {
     if (focus?.id != id && focusState == true) {
@@ -131,21 +131,24 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
         };
 
         // Handle Pickup Debounce
-        if (debounced) {
+        if (loading) {
           if (hand.length > 0) {
+            // Focus the topdecked card in Single Device mode only
             if (!isMultiplayer) {
-              // Focus the topdecked card in Single Device mode only
               const justPickedUpCard = hand.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))[0]; // Newest to Oldest
-              focusCard(justPickedUpCard.id, true)
+              // If it came from the Pile, no need to refocus
+              if (!justPickedUpCard.previousOwner) {
+                focusCard(justPickedUpCard.id, true);
+              }
             }
             setTimeout(() => {
-              setDebounced(false);
+              setLoading(false);
             }, 500);
           }
         }
       }
     }
-  }, [ctx, playerID, debounced, focusCard, hand, isMultiplayer])
+  }, [ctx, playerID, loading, setLoading, focusCard, hand, isMultiplayer])
 
   const styles: { [key: string]: Properties<string | number> } = {
     toolbar: {
@@ -180,7 +183,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
     let mainButtonIcon = <></>
     let mainButtonText = ''
     if (deck.length > 0) {
-      if (debounced) {
+      if (loading) {
         mainButtonIcon = <div className='spin'>
           <Icon name='loading' />
         </div>
@@ -206,8 +209,8 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
       <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='menu' />Menu</wired-card>
       <wired-card style={{ ...styles.button, width: '9.75em', margin: '0' }} onClick={() => {
           if (G.cards.length > 0) {
-            if (!debounced) { 
-              setDebounced(true);
+            if (!loading) { 
+              setLoading(true);
               moves.pickupCard(true);
             }
           } else if (playerID == '0') {

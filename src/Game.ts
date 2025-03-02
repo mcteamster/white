@@ -65,6 +65,22 @@ const moveCard: Move<GameState> = ({ G, playerID }, id, target, owner) => {
   }
 }
 
+const claimCard: Move<GameState> = ({ G, playerID }, id) => {
+  const selectedCard = getCardById(G.cards, id);
+  if (selectedCard) {
+    if (selectedCard.location == 'pile') {
+      // Cards in the pile have no owner and can be "claimed" by anyone into their hand
+      selectedCard.owner = playerID;
+      selectedCard.timestamp = Number(Date.now());
+      selectedCard.location = 'hand';
+    } else {
+      return INVALID_MOVE;
+    }
+  } else {
+    return INVALID_MOVE;
+  }
+}
+
 const submitCard: Move<GameState> = ({ G }, card: Card) => {
   card.id = G.cards.length + 1; // Commit ID sequentially to GameState
   G.cards.push(card);
@@ -114,6 +130,11 @@ export const BlankWhiteCards: Game<GameState> = {
   moves: {
     moveCard: {
       move: moveCard,
+      ignoreStaleStateID: true,
+    },
+    claimCard: {
+      move: claimCard,
+      client: false,
       ignoreStaleStateID: true,
     },
     pickupCard: {
