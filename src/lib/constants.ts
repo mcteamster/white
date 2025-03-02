@@ -10,17 +10,16 @@ export const presetDecks: {[key: string]: GameState} = {
 }
 
 const refreshDeck = (deck: string) => {
-  (fetch(`${ORIGIN}/decks/${deck}.json`)).then(async (res) => {
-    presetDecks[deck] = (((await res.json())) as GameState);
-  });
+  try {
+    console.debug(`${new Date()} Refreshing Decks`);
+    (fetch(`${ORIGIN}/decks/${deck}.json`)).then(async (res) => {
+      presetDecks[deck] = (((await res.json())) as GameState);
+    });
+
+    setTimeout(refreshDeck, 1000 * 60 * 10, 'global'); // Refresh every 10 minutes thereafter
+  } catch (e) {
+    console.error(e)
+  }
 }
 
-try {
-  refreshDeck('global');
-  setInterval(() => {
-    console.debug(`${new Date()} Refreshing Decks`);
-    refreshDeck('global');
-  }, 1000 * 60 * 10);
-} catch (e) {
-  console.error(e)
-}
+setTimeout(refreshDeck, 1000 * 30, 'global'); // Refresh after first 30 seconds

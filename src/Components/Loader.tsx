@@ -159,7 +159,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
       width: '100%',
       minWidth: '10em',
       margin: '0',
-      maxHeight: '25vh',
+      maxHeight: '35vh',
       overflowY: 'scroll',
       display: 'flex',
       flexDirection: 'row',
@@ -185,6 +185,10 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
       width: '2em',
       height: '2em',
       border: '0.1pt solid black',
+      backgroundColor: 'white',
+    },
+    prompt: {
+      textAlign: 'center',
     },
     instructionsContainer: {
       display: 'flex',
@@ -196,16 +200,10 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
       width: '15em',
       margin: '0.5em',
       textAlign: 'center',
-    },
-    selection: {
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-around',
-      alignItems: 'center',
+      backgroundColor: '#eee',
     },
     uploader: {
-      maxWidth: '20em',
-      fontFamily: "'Patrick Hand SC', Arial, Helvetica, sans-serif",
+      display: 'none',
     },
     confirmation: {
       width: '100%',
@@ -248,6 +246,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
         <div style={styles.title}>
           Deck Loader
         </div>
+        <div>
         {
           loaded.length > 0 ?
             <wired-card>
@@ -270,32 +269,33 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
               </div>
               <div style={styles.preview}>
                 {loadedPreview}
-              </div>           
+              </div>
+              <div style={styles.prompt}>
+                {globalSubmit ? 'Limited to ONE card per submission' : 'Tap cards to include/exclude'}
+              </div>
             </wired-card> :
             <div style={styles.instructionsContainer} >
               {
                 !isMultiplayer &&
                 <>
-                  <wired-card style={{...styles.instructions, backgroundColor: globalSubmit ? '#eee' : undefined }} onClick={() => { setGlobalSubmit(true) }}>
+                  <wired-card style={{...styles.instructions }} onClick={() => { setGlobalSubmit(true); document.getElementById('fileselector')?.click() }}>
                     <Icon name='global' />
                     Submit to the Global Deck
                   </wired-card>
                   or
                 </>
               }
-              <wired-card style={{...styles.instructions, backgroundColor: globalSubmit ? undefined : '#eee' }} onClick={() => { setGlobalSubmit(false) }}>
+              <wired-card style={{...styles.instructions }} onClick={() => { setGlobalSubmit(false); document.getElementById('fileselector')?.click() }}>
                 <Icon name='display' />
                 Load cards into this session
               </wired-card>
+              <div id="fileCard" style={styles.prompt}>
+                From a Saved Deck File
+              </div>
             </div>
-        }
-        <div style={styles.selection}>
-          Select a Saved Deck File
-          <wired-card id="fileCard">
-            <input disabled={progress[0] != -1} style={styles.uploader} type="file" id="fileselector" accept=".html" onChange={uploadDeck} />
-          </wired-card>
-          <div>*{globalSubmit ? 'maximum of ONE card per submission' : 'one deck per upload'} </div>
+        } 
         </div>
+        <input disabled={progress[0] != -1} style={styles.uploader} type="file" id="fileselector" accept=".html" onChange={uploadDeck} />
         <div style={styles.confirmation}>
           <wired-card style={styles.button} onClick={() => { setMode('play') }}>
             <Icon name='exit' />Close
@@ -305,7 +305,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
           </wired-card>
           <wired-card style={{ 
               ...styles.button, 
-              color: ((globalSubmit && !isMultiplayer && getCardsByLocation(loaded, 'deck').length == 1)) ? undefined : ((progress[0] == -1) && (getCardsByLocation(loaded, 'deck').length > 0)) ? undefined : 'grey',
+              color: ((globalSubmit && !isMultiplayer && getCardsByLocation(loaded, 'deck').length == 1)) ? undefined : (!globalSubmit &&(progress[0] == -1) && (getCardsByLocation(loaded, 'deck').length > 0)) ? undefined : 'grey',
             }} 
             onClick={() => {
             if (progress[0] == -1 && getCardsByLocation(loaded, 'deck').length > 0) {
