@@ -1,5 +1,5 @@
 // Hooks
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { HotkeysContextType } from './contexts';
 
 // Dimensions
@@ -29,6 +29,7 @@ export const useWindowDimensions = () => {
 
 // Hotkeys
 export const useHotkeys = ({ hotkeys, setHotkeys}: HotkeysContextType) => {
+  const keyTicks = useRef(0);
   useEffect(() => {
     const hotkeyMapping = {
       ArrowUp: 'up',
@@ -45,17 +46,30 @@ export const useHotkeys = ({ hotkeys, setHotkeys}: HotkeysContextType) => {
     const keyDownHandler = (event: globalThis.KeyboardEvent) => {
       if (hotkeyMapping[event.code as keyof typeof hotkeyMapping]) {
         const hotkeyEvent: { [key: string]: boolean } = {};
-        hotkeyEvent[hotkeyMapping[event.code as keyof typeof hotkeyMapping]] = true;
-        setHotkeys(hotkeyEvent);
+        // Slow Down repeated keys
+        if (keyTicks.current > 6 || keyTicks.current == 0) {
+          hotkeyEvent[hotkeyMapping[event.code as keyof typeof hotkeyMapping]] = true;
+          setHotkeys(hotkeyEvent);
+          keyTicks.current = 0;
+        }
+        keyTicks.current++;
       }
       setTimeout(() => {
         setHotkeys({});
       }, 0)
     };
 
+    // Clear Reference
+    const keyUpHandler = () => {
+      keyTicks.current = 0;
+      setHotkeys({});
+    }
+
     document.addEventListener("keydown", keyDownHandler);
+    document.addEventListener("keyup", keyUpHandler);
     return () => {
       document.removeEventListener("keydown", keyDownHandler);
+      document.removeEventListener("keyup", keyUpHandler);
     };
   }, [hotkeys, setHotkeys])
 }

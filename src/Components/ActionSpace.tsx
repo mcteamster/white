@@ -145,7 +145,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
                   focusCard(justPickedUpCard.id, true);
                 }
               }
-            }, 500);
+            }, 250);
           }
         }
       } else {
