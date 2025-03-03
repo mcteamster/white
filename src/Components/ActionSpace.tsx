@@ -210,14 +210,13 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
         mainButtonIcon = <div className='spin'>
           <Icon name='loading' />
         </div>
-        mainButtonText = `Pickup [${deck.length}]`
       } else {
         mainButtonIcon = <Icon name='play' />
-        mainButtonText = `Pickup [${deck.length}]`
       }
+      mainButtonText = `Pickup (${deck.length})`
     } else if (G.cards.length == 0) {
       if (playerID == '0') {
-        mainButtonIcon = <Icon name='display' />
+        mainButtonIcon = <Icon name='display' /> 
         mainButtonText = 'Load Saved Deck?'
       } else {
         mainButtonIcon = <Icon name='create' />
