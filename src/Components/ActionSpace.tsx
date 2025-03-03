@@ -135,16 +135,16 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
         // Handle Pickup Debounce
         if (loading) {
           if (hand.length > 0) {
-            // Focus the topdecked card in Single Device mode only
-            if (!isMultiplayer) {
-              const justPickedUpCard = hand.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))[0]; // Newest to Oldest
-              // If it came from the Pile, no need to refocus
-              if (!justPickedUpCard.previousOwner) {
-                focusCard(justPickedUpCard.id, true);
-              }
-            }
             setTimeout(() => {
+              // Focus the topdecked card in Single Device mode only
               setLoading(false);
+              if (!isMultiplayer) {
+                const justPickedUpCard = hand.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))[0]; // Newest to Oldest
+                // If it came from the Pile, no need to refocus
+                if (!justPickedUpCard.previousOwner) {
+                  focusCard(justPickedUpCard.id, true);
+                }
+              }
             }, 500);
           }
         }
