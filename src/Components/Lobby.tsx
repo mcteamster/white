@@ -54,8 +54,7 @@ const styles: { [key: string]: Properties<string | number> } = {
     textAlign: 'center',
   },
   code: {
-    fontSize: '1.25em',
-    width: '5em',
+    width: '3em',
   },
   button: {
     fontSize: '1.25em',
@@ -228,14 +227,15 @@ export function Lobby(props: { globalSize: number }) {
 
           <div style={{ display: (stage == 'landing') ? undefined : 'none' }}>
             <div style={styles.heading}><Icon name="multi" />&nbsp;Multiplayer</div>
-            <div style={styles.subheading}>Join by Room Code</div>
             <div style={styles.textentry}>
-              <wired-input style={styles.code} id="roomInput" placeholder="Room Code" maxlength={4} value={auth?.matchID}></wired-input>
-              <wired-card style={styles.button} onClick={() => { checkForRoomCode() }}><Icon name='send' /></wired-card>
+              <wired-card style={styles.action} onClick={() => { checkForRoomCode() }}>
+                Join Room by&nbsp;
+                <wired-input style={styles.code} id="roomInput" placeholder="Code" maxlength={4} value={auth?.matchID} onClick={(e) => e.stopPropagation()}></wired-input>
+              </wired-card>
             </div>
             <div>or</div>
             <wired-card style={{...styles.action, fontSize: '1.5em'}} onClick={() => { setStage('create') }}>
-              Create New Game
+              Create a New Game
             </wired-card>
           </div>
 
