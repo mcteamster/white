@@ -1,6 +1,6 @@
 import type { Properties } from 'csstype';
 import { Icon } from './Icons';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { useState } from 'react';
 import { BoardProps } from 'boardgame.io/dist/types/packages/react';
 import { GameState } from '../Game';
@@ -26,7 +26,7 @@ export function About() {
     button: {
       position: 'fixed',
       bottom: '1em',
-      left: '1em',
+      right: '1em',
       height: '3em',
       width: '5.5em',
       margin: '0.25em',
@@ -52,24 +52,27 @@ export function About() {
   return (
     <div style={styles.about}>
       <h1>Blank White Cards</h1>
-      <div>a game by mcteamster</div>
+      <Link to="https://mcteamster.com" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}>
+        a game by <u>mcteamster</u>
+      </Link>
       <div style={styles.paragraph} id='about'>
         <h2 style={styles.subheading}>About</h2>
-        <p>This is <a href="https://en.wikipedia.org/wiki/1000_Blank_White_Cards" target="_blank"><u>1000 Blank White Cards</u></a> online.</p>
+        <p>This is <Link to="https://en.wikipedia.org/wiki/1000_Blank_White_Cards" target="_blank" rel="noreferrer">1000 Blank White Cards</Link> online.</p>
         <p>
-          A social party game sandbox where you make the rules. Best played with friends around a table or on video call.
+          A social drawing sandbox party game where you make the rules. Best played with friends around a table or on video call.
         </p>
         <p>
-          Connect to the same Multiplayer Room to draw cards together using a common Deck.*
-          Put your cards on the Pile for everyone to see in real-time!
-          Or maybe keep them hidden in your Hand, displayed on the Table in front of you, or even Send them to someone else!
+          Connect to the same Multiplayer Room to draw cards together using a common Deck.
+          Play your cards on the Pile for everyone to see in real-time!
+          Or maybe keep them hidden in your Hand, displayed on the Table, or Send them to someone else!
         </p>
         <p>
-          Browse the Global Deck in Single Device mode for a local pass-and-play experience.
+          Save and Load your Multiplayer Decks to keep your creations between games!
+          (Decks from the previous version of this game are even backwards compatibile)
+        </p>
+        <p>
+          Browse the Global Deck in Single Device mode, or use it for an instant pass-and-play experience.
           Create and submit cards here for the whole world to see!
-        </p>
-        <p>
-          *The Save / Load tools for Multiplayer Decks are now availble (with backwards compatibility)!
         </p>
       </div>
       <div style={styles.paragraph}>
@@ -81,32 +84,32 @@ export function About() {
           aside from  illegal or malicious content and actions being prohibited.
           This includes text, links, images, and anything else related to the game.
           We reserve the right to remove content at our discretion.
-          Please follow the guidelines below for the best experience:
+          Please follow the guidelines for the best experience:
         </p>
         <p>
-          - Be safe and mindful, you are responsible for your own actions!<br />
+          - Stay safe and mindful, you are responsible for your own actions!<br />
           - Beware that anything you submit becomes public, even in Multiplayer rooms<br />
           - Be original, inclusive & avoid in-jokes
         </p>
         <p>
-          Also feel welcome to share and use content from the game.
+          Also feel free to share and use content from the game.
           If you do, give credit to the author and share a screenshot/permalink.
-          Please get in <a href="https://instagram.com/blankwhitecards" target='_blank'><u>contact</u></a> if you have any questions or wanna collab!
+          Please get in <Link to="https://www.buymeacoffee.com/mcteamster" target='_blank' rel="noreferrer">contact</Link> if you have questions or wanna collab!
         </p>
       </div>
       <div style={styles.paragraph}>
         <h2 style={styles.subheading} id='terms'>Terms of Service</h2>
         <p>
           1. Privacy Policy<br />
-          The only data that we collect is game card information (e.g. title, description, author, picture, date), and aggregated player usage stats.
+          The only data that we collect is game information (e.g. title, description, author, picture, date), and player usage stats.
           Cards submitted to the global deck will remain in our database, where we reserve the right to handle this data in whatever way we deem appropriate.
           Cards in multiplayer rooms are automatically deleted from our database periodically.
           Note that multiplayer rooms are publicly accessible; we offer no warranty or security of the content within.
         </p>
         <p>
           2. Waiver of Liability<br />
-          The user-generated content in this game does not express the views or opinions
-          of the developers. Due to the unrestricted online nature of the game, players must be over the age of 18.
+          The user-generated content in this game does not express the views or opinions of the developers. 
+          Due to the unrestricted online nature of the game, players must be over the age of 18.
           We are not liable or accountable for any damage or injury that may result from playing this game.
         </p>
         <p>
@@ -114,14 +117,14 @@ export function About() {
           Cards submitted to this website fall under the Creative Commons Attribution 4.0 International licence.
           This allows for cards to be shared, adapted, and used for commercial purposes by anyone provided
           that attribution is given. Attribution must be made to the listed author of a card.
-          Please see <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank"><u>this link</u></a> for more details.
+          Please see <Link to="https://creativecommons.org/licenses/by/4.0/" target='_blank' rel="noreferrer">this link</Link> for more details.
         </p>
       </div>
       <div>
-        <a style={styles.subheading} href='https://github.com/mcteamster/white' target='_blank'>
+        <Link style={styles.subheading} to='https://github.com/mcteamster/white' target='_blank' rel="noreferrer">
           <Icon name='github' />
           <p>v2.0.0</p>
-        </a>
+        </Link>
       </div>
       <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { navigate('/') }} elevation={2}><Icon name='logout' />Lobby</wired-card>
     </div>
@@ -181,17 +184,14 @@ export function Tutorial(props: TutorialProps) {
       borderRadius: '1em',
     },
     heading: {
-      fontSize: '1.5em',
-      textAlign: 'center',
-    },
-    subheading: {
+      fontSize: '2em',
       textAlign: 'center',
     },
     paragraph: {
       overflowY: 'scroll',
       scrollbarWidth: 'none',
       padding: '0.5em',
-      textAlign: 'justify',
+      textAlign: 'center',
       width: '25em',
       maxWidth: '80vw',
     }
@@ -199,18 +199,18 @@ export function Tutorial(props: TutorialProps) {
 
   const tutorialText = <>
     <div style={styles.paragraph}>
-      <p>This is a sandbox game with no exact rules - but it does have conventional card game concepts:</p>
-      <p>The <u>Deck</u>: All the cards that can be <u>Picked Up</u></p>
-      <p>The <u>Pile</u>: A central area where cards can be <u>Played</u></p>
-      <p>Your <u>Hand</u>: Your hidden collection of cards</p>
-      <p>The <u>Table</u>: Your displayed collection of cards</p>
-      <p>The <u>Discard</u>: Cards removed and hidden from play</p>
+      <p>This is a sandbox game with NO EXISTING RULES. However, common card game concepts apply:</p>
+      <p><u>Deck</u> - All the cards which can be <u>Picked Up</u></p>
+      <p><u>Pile</u> - A central area where cards are <u>Played</u></p>
+      <p><u>Hand</u> - Your hidden collection of cards</p>
+      <p><u>Table</u> - Your displayed / active-in-play cards</p>
+      <p><u>Discard</u> - Cards removed and hidden from play</p>
       {
         props.isMultiplayer ?
         <>
           <p>You can <u>Move</u> your cards between these locations and even <u>Send</u> them to other players</p>
           <p><u>Create</u> new cards and <u>Save</u> them for next time!</p>
-          <h3 style={styles.subheading}>Game Suggestions:</h3>
+          <h3>Gameplay Suggestions:</h3>
           <p>Multiplayer tends to work better with a "Gamemaster" - usually the host, as they have the ability to <u>Load</u> cards and <u>Reset</u> the game.</p>
           <p>In the beginning, spend some time creating new cards - about 2 or 3 per player. <u>Reset</u> to shuffle all cards into the deck.</p>
           <p>A typical game might start with everyone getting a Hand, then taking turns to play and Pick Up more.</p>
@@ -222,9 +222,9 @@ export function Tutorial(props: TutorialProps) {
         <>
           <p>You can <u>Move</u> your cards between these locations</p>
           <p><u>Create</u> and <u>Submit</u> new cards to the Global Deck!</p>
-          <h3 style={styles.subheading}>Game Suggestions:</h3>
-          <p>Hotseat Mode - picked up cards are instantly focused. Take turns to pick up, do the action (or not), and pass to the next player.</p>
-          <p style={styles.subheading}>(Try Multiplayer for more possibilities!)</p>
+          <h3>Gameplay Suggestions:</h3>
+          <p>Hotseat Mode - Take turns to pick up, do the action (or not), and pass to the next player.</p>
+          <p>(Try Multiplayer for more possibilities!)</p>
         </>
       }
     </div>
@@ -234,7 +234,7 @@ export function Tutorial(props: TutorialProps) {
     return (
       <wired-dialog open={props.mode == 'play-tutorial' || undefined}>
         <div style={styles.tutorial}>
-          <div style={styles.heading}>How to Play</div>
+          <div style={styles.heading}>How to Play?</div>
           {tutorialText}
           <div style={styles.buttonBox}>
             <div style={styles.dismissBox}>

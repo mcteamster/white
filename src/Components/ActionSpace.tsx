@@ -324,7 +324,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
 }
 
 export function ActionSpace(props: BoardProps<GameState>) {
-  const [mode, setMode] = useState(localStorage.getItem('tutorial') == "true" ? 'play-tutorial' : 'play');
+  const [mode, setMode] = useState(localStorage.getItem('tutorial') != "false" ? 'play-tutorial' : 'play');
   return (
     <>
       <Focus {...props} />

@@ -106,7 +106,7 @@ export function CardFace(card: Card) {
         </div>
         <Link to="https://mcteamster.com" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}>
           <Icon name='game' />
-          a game by <u>mcteamster</u>
+          <div>a game by <u>mcteamster</u></div>
         </Link>
       </>
     } else {
