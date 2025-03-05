@@ -1,3 +1,6 @@
+// Constant White Image
+export const BLANK_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+
 // Process Images
 export const resizeImage = async (imageDataUrl: string) => {
   return new Promise<string>((resolve) => {
@@ -70,7 +73,7 @@ export const compressImage = async (imageDataUrl: string) => {
           }
         }
 
-        // Compress Image
+        // Compress Image with RLE
         const compressed: number[] = [];
         let currentColour = '1'; // White is '1' and Black is '0'
         let currentCount = 0;
@@ -99,7 +102,7 @@ export const decompressImage = async (compressedImage: number[]) => {
 
   return new Promise<string>((resolve) => {
     const img = new Image();
-    img.src = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="; // Dummy white image to trigger the onload
+    img.src = BLANK_IMAGE; // Dummy white image to trigger the onload
     img.onload = () => {
       const canvas = document.createElement('canvas');
       canvas.width = 500;

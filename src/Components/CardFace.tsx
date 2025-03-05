@@ -2,7 +2,7 @@ import type { Properties } from 'csstype';
 import type { Card } from '../Cards.ts';
 import { Link } from 'react-router';
 import { Icon } from './Icons.tsx';
-import { decompressImage } from '../lib/images.ts';
+import { BLANK_IMAGE, decompressImage } from '../lib/images.ts';
 import { useEffect, useState } from 'react';
 
 export function CardFace(card: Card) {
@@ -125,7 +125,7 @@ export function CardFace(card: Card) {
       </>
     } else {
       content = <>
-        {<img style={styles.image} src={image ?? "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="}></img>}
+        {<img style={styles.image} src={image ?? BLANK_IMAGE}></img>}
         <div style={styles.title}>{card.content.title}</div>
         <div style={styles.description}>{card.content.description}</div>
         <div style={styles.credit}>{card.content.author && `${card.content.author}`}{card.content.date && ` - ${localDate}`}</div>
@@ -171,7 +171,7 @@ export function CardFace(card: Card) {
 
     return (
       <wired-card style={{...styles.card}} elevation={1}>
-        {card.id != 0 && <img style={styles.image} src={image ?? "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="}></img>}
+        {card.id != 0 && <img style={styles.image} src={image ?? BLANK_IMAGE}></img>}
         {content}
       </wired-card>
     )

@@ -5,7 +5,7 @@ import { Card, getAdjacentCard, getCardById } from '../Cards';
 import { Icon, Browse } from './Icons';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { FocusContext, HotkeysContext, LoadingContext } from '../lib/contexts.ts';
-import { decompressImage } from '../lib/images.ts';
+import { BLANK_IMAGE, decompressImage } from '../lib/images.ts';
 
 export function Focus(props: BoardProps<GameState>) {
   const { loading, setLoading } = useContext(LoadingContext);
@@ -24,7 +24,7 @@ export function Focus(props: BoardProps<GameState>) {
   const { hotkeys } = useContext(HotkeysContext);
   const [sendCardMode, setSendCardMode] = useState(false);
   
-  const [image, setImage] = useState<string>();
+  const [image, setImage] = useState<string>(BLANK_IMAGE);
   useEffect(() => {
     if (typeof(focused?.content.image) === 'string') {
       setImage(focused?.content.image);
@@ -176,6 +176,7 @@ export function Focus(props: BoardProps<GameState>) {
       setTimeout(() => {
         focusCard(0, false);
         setSendCardMode(false);
+        setImage(BLANK_IMAGE);
       }, 0)
     }
 
