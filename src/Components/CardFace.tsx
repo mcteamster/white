@@ -2,6 +2,8 @@ import type { Properties } from 'csstype';
 import type { Card } from '../Cards.ts';
 import { Link } from 'react-router';
 import { Icon } from './Icons.tsx';
+import { BLANK_IMAGE, decompressImage } from '../lib/images.ts';
+import { useEffect, useState } from 'react';
 
 export function CardFace(card: Card) {
   const baseStyles: {[key: string]: Properties<string | number>} = {
@@ -18,6 +20,18 @@ export function CardFace(card: Card) {
   if (card.content.date) {
     localDate = new Date(Number(card.content.date)).toLocaleDateString();
   }
+
+  // TODO: Fix Rendering Lag
+  const [image, setImage] = useState<string>();
+  useEffect(() => {
+    if (typeof(card.content.image) === 'string') {
+      setImage(card.content.image); // Support PNG Data URIs
+    } else if (card.content.image) {
+      decompressImage(card.content.image).then(res => {
+        setImage(res);
+      });
+    }
+  }, [card.content.image])
 
   if (card.location === 'hand') {
     const styles: {[key: string]: Properties<string | number>} = {
@@ -40,7 +54,7 @@ export function CardFace(card: Card) {
     return (
       <wired-card style={{...baseStyles.card, ...styles.card}} elevation={1}>
         <div style={styles.title}>{card.content.title}</div>
-        <img style={styles.image} src={card.content.image}></img>
+        <img style={styles.image} src={image}></img>
       </wired-card>
     );
   } else if (card.location === 'table') {
@@ -58,7 +72,7 @@ export function CardFace(card: Card) {
     };
     return (
       <wired-card style={{...baseStyles.card, ...styles.card}} elevation={1}>
-        <img style={styles.image} src={card.content.image}></img>
+        <img style={styles.image} src={image}></img>
       </wired-card>
     );
   }
@@ -111,7 +125,7 @@ export function CardFace(card: Card) {
       </>
     } else {
       content = <>
-        {<img style={styles.image} src={card.content.image ?? "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="}></img>}
+        {<img style={styles.image} src={image ?? BLANK_IMAGE}></img>}
         <div style={styles.title}>{card.content.title}</div>
         <div style={styles.description}>{card.content.description}</div>
         <div style={styles.credit}>{card.content.author && `${card.content.author}`}{card.content.date && ` - ${localDate}`}</div>
@@ -157,7 +171,7 @@ export function CardFace(card: Card) {
 
     return (
       <wired-card style={{...styles.card}} elevation={1}>
-        {card.id != 0 && <img style={styles.image} src={card.content.image ?? "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="}></img>}
+        {card.id != 0 && <img style={styles.image} src={image ?? BLANK_IMAGE}></img>}
         {content}
       </wired-card>
     )

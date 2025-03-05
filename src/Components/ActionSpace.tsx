@@ -10,10 +10,11 @@ import { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { undo, strokes, sketchpad } from '../Canvas.js';
 import { Link, useNavigate } from 'react-router';
 import { AuthContext, FocusContext, LoadingContext } from '../lib/contexts.ts';
-import { downloadDeck, resizeImage } from '../lib/data.ts';
+import { downloadDeck } from '../lib/data.ts';
 import { Loader } from './Loader.tsx';
 import { submitGlobalCard } from '../lib/clients.ts';
 import { Tutorial } from './About.tsx';
+import { compressImage, resizeImage } from '../lib/images.ts';
 
 interface ToolbarProps extends BoardProps<GameState> {
   mode: string;
@@ -64,7 +65,14 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
       const title = (document.getElementById('titleInput') as HTMLInputElement);
       const description = (document.getElementById('descriptionInput') as HTMLInputElement);
       const author = (document.getElementById('authorInput') as HTMLInputElement);
-      const image = strokes.length > 0 ? (document.getElementById("sketchpad") as HTMLCanvasElement).toDataURL("image/png") : undefined;
+      const image = strokes.length > 0 ? (await resizeImage((document.getElementById("sketchpad") as HTMLCanvasElement).toDataURL("image/png"))) : undefined;
+      let imageData;
+      if (import.meta.env.VITE_COMPRESS_IMAGES === 'true' && image) {
+        // Image Compression to minimise gamestate size for network optimisation
+        imageData = (await compressImage(image))
+      } else {
+        imageData = image
+      }
 
       if (title.value && description.value) {
         const createdCard: Card = {
@@ -73,7 +81,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
             title: title.value,
             description: description.value,
             author: author.value || 'anon',
-            image: image ? await resizeImage(image) : undefined,
+            image: imageData,
             date: String(Number(new Date())),
           },
           location: 'hand',

@@ -3,8 +3,9 @@ import type { GameState } from '../Game.ts'
 import type { Properties } from 'csstype';
 import { Card, getAdjacentCard, getCardById } from '../Cards';
 import { Icon, Browse } from './Icons';
-import { useCallback, useContext, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { FocusContext, HotkeysContext, LoadingContext } from '../lib/contexts.ts';
+import { BLANK_IMAGE, decompressImage } from '../lib/images.ts';
 
 export function Focus(props: BoardProps<GameState>) {
   const { loading, setLoading } = useContext(LoadingContext);
@@ -22,6 +23,18 @@ export function Focus(props: BoardProps<GameState>) {
   };
   const { hotkeys } = useContext(HotkeysContext);
   const [sendCardMode, setSendCardMode] = useState(false);
+  
+  // TODO: Fix Rendering Lag
+  // const [image, setImage] = useState<string>(BLANK_IMAGE);
+  // useEffect(() => {
+  //   if (typeof(focused?.content.image) === 'string') {
+  //     setImage(focused?.content.image);
+  //   } else if (focused?.content.image) {
+  //     decompressImage(focused?.content.image).then(res => {
+  //       setImage(res);
+  //     });
+  //   }
+  // }, [focused])
 
   const styles: { [key: string]: Properties<string | number> } = {
     focus: {
@@ -267,7 +280,7 @@ export function Focus(props: BoardProps<GameState>) {
           <div style={styles.title}>{focused.content.title}</div>
           <div style={styles.credit}>by {focused.content.author}</div>
           <div style={styles.credit}>{localDate ? `${localDate}` : ''}</div>
-          <img style={styles.image} src={focused.content.image} />
+          <img style={styles.image} src={(focused && typeof(focused?.content.image) === 'string') ? focused.content.image : undefined} />
           <div style={styles.description}>{focused.content.description}</div>
           {tray}
           {browse}
