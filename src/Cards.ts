@@ -6,7 +6,7 @@ export interface Card {
     description: string,
     author?: string,
     date?: string,
-    image?: string,
+    image?: string | number[] | HuffmanImage, // PNG Data URI (v1) or Compressed 1-Bit Color Array (v2)
   },
   location: string, // 'deck' | 'pile' | 'discard' | 'hand' | 'table' | 'box',
   focused?: string[], // DEPRECATED: list of viewing player IDs, causes too much noise in move traffic
@@ -14,6 +14,12 @@ export interface Card {
   previousOwner?: string, // playerID, used for tracking ownership changes
   timestamp?: number, // epoch of last move
   likes?: number, // number of times this card has been liked
+}
+
+// Huffman encoding of 1-bit image
+export interface HuffmanImage {
+  frequencies: { [key: number]: number },
+  sequences: number[]
 }
 
 // Helper Functions
