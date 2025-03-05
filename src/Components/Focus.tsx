@@ -24,16 +24,17 @@ export function Focus(props: BoardProps<GameState>) {
   const { hotkeys } = useContext(HotkeysContext);
   const [sendCardMode, setSendCardMode] = useState(false);
   
-  const [image, setImage] = useState<string>(BLANK_IMAGE);
-  useEffect(() => {
-    if (typeof(focused?.content.image) === 'string') {
-      setImage(focused?.content.image);
-    } else if (focused?.content.image) {
-      decompressImage(focused?.content.image).then(res => {
-        setImage(res);
-      });
-    }
-  }, [focused])
+  // TODO: Fix Rendering Lag
+  // const [image, setImage] = useState<string>(BLANK_IMAGE);
+  // useEffect(() => {
+  //   if (typeof(focused?.content.image) === 'string') {
+  //     setImage(focused?.content.image);
+  //   } else if (focused?.content.image) {
+  //     decompressImage(focused?.content.image).then(res => {
+  //       setImage(res);
+  //     });
+  //   }
+  // }, [focused])
 
   const styles: { [key: string]: Properties<string | number> } = {
     focus: {
@@ -176,7 +177,6 @@ export function Focus(props: BoardProps<GameState>) {
       setTimeout(() => {
         focusCard(0, false);
         setSendCardMode(false);
-        setImage(BLANK_IMAGE);
       }, 0)
     }
 
@@ -280,7 +280,7 @@ export function Focus(props: BoardProps<GameState>) {
           <div style={styles.title}>{focused.content.title}</div>
           <div style={styles.credit}>by {focused.content.author}</div>
           <div style={styles.credit}>{localDate ? `${localDate}` : ''}</div>
-          <img style={styles.image} src={image} />
+          <img style={styles.image} src={(focused && typeof(focused?.content.image) === 'string') ? focused.content.image : undefined} />
           <div style={styles.description}>{focused.content.description}</div>
           {tray}
           {browse}

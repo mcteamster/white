@@ -21,7 +21,7 @@ export function CardFace(card: Card) {
     localDate = new Date(Number(card.content.date)).toLocaleDateString();
   }
 
-  // TODO: Decompress and Cache in Context
+  // TODO: Fix Rendering Lag
   const [image, setImage] = useState<string>();
   useEffect(() => {
     if (typeof(card.content.image) === 'string') {

@@ -109,7 +109,7 @@ export function Lobby(props: { globalSize: number }) {
       // Create Match on Server
       const { matchID } = await lobbyClient.createMatch('blank-white-cards', {
         unlisted: true,
-        numPlayers: 100, // TODO: what is realistic?
+        numPlayers: 100, // TODO: What is a realistic upper bound?
         setupData: {
           presetDeck: preset || 'blank',
         }
