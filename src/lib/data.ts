@@ -2,21 +2,6 @@ import { Card } from "../Cards";
 import { GameState } from "../Game";
 
 // Process Images
-// https://www.dynamsoft.com/codepool/convert-image-to-black-white-with-javascript.html
-const rgbToGrayScale = (red: number, green: number, blue: number) => {
-  //return red * 0.2126 + green * 0.7152 + blue * 0.0722;
-  return (red * 6966 + green * 23436 + blue * 2366) >> 15;
-}
-
-const threshold = (grayscale: number) => {
-  const thresholdValue = 127;
-  if (grayscale < thresholdValue) {
-    return true;
-  } else{
-    return false;
-  }
-}
-
 export const resizeImage = async (imageDataUrl: string) => {
   return new Promise<string>((resolve) => {
     const img = new Image();
@@ -27,6 +12,8 @@ export const resizeImage = async (imageDataUrl: string) => {
       canvas.height = 500;
       const ctx = canvas.getContext('2d');
       if (ctx) {
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, 500, 500);
         ctx.drawImage(img, 0, 0, 500, 500);
 
         // Force Black and White
@@ -36,17 +23,19 @@ export const resizeImage = async (imageDataUrl: string) => {
           const red = pixels[i];
           const green = pixels[i + 1];
           const blue = pixels[i + 2];
-          const grayscale = rgbToGrayScale(red, green, blue)
-          if (threshold(grayscale)) {
+          const average = (red + green + blue) / 3;
+          if (average < 128) {
             pixels[i] = 0;
             pixels[i + 1] = 0;
             pixels[i + 2] = 0;
-          }else{
+          } else {
             pixels[i] = 255;
             pixels[i + 1] = 255;
             pixels[i + 2] = 255;
           }
         }
+
+        // Return PNG Data URI
         ctx.putImageData(imageData, 0, 0);
         resolve(canvas.toDataURL("image/png"));
       }
