@@ -1,41 +1,51 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="shortcut icon" type="image/png" href="/favicon.png"/>
-    <link rel="apple-touch-icon" href="/favicon.png">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Blank White Cards</title>
-    <style>
-      @font-face {
-        font-family: "Patrick Hand SC";
-        src:local("PatrickHandSC-Regular"),
-        url('/fonts/PatrickHandSC-Regular.ttf') 
-      }
 
-      body {
-        font-family: 'Patrick Hand SC', Arial, Helvetica, sans-serif;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Blank White Cards</title>
+  <style>
+    @font-face {
+      font-family: "Patrick Hand SC";
+      src: local("PatrickHandSC-Regular"),
+        url('/fonts/PatrickHandSC-Regular.ttf')
+    }
 
-      #loading {
-        width: 5em;
-        height: 5em;
-        position: fixed; 
-        top: 50%; 
-        left: 50%; 
-        transform: translate(-50%, -50%);
-        z-index: -1;
-      }
-    </style>
-  </head>
-  <body>
-    <img id="loading" src="/favicon.png"></img>
-    <div id="root"></div>
-    <div id="create">
-      <canvas id="sketchpad"></canvas>
-    </div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+    body {
+      font-family: 'Patrick Hand SC', Arial, Helvetica, sans-serif;
+    }
+
+    #loading {
+      width: 5em;
+      height: 5em;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: -1;
+    }
+  </style>
+  <script type="text/javascript">
+    (function (c, l, a, r, i, t, y) {
+      c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+      t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+      y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+    })(window, document, "clarity", "script", "qjf21tnsln");
+  </script>
+</head>
+
+<body>
+  <img id="loading" src="/favicon.png"></img>
+  <div id="root"></div>
+  <div id="create">
+    <canvas id="sketchpad"></canvas>
+  </div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

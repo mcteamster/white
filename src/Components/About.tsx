@@ -101,7 +101,7 @@ export function About() {
         <h2 style={styles.subheading} id='terms'>Terms of Service</h2>
         <p>
           1. Privacy Policy<br />
-          The only data that we collect is game information (e.g. title, description, author, picture, date), and player usage stats.
+          The only data that we collect is game information (e.g. title, description, author, picture, date), and anonymous player usage stats.
           Cards submitted to the global deck will remain in our database, where we reserve the right to handle this data in whatever way we deem appropriate.
           Cards in multiplayer rooms are automatically deleted from our database periodically.
           Note that multiplayer rooms are publicly accessible; we offer no warranty or security of the content within.
