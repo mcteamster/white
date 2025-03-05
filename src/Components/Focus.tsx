@@ -3,9 +3,9 @@ import type { GameState } from '../Game.ts'
 import type { Properties } from 'csstype';
 import { Card, getAdjacentCard, getCardById } from '../Cards';
 import { Icon, Browse } from './Icons';
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useState } from 'react';
 import { FocusContext, HotkeysContext, LoadingContext } from '../lib/contexts.ts';
-import { BLANK_IMAGE, decompressImage } from '../lib/images.ts';
+import { BLANK_IMAGE } from '../lib/images.ts';
 
 export function Focus(props: BoardProps<GameState>) {
   const { loading, setLoading } = useContext(LoadingContext);
@@ -280,7 +280,7 @@ export function Focus(props: BoardProps<GameState>) {
           <div style={styles.title}>{focused.content.title}</div>
           <div style={styles.credit}>by {focused.content.author}</div>
           <div style={styles.credit}>{localDate ? `${localDate}` : ''}</div>
-          <img style={styles.image} src={(focused && typeof(focused?.content.image) === 'string') ? focused.content.image : undefined} />
+          <img style={styles.image} src={(focused && typeof(focused?.content.image) === 'string') ? focused.content.image : BLANK_IMAGE} />
           <div style={styles.description}>{focused.content.description}</div>
           {tray}
           {browse}
