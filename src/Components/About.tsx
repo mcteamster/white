@@ -188,6 +188,7 @@ export function Tutorial(props: TutorialProps) {
       textAlign: 'center',
     },
     paragraph: {
+      fontSize: '1.25em',
       overflowY: 'scroll',
       scrollbarWidth: 'none',
       padding: '0.5em',
@@ -199,16 +200,17 @@ export function Tutorial(props: TutorialProps) {
 
   const tutorialText = <>
     <div style={styles.paragraph}>
-      <p>This is a sandbox game with NO EXISTING RULES. However, common card game concepts apply:</p>
-      <p><u>Deck</u> - All the cards which can be <u>Picked Up</u></p>
-      <p><u>Pile</u> - A central area where cards are <u>Played</u></p>
-      <p><u>Hand</u> - Your hidden collection of cards</p>
-      <p><u>Table</u> - Your displayed / active-in-play cards</p>
-      <p><u>Discard</u> - Cards removed and hidden from play</p>
+      <p>This is a sandbox drawing party game with NO SET RULES. However, common card game conventions apply:</p>
+      <p><u>Deck</u> - Cards to <u>Pick Up</u></p>
+      <p><u>Pile</u> - Where cards are <u>Played</u></p>
+      <p><u>Hand</u> - Your hidden cards</p>
+      <p><u>Table</u> - Your displayed cards</p>
+      <p><u>Discard</u> - Cards removed from play</p>
+      <p><u>Move</u> cards between these areas</p>
       {
         props.isMultiplayer ?
         <>
-          <p>You can <u>Move</u> your cards between these locations and even <u>Send</u> them to other players</p>
+          <p><u>Send</u> them to other players</p>
           <p><u>Create</u> new cards and <u>Save</u> them for next time!</p>
           <h3>Gameplay Suggestions:</h3>
           <p>Multiplayer tends to work better with a "Gamemaster" - usually the host, as they have the ability to <u>Load</u> cards and <u>Reset</u> the game.</p>
@@ -220,8 +222,7 @@ export function Tutorial(props: TutorialProps) {
           <p>Or why not just play Free-for-All? Anyone can do anything at any time. Embrace the chaos!</p>
         </> :
         <>
-          <p>You can <u>Move</u> your cards between these locations</p>
-          <p><u>Create</u> and <u>Submit</u> new cards to the Global Deck!</p>
+          <p><u>Submit</u> new cards to the Global Deck!</p>
           <h3>Gameplay Suggestions:</h3>
           <p>Hotseat Mode - Take turns to pick up, do the action (or not), and pass to the next player.</p>
           <p>(Try Multiplayer for more possibilities!)</p>
