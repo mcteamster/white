@@ -42,7 +42,7 @@ export const resizeImage = async (imageDataUrl: string) => {
   });
 };
 
-export const compressImage = async (imageDataUrl: string) => {
+export const compressImage = async (imageDataUrl: string, encoding?: 'huffman') => {
   return new Promise<HuffmanImage | number[]>((resolve) => {
     const img = new Image();
     img.src = imageDataUrl;
@@ -89,8 +89,12 @@ export const compressImage = async (imageDataUrl: string) => {
 
         // Resolve
         let output;
-        output = compressed;
-        output = huffmanEncode(compressed) // Huffman Encode
+        if (encoding == 'huffman') {
+          output = huffmanEncode(compressed) // Huffman Encode;
+        } else {
+          output = compressed;
+        }
+        console.info(`Image Compression Ratio: ${JSON.stringify(imageDataUrl).length/JSON.stringify(compressed).length}`);
         resolve(output)
       }
     };

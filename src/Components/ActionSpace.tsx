@@ -70,7 +70,6 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
       if (import.meta.env.VITE_COMPRESS_IMAGES === 'true' && image) {
         // Image Compression to minimise gamestate size for network optimisation
         imageData = (await compressImage(image))
-        console.info(`Image Compression Ratio: ${JSON.stringify(image).length/JSON.stringify(imageData).length}`);
       } else {
         imageData = image
       }
