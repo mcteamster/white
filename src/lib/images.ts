@@ -1,5 +1,3 @@
-import { HuffmanImage } from "../Cards";
-
 // Process Images
 export const resizeImage = async (imageDataUrl: string) => {
   return new Promise<string>((resolve) => {
@@ -42,8 +40,8 @@ export const resizeImage = async (imageDataUrl: string) => {
   });
 };
 
-export const compressImage = async (imageDataUrl: string, encoding?: 'huffman') => {
-  return new Promise<HuffmanImage | number[]>((resolve) => {
+export const compressImage = async (imageDataUrl: string) => {
+  return new Promise<number[]>((resolve) => {
     const img = new Image();
     img.src = imageDataUrl;
     img.onload = () => {
@@ -88,27 +86,16 @@ export const compressImage = async (imageDataUrl: string, encoding?: 'huffman') 
         compressed.push(currentCount); // Append last sequence
 
         // Resolve
-        let output;
-        if (encoding == 'huffman') {
-          output = huffmanEncode(compressed) // Huffman Encode;
-        } else {
-          output = compressed;
-        }
-        console.info(`Image Compression Ratio: ${JSON.stringify(imageDataUrl).length/JSON.stringify(compressed).length}`);
+        const output = compressed;
+        console.info(`Image Compression Ratio: ${JSON.stringify(imageDataUrl).length/JSON.stringify(output).length}`);
         resolve(output)
       }
     };
   });
 };
 
-export const decompressImage = async (compressedImage: HuffmanImage | number[]) => {
-  let input;
-  if (compressedImage instanceof Array) {
-    input = compressedImage
-  } else {
-    // Huffman Decode
-    input = huffmanDecode(compressedImage);
-  }
+export const decompressImage = async (compressedImage: number[]) => {
+  const input = compressedImage;
 
   return new Promise<string>((resolve) => {
     const img = new Image();
@@ -140,36 +127,3 @@ export const decompressImage = async (compressedImage: HuffmanImage | number[]) 
     };
   });
 };
-
-const huffmanEncode = (input: number[]) => {
-  const output: HuffmanImage = {
-    frequencies: {},
-    sequences: [],
-  }
-  const frequencies: { [key: number]: number} = {}; // Generate Frequency Table
-  input.forEach((sequence) => {
-    if (frequencies[sequence]) {
-      frequencies[sequence]++;
-    } else {
-      frequencies[sequence] = 1;
-    }
-  });
-  const sortedFrequencies = Object.entries(frequencies).sort((a, b) => Number(b[1]) - Number(a[1])); // Most to least common keys
-  sortedFrequencies.forEach((frequency, i) => {
-    output.frequencies[i] = Number(frequency[0]); // Lower indicies take up less space
-  });
-  input.forEach((sequence) => {
-    const huffmanKey = sortedFrequencies.findIndex((frequency) => Number(frequency[0]) === sequence); // Lookup the sequence's frequency index
-    output.sequences.push(huffmanKey); // Generate sequence array
-  });
-
-  return output
-}
-
-const huffmanDecode = (input: HuffmanImage) => {
-  const output: number[] = [];
-  input.sequences.forEach((sequence) => {
-    output.push(input.frequencies[sequence])
-  })
-  return output
-}
