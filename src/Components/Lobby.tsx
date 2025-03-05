@@ -55,6 +55,7 @@ const styles: { [key: string]: Properties<string | number> } = {
   },
   code: {
     width: '3em',
+    margin: '0 0 0 0.25em'
   },
   button: {
     fontSize: '1.25em',
@@ -227,16 +228,16 @@ export function Lobby(props: { globalSize: number }) {
 
           <div style={{ display: (stage == 'landing') ? undefined : 'none' }}>
             <div style={styles.heading}><Icon name="multi" />&nbsp;Multiplayer</div>
+            <wired-card style={{...styles.action, fontSize: '1.5em'}} onClick={() => { setStage('create') }}>
+              Create New Game
+            </wired-card>
+            <div>or</div>
             <div style={styles.textentry}>
               <wired-card style={styles.action} onClick={() => { checkForRoomCode() }}>
-                Join Room by&nbsp;
+                Join Room
                 <wired-input style={styles.code} id="roomInput" placeholder="Code" maxlength={4} value={auth?.matchID} onClick={(e) => e.stopPropagation()}></wired-input>
               </wired-card>
             </div>
-            <div>or</div>
-            <wired-card style={{...styles.action, fontSize: '1.5em'}} onClick={() => { setStage('create') }}>
-              Create a New Game
-            </wired-card>
           </div>
 
           <div style={{ display: (stage == 'join') ? undefined : 'none' }}>
@@ -266,11 +267,11 @@ export function Lobby(props: { globalSize: number }) {
         </wired-card>
         <wired-card style={styles.singleplayer}>
           <div style={styles.heading}><Icon name="single" />&nbsp;Single Device</div>
-          <div style={styles.subheading}>Draw and add your own cards!</div>
           <wired-card style={styles.action} onClick={enterSinglePlayer}>
             <div style={styles.subheading}><Icon name='global' />&nbsp;Global Deck</div>
             <div style={styles.subheading}>{props.globalSize} Cards</div>
           </wired-card>
+          <div style={styles.subheading}>Draw and add your own!</div>
         </wired-card>
       </div>
       <div style={styles.terms}>
