@@ -44,7 +44,7 @@ export const resizeImage = async (imageDataUrl: string) => {
 };
 
 export const compressImage = async (imageDataUrl: string) => {
-  return new Promise<number[]>((resolve) => {
+  return new Promise<string>((resolve) => {
     const img = new Image();
     img.src = imageDataUrl;
     img.onload = () => {
@@ -89,7 +89,7 @@ export const compressImage = async (imageDataUrl: string) => {
         compressed.push(currentCount); // Append last sequence
 
         // Resolve
-        const output = compressed;
+        const output = JSON.stringify(compressed);
         console.info(`Image Compression Ratio: ${JSON.stringify(imageDataUrl).length/JSON.stringify(output).length}`);
         resolve(output)
       }
@@ -97,8 +97,8 @@ export const compressImage = async (imageDataUrl: string) => {
   });
 };
 
-export const decompressImage = async (compressedImage: number[]) => {
-  const input = compressedImage;
+export const decompressImage = async (compressedImage: string) => {
+  const input = JSON.parse(compressedImage);
 
   return new Promise<string>((resolve) => {
     const img = new Image();

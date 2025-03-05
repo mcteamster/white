@@ -6,7 +6,7 @@ export interface Card {
     description: string,
     author?: string,
     date?: string,
-    image?: string | number[], // PNG Data URI (v1) or Compressed 1-Bit Color Array (v2)
+    image?: string, // PNG Data URI (v1) or Compressed 1-Bit Color Array (v2)
   },
   location: string, // 'deck' | 'pile' | 'discard' | 'hand' | 'table' | 'box',
   focused?: string[], // DEPRECATED: list of viewing player IDs, causes too much noise in move traffic

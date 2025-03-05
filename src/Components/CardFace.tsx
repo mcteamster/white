@@ -24,9 +24,9 @@ export function CardFace(card: Card) {
   // TODO: Fix Rendering Lag
   const [image, setImage] = useState<string>();
   useEffect(() => {
-    if (typeof(card.content.image) === 'string') {
-      setImage(card.content.image); // Support PNG Data URIs
-    } else if (card.content.image) {
+    if (card.content.image?.startsWith('data:image/png;base64,')) { // Support PNG Data URIs
+      setImage(card.content.image); 
+    } else if (card.content.image) { // Stringified RLE Array
       decompressImage(card.content.image).then(res => {
         setImage(res);
       });

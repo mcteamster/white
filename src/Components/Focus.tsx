@@ -25,7 +25,6 @@ export function Focus(props: BoardProps<GameState>) {
   const [sendCardMode, setSendCardMode] = useState(false);
   
   // TODO: Fix Rendering Lag
-  // const [image, setImage] = useState<string>(BLANK_IMAGE);
   // useEffect(() => {
   //   if (typeof(focused?.content.image) === 'string') {
   //     setImage(focused?.content.image);
@@ -280,7 +279,7 @@ export function Focus(props: BoardProps<GameState>) {
           <div style={styles.title}>{focused.content.title}</div>
           <div style={styles.credit}>by {focused.content.author}</div>
           <div style={styles.credit}>{localDate ? `${localDate}` : ''}</div>
-          <img style={styles.image} src={(focused && typeof(focused?.content.image) === 'string') ? focused.content.image : BLANK_IMAGE} />
+          <img style={styles.image} src={(focused?.content.image)?.startsWith('data:image/png;base64,') ? focused.content.image : BLANK_IMAGE} />
           <div style={styles.description}>{focused.content.description}</div>
           {tray}
           {browse}
