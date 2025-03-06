@@ -74,31 +74,32 @@ export const compressImage = async (imageDataUrl: string) => {
         }
 
         // Compress Image with RLE
-        const compressed: number[] = [];
+        const RLE: number[] = [];
         let currentColour = '1'; // White is '1' and Black is '0'
         let currentCount = 0;
         for (let i = 0; i < binaryString.length; i++) {
           if (binaryString[i] === currentColour) {
             currentCount += 1;
           } else {
-            compressed.push(currentCount); // Append prevous colour sequence
+            RLE.push(currentCount); // Append prevous colour sequence
             currentCount = 1; // Reset count to 1 to include current pixel
             currentColour = currentColour === '1' ? '0' : '1'; // Switch to opposite colour
           }
         }
-        compressed.push(currentCount); // Append last sequence
+        RLE.push(currentCount); // Append last sequence
 
-        // Resolve
-        const output = JSON.stringify(compressed);
-        console.info(`Image Compression Ratio: ${JSON.stringify(imageDataUrl).length/JSON.stringify(output).length}`);
-        resolve(output)
+        // Convert to UTF-8 String for maximum density
+        const RLEutf8 = RLE.map((run) => { return String.fromCharCode(run+32) }).join(''); // Start from ASCII Char 32 (space) and above, at a resolution of 500x500 it's impossible to hit the upper limit of UTF-8
+        console.info(`Image Compression Ratio: ~${((JSON.stringify(imageDataUrl).length)/(1.5*JSON.stringify(RLEutf8).length)).toFixed(3)}`); // Approximate compression ratio with 1.5 byte-per char estimate
+        resolve(RLEutf8)
       }
     };
   });
 };
 
 export const decompressImage = async (compressedImage: string) => {
-  const input = JSON.parse(compressedImage);
+  // Convert from UTF-8 String to Run Length Encoding
+  const input = compressedImage.split('').map((char) => { return (char.charCodeAt(0) - 32) });
 
   return new Promise<string>((resolve) => {
     const img = new Image();

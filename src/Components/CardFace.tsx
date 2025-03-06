@@ -26,7 +26,7 @@ export function CardFace(card: Card) {
   useEffect(() => {
     if (card.content.image?.startsWith('data:image/png;base64,')) { // Support PNG Data URIs
       setImage(card.content.image); 
-    } else if (card.content.image) { // Stringified RLE Array
+    } else if (card.content.image) { // RLE UTF-8 String
       decompressImage(card.content.image).then(res => {
         setImage(res);
       });
