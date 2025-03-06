@@ -1,9 +1,10 @@
 import type { Properties } from 'csstype';
 import { Icon } from './Icons';
 import { Link, useNavigate } from 'react-router';
-import { useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { BoardProps } from 'boardgame.io/dist/types/packages/react';
 import { GameState } from '../Game';
+import { HotkeysContext } from '../lib/contexts';
 
 export function About() {
   const navigate = useNavigate();
@@ -136,7 +137,8 @@ interface TutorialProps extends BoardProps<GameState> {
   setMode: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export function Tutorial(props: TutorialProps) {
+export function Tutorial({ isMultiplayer, playerID, mode, setMode }: TutorialProps) {
+  const { hotkeys } = useContext(HotkeysContext);
   const [dismiss, setDismiss] = useState(localStorage.getItem('tutorial') == "false");
 
   const styles: { [key: string]: Properties<string | number> } = {
@@ -208,7 +210,7 @@ export function Tutorial(props: TutorialProps) {
       <p><u>Discard</u> - Cards removed from play</p>
       <p><u>Move</u> cards between these areas</p>
       {
-        props.isMultiplayer ?
+        isMultiplayer ?
         <>
           <p><u>Send</u> them to other players</p>
           <p><u>Create</u> new cards and <u>Save</u> them for next time!</p>
@@ -231,9 +233,20 @@ export function Tutorial(props: TutorialProps) {
     </div>
   </>
 
-  if (props.isMultiplayer || props.playerID == "0") {
+  useEffect(() => {
+    if (mode == 'play-tutorial'  && (isMultiplayer || playerID == "0")) {
+      if (hotkeys.space) {
+        setDismiss(!dismiss);
+        localStorage.setItem('tutorial', String(dismiss))
+      } else if (hotkeys.enter) {
+        setMode('play');
+      }
+    }
+  }, [hotkeys, dismiss, isMultiplayer, playerID, mode, setMode])  
+
+  if (isMultiplayer || playerID == "0") {
     return (
-      <wired-dialog open={props.mode == 'play-tutorial' || undefined}>
+      <wired-dialog open={mode == 'play-tutorial' || undefined}>
         <div style={styles.tutorial}>
           <div style={styles.heading}>How to Play?</div>
           {tutorialText}
@@ -245,7 +258,7 @@ export function Tutorial(props: TutorialProps) {
               </wired-card>
             </div>
             <wired-card style={styles.button} onClick={() => {
-              props.setMode('play');
+              setMode('play');
             }}>
               <Icon name="done" />
               Let's Play!

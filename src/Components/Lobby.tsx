@@ -2,7 +2,7 @@ import { useNavigate } from "react-router";
 import { Properties } from 'csstype';
 import { Icon } from './Icons';
 import { useCallback, useContext, useEffect, useState } from "react";
-import { AuthContext } from "../lib/contexts";
+import { AuthContext, HotkeysContext } from "../lib/contexts";
 import { lobbyClient } from "../lib/clients";
 
 const styles: { [key: string]: Properties<string | number> } = {
@@ -103,7 +103,34 @@ export function Lobby(props: { globalSize: number }) {
     navigate('/app');
   }
 
-  const createGame = async (preset: string) => {
+  const checkForPlayerName = useCallback(() => {
+    const playerName = (document.getElementById("nameInput") as HTMLInputElement);
+    if (!playerName.value) {
+      playerName.style.color = 'red';
+      (document.getElementById('flavourbox') as HTMLElement).style.color = 'red';
+      setTimeout(() => {
+        playerName.style.color = 'black';
+        (document.getElementById('flavourbox') as HTMLElement).style.color = 'black';
+      }, 500)
+      return false
+    } else {
+      return playerName.value
+    }
+  }, [])
+
+  const roomCodeError = useCallback(() => {
+    setAuth({});
+    const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
+    roomCode.value = "";
+    roomCode.style.color = 'red';
+    (document.getElementById('flavourbox') as HTMLElement).style.color = 'red';
+    setTimeout(() => {
+      roomCode.style.color = 'black';
+      (document.getElementById('flavourbox') as HTMLElement).style.color = 'black';
+    }, 500)
+  }, [setAuth])
+
+  const createGame = useCallback(async (preset: string) => {
     const playerName = checkForPlayerName();
     if (playerName) {
       // Create Match on Server
@@ -134,9 +161,9 @@ export function Lobby(props: { globalSize: number }) {
         navigate(`/${matchID}`);
       }
     }
-  }
+  }, [navigate, setAuth, checkForPlayerName])
 
-  const joinGame = async () => {
+  const joinGame = useCallback(async () => {
     const playerName = checkForPlayerName();
     if (playerName) {
       const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
@@ -164,36 +191,9 @@ export function Lobby(props: { globalSize: number }) {
         roomCodeError();
       }
     }
-  }
+  }, [navigate, setAuth, checkForPlayerName, roomCodeError])
 
-  const checkForPlayerName = () => {
-    const playerName = (document.getElementById("nameInput") as HTMLInputElement);
-    if (!playerName.value) {
-      playerName.style.color = 'red';
-      (document.getElementById('flavourbox') as HTMLElement).style.color = 'red';
-      setTimeout(() => {
-        playerName.style.color = 'black';
-        (document.getElementById('flavourbox') as HTMLElement).style.color = 'black';
-      }, 500)
-      return false
-    } else {
-      return playerName.value
-    }
-  }
-
-  const roomCodeError = () => {
-    setAuth({});
-    const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
-    roomCode.value = "";
-    roomCode.style.color = 'red';
-    (document.getElementById('flavourbox') as HTMLElement).style.color = 'red';
-    setTimeout(() => {
-      roomCode.style.color = 'black';
-      (document.getElementById('flavourbox') as HTMLElement).style.color = 'black';
-    }, 500)
-  }
-
-  const checkForRoomCode = () => {
+  const checkForRoomCode = useCallback(() => {
     const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
     if (roomCode.value && roomCode.value.toUpperCase().match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
       lobbyClient.getMatch('blank-white-cards', roomCode.value.toUpperCase()).then(async () => {
@@ -205,7 +205,7 @@ export function Lobby(props: { globalSize: number }) {
     } else {
       roomCodeError();
     }
-  }
+  }, [auth, setAuth, roomCodeError])
 
   const checkLobbyConnection = useCallback(() => {
     lobbyClient.listMatches('blank-white-cards').then(() => {
@@ -216,6 +216,20 @@ export function Lobby(props: { globalSize: number }) {
     });
   }, [setStage])
   useEffect(checkLobbyConnection, [checkLobbyConnection]);
+
+  // Hotkeys
+  const { hotkeys } = useContext(HotkeysContext);
+  useEffect(() => {
+    if (hotkeys.enter) {
+      if (stage == 'landing') {
+        checkForRoomCode();
+      } else if (stage == 'join') {
+        joinGame();
+      } else if (stage == 'create'){
+        createGame(preset);
+      }
+    }
+  }, [hotkeys, preset, stage, checkForRoomCode, createGame, joinGame])
 
   return (
     <wired-dialog open>
