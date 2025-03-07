@@ -122,11 +122,11 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
     }
   }
 
-  const leaveGame = () => {
+  const leaveGame = useCallback(() => {
     // Is there any point leaving gracefully via Lobby API?
     setAuth({});
     navigate('/');
-  }
+  }, [setAuth, navigate])
 
   // Track number of moves made by the player to debounce button
   const moveTracker = useRef({ numMoves: 0, timestamp: (new Date()).getTime() });
