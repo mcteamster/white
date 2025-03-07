@@ -7,6 +7,10 @@ import { PlayerSpace } from './Components/PlayerSpace.tsx';
 
 // Web Components from https://wiredjs.com/
 import 'wired-elements';
+import { useContext, useEffect } from 'react';
+import { ImageCacheContext } from './lib/contexts.ts';
+import { Card } from './Cards.ts';
+import { decompressImage } from './lib/images.ts';
 declare global {
   namespace React.JSX {
     interface IntrinsicElements {
@@ -30,6 +34,22 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
     gridTemplateColumns: 'auto auto auto auto auto auto auto auto auto',
     gridTemplateRows: '5vh auto auto auto auto auto auto auto 7em',
   };
+
+  // Cache All Images from Gamestate
+  const { dispatchImage } = useContext(ImageCacheContext);
+  useEffect(() => {
+    props.G.cards.forEach((card: Card) => {
+      if (card.id) {
+        if (card.content.image?.startsWith('data:image/png;base64,')) { // Support PNG Data URIs
+          dispatchImage({ id: card.id, value: card.content.image})
+        } else if (card.content.image) { // RLE UTF-8 String
+          decompressImage(card.content.image).then(res => {
+            dispatchImage({ id: card.id, value: res});
+          });
+        }
+      }
+    })
+  }, [props.G.cards, dispatchImage])
 
   return (
     <div style={boardStyle}>

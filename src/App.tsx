@@ -1,10 +1,10 @@
 // Blank White Cards React App
 import { BrowserRouter, Routes, Route } from "react-router";
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useReducer, useState } from 'react';
 import { Lobby } from './Components/Lobby';
 import { About } from "./Components/About";
-import { AuthContext, AuthType, FocusContext, HotkeysContext, LoadingContext } from "./lib/contexts";
+import { AuthContext, AuthType, FocusContext, HotkeysContext, ImageCacheContext, ImageCacheType, LoadingContext } from "./lib/contexts";
 import { GlobalBlankWhiteCardsClient, lobbyClient, MultiplayerBlankWhiteCardsClient, parsePathCode, startingDeck } from "./lib/clients";
 import { Rotate } from "./Components/Icons";
 import { useHotkeys, useWindowDimensions } from "./lib/hooks";
@@ -63,6 +63,12 @@ const App = () => {
   const [hotkeys, setHotkeys] = useState({});
   useHotkeys({ hotkeys, setHotkeys });
 
+  // Image Cache
+  const [imageCache, dispatchImage] = useReducer((cache: ImageCacheType, image: { id: number, value: string }) => {
+    cache[image.id] = image.value;
+    return cache
+  }, {})
+
   // Check Screen Size
   const dimensions = useWindowDimensions();
 
@@ -71,32 +77,34 @@ const App = () => {
       <AuthContext.Provider value={{ auth, setAuth }}>
         <FocusContext.Provider value={{ focus, setFocus }}>
           <HotkeysContext.Provider value={{ hotkeys, setHotkeys }}>
-            {(dimensions.height > 480) ?
-              <div style={{backgroundColor: (dimensions.upright) ? 'white' : '#eee'}}>
-                <BrowserRouter>
-                  <Routes>
-                    <Route path="/" element={<>
-                      <Lobby globalSize={startingDeck.cards.length || 0} />
-                      <GlobalBlankWhiteCardsClient />
-                    </>} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/app" element={<GlobalBlankWhiteCardsClient playerID='0' />} />
-                    <Route path="/card" element={<Gallery />}>
-                      <Route path=":cardID" element={<Gallery />} />
-                    </Route>
-                    <Route path="/*" element={<>
-                      {(validMatch) ?
-                        <MultiplayerBlankWhiteCardsClient playerID={auth.playerID} matchID={auth.matchID} credentials={auth.credentials} /> :
-                        <>
-                          <Lobby globalSize={startingDeck.cards.length || 0} />
-                          <GlobalBlankWhiteCardsClient />
-                        </>}
-                    </>}></Route>
-                  </Routes>
-                </BrowserRouter>
-              </div> :
-              <Rotate />
-            }
+            <ImageCacheContext.Provider value={{ imageCache, dispatchImage }}>
+              {(dimensions.height > 480) ?
+                <div style={{backgroundColor: (dimensions.upright) ? 'white' : '#eee'}}>
+                  <BrowserRouter>
+                    <Routes>
+                      <Route path="/" element={<>
+                        <Lobby globalSize={startingDeck.cards.length || 0} />
+                        <GlobalBlankWhiteCardsClient />
+                      </>} />
+                      <Route path="/about" element={<About />} />
+                      <Route path="/app" element={<GlobalBlankWhiteCardsClient playerID='0' />} />
+                      <Route path="/card" element={<Gallery />}>
+                        <Route path=":cardID" element={<Gallery />} />
+                      </Route>
+                      <Route path="/*" element={<>
+                        {(validMatch) ?
+                          <MultiplayerBlankWhiteCardsClient playerID={auth.playerID} matchID={auth.matchID} credentials={auth.credentials} /> :
+                          <>
+                            <Lobby globalSize={startingDeck.cards.length || 0} />
+                            <GlobalBlankWhiteCardsClient />
+                          </>}
+                      </>}></Route>
+                    </Routes>
+                  </BrowserRouter>
+                </div> :
+                <Rotate />
+              }
+            </ImageCacheContext.Provider>
           </HotkeysContext.Provider>
         </FocusContext.Provider>
       </AuthContext.Provider>

@@ -4,8 +4,8 @@ import type { Properties } from 'csstype';
 import { Card, getAdjacentCard, getCardById } from '../Cards';
 import { Icon, Browse } from './Icons';
 import { useCallback, useContext, useEffect, useState } from 'react';
-import { FocusContext, HotkeysContext, LoadingContext } from '../lib/contexts.ts';
-import { BLANK_IMAGE, decompressImage } from '../lib/images.ts';
+import { FocusContext, HotkeysContext, ImageCacheContext, LoadingContext } from '../lib/contexts.ts';
+import { BLANK_IMAGE } from '../lib/images.ts';
 
 export function Focus(props: BoardProps<GameState>) {
   const { loading, setLoading } = useContext(LoadingContext);
@@ -13,6 +13,7 @@ export function Focus(props: BoardProps<GameState>) {
   const [ displayedCard, setDisplayedCard] = useState(<></>);
   const [ sendCardMode, setSendCardMode ] = useState(false);
   const { hotkeys } = useContext(HotkeysContext);
+  const { imageCache } = useContext(ImageCacheContext);
 
   const focusCard = useCallback(((id: number, focusState: boolean) => {
     if (focus?.id != id && focusState == true) {
@@ -41,7 +42,7 @@ export function Focus(props: BoardProps<GameState>) {
     props.moves.moveCard(id, target);
     unfocusCards()
   }, [props.moves, unfocusCards])
-  
+
   useEffect(() => {
     const styles: { [key: string]: Properties<string | number> } = {
       focus: {
@@ -140,14 +141,7 @@ export function Focus(props: BoardProps<GameState>) {
       const owned = card.owner == props.playerID;
 
       // Define Image
-      let image;
-      if ((card?.content.image)?.startsWith('data:image/png;base64,')) {
-        image = card?.content.image;
-      } else if (card?.content.image) {
-        decompressImage(card?.content.image).then(res => {
-          image = res;
-        });
-      }
+      const image = imageCache[card.id] || BLANK_IMAGE;
 
       // Generate Buttons
       let tray = <></>
@@ -219,7 +213,7 @@ export function Focus(props: BoardProps<GameState>) {
           <div style={styles.title}>{card.content.title}</div>
           <div style={styles.credit}>by {card.content.author}</div>
           <div style={styles.credit}>{localDate ? `${localDate}` : ''}</div>
-          <img style={styles.image} src={image ? image : BLANK_IMAGE} />
+          <img style={styles.image} src={image} />
           <div style={styles.description}>{card.content.description}</div>
           {tray}
           {browse}
@@ -227,7 +221,7 @@ export function Focus(props: BoardProps<GameState>) {
         </div>
       </wired-dialog>)
     }
-  }, [props, focus, sendCardMode, loading, setLoading, unfocusCards, changeFocus, moveCardTo])
+  }, [props, imageCache, focus, sendCardMode, loading, setLoading, unfocusCards, changeFocus, moveCardTo])
 
   // Hotkeys
   useEffect(() => {

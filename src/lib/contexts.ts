@@ -55,3 +55,15 @@ export interface HotkeysContextType {
 }
 
 export const HotkeysContext = createContext<HotkeysContextType>({ hotkeys: {}, setHotkeys: () => { return {} } });
+
+// Image Cache
+export interface ImageCacheType {
+  [key: number]: string,
+}
+
+export interface ImageCacheContextType {
+  imageCache: ImageCacheType,
+  dispatchImage: React.Dispatch<{ id: number, value: string }>;
+}
+
+export const ImageCacheContext = createContext<ImageCacheContextType>({ imageCache: {}, dispatchImage: () => {} });

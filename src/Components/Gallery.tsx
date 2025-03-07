@@ -3,15 +3,32 @@ import type { Properties } from 'csstype';
 import { Browse, Icon } from './Icons';
 import { startingDeck } from '../lib/clients';
 import { CardFace } from "./CardFace";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Card, getAdjacentCard } from "../Cards";
-import { HotkeysContext } from "../lib/contexts";
+import { HotkeysContext, ImageCacheContext } from "../lib/contexts";
 import { useWindowDimensions } from "../lib/hooks";
+import { decompressImage } from "../lib/images";
 
 export function Gallery() {
   const navigate = useNavigate();
   const { hotkeys } = useContext(HotkeysContext);
   const { height } = useWindowDimensions();
+
+  // Cache All Images from Global Deck
+  const { imageCache, dispatchImage } = useContext(ImageCacheContext);
+  useEffect(() => {
+    startingDeck.cards.forEach((card: Card) => {
+      if (card.id) {
+        if (card.content.image?.startsWith('data:image/png;base64,')) { // Support PNG Data URIs
+          dispatchImage({ id: card.id, value: card.content.image })
+        } else if (card.content.image) { // RLE UTF-8 String
+          decompressImage(card.content.image).then(res => {
+            dispatchImage({ id: card.id, value: res });
+          });
+        }
+      }
+    })
+  }, [dispatchImage])
   
   const styles: { [key: string]: Properties<string | number> } = {
     gallery: {
@@ -164,7 +181,7 @@ export function Gallery() {
           <div style={styles.title}>{viewedCard.content.title}</div>
           <div style={styles.credit}>by {viewedCard.content.author}</div>
           <div style={styles.credit}>{localDate ? `${localDate}` : ''}</div>
-          <img style={styles.image} src={viewedCard.content.image} />
+          <img style={styles.image} src={imageCache[viewedCard.id]} />
           <div style={styles.description}>{viewedCard.content.description}</div>
           {browse}
         </div>
