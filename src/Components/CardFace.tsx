@@ -3,18 +3,35 @@ import type { Card } from '../Cards.ts';
 import { Link } from 'react-router';
 import { Icon } from './Icons.tsx';
 import { ReactElement, useCallback, useContext, useEffect, useState } from 'react';
+import { BLANK_IMAGE, decompressImage } from '../lib/images.ts';
 import { ImageCacheContext } from '../lib/contexts.ts';
-import { BLANK_IMAGE } from '../lib/images.ts';
 
 export function CardFace(card: Card) {
   const [ displayedCard, setDisplayedCard] = useState(<></>);
+  const [image, setImage] = useState(BLANK_IMAGE);
   const { imageCache } = useContext(ImageCacheContext);
 
   const display = useCallback((element: ReactElement) => {
-    setTimeout(setDisplayedCard, 0, element)
+    setDisplayedCard(element)
   }, [])
 
   useEffect(() => {
+    // Define Image
+    if (card.id) {
+      if (imageCache[card.id]) { // Use cached image if available
+        console.debug('Image Cache Hit')
+        setImage(imageCache[card.id])
+      } else if (card.content.image?.startsWith('data:image/png;base64,')) { // Support PNG Data URIs
+        console.debug('Image Passthrough')
+        setImage(card.content.image)
+      } else if (card.content.image) { // Decompress RLE UTF-8 String
+        console.debug('Image Decompression on Demand')
+        decompressImage(card.content.image).then(res => {
+          setImage(res)
+        });
+      }
+    }
+
     const baseStyles: {[key: string]: Properties<string | number>} = {
       card: {
         borderRadius: '0.5em',
@@ -51,7 +68,7 @@ export function CardFace(card: Card) {
       display(
         <wired-card style={{...baseStyles.card, ...styles.card}} elevation={1}>
           <div style={styles.title}>{card.content.title}</div>
-          <img style={styles.image} src={imageCache[card.id] || BLANK_IMAGE}></img>
+          <img style={styles.image} src={image || BLANK_IMAGE}></img>
         </wired-card>
       );
     } else if (card.location === 'table') {
@@ -69,7 +86,7 @@ export function CardFace(card: Card) {
       };
       display(
         <wired-card style={{...baseStyles.card, ...styles.card}} elevation={1}>
-          <img style={styles.image} src={imageCache[card.id] || BLANK_IMAGE}></img>
+          <img style={styles.image} src={image || BLANK_IMAGE}></img>
         </wired-card>
       );
     }
@@ -122,7 +139,7 @@ export function CardFace(card: Card) {
         </>
       } else {
         content = <>
-          {<img style={styles.image} src={imageCache[card.id] || BLANK_IMAGE}></img>}
+          {<img style={styles.image} src={image || BLANK_IMAGE}></img>}
           <div style={styles.title}>{card.content.title}</div>
           <div style={styles.description}>{card.content.description}</div>
           <div style={styles.credit}>{card.content.author && `${card.content.author}`}{card.content.date && ` - ${localDate}`}</div>
@@ -134,46 +151,8 @@ export function CardFace(card: Card) {
           {content}
         </wired-card>
       );
-    } else {
-      const styles: {[key: string]: Properties<string | number>} = {
-        card: {
-          width: '9em',
-          height: '9em',
-          borderRadius: '0.5em',
-          backgroundColor: 'white',
-          textAlign: 'center',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        },
-        title: {
-          fontSize: '1em',
-          fontWeight: 'bold',
-        },
-        image: {
-          width: '4em',
-          height: '4em',
-        },
-        credit: {
-          fontSize: '0.75em',
-          textAlign: 'center',
-        },
-      };
-
-      const content = <>
-          <div style={styles.title}>{card.content.title}</div>
-          <div style={styles.credit}>{card.content.author && `${card.content.author}`}</div>
-          <div style={styles.credit}>{card.content.date && `${localDate}`}</div>
-      </>
-
-      display(
-        <wired-card style={{...styles.card}} elevation={1}>
-          {card.id != 0 && <img style={styles.image} src={imageCache[card.id] || BLANK_IMAGE}></img>}
-          {content}
-        </wired-card>
-      )
     }
-  })
+  }, [card, image, imageCache, display])
 
   return (displayedCard)
 }

@@ -2,34 +2,18 @@ import { useNavigate, useParams } from "react-router";
 import type { Properties } from 'csstype';
 import { Browse, Icon } from './Icons';
 import { startingDeck } from '../lib/clients';
-import { CardFace } from "./CardFace";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { Card, getAdjacentCard } from "../Cards";
 import { HotkeysContext, ImageCacheContext } from "../lib/contexts";
 import { useWindowDimensions } from "../lib/hooks";
-import { decompressImage } from "../lib/images";
+import { BLANK_IMAGE, decompressImage } from "../lib/images";
 
 export function Gallery() {
   const navigate = useNavigate();
   const { hotkeys } = useContext(HotkeysContext);
   const { height } = useWindowDimensions();
+  const [displayedCards, setDisplayedCards] = useState<Card[]>([]);
 
-  // Cache All Images from Global Deck
-  const { imageCache, dispatchImage } = useContext(ImageCacheContext);
-  useEffect(() => {
-    startingDeck.cards.forEach((card: Card) => {
-      if (card.id) {
-        if (card.content.image?.startsWith('data:image/png;base64,')) { // Support PNG Data URIs
-          dispatchImage({ id: card.id, value: card.content.image })
-        } else if (card.content.image) { // RLE UTF-8 String
-          decompressImage(card.content.image).then(res => {
-            dispatchImage({ id: card.id, value: res });
-          });
-        }
-      }
-    })
-  }, [dispatchImage])
-  
   const styles: { [key: string]: Properties<string | number> } = {
     gallery: {
       width: '100%',
@@ -115,7 +99,46 @@ export function Gallery() {
       justifyContent: 'space-between',
       alignItems: 'center',
     },
-  };
+    card: {
+      width: '9em',
+      height: '9em',
+      borderRadius: '0.5em',
+      backgroundColor: 'white',
+      textAlign: 'center',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cardTitle: {
+      fontSize: '1em',
+      fontWeight: 'bold',
+    },
+    cardImage: {
+      width: '4em',
+      height: '4em',
+    },
+    cardCredit: {
+      fontSize: '0.75em',
+      textAlign: 'center',
+    },
+  }
+
+  // Cache All Images from Global Deck
+  const { imageCache, dispatchImage } = useContext(ImageCacheContext);
+  useEffect(() => {
+    startingDeck.cards.forEach((card: Card) => {
+      if (card.id) {
+        if (card.content.image?.startsWith('data:image/png;base64,')) { // Support PNG Data URIs
+          dispatchImage({ id: card.id, value: card.content.image })
+        } else if (card.content.image) { // RLE UTF-8 String
+          decompressImage(card.content.image).then(res => {
+            dispatchImage({ id: card.id, value: res });
+          });
+        }
+      }
+    })
+    setDisplayedCards(startingDeck.cards);
+  }, [setDisplayedCards, dispatchImage])
 
   const globalDeck = startingDeck;
   const params = useParams();
@@ -123,23 +146,13 @@ export function Gallery() {
   let localDate;
   let viewDialog = <></>;
 
-  // Show All Cards Matching Filter
-  const [filteredCards, setFilteredCards] = useState(globalDeck.cards)
-  const shownCards = <div style={styles.cards}>
-    {filteredCards.map((card) => {
-      return <div key={`gallery-${card.id}`} onClick={(e) => { navigate(`/card/${card.id}`); e.stopPropagation() }}>
-        {CardFace(card)}
-      </div>
-    })}
-  </div>
-
   if (viewedCard) {
     if (viewedCard.content.date) {
       localDate = new Date(Number(viewedCard.content.date)).toLocaleDateString();
     }
 
     const changeViewed = (direction: 'old' | 'new') => {
-      const adjacentCard = getAdjacentCard(filteredCards, viewedCard.id, direction, null);
+      const adjacentCard = getAdjacentCard(displayedCards, viewedCard.id, direction, null);
       if (adjacentCard) {
         navigate(`/card/${Number(adjacentCard.id)}`)
       }
@@ -161,13 +174,13 @@ export function Gallery() {
 
     const browse = <>
       {
-        filteredCards.findIndex((card) => card.id == viewedCard.id) > 0 &&
+        displayedCards.findIndex((card) => card.id == viewedCard.id) > 0 &&
         <div onClick={(e) => { changeViewed('old'); e.stopPropagation() }}>
           <Browse type="prev" />
         </div>
       }
       {
-        filteredCards.findIndex((card) => card.id == viewedCard.id) < (filteredCards.length - 1) &&
+        displayedCards.findIndex((card) => card.id == viewedCard.id) < (displayedCards.length - 1) &&
         <div onClick={(e) => { changeViewed('new'); e.stopPropagation() }}>
           <Browse type="next" />
         </div>
@@ -191,16 +204,32 @@ export function Gallery() {
 
   return (
     <div style={styles.gallery}>
-      {shownCards}
+      <div style={styles.cards}>
+        {
+          displayedCards.map((card: Card) => {
+            let cardLocalDate;
+            if (card.content.date) {
+              cardLocalDate = new Date(Number(card.content.date)).toLocaleDateString();
+            }
+
+            return <wired-card style={styles.card} key={`gallery-${card.id}`} onClick={(e) => { navigate(`/card/${card.id}`); e.stopPropagation() }}>
+              {card.id != 0 && <img style={styles.cardImage} src={imageCache[card.id] || BLANK_IMAGE}></img>}
+              <div style={styles.cardTitle}>{card.content.title}</div>
+              <div style={styles.cardCredit}>{card.content.author && `${card.content.author}`}</div>
+              <div style={styles.cardCredit}>{card.content.date && `${cardLocalDate}`}</div>
+            </wired-card>
+          })
+        }
+      </div>
       {viewedCard && viewDialog}
       <div style={styles.footer}>
         <div style={styles.button} onClick={() => { navigate('/') }}>
             <Icon name='logout' />
             Lobby
         </div>
-        <Search allCards={globalDeck.cards} setFilteredCards={setFilteredCards} />
+        <Search allCards={globalDeck.cards} setDisplayedCards={setDisplayedCards} />
         <div style={styles.button}>
-          {filteredCards.length}<br></br>
+          {displayedCards.length}<br></br>
           Cards
         </div>
       </div>
@@ -210,7 +239,7 @@ export function Gallery() {
 
 interface SearchProps {
   allCards: Card[];
-  setFilteredCards: (cards: Card[]) => void;
+  setDisplayedCards: (cards: Card[]) => void;
 }
 
 export function Search(props: SearchProps) {
@@ -236,9 +265,8 @@ export function Search(props: SearchProps) {
     },
   }
 
-  const searchCards = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    const query = e.target.value;
-    const matchedCards = props.allCards.filter((card) => {
+  const searchCards = useCallback((query: string): Card[] => {
+    return props.allCards.filter((card) => {
       if (card.id == Number(query)) {
         return true
       }
@@ -253,20 +281,22 @@ export function Search(props: SearchProps) {
       }
       return false
     });
-    props.setFilteredCards(matchedCards);
-  }
+  }, [props.allCards])
 
-  const clearSearch = () => {
+  const clearSearch = useCallback(() => {
     const queryInput = document.querySelector('#searchInput') as HTMLInputElement
     if (queryInput) {
       queryInput.value = '';
-      props.setFilteredCards(props.allCards);
+      props.setDisplayedCards(props.allCards);
     }
-  }
+  }, [props])
 
   return <div style={styles.search}>
     <Icon name="search" />
-    <input type='text' style={styles.searchbox} id="searchInput" placeholder="Search Card Gallery" onChange={searchCards}/>
+    <input type='text' style={styles.searchbox} id="searchInput" placeholder="Search Card Gallery" onChange={(e) => {
+      const query = e.target.value;
+      props.setDisplayedCards(searchCards(query));
+    }}/>
     <div onClick={clearSearch}>
       <Icon name="exit" />
     </div>
