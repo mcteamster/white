@@ -25,4 +25,4 @@ dist-ssr
 
 # Card Files
 public/card
-public/decks/global.json
+public/decks

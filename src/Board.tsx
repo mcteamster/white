@@ -7,10 +7,8 @@ import { PlayerSpace } from './Components/PlayerSpace.tsx';
 
 // Web Components from https://wiredjs.com/
 import 'wired-elements';
-import { useEffect, useReducer } from 'react';
+import { useReducer } from 'react';
 import { ImageCacheContext, ImageCacheType } from './lib/contexts.ts';
-import { Card } from './Cards.ts';
-import { decompressImage } from './lib/images.ts';
 declare global {
   namespace React.JSX {
     interface IntrinsicElements {
@@ -40,23 +38,6 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
     cache[image.id] = image.value;
     return cache
   }, {})
-
-  // Cache All Images from Gamestate
-  useEffect(() => {
-    props.G.cards.forEach((card: Card) => {
-      if (card.id) {
-        if (card.content.image?.startsWith('data:image/png;base64,')) { // Support PNG Data URIs
-          dispatchImage({ id: card.id, value: card.content.image})
-        } else if (card.content.image) { // RLE UTF-8 String
-          decompressImage(card.content.image).then(res => {
-            dispatchImage({ id: card.id, value: res});
-          });
-        }
-      }
-    })
-  // Cache population step only needs to run once
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   return (
     <ImageCacheContext.Provider value={{ imageCache, dispatchImage }}>

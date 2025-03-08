@@ -78,6 +78,12 @@ export const compressImage = async (imageDataUrl: string) => {
         let currentColour = '1'; // White is '1' and Black is '0'
         let currentCount = 0;
         for (let i = 0; i < binaryString.length; i++) {
+          // Break up run lengths that will cause UTF-8 character to exceed 16 bits
+          if (currentCount == 65503) {
+            RLE.push(65503, 0) // Add a spacer to preserve index gap
+            currentCount = 0;
+          }
+          
           if (binaryString[i] === currentColour) {
             currentCount += 1;
           } else {

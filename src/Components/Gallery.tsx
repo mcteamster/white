@@ -144,7 +144,7 @@ export function Gallery() {
     })
     setTimeout(() => {
       setDisplayedCards([...startingDeck.cards]);
-    }, 1000)
+    }, 500)
   }, [setDisplayedCards, dispatchImage])
 
   const globalDeck = startingDeck;

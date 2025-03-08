@@ -47,7 +47,7 @@ A JSON serialised javascript object with multi-digit numbers will also encode ea
 
 These factors are simultaneously addressed by transforming the RLE array into a string of characters corresponding to the UTF-8 character code of the run value (plus an offset of `32` to avoid non-printable ASCII characters).
 
-Run values of `223` and under take up 1 byte. Values between `224-65503` take up two. And anything between `65504` and the pixel limit of `250000` consumes 3 bytes - but any run values of this size would be outliers and take up at least a quarter of the image, reducing the overall RLE array size significantly.
+Run values of `223` and under take up 1 byte. Values between `224-65503` take up two. ~~And anything between `65504` and the pixel limit of `250000` consumes 3 bytes~~ Run lengths over `65503` are broken down into multiple runs to keep the resulting character under 16 bits for encoding compatibility. Run values of this size are outliers and take up at least a quarter of the image, which reduces the overall RLE array size anyway. 
 
 These raw UTF-8 strings tend to be at most `a few kilobytes` and reliably beat built-in `.png` compression by at least a factor of 3.
 
