@@ -1,5 +1,6 @@
 // Constant White Image
 export const BLANK_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+export const BLANK_COMPRESSED_IMAGE = '썰 썰 썰 썰 썰';
 
 // Process Images
 export const resizeImage = async (imageDataUrl: string) => {
