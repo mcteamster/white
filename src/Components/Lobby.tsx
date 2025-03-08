@@ -209,7 +209,12 @@ export function Lobby(props: { globalSize: number }) {
 
   const checkLobbyConnection = useCallback(() => {
     lobbyClient.listMatches('blank-white-cards').then(() => {
-      setStage('landing');
+      const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
+      if (roomCode.value) {
+        checkForRoomCode();
+      } else {
+        setStage('landing');
+      }
     }).catch(() => {
       setStage('down');
       setTimeout(checkLobbyConnection, 30000);
