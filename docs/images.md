@@ -49,15 +49,24 @@ These factors are simultaneously addressed by transforming the RLE array into a 
 
 Run values of `223` and under take up 1 byte. Values between `224-65503` take up two. ~~And anything between `65504` and the pixel limit of `250000` consumes 3 bytes~~ Run lengths over `65503` are broken down into multiple runs to keep the resulting character under 16 bits for encoding compatibility. Run values of this size are outliers and take up at least a quarter of the image, which reduces the overall RLE array size anyway. 
 
-These raw UTF-8 strings tend to be at most `a few kilobytes` and reliably beat built-in `.png` compression by at least a factor of 3.
+These raw UTF-8 strings tend to be at most `a few kilobytes` and reliably beat built-in `.png` compression by at least a factor of 2.
 
 ### Compression Ratios
-Here's a benchmark of compression ratios from processing the Global Deck dataset (as of March 2025):
+The Global Deck was upgraded to used compression in March 2025. Data from the 392 cards at the time:
 
-Method | Size | Ratio to Baseline (PNG Data URI)
---- | --- | --- |
-Unrestricted Monochrome PNG (v1) | `up to >100kB` |
-500x500 True-Colour Bitmap | `976.563kB` | 
-500x500 1-Bit Colour Bitmap | `30.518kB` |
-500x500 1-Bit Run Length Encoded | `5-15kB` |
-500x500 1-Bit RLE UTF-8 | `<10kB` |
+Compression Ratios | Median | Mean | StdDev | Range
+--- | --- | --- | --- | ---
+All Cards | `4.191:1` | `20.459:1` | `88.755` | `1.943-538.370`
+Outliers Excluded | `4.1085:1` | `5.403:1` | `6.064:1` | `1.943-60.907`
+
+Prior to processing, the mean uncompressed, non-normalised, card using a PNG Data URI was `22kB`
+
+After processing, the mean compressed card was `3.727kB`
+
+Method | Size 
+--- | ---
+Unrestricted Monochrome PNG (v1) | `up to >100kB`
+500x500 True-Colour Bitmap | `976.563kB`
+500x500 1-Bit Colour Bitmap | `30.518kB`
+500x500 1-Bit Run Length Encoded | `5-15kB`
+500x500 1-Bit RLE UTF-8 | `~4kB`
