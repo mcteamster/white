@@ -213,7 +213,7 @@ export function Focus(props: BoardProps<GameState>) {
           <div style={styles.title}>{card.content.title}</div>
           <div style={styles.credit}>by {card.content.author}</div>
           <div style={styles.credit}>{localDate ? `${localDate}` : ''}</div>
-          <img style={styles.image} src={image} />
+          <img style={styles.image} src={image || BLANK_IMAGE} />
           <div style={styles.description}>{card.content.description}</div>
           {tray}
           {browse}
