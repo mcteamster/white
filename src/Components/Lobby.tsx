@@ -267,6 +267,7 @@ export function Lobby(props: { globalSize: number }) {
             <div style={styles.subheading}>Select a Starting Deck</div>
             <wired-card style={{...styles.action, backgroundColor: (preset == 'blank') ? '#eee' : undefined }} onClick={() => { setPreset('blank'); }}><Icon name="copy" />Blank</wired-card>
             <wired-card style={{...styles.action, backgroundColor: (preset == 'global') ? '#eee' : undefined }} onClick={() => { setPreset('global'); }}><Icon name="global" />Global</wired-card>
+            <wired-card style={{...styles.action, backgroundColor: (preset == 'standard') ? '#eee' : undefined }} onClick={() => { setPreset('standard'); }}><Icon name="die" />Standard</wired-card>
           </div>
 
           <div style={{ display: (['join', 'create'].includes(stage)) ? undefined : 'none' }}>

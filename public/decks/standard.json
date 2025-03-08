@@ -1,0 +1,576 @@
+{
+  "cards": [
+    {
+      "id": 1,
+      "content": {
+        "title": "A ♠️",
+        "description": "Ace of Spades",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 2,
+      "content": {
+        "title": "2 ♠️",
+        "description": "2 of Spades",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 3,
+      "content": {
+        "title": "3 ♠️",
+        "description": "3 of Spades",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 4,
+      "content": {
+        "title": "4 ♠️",
+        "description": "4 of Spades",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 5,
+      "content": {
+        "title": "5 ♠️",
+        "description": "5 of Spades",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 6,
+      "content": {
+        "title": "6 ♠️",
+        "description": "6 of Spades",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 7,
+      "content": {
+        "title": "7 ♠️",
+        "description": "7 of Spades",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 8,
+      "content": {
+        "title": "8 ♠️",
+        "description": "8 of Spades",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 9,
+      "content": {
+        "title": "9 ♠️",
+        "description": "9 of Spades",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 10,
+      "content": {
+        "title": "10 ♠️",
+        "description": "10 of Spades",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 11,
+      "content": {
+        "title": "J ♠️",
+        "description": "Jack of Spades",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 12,
+      "content": {
+        "title": "Q ♠️",
+        "description": "Queen of Spades",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 13,
+      "content": {
+        "title": "K ♠️",
+        "description": "King of Spades",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 14,
+      "content": {
+        "title": "A ❤️",
+        "description": "Ace of Hearts",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 15,
+      "content": {
+        "title": "2 ❤️",
+        "description": "2 of Hearts",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 16,
+      "content": {
+        "title": "3 ❤️",
+        "description": "3 of Hearts",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 17,
+      "content": {
+        "title": "4 ❤️",
+        "description": "4 of Hearts",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 18,
+      "content": {
+        "title": "5 ❤️",
+        "description": "5 of Hearts",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 19,
+      "content": {
+        "title": "6 ❤️",
+        "description": "6 of Hearts",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 20,
+      "content": {
+        "title": "7 ❤️",
+        "description": "7 of Hearts",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 21,
+      "content": {
+        "title": "8 ❤️",
+        "description": "8 of Hearts",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 22,
+      "content": {
+        "title": "9 ❤️",
+        "description": "9 of Hearts",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 23,
+      "content": {
+        "title": "10 ❤️",
+        "description": "10 of Hearts",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 24,
+      "content": {
+        "title": "J ❤️",
+        "description": "Jack of Hearts",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 25,
+      "content": {
+        "title": "Q ❤️",
+        "description": "Queen of Hearts",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 26,
+      "content": {
+        "title": "K ❤️",
+        "description": "King of Hearts",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 27,
+      "content": {
+        "title": "A ♦️",
+        "description": "Ace of Diamonds",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 28,
+      "content": {
+        "title": "2 ♦️",
+        "description": "2 of Diamonds",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 29,
+      "content": {
+        "title": "3 ♦️",
+        "description": "3 of Diamonds",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 30,
+      "content": {
+        "title": "4 ♦️",
+        "description": "4 of Diamonds",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 31,
+      "content": {
+        "title": "5 ♦️",
+        "description": "5 of Diamonds",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 32,
+      "content": {
+        "title": "6 ♦️",
+        "description": "6 of Diamonds",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 33,
+      "content": {
+        "title": "7 ♦️",
+        "description": "7 of Diamonds",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 34,
+      "content": {
+        "title": "8 ♦️",
+        "description": "8 of Diamonds",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 35,
+      "content": {
+        "title": "9 ♦️",
+        "description": "9 of Diamonds",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 36,
+      "content": {
+        "title": "10 ♦️",
+        "description": "10 of Diamonds",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 37,
+      "content": {
+        "title": "J ♦️",
+        "description": "Jack of Diamonds",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 38,
+      "content": {
+        "title": "Q ♦️",
+        "description": "Queen of Diamonds",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 39,
+      "content": {
+        "title": "K ♦️",
+        "description": "King of Diamonds",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 40,
+      "content": {
+        "title": "A ♣️",
+        "description": "Ace of Clubs",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 41,
+      "content": {
+        "title": "2 ♣️",
+        "description": "2 of Clubs",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 42,
+      "content": {
+        "title": "3 ♣️",
+        "description": "3 of Clubs",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 43,
+      "content": {
+        "title": "4 ♣️",
+        "description": "4 of Clubs",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 44,
+      "content": {
+        "title": "5 ♣️",
+        "description": "5 of Clubs",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 45,
+      "content": {
+        "title": "6 ♣️",
+        "description": "6 of Clubs",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 46,
+      "content": {
+        "title": "7 ♣️",
+        "description": "7 of Clubs",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 47,
+      "content": {
+        "title": "8 ♣️",
+        "description": "8 of Clubs",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 48,
+      "content": {
+        "title": "9 ♣️",
+        "description": "9 of Clubs",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 49,
+      "content": {
+        "title": "10 ♣️",
+        "description": "10 of Clubs",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 50,
+      "content": {
+        "title": "J ♣️",
+        "description": "Jack of Clubs",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 51,
+      "content": {
+        "title": "Q ♣️",
+        "description": "Queen of Clubs",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    },
+    {
+      "id": 52,
+      "content": {
+        "title": "K ♣️",
+        "description": "King of Clubs",
+        "author": "Standard Deck",
+        "date": 1735732800000,
+        "image": ""
+      },
+      "location": "deck"
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import BookOutlinedIcon from '@mui/icons-material/BookOutlined';
+import CasinoOutlinedIcon from '@mui/icons-material/CasinoOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import CollectionsOutlinedIcon from '@mui/icons-material/CollectionsOutlined';
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
@@ -42,6 +43,7 @@ type IconName =
   'coffee' |
   'copy' |
   'create' |
+  'die' |
   'discard' | 
   'display' |
   'done' |
@@ -79,6 +81,7 @@ export function Icon(props: { name: IconName }) {
     coffee: <LocalCafeOutlinedIcon></LocalCafeOutlinedIcon>,
     copy: <ContentCopyOutlinedIcon></ContentCopyOutlinedIcon>,
     create: <CreateOutlinedIcon></CreateOutlinedIcon>,
+    die: <CasinoOutlinedIcon></CasinoOutlinedIcon>,
     discard: <DeleteForeverOutlinedIcon></DeleteForeverOutlinedIcon>,
     display: <PresentToAllOutlinedIcon></PresentToAllOutlinedIcon>,
     done: <DoneOutlinedIcon></DoneOutlinedIcon>,
