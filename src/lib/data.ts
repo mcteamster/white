@@ -217,11 +217,47 @@ export const downloadDeck = (G: GameState) => {
           window.onbeforeunload = () => { return true }; // Warn about leaving without saving changes
         }
 
+        // Decompression Algorithm
+        const decompressImage = async (compressedImage) => {
+          // Convert from UTF-8 String to Run Length Encoding
+          const input = compressedImage.split('').map((char) => { return (char.charCodeAt(0) - 32) });
+
+          return new Promise((resolve) => {
+            const img = new Image();
+            img.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='; // Dummy white image to trigger the onload
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              canvas.width = 500;
+              canvas.height = 500;
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                const imageData = ctx.createImageData(canvas.width, canvas.height);
+                const pixels = imageData.data;
+                let pixelTracker = 0;
+                for (let i = 0; i < input.length; i++) {
+                  const colour = i & 1 ? 0 : 255 // Odd is white, Even is black
+                  let count = input[i];
+                  while (count > 0) {
+                    pixels[pixelTracker] = colour;
+                    pixels[pixelTracker + 1] = colour;
+                    pixels[pixelTracker + 2] = colour;
+                    pixels[pixelTracker + 3] = 255;
+                    count--;
+                    pixelTracker += 4;
+                  }
+                }
+                ctx.putImageData(imageData, 0, 0);
+                resolve(canvas.toDataURL("image/png"));
+              }
+            };
+          });
+        };
+
         // Render Cards
         const renderCards = (filterText) => {
           const table = document.getElementById('table');
           table.textContent = '';
-          cards.forEach(card => {
+          cards.forEach(async (card) => {
             // Filter
             if (filterText && !card.content.title.toLowerCase().includes(filterText.toLowerCase()) && !card.content.author.toLowerCase().includes(filterText.toLowerCase()) && !card.content.description.toLowerCase().includes(filterText.toLowerCase())) {
               return;
@@ -242,8 +278,11 @@ export const downloadDeck = (G: GameState) => {
             const imgDiv = document.createElement("div");
             imgDiv.classList.add("picture");
             imgDiv.classList.add("center");
-            if (card.content.image) {
+
+            if (card.content.image.startsWith('data:image/png;base64,')) {
               imgDiv.style.backgroundImage = 'url('+card.content.image+')';
+            } else if (card.content.image) {
+              imgDiv.style.backgroundImage = 'url('+(await decompressImage(card.content.image))+')';
             }
             cardDiv.appendChild(imgDiv);
 
