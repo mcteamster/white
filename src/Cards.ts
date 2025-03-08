@@ -9,7 +9,6 @@ export interface Card {
     image?: string, // PNG Data URI (v1) or Compressed 1-Bit Color Array (v2)
   },
   location: string, // 'deck' | 'pile' | 'discard' | 'hand' | 'table' | 'box',
-  focused?: string[], // DEPRECATED: list of viewing player IDs, causes too much noise in move traffic
   owner?: string, // playerID
   previousOwner?: string, // playerID, used for tracking ownership changes
   timestamp?: number, // epoch of last move
