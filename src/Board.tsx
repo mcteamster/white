@@ -54,6 +54,8 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
         }
       }
     })
+  // Cache population step only needs to run once
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

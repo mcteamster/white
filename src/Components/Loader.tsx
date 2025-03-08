@@ -92,7 +92,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
               setProgress([-1, arr.length])
               setTimeout(() => {
                 setLoaded([...arr]);
-              }, 0)
+              }, 1000)
             }
           })
         }

@@ -142,7 +142,9 @@ export function Gallery() {
         }
       }
     })
-    setDisplayedCards(startingDeck.cards);
+    setTimeout(() => {
+      setDisplayedCards([...startingDeck.cards]);
+    }, 1000)
   }, [setDisplayedCards, dispatchImage])
 
   const globalDeck = startingDeck;
