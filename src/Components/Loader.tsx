@@ -7,6 +7,7 @@ import { Icon } from "./Icons";
 import { BoardProps } from "boardgame.io/dist/types/packages/react";
 import { GameState } from "../Game";
 import { submitGlobalCard } from "../lib/clients";
+import { BLANK_IMAGE, decompressImage } from "../lib/images";
 
 interface LoaderProps extends BoardProps<GameState> {
   mode: string;
@@ -38,7 +39,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
     }
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         if (event.target && event.target.result) {
           const result = event.target.result as string;
@@ -64,10 +65,21 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
             }
             return sanitisedCard;
           });
-          if (deck.length > 0) {
-            setLoaded(deck);
-            setProgress([-1, deck.length])
-          }
+
+          // Process images for preview
+          deck.forEach(async (card: Card, i: number) => {
+            if (!card.content.image) {
+              card.content.image = BLANK_IMAGE;
+            } else if (!card.content.image?.startsWith('data:image/png;base64,')) {
+              card.content.image = await decompressImage(card.content.image);
+            }
+
+            // Update Loaded at the end
+            if (deck.length > 0 && (i == deck.length - 1)) {
+              setLoaded(deck);
+              setProgress([-1, deck.length])
+            }
+          })
         }
       } catch (err) {
         uploadWarning();
