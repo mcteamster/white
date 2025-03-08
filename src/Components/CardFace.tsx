@@ -2,14 +2,12 @@ import type { Properties } from 'csstype';
 import type { Card } from '../Cards.ts';
 import { Link } from 'react-router';
 import { Icon } from './Icons.tsx';
-import { ReactElement, useCallback, useContext, useEffect, useState } from 'react';
+import { ReactElement, useCallback, useEffect, useState } from 'react';
 import { BLANK_IMAGE, decompressImage } from '../lib/images.ts';
-import { ImageCacheContext } from '../lib/contexts.ts';
 
 export function CardFace(card: Card) {
   const [ displayedCard, setDisplayedCard] = useState(<></>);
-  const [image, setImage] = useState(BLANK_IMAGE);
-  const { imageCache } = useContext(ImageCacheContext);
+  const [ image, setImage ] = useState(BLANK_IMAGE);
 
   const display = useCallback((element: ReactElement) => {
     setDisplayedCard(element)
@@ -18,10 +16,7 @@ export function CardFace(card: Card) {
   useEffect(() => {
     // Define Image
     if (card.id) {
-      if (imageCache[card.id]) { // Use cached image if available
-        console.debug('Image Cache Hit')
-        setImage(imageCache[card.id])
-      } else if (card.content.image?.startsWith('data:image/png;base64,')) { // Support PNG Data URIs
+      if (card.content.image?.startsWith('data:image/png;base64,')) { // Support PNG Data URIs
         console.debug('Image Passthrough')
         setImage(card.content.image)
       } else if (card.content.image) { // Decompress RLE UTF-8 String
@@ -152,7 +147,7 @@ export function CardFace(card: Card) {
         </wired-card>
       );
     }
-  }, [card, image, imageCache, display])
+  }, [card, image, display])
 
   return (displayedCard)
 }
