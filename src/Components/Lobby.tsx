@@ -14,7 +14,7 @@ const styles: { [key: string]: Properties<string | number> } = {
   },
   multiplayer: {
     width: 'min(40vh, 85vw)',
-    height: 'min(40vh, 85vw)',
+    minHeight: 'min(35vh, 85vw)',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
@@ -23,7 +23,7 @@ const styles: { [key: string]: Properties<string | number> } = {
   },
   singleplayer: {
     width: 'min(40vh, 85vw)',
-    height: 'min(30vh, 85vw)',
+    minHeight: 'min(35vh, 85vw)',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
@@ -240,13 +240,12 @@ export function Lobby(props: { globalSize: number }) {
     <wired-dialog open>
       <div style={styles.dialog}>
         <wired-card style={styles.multiplayer}>
+          <div style={styles.heading}><Icon name="multi" />&nbsp;Multiplayer</div>
           <div style={{ display: (stage == 'down') ? undefined : 'none' }}>
-            <div style={styles.heading}><Icon name="multi" />&nbsp;Multiplayer</div>
             <div style={styles.subheading}>Server Currently Unavailable</div>
           </div>
 
           <div style={{ display: (stage == 'landing') ? undefined : 'none' }}>
-            <div style={styles.heading}><Icon name="multi" />&nbsp;Multiplayer</div>
             <wired-card style={{...styles.action, fontSize: '1.5em'}} onClick={() => { setStage('create') }}>
               Create New Game
             </wired-card>
@@ -261,10 +260,11 @@ export function Lobby(props: { globalSize: number }) {
 
           <div style={{ display: (stage == 'join') ? undefined : 'none' }}>
             <div style={styles.subheading}>Joining Room</div>
-            <wired-card style={{ ...styles.code, color: 'grey' }}>{auth?.matchID}</wired-card>
+            <wired-card style={{ ...styles.code, fontSize: '1.5em', color: 'grey' }}>{auth?.matchID}</wired-card>
           </div>
 
           <div style={{ ...styles.presets, display: (stage == 'create') ? undefined : 'none' }}>
+            <div style={styles.subheading}>Select a Starting Deck</div>
             <wired-card style={{...styles.action, backgroundColor: (preset == 'blank') ? '#eee' : undefined }} onClick={() => { setPreset('blank'); }}><Icon name="copy" />Blank</wired-card>
             <wired-card style={{...styles.action, backgroundColor: (preset == 'global') ? '#eee' : undefined }} onClick={() => { setPreset('global'); }}><Icon name="global" />Global</wired-card>
           </div>
@@ -284,14 +284,17 @@ export function Lobby(props: { globalSize: number }) {
             </div>
           </div>
         </wired-card>
-        <wired-card style={styles.singleplayer}>
-          <div style={styles.heading}><Icon name="single" />&nbsp;Single Device</div>
-          <wired-card style={styles.action} onClick={enterSinglePlayer}>
-            <div style={styles.subheading}><Icon name='global' />&nbsp;Global Deck</div>
-            <div style={styles.subheading}>{props.globalSize} Cards</div>
+        {
+          (stage == 'landing' || stage == 'down') &&
+          <wired-card style={styles.singleplayer}>
+            <div style={styles.heading}><Icon name="single" />&nbsp;Single Device</div>
+            <wired-card style={styles.action} onClick={enterSinglePlayer}>
+              <div style={styles.subheading}><Icon name='global' />&nbsp;Global Deck</div>
+              <div style={styles.subheading}>{props.globalSize} Cards</div>
+            </wired-card>
+            <div style={styles.subheading}>Draw and add your own!</div>
           </wired-card>
-          <div style={styles.subheading}>Draw and add your own!</div>
-        </wired-card>
+        }
       </div>
       <div style={styles.terms}>
         <div>by continuing you confirm you are over 18</div>
