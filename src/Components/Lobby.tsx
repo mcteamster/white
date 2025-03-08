@@ -273,7 +273,7 @@ export function Lobby(props: { globalSize: number }) {
             <div style={styles.subheading}>Who's Playing?</div>
             <wired-input style={{ ...styles.name, display: (['join', 'create'].includes(stage)) ? undefined : 'none' }} id="nameInput" placeholder="Player Name" maxlength={25} value={auth?.playerName}></wired-input>
             <div style={{ ...styles.presets}}>
-              <wired-card style={styles.action} onClick={() => { setStage('landing') }}><Icon name="back" />Back</wired-card>
+              <wired-card style={styles.action} onClick={() => { roomCodeError(); setStage('landing') }}><Icon name="back" />Back</wired-card>
               <wired-card style={styles.action} onClick={() => {
                 if (stage == 'join') {
                   joinGame(); 
