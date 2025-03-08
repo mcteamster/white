@@ -249,7 +249,7 @@ export function Lobby(props: { globalSize: number }) {
             <div style={styles.textentry}>
               <wired-card style={styles.action} onClick={() => { checkForRoomCode() }}>
                 Join Room
-                <wired-input style={styles.code} id="roomInput" placeholder="Code" maxlength={4} value={auth?.matchID} onClick={(e) => e.stopPropagation()}></wired-input>
+                <wired-input style={styles.code} id="roomInput" placeholder="&nbsp;Code" maxlength={4} value={auth?.matchID} onClick={(e) => e.stopPropagation()}></wired-input>
               </wired-card>
             </div>
           </div>
