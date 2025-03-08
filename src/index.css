@@ -80,7 +80,7 @@ input:focus {
   box-shadow: 5px 5px black;
 }
 
-@media only screen and (max-aspect-ratio: 2/3) {
+@media only screen and (max-aspect-ratio: 1/1) {
   body {
     min-height: calc(90vh - 70px);
     background-color: white;

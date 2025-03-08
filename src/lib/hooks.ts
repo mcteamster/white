@@ -8,7 +8,7 @@ const getWindowDimensions = () => {
   return {
     width,
     height,
-    upright: ((width/height) < (2/3)),
+    upright: ((width/height) < 1),
   };
 }
 
