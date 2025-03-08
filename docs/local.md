@@ -23,7 +23,7 @@ This will run a `boardgame.io` server at http://localhost:3000
 ```
 # Game Info
 VITE_ORIGIN='http://<YOUR_LAN_IP_ADDRESS>:5173'
-VITE_COMPRESS_IMAGES='true' # Compress images for network performance (EXPERIMENTAL)
+VITE_COMPRESS_IMAGES='true' # Compressing image improves network performance at the cost of decompression lag
 
 # Client Side Environment
 VITE_LOBBY_SERVER='http://<YOUR_LAN_IP_ADDRESS>:<PORT>'
@@ -50,7 +50,7 @@ Update `.env.production` with the details of your hosting setup:
 ```
 # Game Info
 VITE_ORIGIN='<WEBSITE>' # Website where this game is served from
-VITE_COMPRESS_IMAGES='false' # Compress images for network performance (EXPERIMENTAL)
+VITE_COMPRESS_IMAGES='false' # Compressing image improves network performance at the cost of decompression lag
 
 # Client Side Environment
 VITE_API_SERVER='' # For Global Deck Cards - leave this empty

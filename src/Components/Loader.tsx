@@ -122,7 +122,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
   useEffect(() => {
     // In Progress
     if (progress[0] >= 0 && progress[0] < progress[1]) {
-      const bounds = [ progress[0], Math.min((progress[0] + 15), progress[1]) ] // 15 cards per second
+      const bounds = [ progress[0], Math.min((progress[0] + 25), progress[1]) ] // 25 cards per second
       const cards = loaded.slice(...bounds).filter((card) => card.location == 'deck');
       if (cards.length == 0) {
         // Skip immediately
