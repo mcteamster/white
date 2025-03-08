@@ -7,8 +7,8 @@ import { PlayerSpace } from './Components/PlayerSpace.tsx';
 
 // Web Components from https://wiredjs.com/
 import 'wired-elements';
-import { useContext, useEffect } from 'react';
-import { ImageCacheContext } from './lib/contexts.ts';
+import { useEffect, useReducer } from 'react';
+import { ImageCacheContext, ImageCacheType } from './lib/contexts.ts';
 import { Card } from './Cards.ts';
 import { decompressImage } from './lib/images.ts';
 declare global {
@@ -35,8 +35,13 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
     gridTemplateRows: '5vh auto auto auto auto auto auto auto 7em',
   };
 
+  // Image Cache
+  const [imageCache, dispatchImage] = useReducer((cache: ImageCacheType, image: { id: number, value: string }) => {
+    cache[image.id] = image.value;
+    return cache
+  }, {})
+
   // Cache All Images from Gamestate
-  const { dispatchImage } = useContext(ImageCacheContext);
   useEffect(() => {
     props.G.cards.forEach((card: Card) => {
       if (card.id) {
@@ -49,13 +54,15 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
         }
       }
     })
-  }, [props.G.cards, dispatchImage])
+  }, [])
 
   return (
-    <div style={boardStyle}>
-      <ActionSpace {...props} />
-      <CommonSpace {...props} />
-      <PlayerSpace {...props} />
-    </div>
+    <ImageCacheContext.Provider value={{ imageCache, dispatchImage }}>
+      <div style={boardStyle}>
+        <ActionSpace {...props} />
+        <CommonSpace {...props} />
+        <PlayerSpace {...props} />
+      </div>
+    </ImageCacheContext.Provider>
   );
 }

@@ -1,13 +1,14 @@
 import { Properties } from "csstype";
 import { useWindowDimensions } from "../lib/hooks";
 import { sanitiseCard } from "../lib/data";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 import { Card, getCardsByLocation } from "../Cards";
 import { Icon } from "./Icons";
 import { BoardProps } from "boardgame.io/dist/types/packages/react";
 import { GameState } from "../Game";
 import { submitGlobalCard } from "../lib/clients";
-import { BLANK_IMAGE, decompressImage } from "../lib/images";
+import { BLANK_IMAGE, compressImage, decompressImage, resizeImage } from "../lib/images";
+import { ImageCacheType } from "../lib/contexts";
 
 interface LoaderProps extends BoardProps<GameState> {
   mode: string;
@@ -21,6 +22,12 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
   const [progress, setProgress] = useState([-1, 0]); // Progress index of currently processing load: [currentIndex, endIndex]. -1 means no processing
   const fileSelector = document.getElementById('fileselector') as HTMLInputElement;
 
+  // Cache All Images from Imported Deck
+  const [imageCache, dispatchImage] = useReducer((cache: ImageCacheType, image: { id: number, value: string }) => {
+    cache[image.id] = image.value;
+    return cache
+  }, {})
+
   // Leave and clear
   const leaveLoader = useCallback(() => {
     fileSelector.value = '';
@@ -28,7 +35,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
   }, [fileSelector, setMode])
 
   // Handle File Upload
-  const uploadDeck = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadDeck = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadWarning = () => {
       const fileCard = document.getElementById('fileCard') as HTMLElement;
       fileCard.style.color = 'red';
@@ -67,17 +74,25 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
           });
 
           // Process images for preview
-          deck.forEach(async (card: Card) => {
-            if (!card.content.image) {
-              card.content.image = BLANK_IMAGE;
-            } else if (!card.content.image?.startsWith('data:image/png;base64,')) {
-              card.content.image = await decompressImage(card.content.image);
+          deck.forEach(async (card: Card, i: number, arr: Card[]) => {
+            if (card.content.image && card.content.image?.startsWith('data:image/png;base64,')) {
+              dispatchImage({ id: i, value: card.content.image }) // Cache the Uncompressed Image
+              card.content.image = await compressImage(await resizeImage(card.content.image)); // Import Compressed image
+            } else if (card.content.image) {
+              // Cache the Decompressed Image
+              decompressImage(card.content.image).then(res => {
+                dispatchImage({ id: i, value: res });
+              });
+            } else {
+              dispatchImage({ id: i, value: BLANK_IMAGE });
             }
 
             // Update Loaded at the end
-            if (deck.length > 0) {
-              setLoaded(deck);
-              setProgress([-1, deck.length])
+            if (arr.length > 0 && (i == arr.length - 1)) {
+              setProgress([-1, arr.length])
+              setTimeout(() => {
+                setLoaded([...arr]);
+              }, 0)
             }
           })
         }
@@ -101,7 +116,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
       setLoaded([]);
       setProgress([-1, 0])
     }
-  }
+  }, [fileSelector, globalSubmit])
 
   // Batch Submissions
   useEffect(() => {
@@ -136,204 +151,206 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
         setProgress([-1, 0]); // Stop processing, reset tracker
         leaveLoader();
       }, 0)
-    }    
+    }
   }, [progress, setProgress, moves, setMode, loaded, leaveLoader])
 
-  // Submit loaded cards to server
-  const submitLoaded = () => {
-    setProgress([0, progress[1]]); // Begin submitting from the start
-  }
+  // Render
+  const [ displayLoader, setDisplayLoader] = useState(<></>);
+  useEffect(() => {
+    const styles: { [key: string]: Properties<string | number> } = {
+      loader: {
+        width: width * 0.75,
+        height: height * 0.75,
+        padding: '1em',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      },
+      title: {
+        fontSize: '2em',
+      },
+      info: {
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      },
+      listbutton: {
+        padding: '0.5em',
+      },
+      preview: {
+        width: '100%',
+        minWidth: '10em',
+        margin: '0',
+        maxHeight: '35vh',
+        overflowY: 'scroll',
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        alignItems: 'flex-start',
+        flexWrap: 'wrap',
+      },
+      previewNumber: {
+        width: '1.5em',
+        textAlign: 'right',
+      },
+      previewItem: {
+        width: '15em',
+        borderRadius: '0.25em',
+        margin: '0.25em',
+        display: 'flex',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        flexGrow: 1,
+      },
+      previewImage: {
+        margin: '0.25em 0.5em',
+        width: '2em',
+        height: '2em',
+        border: '0.1pt solid black',
+        backgroundColor: 'white',
+      },
+      prompt: {
+        textAlign: 'center',
+      },
+      instructionsContainer: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'column',
+      },
+      instructions: {
+        width: '15em',
+        margin: '0.5em',
+        textAlign: 'center',
+        backgroundColor: '#eee',
+      },
+      uploader: {
+        display: 'none',
+      },
+      confirmation: {
+        width: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      button: {
+        height: '3em',
+        width: '6em',
+        margin: '0.25em',
+        fontWeight: 'bold',
+        textAlign: 'center',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#eee',
+        borderRadius: '1em',
+      },
+    }
 
-  const styles: { [key: string]: Properties<string | number> } = {
-    loader: {
-      width: width * 0.75,
-      height: height * 0.75,
-      padding: '1em',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    title: {
-      fontSize: '2em',
-    },
-    info: {
-      width: '100%',
-      display: 'flex',
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    listbutton: {
-      padding: '0.5em',
-    },
-    preview: {
-      width: '100%',
-      minWidth: '10em',
-      margin: '0',
-      maxHeight: '35vh',
-      overflowY: 'scroll',
-      display: 'flex',
-      flexDirection: 'row',
-      justifyContent: 'flex-start',
-      alignItems: 'flex-start',
-      flexWrap: 'wrap',
-    },
-    previewNumber: {
-      width: '1.5em',
-      textAlign: 'right',
-    },
-    previewItem: {
-      width: '15em',
-      borderRadius: '0.25em',
-      margin: '0.25em',
-      display: 'flex',
-      justifyContent: 'flex-start',
-      alignItems: 'center',
-      flexGrow: 1,
-    },
-    previewImage: {
-      margin: '0.25em 0.5em',
-      width: '2em',
-      height: '2em',
-      border: '0.1pt solid black',
-      backgroundColor: 'white',
-    },
-    prompt: {
-      textAlign: 'center',
-    },
-    instructionsContainer: {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      flexDirection: 'column',
-    },
-    instructions: {
-      width: '15em',
-      margin: '0.5em',
-      textAlign: 'center',
-      backgroundColor: '#eee',
-    },
-    uploader: {
-      display: 'none',
-    },
-    confirmation: {
-      width: '100%',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    button: {
-      height: '3em',
-      width: '6em',
-      margin: '0.25em',
-      fontWeight: 'bold',
-      textAlign: 'center',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: '#eee',
-      borderRadius: '1em',
-    },
-  }
+      // Submit loaded cards to server
+    const submitLoaded = () => {
+      setProgress([0, progress[1]]); // Begin submitting from the start
+    }
 
-  const loadedPreview = <>
-    {loaded.length > 0 && loaded.map((card: Card, i) => {
-      return (<div key={`loader-preview-${i}`} style={{ ...styles.previewItem, color: card.location == 'box' ? 'grey' : 'black', backgroundColor: card.location == 'box' ? 'white' : '#eee' }} onClick={() => {
-        if (progress[0] == -1) {
-          loaded[i].location = (card.location == 'deck') ? 'box' : 'deck'; setLoaded([...loaded])
-        }}}>
-        <div style={styles.previewNumber}>
-          {card.location == 'deck' && (i < progress[0]) && '*'}{i + 1}
-        </div>
-        <img style={styles.previewImage} src={card.content.image}></img>
-        {card.content.title}
-      </div>)
-    })}
-  </>
-
-  return (
-    <wired-dialog open={mode == 'menu-tools-loader' ? true : undefined} onClick={(e) => { setMode('menu-tools'); e.stopPropagation() }}>
-      <div style={styles.loader} onClick={(e) => e.stopPropagation()}>
-        <div style={styles.title}>
-          Deck Loader
-        </div>
-        <div>
-        {
-          loaded.length > 0 ?
-            <wired-card>
-              <div style={styles.info}>
-                <div style={styles.listbutton} onClick={() => { setLoaded(loaded.map((card) => { card.location = 'deck'; return card })); }}>
-                  <Icon name='checklist' />
-                </div>
-                {
-                  (progress[0] == -1) ?
-                  <div style={{ color: (globalSubmit && (getCardsByLocation(loaded, 'deck').length != 1)) ? 'red' : 'black' }}>
-                    {`${getCardsByLocation(loaded, 'deck').length} / ${loaded.length}`}
-                  </div> :
-                  <div>
-                    {`${((progress[0]/progress[1])*100).toFixed(0)}% Complete`}
+    setDisplayLoader(
+      <wired-dialog open={mode == 'menu-tools-loader' ? true : undefined} onClick={(e) => { setMode('menu-tools'); e.stopPropagation() }}>
+        <div style={styles.loader} onClick={(e) => e.stopPropagation()}>
+          <div style={styles.title}>
+            Deck Loader
+          </div>
+          <div>
+          {
+            loaded.length > 0 ?
+              <wired-card>
+                <div style={styles.info}>
+                  <div style={styles.listbutton} onClick={() => { setLoaded(loaded.map((card) => { card.location = 'deck'; return card })); }}>
+                    <Icon name='checklist' />
                   </div>
+                  {
+                    (progress[0] == -1) ?
+                    <div style={{ color: (globalSubmit && (getCardsByLocation(loaded, 'deck').length != 1)) ? 'red' : 'black' }}>
+                      {`${getCardsByLocation(loaded, 'deck').length} / ${loaded.length}`}
+                    </div> :
+                    <div>
+                      {`${((progress[0]/progress[1])*100).toFixed(0)}% Complete`}
+                    </div>
+                  }
+                  <div style={styles.listbutton} onClick={() => { setLoaded(loaded.map((card) => { card.location = 'box'; return card })); }}>
+                    <Icon name='exit' />
+                  </div>
+                </div>
+                <div style={styles.preview}>
+                  {loaded.length > 0 && loaded.map((card: Card, i) => {
+                    return (<div key={`loader-preview-${i}`} style={{ ...styles.previewItem, color: card.location == 'box' ? 'grey' : 'black', backgroundColor: card.location == 'box' ? 'white' : '#eee' }} onClick={() => {
+                      if (progress[0] == -1) {
+                        loaded[i].location = (card.location == 'deck') ? 'box' : 'deck'; setLoaded([...loaded])
+                      }}}>
+                      <div style={styles.previewNumber}>
+                        {card.location == 'deck' && (i < progress[0]) && '*'}{i + 1}
+                      </div>
+                      <img style={styles.previewImage} src={imageCache[i]}></img>
+                      {card.content.title}
+                    </div>)
+                  })}
+                </div>
+                <div style={styles.prompt}>
+                  {globalSubmit ? 'Limited to ONE card per submission' : 'Tap cards to include/exclude'}
+                </div>
+              </wired-card> :
+              <div style={styles.instructionsContainer} >
+                {
+                  !isMultiplayer &&
+                  <>
+                    <wired-card style={{...styles.instructions }} onClick={() => { setGlobalSubmit(true); document.getElementById('fileselector')?.click() }}>
+                      <Icon name='global' />
+                      Submit to the Global Deck
+                    </wired-card>
+                    or
+                  </>
                 }
-                <div style={styles.listbutton} onClick={() => { setLoaded(loaded.map((card) => { card.location = 'box'; return card })); }}>
-                  <Icon name='exit' />
+                <wired-card style={{...styles.instructions }} onClick={() => { setGlobalSubmit(false); document.getElementById('fileselector')?.click() }}>
+                  <Icon name='display' />
+                  Load cards into this session
+                </wired-card>
+                <div id="fileCard" style={styles.prompt}>
+                  From a Saved Deck File
                 </div>
               </div>
-              <div style={styles.preview}>
-                {loadedPreview}
-              </div>
-              <div style={styles.prompt}>
-                {globalSubmit ? 'Limited to ONE card per submission' : 'Tap cards to include/exclude'}
-              </div>
-            </wired-card> :
-            <div style={styles.instructionsContainer} >
-              {
-                !isMultiplayer &&
-                <>
-                  <wired-card style={{...styles.instructions }} onClick={() => { setGlobalSubmit(true); document.getElementById('fileselector')?.click() }}>
-                    <Icon name='global' />
-                    Submit to the Global Deck
-                  </wired-card>
-                  or
-                </>
-              }
-              <wired-card style={{...styles.instructions }} onClick={() => { setGlobalSubmit(false); document.getElementById('fileselector')?.click() }}>
-                <Icon name='display' />
-                Load cards into this session
-              </wired-card>
-              <div id="fileCard" style={styles.prompt}>
-                From a Saved Deck File
-              </div>
-            </div>
-        } 
-        </div>
-        <input disabled={progress[0] != -1} style={styles.uploader} type="file" id="fileselector" accept=".html" onChange={uploadDeck} />
-        <div style={styles.confirmation}>
-          <wired-card style={styles.button} onClick={() => { setMode('play') }}>
-            <Icon name='exit' />Close
-          </wired-card>
-          <wired-card style={{ ...styles.button, color: (loaded.length > 0) ? 'red' : 'grey' }} onClick={() => { if (loaded.length > 0) { setLoaded([]); leaveLoader() } }}>
-            <Icon name='discard' />{(progress[0] == -1) ? 'Cancel' : 'Stop'}
-          </wired-card>
-          <wired-card style={{ 
-              ...styles.button, 
-              color: ((globalSubmit && !isMultiplayer && getCardsByLocation(loaded, 'deck').length == 1)) ? undefined : (!globalSubmit &&(progress[0] == -1) && (getCardsByLocation(loaded, 'deck').length > 0)) ? undefined : 'grey',
-            }} 
-            onClick={() => {
-            if (progress[0] == -1 && getCardsByLocation(loaded, 'deck').length > 0) {
-              if (globalSubmit) {
-                if (!isMultiplayer && getCardsByLocation(loaded, 'deck').length == 1) {
-                  submitGlobalCard(getCardsByLocation(loaded, 'deck')[0]); // Only one card can be submitted to the global deck at a time
-                  submitLoaded(); // Also upload straight to gamestate
+          } 
+          </div>
+          <input disabled={progress[0] != -1} style={styles.uploader} type="file" id="fileselector" accept=".html" onChange={uploadDeck} />
+          <div style={styles.confirmation}>
+            <wired-card style={styles.button} onClick={() => { setMode('play') }}>
+              <Icon name='exit' />Close
+            </wired-card>
+            <wired-card style={{ ...styles.button, color: (loaded.length > 0) ? 'red' : 'grey' }} onClick={() => { if (loaded.length > 0) { setLoaded([]); leaveLoader() } }}>
+              <Icon name='discard' />{(progress[0] == -1) ? 'Cancel' : 'Stop'}
+            </wired-card>
+            <wired-card style={{ 
+                ...styles.button, 
+                color: ((globalSubmit && !isMultiplayer && getCardsByLocation(loaded, 'deck').length == 1)) ? undefined : (!globalSubmit &&(progress[0] == -1) && (getCardsByLocation(loaded, 'deck').length > 0)) ? undefined : 'grey',
+              }} 
+              onClick={() => {
+              if (progress[0] == -1 && getCardsByLocation(loaded, 'deck').length > 0) {
+                if (globalSubmit) {
+                  if (!isMultiplayer && getCardsByLocation(loaded, 'deck').length == 1) {
+                    submitGlobalCard(getCardsByLocation(loaded, 'deck')[0]); // Only one card can be submitted to the global deck at a time
+                    submitLoaded(); // Also upload straight to gamestate
+                  }
+                } else {
+                  submitLoaded();
                 }
-              } else {
-                submitLoaded();
-              }
-            }}}>
-            <Icon name='done' />{(progress[0] == -1) ? 'Upload' : 'Uploading'}
-          </wired-card>
+              }}}>
+              <Icon name='done' />{(progress[0] == -1) ? 'Upload' : 'Uploading'}
+            </wired-card>
+          </div>
         </div>
-      </div>
-    </wired-dialog>
-  )
+      </wired-dialog>
+    )
+  }, [globalSubmit, height, imageCache, isMultiplayer, leaveLoader, loaded, mode, progress, setMode, uploadDeck, width])
+
+  return (displayLoader)
 }

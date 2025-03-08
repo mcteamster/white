@@ -2,13 +2,16 @@ import type { Properties } from 'csstype';
 import type { Card } from '../Cards.ts';
 import { Link } from 'react-router';
 import { Icon } from './Icons.tsx';
-import { ReactElement, useCallback, useEffect, useState } from 'react';
+import { ReactElement, useCallback, useContext, useEffect, useState } from 'react';
 import { BLANK_IMAGE, decompressImage } from '../lib/images.ts';
+import { ImageCacheContext } from '../lib/contexts.ts';
 
 export function CardFace(card: Card) {
-  const [ displayedCard, setDisplayedCard] = useState(<></>);
   const [ image, setImage ] = useState(BLANK_IMAGE);
-
+  const { imageCache, dispatchImage } = useContext(ImageCacheContext);
+  const cachedImage = imageCache[card.id];
+  const [ displayedCard, setDisplayedCard] = useState(<></>);
+  
   const display = useCallback((element: ReactElement) => {
     setDisplayedCard(element)
   }, [])
@@ -16,13 +19,18 @@ export function CardFace(card: Card) {
   useEffect(() => {
     // Define Image
     if (card.id) {
-      if (card.content.image?.startsWith('data:image/png;base64,')) { // Support PNG Data URIs
+      if (cachedImage) {
+        console.debug('Image Cache Hit')
+        setImage(cachedImage)
+      } else if (card.content.image?.startsWith('data:image/png;base64,')) { // Support PNG Data URIs
         console.debug('Image Passthrough')
         setImage(card.content.image)
+        dispatchImage({ id: card.id, value: card.content.image })
       } else if (card.content.image) { // Decompress RLE UTF-8 String
         console.debug('Image Decompression on Demand')
         decompressImage(card.content.image).then(res => {
           setImage(res)
+          dispatchImage({ id: card.id, value: res })
         });
       }
     }
@@ -147,7 +155,7 @@ export function CardFace(card: Card) {
         </wired-card>
       );
     }
-  }, [card, image, display])
+  }, [card, image, dispatchImage, cachedImage, display])
 
   return (displayedCard)
 }
