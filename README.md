@@ -23,7 +23,7 @@ It's honestly amazing that so many people have contributed so far, and even more
 - Making Weird Noises
 
 ### What's New
-Some meta-actions which were previously bound by the technical limitations of the game are now in version `2.x` with features like:
+Some meta-actions which were previously bound by technical limitations are now possible in version `2.x` with features like:
 - Hand: Picking Up and Discarding
 - Table: Placing cards in front of you (e.g. for long-lived/dormant/persistent actions/buffs/debuffs)
 - Sending cards between players: you can only send cards in your Hand or on your Table
@@ -41,9 +41,9 @@ Other noteworthy features:
 - New Save / Load format: with backwards compatibility for decks made in `1.x`!
 - A new Multiplayer Lobby experience: share and join links with QR codes
 - Session memory and persistence
-- Overall performance improvements
+- Custom image compression for faster multiplayer performance
 
-This new version is made in React TypeScript and uses [`boardgame.io`](https://boardgame.io/) as the game engine and networking framework. Writing [your own multiplayer networking code](https://github.com/mcteamster/twinge?tab=readme-ov-file#twinge-service) is tricky, and `bgio` made it a breeze.
+This new version is made in React TypeScript and uses [`boardgame.io`](https://boardgame.io/) as the game engine and networking stack. [Writing your own multiplayer networking code](https://github.com/mcteamster/twinge?tab=readme-ov-file#twinge-service) is tricky, and `bgio` made it a breeze.
 
 ## More Docs
 [Infrastructure:](./docs/aws.md)
@@ -53,6 +53,9 @@ Take a look if you're wondering how it's done.
 [Self-Hosting Guide:](./docs/local.md)
 The internet can be too big and scary of a place to send your precious creations.
 You're welcome to run your own instance of `Blank White Cards` locally if you wish.
+
+[Image Processing:](./docs/images.md)
+Card images are standardised and compressed to maximise network performance with minimal gameplay impact. Learn more about the custom algorithm implemented here.
 
 ## License
 Blank White Cards game software code freely available under [MIT License](./LICENSE.md)
