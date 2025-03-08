@@ -219,7 +219,7 @@ export function Lobby(props: { globalSize: number }) {
       setStage('down');
       setTimeout(checkLobbyConnection, 30000);
     });
-  }, [setStage])
+  }, [setStage, checkForRoomCode])
   useEffect(checkLobbyConnection, [checkLobbyConnection]);
 
   // Hotkeys
