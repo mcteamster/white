@@ -67,7 +67,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
           });
 
           // Process images for preview
-          deck.forEach(async (card: Card, i: number) => {
+          deck.forEach(async (card: Card) => {
             if (!card.content.image) {
               card.content.image = BLANK_IMAGE;
             } else if (!card.content.image?.startsWith('data:image/png;base64,')) {
@@ -75,7 +75,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
             }
 
             // Update Loaded at the end
-            if (deck.length > 0 && (i == deck.length - 1)) {
+            if (deck.length > 0) {
               setLoaded(deck);
               setProgress([-1, deck.length])
             }
