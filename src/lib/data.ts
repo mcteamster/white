@@ -33,8 +33,17 @@ export const sanitiseCard = (inputCard) => {
 
 // Download Deck Data
 export const downloadDeck = (G: GameState) => {
+  // Strip Unnecessary Data from Gamestate
+  const strippedCards = G.cards.map((card) => {
+    return {
+      id: card.id,
+      content: card.content,
+      location: 'deck'
+    }
+  })
+
   // Create Data String
-  const rawData = btoa(encodeURI(JSON.stringify(G.cards)));
+  const rawData = btoa(encodeURI(JSON.stringify(strippedCards)));
 
   // Format Deck
   const outputHTML = `<!DOCTYPE html><html><head><script>const rawData =
