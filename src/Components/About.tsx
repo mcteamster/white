@@ -221,7 +221,8 @@ export function Tutorial({ isMultiplayer, playerID, mode, setMode }: TutorialPro
           <p>If playing for points, find somewhere to take notes. Points get complicated very fast!</p>
           <p>If playing with drinks, drink-responsibly :)</p>
           <p>Remember to <u>Save</u> the deck. You can edit it offline and reuse it later.</p>
-          <p>Or why not just play Free-for-All? Anyone can do anything at any time. Embrace the chaos!</p>
+          <p>Alternatively, choose a Preset Deck for a super quick way to get started!</p>
+          <p>Or why not just play Free-for-All? Let anyone can do anything at any time and embrace the chaos!</p>
         </> :
         <>
           <p><u>Submit</u> new cards to the Global Deck!</p>
