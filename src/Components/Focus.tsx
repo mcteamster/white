@@ -352,9 +352,9 @@ export function Likes({ card, likeCard, matchId }: LikesProps) {
       const cardData = await (await fetch(`${import.meta.env.VITE_ORIGIN}/card/${card.id}.json`)).json();
       setLikes(abbreviate(++cardData.likes || 0));
     } else {
-      setLikes('0')
+      setLikes('-')
     }
-  }, []);
+  }, [abbreviate, card, matchId]);
 
   const handleLike = useCallback((e: React.MouseEvent) => {
     if (sessionStorage.getItem(`${matchId}-${card.id}-liked`) != '1') {
@@ -367,13 +367,13 @@ export function Likes({ card, likeCard, matchId }: LikesProps) {
     } // Can only like, cannot unlike
     getLikes();
     e.stopPropagation();
-  }, [card.id, likeCard, matchId]);
+  }, [card.id, likeCard, getLikes, matchId]);
 
   useEffect(() => {
     if (matchId != 'default') {
       getLikes();
     }
-  }, [])
+  }, [matchId, getLikes])
 
   return (
     <>
