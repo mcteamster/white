@@ -28,6 +28,11 @@ export const sanitiseCard = (inputCard) => {
     outputCard.location = 'box'
   }
 
+  // Preserve Likes
+  if (inputCard?.likes && inputCard.likes > 0 && inputCard.likes < 1_000_000_000) {
+    outputCard.likes = inputCard.likes
+  }
+
   return outputCard;
 }
 
@@ -35,11 +40,13 @@ export const sanitiseCard = (inputCard) => {
 export const downloadDeck = (G: GameState) => {
   // Strip Unnecessary Data from Gamestate
   const strippedCards = G.cards.map((card) => {
-    return {
+    const strippedCard = {
       id: card.id,
       content: card.content,
-      location: 'deck'
+      location: 'deck',
+      likes: (card?.likes && card.likes > 0 && card.likes < 1_000_000_000) ? card.likes : undefined,
     }
+    return strippedCard
   })
 
   // Create Data String
