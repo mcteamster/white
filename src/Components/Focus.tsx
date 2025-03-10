@@ -6,6 +6,7 @@ import { Icon, Browse } from './Icons';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { FocusContext, HotkeysContext, ImageCacheContext, LoadingContext } from '../lib/contexts.ts';
 import { BLANK_IMAGE } from '../lib/images.ts';
+import { likeGlobalCard } from '../lib/clients.ts';
 
 export function Focus(props: BoardProps<GameState>) {
   const { loading, setLoading } = useContext(LoadingContext);
@@ -316,14 +317,6 @@ export function Likes({ card, likeCard, matchId }: LikesProps) {
     },
   }
 
-  const handleLike = useCallback((e: React.MouseEvent) => {
-    if (sessionStorage.getItem(`${matchId}-${card.id}-liked`) != '1') {
-      likeCard(card.id);
-      sessionStorage.setItem(`${matchId}-${card.id}-liked`, '1');
-    } // Can only like, cannot unlike
-    e.stopPropagation();
-  }, [card.id, likeCard, matchId]);
-
   const abbreviate = useCallback((value: number) => {
     const valueString = String(value);
     const magnitude = valueString.length;
@@ -349,22 +342,45 @@ export function Likes({ card, likeCard, matchId }: LikesProps) {
     }
   }, [])
 
-  let likes;
-  if (card.likes && (matchId != 'default')) {
-    likes = abbreviate(card.likes);
-  } else {
-    likes = abbreviate(0); // TODO Fetch from Server
-  }
+  // Fetch and Set Likes
+  const [likes, setLikes] = useState("0");
+  const getLikes = useCallback(async () => {
+    if (card.likes && (matchId != 'default')) {
+      setLikes(abbreviate(card.likes));
+    } else if (matchId == 'default') {
+      // Fetch from CDN for Single Device Mode Only
+      const cardData = await (await fetch(`${import.meta.env.VITE_ORIGIN}/card/${card.id}.json`)).json();
+      setLikes(abbreviate(++cardData.likes || 0));
+    } else {
+      setLikes('0')
+    }
+  }, []);
+
+  const handleLike = useCallback((e: React.MouseEvent) => {
+    if (sessionStorage.getItem(`${matchId}-${card.id}-liked`) != '1') {
+      sessionStorage.setItem(`${matchId}-${card.id}-liked`, '1');
+      likeCard(card.id);
+      // Update in CDN for Global Deck
+      if (matchId == 'default') {
+        likeGlobalCard(card.id);
+      }
+    } // Can only like, cannot unlike
+    getLikes();
+    e.stopPropagation();
+  }, [card.id, likeCard, matchId]);
+
+  useEffect(() => {
+    if (matchId != 'default') {
+      getLikes();
+    }
+  }, [])
 
   return (
     <>
-      {
-        (matchId != 'default') &&
-        <div style={styles.likes} onClick={handleLike}>
-          {sessionStorage.getItem(`${matchId}-${card.id}-liked`) == '1' ? <Icon name="hearted" /> : <Icon name="heart" />}
-          {likes}
-        </div>
-      }
+      <div style={styles.likes} onClick={handleLike}>
+        {sessionStorage.getItem(`${matchId}-${card.id}-liked`) == '1' ? <Icon name="hearted" /> : <Icon name="heart" />}
+        {sessionStorage.getItem(`${matchId}-${card.id}-liked`) == '1' && likes}
+      </div>
     </>
   )
 }
