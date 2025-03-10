@@ -298,18 +298,19 @@ export interface LikesProps {
 export function Likes({ card, likeCard, matchId }: LikesProps) {
   const styles: { [key: string]: Properties<string | number> } = {
     likes: {
-      width: '2em',
-      height: '2em',
+      width: '1.75em',
+      height: '1.75em',
       position: 'absolute',
       zIndex: '1',
-      top: '-2em',
-      right: '-2.5em',
+      top: '-2.25em',
+      right: '-2.25em',
       padding: '1em',
       fontSize: '0.75em',
       textAlign: 'center',
       color: 'red',
       backgroundColor: '#eee',
       borderRadius: '2em',
+      boxShadow: '2px 2px 1px black',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center',
