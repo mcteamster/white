@@ -343,7 +343,7 @@ export function Likes({ card, likeCard, matchId }: LikesProps) {
   }, [])
 
   // Fetch and Set Likes
-  const [likes, setLikes] = useState("0");
+  const [likes, setLikes] = useState("-");
   const getLikes = useCallback(async () => {
     if (card.likes && (matchId != 'default')) {
       setLikes(abbreviate(card.likes));
