@@ -10,8 +10,8 @@ import { BLANK_IMAGE } from '../lib/images.ts';
 export function Focus(props: BoardProps<GameState>) {
   const { loading, setLoading } = useContext(LoadingContext);
   const { focus, setFocus } = useContext(FocusContext);
-  const [ displayedCard, setDisplayedCard] = useState(<></>);
-  const [ sendCardMode, setSendCardMode ] = useState(false);
+  const [displayedCard, setDisplayedCard] = useState(<></>);
+  const [sendCardMode, setSendCardMode] = useState(false);
   const { hotkeys } = useContext(HotkeysContext);
   const { imageCache } = useContext(ImageCacheContext);
 
@@ -159,16 +159,16 @@ export function Focus(props: BoardProps<GameState>) {
           {<wired-card style={{ ...styles.button }} id="claimButton" onClick={(e) => { props.moves.claimCard(card.id); setLoading(true); e.stopPropagation() }}>
             {
               loading ?
-              <div className='spin'>
-                <Icon name='loading' />
-              </div> : 
-              <Icon name='take' />
+                <div className='spin'>
+                  <Icon name='loading' />
+                </div> :
+                <Icon name='take' />
             }
             Put in Hand
           </wired-card>}
         </div>
       }
-  
+
       const browse = <>
         {
           getAdjacentCard(props.G.cards, card.id, 'prev', props.playerID) &&
@@ -183,7 +183,7 @@ export function Focus(props: BoardProps<GameState>) {
           </div>
         }
       </>
-  
+
       const sendMenu = <wired-dialog open={sendCardMode === true || undefined}>
         <div style={styles.sendmenu} onClick={(e) => e.stopPropagation()}>
           <div>
@@ -210,6 +210,7 @@ export function Focus(props: BoardProps<GameState>) {
 
       setDisplayedCard(<wired-dialog open onClick={() => { unfocusCards() }}>
         <div style={styles.focus} onClick={e => owned && e.stopPropagation()}>
+          <Likes card={card} likeCard={props.moves.likeCard} matchId={props.matchID} />
           <div style={styles.title}>{card.content.title}</div>
           <div style={styles.credit}>by {card.content.author}</div>
           <div style={styles.credit}>{localDate ? `${localDate}` : ''}</div>
@@ -285,4 +286,85 @@ export function Focus(props: BoardProps<GameState>) {
   }, [props, hotkeys, focus, focusCard, changeFocus, unfocusCards])
 
   return (displayedCard);
+}
+
+export interface LikesProps {
+  card: Card,
+  likeCard: (id: number) => void,
+  matchId: string,
+}
+
+export function Likes({ card, likeCard, matchId }: LikesProps) {
+  const styles: { [key: string]: Properties<string | number> } = {
+    likes: {
+      width: '2em',
+      height: '2em',
+      position: 'absolute',
+      zIndex: '1',
+      top: '-2em',
+      right: '-2.5em',
+      padding: '1em',
+      fontSize: '0.75em',
+      textAlign: 'center',
+      color: 'red',
+      backgroundColor: '#eee',
+      borderRadius: '2em',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  }
+
+  const handleLike = useCallback((e: React.MouseEvent) => {
+    if (sessionStorage.getItem(`${matchId}-${card.id}-liked`) != '1') {
+      likeCard(card.id);
+      sessionStorage.setItem(`${matchId}-${card.id}-liked`, '1');
+    } // Can only like, cannot unlike
+    e.stopPropagation();
+  }, [card.id, likeCard, matchId]);
+
+  const abbreviate = useCallback((value: number) => {
+    const valueString = String(value);
+    const magnitude = valueString.length;
+    if (magnitude < 4) {
+      return valueString // Display anything less than 1000 verbatim
+    } else {
+      switch(magnitude) {
+        case 4:
+          return `${valueString[0]}.${valueString.substring(1,3)}k`
+        case 5:
+          return `${valueString.substring(0,2)}.${valueString[2]}k`
+        case 6:
+          return `${valueString.substring(0,3)}k`
+        case 7:
+          return `${valueString[0]}.${valueString.substring(1,3)}M`
+        case 8:
+          return `${valueString.substring(0,2)}.${valueString[2]}M`
+        case 9:
+          return `${valueString.substring(0,3)}M`
+        default:
+          return '-' // There's no way it's going to be this big
+      }
+    }
+  }, [])
+
+  let likes;
+  if (card.likes && (matchId != 'default')) {
+    likes = abbreviate(card.likes);
+  } else {
+    likes = abbreviate(0); // TODO Fetch from Server
+  }
+
+  return (
+    <>
+      {
+        (matchId != 'default') &&
+        <div style={styles.likes} onClick={handleLike}>
+          {sessionStorage.getItem(`${matchId}-${card.id}-liked`) == '1' ? <Icon name="hearted" /> : <Icon name="heart" />}
+          {likes}
+        </div>
+      }
+    </>
+  )
 }

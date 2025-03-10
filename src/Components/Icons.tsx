@@ -10,6 +10,8 @@ import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined
 import DoneOutlinedIcon from '@mui/icons-material/DoneOutlined';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
+import FavoriteOutlinedIcon from '@mui/icons-material/FavoriteOutlined';
 import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -51,6 +53,8 @@ type IconName =
   'game' |
   'github' |
   'global' |
+  'heart' |
+  'hearted' |
   'how' |
   'less' |
   'loading' |
@@ -89,6 +93,8 @@ export function Icon(props: { name: IconName }) {
     game: <SportsEsportsOutlinedIcon></SportsEsportsOutlinedIcon>,
     github: <GitHubIcon></GitHubIcon>,
     global: <LanguageOutlinedIcon></LanguageOutlinedIcon>,
+    heart: <FavoriteBorderOutlinedIcon></FavoriteBorderOutlinedIcon>,
+    hearted: <FavoriteOutlinedIcon></FavoriteOutlinedIcon>,
     how: <QuestionMarkOutlinedIcon></QuestionMarkOutlinedIcon>,
     less: <ExpandLessIcon></ExpandLessIcon>,
     loading: <SyncOutlinedIcon></SyncOutlinedIcon>,

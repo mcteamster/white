@@ -81,6 +81,17 @@ const claimCard: Move<GameState> = ({ G, playerID }, id) => {
   }
 }
 
+const likeCard: Move<GameState> = ({ G }, id) => {
+  const selectedCard = getCardById(G.cards, id);
+  if (selectedCard?.likes) {
+    selectedCard.likes++;
+  } else if (selectedCard) {
+    selectedCard.likes = 1
+  } else {
+    return INVALID_MOVE
+  }
+}
+
 const submitCard: Move<GameState> = ({ G }, card: Card) => {
   card.id = G.cards.length + 1; // Commit ID sequentially to GameState
   G.cards.push(card);
@@ -140,6 +151,10 @@ export const BlankWhiteCards: Game<GameState> = {
     pickupCard: {
       move: pickupCard,
       client: false,
+      ignoreStaleStateID: true,
+    },
+    likeCard: {
+      move: likeCard,
       ignoreStaleStateID: true,
     },
     submitCard: {
