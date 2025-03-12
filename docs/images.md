@@ -15,12 +15,16 @@ Aside from that, size wasn't too much of an issue previously, because only one c
 
 A standardised resolution of 500px by 500px is now applied to newly submitted cards. This value is small enough to process rapidly, whilst preserving enough fidelity when upscaled to larger screens.
 
+<img src="./img/images_standard_resolution.png" alt="Standard Resolution" width="640"/>
+
 ### 1-Bit Colour
 The canvas context has a 24-bit colour depth with a 8-bit alpha channel per pixel. This is 2,147,483,648 times more granularity than we actually need to represent a black and white card image.
 
 During the image resizing step, the Red Blue and Green bytes are normalised to either 255 (white) or 0 (black) based on whether their mean value is above or below the median (< 128). The alpha channel is left as opaque. This is not the most accurate method for [Luma](https://en.wikipedia.org/wiki/Luma_(video)) calculation, but is certainly the fastest and most practical for the expected high-contrast input data.
 
 Reducing the colour depth to 1-bit means that the picture can then be represented as a stream of 1s (for white) and 0s (for black). In conjunction with the standard 500px square resolution, this means images should now have a maximum theoretical limit of `250,000 bits` or `30.518kB`.
+
+<img src="./img/images_1_bit_colour.png" alt="1-Bit Colour" width="640"/>
 
 ### Run Length Encoding
 In an typical card picture, the array of image bits is generally very sparse; i.e. a long sequence of white pixels interrupted by short bursts of black. 
@@ -30,6 +34,8 @@ In an typical card picture, the array of image bits is generally very sparse; i.
 The 250,000 pixel 1-bit image representation is Run Length Encoded into an array of integers, with an additional optimisation where the odd indices of the array conventionally represent white pixels, and the even indicies represent black (i.e. `colour = (i % 2)`) - further reducing overhead.
 
 The generated arrays tend to only be in the thousands of elements and characters long, so approximately `5-15kB`.
+
+<img src="./img/images_run_length_encoding.png" alt="Run Length Encoding" width="640"/>
 
 ### Huffman Coding
 Inspecting the RLE arrays revealed a skew towards commonly occurring run length values. This is due to the scan pattern of the image being line by line, and the sketchpad brush width being 4 pixels (before resizing). Numbers like `3, 4, 5, 6` and `494, 495, 496, 497` appear very frequenly because of vertical lines in the drawing.
@@ -50,6 +56,8 @@ These factors are simultaneously addressed by transforming the RLE array into a 
 Run values of `223` and under take up 1 byte, and walues between `224-65503` take up two. Run lengths over `65503` are broken down into multiple runs to keep the resulting character under 16 bits for encoding compatibility. Run values of this size are outliers and take up at least a quarter of the image, which reduces the overall RLE array size anyway. 
 
 These raw UTF-16 strings tend to be at most `a few kilobytes` and reliably beat built-in `.png` compression by at least a factor of 2.
+
+<img src="./img/images_utf16.png" alt="UTF-16" width="640"/>
 
 ### Compression Ratios
 The Global Deck was upgraded to used compression in March 2025. Data from the 392 cards at the time:
