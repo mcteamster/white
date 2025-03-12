@@ -79,7 +79,7 @@ export const compressImage = async (imageDataUrl: string) => {
         let currentColour = '1'; // White is '1' and Black is '0'
         let currentCount = 0;
         for (let i = 0; i < binaryString.length; i++) {
-          // Break up run lengths that will cause UTF-8 character to exceed 16 bits
+          // Break up run lengths that will cause UTF-16 character to exceed 16 bits
           if (currentCount == 65503) {
             RLE.push(65503, 0) // Add a spacer to preserve index gap
             currentCount = 0;
@@ -95,17 +95,17 @@ export const compressImage = async (imageDataUrl: string) => {
         }
         RLE.push(currentCount); // Append last sequence
 
-        // Convert to UTF-8 String for maximum density
-        const RLEutf8 = RLE.map((run) => { return String.fromCharCode(run+32) }).join(''); // Start from ASCII Char 32 (space) and above, at a resolution of 500x500 it's impossible to hit the upper limit of UTF-8
-        console.info(`Image Compression Ratio: ~${((JSON.stringify(imageDataUrl).length)/(1.5*JSON.stringify(RLEutf8).length)).toFixed(3)}`); // Approximate compression ratio with 1.5 byte-per char estimate
-        resolve(RLEutf8)
+        // Convert to UTF-16 String for maximum density
+        const RLEutf16 = RLE.map((run) => { return String.fromCharCode(run+32) }).join(''); // Start from ASCII Char 32 (space) and above, at a resolution of 500x500 it's impossible to hit the upper limit of UTF-16
+        console.info(`Image Compression Ratio: ~${((JSON.stringify(imageDataUrl).length)/(1.5*JSON.stringify(RLEutf16).length)).toFixed(3)}`); // Approximate compression ratio with 1.5 byte-per char estimate
+        resolve(RLEutf16)
       }
     };
   });
 };
 
 export const decompressImage = async (compressedImage: string) => {
-  // Convert from UTF-8 String to Run Length Encoding
+  // Convert from UTF-16 String to Run Length Encoding
   const input = compressedImage.split('').map((char) => { return (char.charCodeAt(0) - 32) });
 
   return new Promise<string>((resolve) => {

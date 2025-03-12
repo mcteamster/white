@@ -38,18 +38,18 @@ Inspecting the RLE arrays revealed a skew towards commonly occurring run length 
 
 However, after implementing Huffman Coding for the RLE array, it was observed that the improvements in compression were not reliable enough to sufficiently offset the overheads of introducing the frequency map into the format, so it has not been used.
 
-### UTF-8 Encoding
-`UTF-8` is the standard for character encoding on the web, and allocates 1-4 bytes per character. The first byte overlaps with the definitions for `ASCII` which include the alphanumeric characters `[0-9A-Za-z]`.
+### UTF-16 Encoding
+`UTF-16` is a standard for character encoding on the web, and takes up 1-2 bytes per character.
 
 Additionally `boardgame.io` requires the gamestate object to be `JSON` serialisable. Stringifying javascript `objects` and `arrays` with many elements adds noticable bloat, (due to all the extra quotes `"` colons `:` and commas `,`).
 
 A JSON serialised javascript object with multi-digit numbers will also encode each digit as its own character byte. Since one byte can represent numbers up to 255, this becomes wasteful from two-digit numbers onwards, which are very common in the RLE array.
 
-These factors are simultaneously addressed by transforming the RLE array into a string of characters corresponding to the UTF-8 character code of the run value (plus an offset of `32` to avoid non-printable ASCII characters).
+These factors are simultaneously addressed by transforming the RLE array into a string of characters corresponding to the UTF-16 character code of the run value (plus an offset of `32` to avoid non-printable ASCII characters).
 
-Run values of `223` and under take up 1 byte. Values between `224-65503` take up two. ~~And anything between `65504` and the pixel limit of `250000` consumes 3 bytes~~ Run lengths over `65503` are broken down into multiple runs to keep the resulting character under 16 bits for encoding compatibility. Run values of this size are outliers and take up at least a quarter of the image, which reduces the overall RLE array size anyway. 
+Run values of `223` and under take up 1 byte, and walues between `224-65503` take up two. Run lengths over `65503` are broken down into multiple runs to keep the resulting character under 16 bits for encoding compatibility. Run values of this size are outliers and take up at least a quarter of the image, which reduces the overall RLE array size anyway. 
 
-These raw UTF-8 strings tend to be at most `a few kilobytes` and reliably beat built-in `.png` compression by at least a factor of 2.
+These raw UTF-16 strings tend to be at most `a few kilobytes` and reliably beat built-in `.png` compression by at least a factor of 2.
 
 ### Compression Ratios
 The Global Deck was upgraded to used compression in March 2025. Data from the 392 cards at the time:
@@ -69,4 +69,4 @@ Unrestricted Monochrome PNG (v1) | `up to >100kB`
 500x500 True-Colour Bitmap | `976.563kB`
 500x500 1-Bit Colour Bitmap | `30.518kB`
 500x500 1-Bit Run Length Encoded | `5-15kB`
-500x500 1-Bit RLE UTF-8 | `~4kB`
+500x500 1-Bit RLE UTF-16 | `~4kB`

@@ -135,7 +135,7 @@ export function Gallery() {
       if (card.id) {
         if (card.content.image?.startsWith('data:image/png;base64,')) { // Support PNG Data URIs
           dispatchImage({ id: card.id, value: card.content.image })
-        } else if (card.content.image) { // RLE UTF-8 String
+        } else if (card.content.image) { // RLE UTF-16 String
           decompressImage(card.content.image).then(res => {
             dispatchImage({ id: card.id, value: res });
           });

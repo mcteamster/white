@@ -235,7 +235,7 @@ export const downloadDeck = (G: GameState) => {
 
         // Decompression Algorithm
         const decompressImage = async (compressedImage) => {
-          // Convert from UTF-8 String to Run Length Encoding
+          // Convert from UTF-16 String to Run Length Encoding
           const input = compressedImage.split('').map((char) => { return (char.charCodeAt(0) - 32) });
 
           return new Promise((resolve) => {

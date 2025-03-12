@@ -5,4 +5,4 @@ The game is hosted on AWS using the following services:
 - EC2/ECS Fargate for the `boardgame.io` Server
 - API Gateway, SQS, and Lambda for the Global Card Creation and 'Like' API
 
-![AWS Hosting Architecture](./aws.svg)
+![AWS Hosting Architecture](./img/aws.svg)

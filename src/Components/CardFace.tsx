@@ -26,7 +26,7 @@ export function CardFace(card: Card) {
         console.debug('Image Passthrough')
         setImage(card.content.image)
         dispatchImage({ id: card.id, value: card.content.image })
-      } else if (card.content.image) { // Decompress RLE UTF-8 String
+      } else if (card.content.image) { // Decompress RLE UTF-16 String
         console.debug('Image Decompression on Demand')
         decompressImage(card.content.image).then(res => {
           setImage(res)
