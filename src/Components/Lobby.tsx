@@ -220,7 +220,8 @@ export function Lobby(props: { globalSize: number }) {
       setTimeout(checkLobbyConnection, 30000);
     });
   }, [setStage, checkForRoomCode])
-  useEffect(checkLobbyConnection, [checkLobbyConnection]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(checkLobbyConnection, []);
 
   // Hotkeys
   const { hotkeys } = useContext(HotkeysContext);
