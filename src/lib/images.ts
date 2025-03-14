@@ -3,19 +3,20 @@ export const BLANK_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALA
 export const BLANK_COMPRESSED_IMAGE = '썰 썰 썰 썰 썰';
 
 // Process Images
-export const resizeImage = async (imageDataUrl: string) => {
+export const resizeImage = async (imageDataUrl: string, size?: number) => {
+  // Due to standardisation requirements only sizes of 500x500 can be compressed. Other sizes can only be used as Data URIs.
   return new Promise<string>((resolve) => {
     const img = new Image();
     img.src = imageDataUrl;
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      canvas.width = 500;
-      canvas.height = 500;
+      canvas.width = size || 500;
+      canvas.height = size || 500;
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, 500, 500);
-        ctx.drawImage(img, 0, 0, 500, 500);
+        ctx.fillRect(0, 0, (size || 500), (size || 500));
+        ctx.drawImage(img, 0, 0, (size || 500), (size || 500));
 
         // Force Black and White
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);

@@ -35,7 +35,7 @@ export function Pile(props: BoardProps<GameState>) {
 
   return (
     <div style={styles.pile}>
-      <div onClick={() => { if (pile.length > 0) { focusCard(pile[0].id, true) }}}>
+      <div onClick={() => { if (pile.length > 0) { focusCard(pile[0].id, true) } }}>
         {pile.length > 0 ?
           <CardFace {...pile[0]} /> :
           <CardFace {...{
@@ -52,7 +52,7 @@ export function Pile(props: BoardProps<GameState>) {
   );
 }
 
-export function Players(props: BoardProps<GameState>) {
+export function Players({ G, playerID, isMultiplayer, matchData }: BoardProps<GameState>) {
   const dimensions = useWindowDimensions();
   const { focus, setFocus } = useContext(FocusContext);
   const focusCard = useCallback(((id: number, focusState: boolean) => {
@@ -63,13 +63,13 @@ export function Players(props: BoardProps<GameState>) {
     }
   }), [focus, setFocus]);
   const initialOpenPlayers: number[] = [];
-  if (props.isMultiplayer && props.matchData) {
+  if (isMultiplayer && matchData) {
     if (!dimensions.upright) {
-      props.matchData?.forEach((player) => {
+      matchData?.forEach((player) => {
         initialOpenPlayers.push(player.id)
       });
     }
-  } 
+  }
   const [openPlayers, setOpenPlayers] = useState<number[]>(initialOpenPlayers); // List of players with open table trays
   const styles: { [key: string]: Properties<string | number> } = {
     players: {
@@ -100,7 +100,7 @@ export function Players(props: BoardProps<GameState>) {
       width: '3em',
       minWidth: '3em',
       margin: '0.5em 0.25em',
-      backgroundColor: '#eee',
+      backgroundColor: 'white',
       borderRadius: '0.5em',
       textAlign: 'center',
       display: 'flex',
@@ -142,16 +142,18 @@ export function Players(props: BoardProps<GameState>) {
     }
   }
 
-  const playerAvatars = props.matchData ? props.matchData.map((player, i) => {
-    if (player.isConnected && player.name && player.id != Number(props.playerID)) { 
-      const playerTable = getCardsByLocation(getCardsByOwner(props.G.cards, String(player.id)), 'table').sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)); // Oldest to Newest
-      
+  const playerAvatars = matchData ? matchData.map((player, i) => {
+    if (player.isConnected && player.name && player.id != Number(playerID)) {
+      const playerTable = getCardsByLocation(getCardsByOwner(G.cards, String(player.id)), 'table').sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)); // Oldest to Newest
+      // @ts-expect-error Player Data is Optional
+      const playerAvatar = player?.data?.avatar ? <img height="25" width="25" src={player?.data?.avatar} alt="avatar"></img> : <Icon name='single' />
+
       return (
         <div key={`player-avatar-${i}`} style={styles.avatarBox}>
-          <wired-card style={styles.avatar} onClick={() => { if (playerTable.length > 0) { toggleOpenPlayers(player.id) }}}>
+          <wired-card style={styles.avatar} onClick={() => { if (playerTable.length > 0) { toggleOpenPlayers(player.id) } }}>
             <div style={styles.stats}>
               {(playerTable.length > 0) && ((!openPlayers.includes(player.id)) ? <Icon name='prev' /> : <Icon name='next' />)}
-              <Icon name='single' />
+              {playerAvatar}
             </div>
             {(player.name).slice(0, 6)}{(player.name.length > 6) && '.'}
           </wired-card>
@@ -188,6 +190,8 @@ export function Header(props: HeaderProps) {
   const [showShare, setShowShare] = useState(false);
 
   const playerName = props.isMultiplayer && props.matchData?.find((player) => player.id == Number(props.playerID))?.name?.toUpperCase() || ""
+  // @ts-expect-error Player Data is Optional
+  const playerAvatar = props.isMultiplayer && props.matchData?.find((player) => player.id == Number(props.playerID))?.data?.avatar || undefined
 
   const styles: { [key: string]: Properties<string | number> } = {
     header: {
@@ -220,8 +224,9 @@ export function Header(props: HeaderProps) {
   return (
     <>
       <div style={styles.header}>
-        <div style={{ ...styles.item, ...styles.match }} onClick={ () => setShowShare(true) }><Icon name='copy' />&nbsp;{props.matchID !== 'default' ? `${props.matchID}` : "Blank White Cards"}</div>
+        <div style={{ ...styles.item, ...styles.match }} onClick={() => setShowShare(true)}><Icon name='copy' />&nbsp;{props.matchID !== 'default' ? `${props.matchID}` : "Blank White Cards"}</div>
         <div style={{ ...styles.item, ...styles.displayname }} onClick={() => { props.setShowPlayers(!props.showPlayers) }}>
+          {playerAvatar && <img width="25" height="25" src={playerAvatar}></img>}
           {playerName}&nbsp;{props.matchID !== 'default' && <Icon name='multi' />}
           {props.matchID !== 'default' && ((props.showPlayers) ? <Icon name='less' /> : <Icon name='more' />)}
         </div>
@@ -286,13 +291,13 @@ export function ShareRoom(props: { matchID: string, setShowShare: React.Dispatch
   };
 
   return (
-    <wired-dialog open style={styles.dialog} onClick={ () => props.setShowShare(false) }>
+    <wired-dialog open style={styles.dialog} onClick={() => props.setShowShare(false)}>
       <div style={styles.copy} onClick={(e) => { copyToClipboard(props.matchID); e.stopPropagation() }}>
         <div style={styles.text}>Scan to Share / Tap to Copy</div>
         <QRCode size={256} style={styles.qr} value={url} viewBox={`0 0 256 256`} />
         <div id="shareUrl" style={styles.text}><u>{url}</u></div>
       </div>
-  </wired-dialog>
+    </wired-dialog>
   )
 }
 
@@ -303,7 +308,7 @@ export function CommonSpace(props: BoardProps<GameState>) {
   return (
     <>
       <Header {...props} showPlayers={showPlayers} setShowPlayers={setShowPlayers} />
-      { props.isMultiplayer && showPlayers && <Players {...props} /> }
+      {props.isMultiplayer && showPlayers && <Players {...props} />}
       <Pile {...props} />
     </>
   );

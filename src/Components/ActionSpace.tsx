@@ -12,7 +12,7 @@ import { Link, useNavigate } from 'react-router';
 import { AuthContext, FocusContext, LoadingContext } from '../lib/contexts.ts';
 import { downloadDeck } from '../lib/data.ts';
 import { Loader } from './Loader.tsx';
-import { submitGlobalCard } from '../lib/clients.ts';
+import { lobbyClient, submitGlobalCard } from '../lib/clients.ts';
 import { Tutorial } from './About.tsx';
 import { compressImage, resizeImage } from '../lib/images.ts';
 
@@ -23,7 +23,7 @@ interface ToolbarProps extends BoardProps<GameState> {
 
 export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, setMode, ctx }: ToolbarProps) {
   const navigate = useNavigate();
-  const { setAuth } = useContext(AuthContext);
+  const { auth, setAuth } = useContext(AuthContext);
   const { loading, setLoading } = useContext(LoadingContext);
   const { focus, setFocus } = useContext(FocusContext);
   const focusCard = useCallback(((id: number, focusState: boolean) => {
@@ -41,7 +41,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
 
   useEffect(() => {
     const create = (document.getElementById('create') as HTMLElement);
-    if (mode === 'create-sketch' || mode === 'create-finalise') {
+    if (mode === 'create-sketch' || mode === 'create-finalise' || mode === 'create-avatar') {
       create.style.display = 'flex'
     } else {
       create.style.display = 'none'
@@ -121,6 +121,33 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
       }
     }
   }
+
+  const updateAvatar = useCallback(async () => {
+    if (auth && isMultiplayer) {
+      // Get Image 100x100px
+      const imageData = strokes.length > 0 ? (await resizeImage((document.getElementById("sketchpad") as HTMLCanvasElement).toDataURL("image/png"), 500)) : undefined;
+
+      // Update Player Data
+      if (auth.matchID && auth.playerID && auth.credentials) {
+        try {
+          await lobbyClient.updatePlayer(
+            'blank-white-cards',
+            auth.matchID,
+            {
+              playerID: auth.playerID,
+              credentials: auth.credentials,
+              newName: auth.playerName,
+              data: {
+                avatar: imageData,
+              }
+            }
+          );
+        } catch {
+          console.log("Error Setting Avatar")
+        }
+      }
+    }
+  }, [auth, isMultiplayer, setMode])
 
   const leaveGame = useCallback(() => {
     // Is there any point leaving gracefully via Lobby API?
@@ -224,11 +251,11 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
       mainButtonText = `Pickup (${deck.length})`
     } else if (G.cards.length == 0) {
       if (playerID == '0') {
-        mainButtonIcon = <Icon name='display' /> 
+        mainButtonIcon = <Icon name='display' />
         mainButtonText = 'Load Saved Deck?'
       } else {
-        mainButtonIcon = <Icon name='create' />
-        mainButtonText = 'Create Cards to Begin'
+        mainButtonIcon = <Icon name='single' />
+        mainButtonText = 'Create Your Avatar'
       }
     } else {
       mainButtonIcon = <Icon name='shuffle' />
@@ -238,17 +265,17 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
     toolset = <>
       <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='menu' />Menu</wired-card>
       <wired-card style={{ ...styles.button, width: '9.75em', margin: '0' }} onClick={() => {
-          if (G.cards.length > 0) {
-            if (!loading) { 
-              setLoading(true);
-              moves.pickupCard(true);
-            }
-          } else if (playerID == '0') {
-            setMode('menu-tools-loader')
-          } else {
-            setMode('create-sketch') 
+        if (G.cards.length > 0) {
+          if (!loading) {
+            setLoading(true);
+            moves.pickupCard(true);
           }
-        }} elevation={2}>
+        } else if (playerID == '0') {
+          setMode('menu-tools-loader')
+        } else {
+          setMode('create-sketch')
+        }
+      }} elevation={2}>
         {mainButtonIcon}
         {mainButtonText}
       </wired-card>
@@ -263,6 +290,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
   } else if (mode === 'create-finalise') {
     toolset = <>
       <wired-card style={{ ...styles.button }} onClick={() => { setMode('create-sketch') }} elevation={2}><Icon name='back' />Back</wired-card>
+      {isMultiplayer && <wired-card style={{ ...styles.button }} onClick={() => { updateAvatar() }} elevation={2}><Icon name='single' />Set Avatar</wired-card>}
       <wired-card style={{ ...styles.button }} onClick={() => { submitCard() }} elevation={2}><Icon name='done' />Submit</wired-card>
     </>
   } else if (mode === 'menu') {
@@ -285,32 +313,32 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
       {
         // Show Save Button if Multiplayer, else Gallery Button
         isMultiplayer ?
-        <wired-card style={{
+          <wired-card style={{
             ...styles.button,
             width: '3em',
             color: ((G.cards.length > 0) ? undefined : 'grey'),
-          }} 
-          onClick={() => { 
-            if (G.cards.length > 0) {
-              downloadDeck(G)
-            }
-          }} elevation={2}>
-          <Icon name='take' />Save
-        </wired-card> :
-        <Link to="/card" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='pile' />Gallery</wired-card></Link>
+          }}
+            onClick={() => {
+              if (G.cards.length > 0) {
+                downloadDeck(G)
+              }
+            }} elevation={2}>
+            <Icon name='take' />Save
+          </wired-card> :
+          <Link to="/card" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='pile' />Gallery</wired-card></Link>
       }
       <wired-card style={{
-          ...styles.button,
-          width: '3em',
-          color: ((playerID == '0') ? undefined : 'grey'), // Only the host can load cards
-        }} onClick={() => { if (playerID == '0') { setMode('menu-tools-loader') }}} elevation={2}>
+        ...styles.button,
+        width: '3em',
+        color: ((playerID == '0') ? undefined : 'grey'), // Only the host can load cards
+      }} onClick={() => { if (playerID == '0') { setMode('menu-tools-loader') } }} elevation={2}>
         <Icon name='display' />Load
       </wired-card>
-      <wired-card style={{ 
-        ...styles.button, 
-        width: '3em', 
+      <wired-card style={{
+        ...styles.button,
+        width: '3em',
         color: ((playerID == '0' && G.cards.length > 0) ? undefined : 'grey') // Only the host can reset the game
-      }} onClick={() => { if (playerID == '0' && G.cards.length > 0) { setMode('menu-tools-reset') }}} elevation={2}><Icon name='shuffle' />Reset</wired-card>
+      }} onClick={() => { if (playerID == '0' && G.cards.length > 0) { setMode('menu-tools-reset') } }} elevation={2}><Icon name='shuffle' />Reset</wired-card>
     </>
   } else if (mode === 'menu-tools-reset') {
     toolset = <>
