@@ -1,6 +1,8 @@
 # Blank White Cards
 ### Play Now: https://white.mcteamster.com
 
+![Gameplay](./docs/img/gameplay.png)
+
 ## About
 This is [1000 Blank White Cards](https://en.wikipedia.org/wiki/1000_Blank_White_Cards) online. A social party game sandbox where you make the rules. Best played with friends around a table or on video call.
 
