@@ -1,4 +1,4 @@
-FROM node:22
+FROM node:22-alpine
 WORKDIR /white
 COPY . /white
 RUN npm ci
