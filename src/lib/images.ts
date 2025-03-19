@@ -80,8 +80,8 @@ export const compressImage = async (imageDataUrl: string) => {
         let currentCount = 0;
         for (let i = 0; i < binaryString.length; i++) {
           // Break up run lengths that will cause UTF-16 character to exceed 16 bits
-          if (currentCount == 65503) {
-            RLE.push(65503, 0) // Add a spacer to preserve index gap
+          if (currentCount == 55263) { // Keep in range #x20-#xD7FF
+            RLE.push(55263, 0) // Add a spacer to preserve index gap
             currentCount = 0;
           }
           
