@@ -94,7 +94,6 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
         const submitCardButton = document.getElementById('submitCardButton');
 
         const submitError = () => {
-          console.error('Failed to submit card to Global Deck')
           if (submitCardButton) {
             submitCardButton.style.color = 'red';
             setTimeout(() => {

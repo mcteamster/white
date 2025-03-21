@@ -324,7 +324,7 @@ export function Permalink() {
       try {
         window.navigator.clipboard.writeText(url);
       } catch (err) {
-        console.error("Unable to Copy to Clipboard", err)
+        console.warn("Unable to Copy to Clipboard", err)
       }
     }
   }

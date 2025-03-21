@@ -248,7 +248,7 @@ export function ShareRoom(props: { matchID: string, setShowShare: React.Dispatch
       try {
         window.navigator.clipboard.writeText(`${window.location.origin}/${room}`);
       } catch (err) {
-        console.error("Unable to Copy to Clipboard", err)
+        console.warn("Unable to Copy to Clipboard", err)
       }
     }
   }
