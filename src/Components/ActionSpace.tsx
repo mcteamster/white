@@ -25,6 +25,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
   const navigate = useNavigate();
   const { setAuth } = useContext(AuthContext);
   const { loading, setLoading } = useContext(LoadingContext);
+  const [submitStatus, setSubmitStatus] = useState('Submit');
   const { focus, setFocus } = useContext(FocusContext);
   const focusCard = useCallback(((id: number, focusState: boolean) => {
     if (focus?.id != id && focusState == true) {
@@ -89,20 +90,43 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
           timestamp: Number(new Date()),
         }
 
+        // Submit to Global Deck - Singleplayer Only
+        const submitCardButton = document.getElementById('submitCardButton');
+
+        const submitError = () => {
+          console.error('Failed to submit card to Global Deck')
+          if (submitCardButton) {
+            submitCardButton.style.color = 'red';
+            setTimeout(() => {
+              setSubmitStatus('Retry?');
+            }, 1000)
+          }
+        }
+
+        if (!isMultiplayer && submitCardButton) {
+          submitCardButton.style.color = 'black';
+          setSubmitStatus('Submitting');
+          setTimeout(() => {
+            submitError();
+          }, 15000)
+          const request = await submitGlobalCard(createdCard);
+          if (request.status == 200) {
+            setSubmitStatus('Submit');
+          } else {
+            submitError();
+            return
+          }
+        }
+
         // Update Gamestate
         moves.submitCard(createdCard);
         setMode('play');
 
-        // Cleanup Creation Elements
+        // Cleanup creation elements in background
         sketchpad.clear(); // Image
         strokes.length = 0; // Stroke History
         title.value = '';
         description.value = '';
-
-        // Asynchronously Submit to Global Deck - Singleplayer Only
-        if (!isMultiplayer) {
-          submitGlobalCard(createdCard);
-        }
       } else {
         if (title.value === '') {
           title.style.color = 'red';
@@ -263,7 +287,12 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
   } else if (mode === 'create-finalise') {
     toolset = <>
       <wired-card style={{ ...styles.button }} onClick={() => { setMode('create-sketch') }} elevation={2}><Icon name='back' />Back</wired-card>
-      <wired-card style={{ ...styles.button }} onClick={() => { submitCard() }} elevation={2}><Icon name='done' />Submit</wired-card>
+      <wired-card style={{ ...styles.button }} onClick={() => { if(submitStatus != 'Submitting') { submitCard() } }} elevation={2} id='submitCardButton' key='submitCardButton'>
+        {
+          submitStatus == 'Submitting' ? <div className='spin'><Icon name='loading' /></div> : submitStatus == 'Retry?' ? <Icon name='shuffle' /> : <Icon name='done' />
+        }
+        {submitStatus}
+      </wired-card>
     </>
   } else if (mode === 'menu') {
     toolset = <>

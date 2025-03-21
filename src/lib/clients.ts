@@ -50,7 +50,7 @@ export const parsePathCode = () => {
 // API Client
 const submitEndpoint = import.meta.env.MODE === 'development' ? '' : `${import.meta.env.VITE_API_SERVER}/white/submit`
 export const submitGlobalCard = async (createdCard: Card) => {
-  await fetch(submitEndpoint, {
+  return (await fetch(submitEndpoint, {
     method: "POST",
     body: JSON.stringify({
       title: createdCard.content.title,
@@ -61,7 +61,7 @@ export const submitGlobalCard = async (createdCard: Card) => {
     headers: {
       "Content-Type": "application/json",
     },
-  })
+  }))
 }
 
 export const likeGlobalCard = async (id: number) => {
