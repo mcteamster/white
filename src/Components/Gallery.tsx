@@ -219,7 +219,7 @@ export function Gallery() {
               cardLocalDate = new Date(Number(card.content.date)).toLocaleDateString();
             }
 
-            return <wired-card style={styles.card} key={`gallery-${card.id}`} onClick={(e) => { navigate(`/card/${card.id}`); e.stopPropagation() }}>
+            return <wired-card style={styles.card} id={`gallery-${card.id}`} key={`gallery-${card.id}`} onClick={(e) => { navigate(`/card/${card.id}`); e.stopPropagation() }}>
               {card.id != 0 && <img style={styles.cardImage} src={imageCache[card.id] || BLANK_IMAGE}></img>}
               <div style={styles.cardTitle}>{card.content.title}</div>
               <div style={styles.cardCredit}>{card.content.author && `${card.content.author}`}</div>
@@ -235,7 +235,7 @@ export function Gallery() {
             Lobby
         </div>
         <Search allCards={globalDeck.cards} setDisplayedCards={setDisplayedCards} />
-        <div style={styles.button}>
+        <div style={styles.button} onClick={() => { document.getElementById(`gallery-${displayedCards.length}`)?.scrollIntoView() }}>
           {displayedCards.length}<br></br>
           Cards
         </div>
