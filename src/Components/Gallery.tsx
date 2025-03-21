@@ -259,7 +259,7 @@ export function Search(props: SearchProps) {
     },
     searchbox: {
       fontFamily: "'Patrick Hand SC', Arial, Helvetica, sans-serif",
-      fontSize: "1.5em",
+      fontSize: "1.25em",
       width: '7.25em',
       margin: '0.25em',
       border: 'none',
