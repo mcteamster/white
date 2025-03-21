@@ -213,13 +213,13 @@ export function Gallery() {
     <div style={styles.gallery}>
       <div style={styles.cards}>
         {
-          displayedCards.map((card: Card) => {
+          displayedCards.map((card: Card, i: number) => {
             let cardLocalDate;
             if (card.content.date) {
               cardLocalDate = new Date(Number(card.content.date)).toLocaleDateString();
             }
 
-            return <wired-card style={styles.card} id={`gallery-${card.id}`} key={`gallery-${card.id}`} onClick={(e) => { navigate(`/card/${card.id}`); e.stopPropagation() }}>
+            return <wired-card style={styles.card} id={`gallery-${i+1}`} key={`gallery-${card.id}`} onClick={(e) => { navigate(`/card/${card.id}`); e.stopPropagation() }}>
               {card.id != 0 && <img style={styles.cardImage} src={imageCache[card.id] || BLANK_IMAGE}></img>}
               <div style={styles.cardTitle}>{card.content.title}</div>
               <div style={styles.cardCredit}>{card.content.author && `${card.content.author}`}</div>
