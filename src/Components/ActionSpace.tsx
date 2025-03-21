@@ -256,7 +256,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
       }
     } else {
       mainButtonIcon = <Icon name='shuffle' />
-      mainButtonText = `Reshuffle [${pile.length + discard.length}]`
+      mainButtonText = `Reshuffle (${pile.length + discard.length})`
     }
 
     toolset = <>
