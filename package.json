@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@emotion/styled": "^11.14.0",
+    "@microsoft/clarity": "^1.0.0",
     "@mui/icons-material": "^6.4.5",
     "atrament": "^4.6.0",
     "boardgame.io": "^0.50.2",
