@@ -44,7 +44,7 @@ This will run a hosted `vite` preview site at http://localhost:4173 and [http://
 Congratulations! You can now start playing or extending `Blank White Cards` to your heart's content!
 
 ### 4. [OPTIONAL] Production Builds
-This section assumes you have web servers set up and properly configured for production network traffic (see sample architecture below)
+This section assumes you have web servers set up and properly configured for production network traffic [see sample architecture](./aws.md)
 
 Update `.env.production` with the details of your hosting setup:
 ```

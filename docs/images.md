@@ -47,13 +47,15 @@ However, after implementing Huffman Coding for the RLE array, it was observed th
 ### UTF-16 Encoding
 `UTF-16` is a standard for character encoding on the web, and takes up 1-2 bytes per character.
 
-Additionally `boardgame.io` requires the gamestate object to be `JSON` serialisable. Stringifying javascript `objects` and `arrays` with many elements adds noticable bloat, (due to all the extra quotes `"` colons `:` and commas `,`).
+Additionally `boardgame.io` requires the gamestate object to be `JSON` serialisable. This rules out the use of more sophisticated types for representing image information.
+
+Stringifying javascript `objects` and `arrays` with many elements adds noticable bloat, (due to all the extra quotes `"` colons `:` and commas `,`).
 
 A JSON serialised javascript object with multi-digit numbers will also encode each digit as its own character byte. Since one byte can represent numbers up to 255, this becomes wasteful from two-digit numbers onwards, which are very common in the RLE array.
 
-These factors are simultaneously addressed by transforming the RLE array into a string of characters corresponding to the UTF-16 character code of the run value (plus an offset of `32` to avoid non-printable ASCII characters).
+These factors are simultaneously addressed by transforming the RLE array into a string of UTF-16 characters. These characters correspond to the UTF-16 character codes of the run values (plus an offset of `32` (`#x20`) to avoid non-printable ASCII characters).
 
-Run values of `223` and under take up 1 byte, and values between `224-55263` take up two. Run lengths over `55263` are broken down into multiple runs to keep the resulting character within the hexadecimal range of `#x20-#xD7FF` for encoding compatibility. Run values of this size are outliers and take up at least a quarter of the image, which reduces the overall RLE array size anyway. 
+Therefore, run values of `223` and under take up 1 byte, and values between `224-55263` take up two. Run lengths over `55263` need to be broken down into multiple runs to keep the resulting character within the hexadecimal range of `#x20-#xD7FF` for encoding compatibility. Any run values of this size would be outliers and take up almost a quarter of the image, reducing the overall RLE array size anyway. 
 
 These raw UTF-16 strings tend to be at most `a few kilobytes` and reliably beat built-in `.png` compression by at least a factor of 2.
 
@@ -78,3 +80,10 @@ Unrestricted Monochrome PNG (v1) | `up to >100kB`
 500x500 1-Bit Colour Bitmap | `30.518kB`
 500x500 1-Bit Run Length Encoded | `5-15kB`
 500x500 1-Bit RLE UTF-16 | `~4kB`
+
+### Additional Notes
+Experimented with using `image/webp` as the output type from the canvas, with an impressive 1.5x size reduction out of the box.
+
+As of 2024, only 97% of browsers by market share support webp as opposed to practically 100% for PNG. 
+
+In the future it may be sensible to upgrade the decompressed image cache to use webp images for even further optimisation.
