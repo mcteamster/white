@@ -92,13 +92,14 @@ export const downloadDeck = (G: GameState) => {
         }
 
         .drawn {
-          border-radius: 255px 25px 225px 25px/25px 225px 25px 255px;
+          border-radius: 0.5em;
           border: 0.25em black solid;
         }
 
         .card {
           width: 90vw;
           max-width: 600px;
+          min-height: 7em;
           background: white;
           margin: 0.5em;
           padding: 0.5em;
