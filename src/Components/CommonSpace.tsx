@@ -222,8 +222,10 @@ export function Header(props: HeaderProps) {
       <div style={styles.header}>
         <div style={{ ...styles.item, ...styles.match }} onClick={ () => setShowShare(true) }><Icon name='copy' />&nbsp;{props.matchID !== 'default' ? `${props.matchID}` : "Blank White Cards"}</div>
         <div style={{ ...styles.item, ...styles.displayname }} onClick={() => { props.setShowPlayers(!props.showPlayers) }}>
-          {playerName}&nbsp;{props.matchID !== 'default' && <Icon name='multi' />}
-          {props.matchID !== 'default' && ((props.showPlayers) ? <Icon name='less' /> : <Icon name='more' />)}
+          {playerName}&nbsp;
+          {props.matchID !== 'default' && <Icon name='multi' />}&nbsp;
+          {props.matchData?.filter((player => player.isConnected)).length}
+          {props.matchID !== 'default' && (props.matchData?.filter((player => player.isConnected)).length != 1) ? ((props.showPlayers) ? <Icon name='less' /> : <Icon name='more' />) : <>&nbsp;</> }
         </div>
       </div>
       {showShare && <ShareRoom matchID={props.matchID} setShowShare={setShowShare} />}
