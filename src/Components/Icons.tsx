@@ -78,7 +78,7 @@ type BrowseType = 'prev' | 'next'
 
 export function Icon(props: { name: IconName }) {
   const icons = {
-    about: <InfoOutlinedIcon></InfoOutlinedIcon>,
+    about: <QuestionMarkOutlinedIcon></QuestionMarkOutlinedIcon>,
     back: <KeyboardBackspaceOutlinedIcon></KeyboardBackspaceOutlinedIcon>,
     book: <BookOutlinedIcon></BookOutlinedIcon>,
     checklist: <LibraryAddCheckOutlinedIcon></LibraryAddCheckOutlinedIcon>,
@@ -95,7 +95,7 @@ export function Icon(props: { name: IconName }) {
     global: <LanguageOutlinedIcon></LanguageOutlinedIcon>,
     heart: <FavoriteBorderOutlinedIcon></FavoriteBorderOutlinedIcon>,
     hearted: <FavoriteOutlinedIcon></FavoriteOutlinedIcon>,
-    how: <QuestionMarkOutlinedIcon></QuestionMarkOutlinedIcon>,
+    info: <InfoOutlinedIcon></InfoOutlinedIcon>,
     less: <ExpandLessIcon></ExpandLessIcon>,
     loading: <SyncOutlinedIcon></SyncOutlinedIcon>,
     logout: <LogoutIcon></LogoutIcon>,
