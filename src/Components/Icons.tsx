@@ -55,7 +55,7 @@ type IconName =
   'global' |
   'heart' |
   'hearted' |
-  'how' |
+  'info' |
   'less' |
   'loading' |
   'logout' |
