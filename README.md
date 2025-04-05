@@ -1,5 +1,5 @@
 # Blank White Cards
-### Play Now: https://white.mcteamster.com
+### Play Now: https://blankwhite.cards
 
 ![Gameplay](./docs/img/gameplay.png)
 
@@ -39,7 +39,7 @@ Other quality of life improvements include:
 - Card ownership: and the ability to transfer between locations
 
 Other noteworthy features:
-- [Card Gallery:](https://white.mcteamster.com/card) now with search!
+- [Card Gallery:](https://blankwhite.cards/card) now with search!
 - New Save / Load format: with backwards compatibility for decks made in `1.x`!
 - A new Multiplayer Lobby experience: share and join links with QR codes
 - Session memory and persistence

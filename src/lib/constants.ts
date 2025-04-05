@@ -1,7 +1,7 @@
 import { GameState } from "../Game";
 
 // Config Constants
-export const ORIGIN = 'https://white.mcteamster.com';
+export const ORIGIN = 'https://blankwhite.cards';
 
 // Preload Preset Decks
 export const presetDecks: {[key: string]: GameState} = {

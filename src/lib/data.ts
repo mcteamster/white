@@ -58,7 +58,7 @@ export const downloadDeck = (G: GameState) => {
       const cards = JSON.parse(decodeURI(atob(rawData)));
       </script>
       <title>Blank White Cards</title>
-      <link rel="icon" type="image/png" href="https://white.mcteamster.com/favicon.png"/>
+      <link rel="icon" type="image/png" href="https://blankwhite.cards/favicon.png"/>
       <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
       <style>
         @import url(https://fonts.googleapis.com/css?family=Patrick+Hand+SC);
@@ -216,7 +216,7 @@ export const downloadDeck = (G: GameState) => {
     </head>
     <body>
       <div id="header" class="center">
-        <div id="heading">Blank White Cards Deck<br><a href="https://white.mcteamster.com"><u>white.mcteamster.com</u></a></div>
+        <div id="heading">Blank White Cards Deck<br><a href="https://blankwhite.cards"><u>blankwhite.cards</u></a></div>
         <p id="tip" class="center">Tap to Include/Exclude when importing.<br></br>Remember to SAVE THE DECK when you're finished!</p>
       </div>
       <div id="table" class="center"></div>

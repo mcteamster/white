@@ -5,7 +5,7 @@ import App from './App.tsx'
 import Clarity from '@microsoft/clarity';
 
 // Initialize Clarity only for official deployment
-if (import.meta.env.VITE_CLARITY_ID && import.meta.env.VITE_ORIGIN == 'https://white.mcteamster.com') {
+if (import.meta.env.VITE_CLARITY_ID && import.meta.env.VITE_ORIGIN == 'https://blankwhite.cards') {
   Clarity.init(import.meta.env.VITE_CLARITY_ID);
   console.debug('Clarity enabled');
 }
