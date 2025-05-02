@@ -290,9 +290,10 @@ export function Lobby(props: { globalSize: number }) {
           (stage == 'landing' || stage == 'down') &&
           <wired-card style={styles.singleplayer}>
             <div style={styles.heading}><Icon name="single" />&nbsp;Single Device</div>
+            <div style={styles.subheading}>Use the Global Deck</div>
             <wired-card style={styles.action} onClick={enterSinglePlayer}>
-              <div style={styles.subheading}><Icon name='global' />&nbsp;Global Deck</div>
-              <div style={styles.subheading}>{props.globalSize} Cards</div>
+              <div style={styles.subheading}>{props.globalSize}&nbsp;<Icon name='global' />&nbsp;Cards </div>
+              <div style={styles.subheading}>Play Now</div>
             </wired-card>
             <div style={styles.subheading}>Draw and add your own!</div>
           </wired-card>
