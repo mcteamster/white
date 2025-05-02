@@ -203,32 +203,34 @@ export function Tutorial({ isMultiplayer, playerID, mode, setMode }: TutorialPro
   const tutorialText = <>
     <div style={styles.paragraph}>
       <p>This is a sandbox drawing party game with NO SET RULES. However, common card game conventions apply:</p>
-      <p><u>Deck</u> - Cards to <u>Pick Up</u></p>
-      <p><u>Pile</u> - Where cards are <u>Played</u></p>
-      <p><u>Hand</u> - Your hidden cards</p>
-      <p><u>Table</u> - Your displayed cards</p>
-      <p><u>Discard</u> - Cards removed from play</p>
-      <p><u>Move</u> cards between these areas</p>
+      <p><Icon name='copy' />Deck: Cards to pick up</p>
+      <p><Icon name='pile' />Pile: Played cards seen by all</p>
+      <p><Icon name='take' />Hand: Your hidden cards</p>
+      <p><Icon name='display' />Table: Your displayed cards</p>
+      <p><Icon name='discard' />Discard: Cards removed from play</p>
+      <p><Icon name='loading' />Move cards between these areas</p>
       {
         isMultiplayer ?
         <>
-          <p><u>Send</u> them to other players</p>
-          <p><u>Create</u> new cards and <u>Save</u> them for next time!</p>
+          <p><Icon name='send' />Send them to other players</p>
+          <p><Icon name='create' />Create your own cards</p>
+          <p><Icon name='heart' />Save and Load them next time!</p>
           <h3>Gameplay Suggestions:</h3>
-          <p>Multiplayer tends to work better with a "Gamemaster" - usually the host, as they have the ability to <u>Load</u> cards and <u>Reset</u> the game.</p>
-          <p>In the beginning, spend some time creating new cards - about 2 or 3 per player. <u>Reset</u> to shuffle all cards into the deck.</p>
-          <p>A typical game might start with everyone getting a Hand, then taking turns to play and Pick Up more.</p>
+          <p>Multiplayer tends to work better with a "Gamemaster" - usually the host, as they have the ability to Load cards and Reset the game.</p>
+          <p>Start with everyone creating some new cards - about 3 per player is good. Reset to shuffle all cards into the deck.</p>
+          <p>Have everyone pick up a few cards to make a Hand, then take turns to play and pickup more.</p>
+          <p>It's highly encouraged to keep creating cards between turns in response to what gets played.</p>
           <p>If playing for points, find somewhere to take notes. Points get complicated very fast!</p>
           <p>If playing with drinks, drink-responsibly :)</p>
-          <p>Remember to <u>Save</u> the deck. You can edit it offline and reuse it later.</p>
+          <p>Remember to Save the deck. You can filter it offline and reuse it again later.</p>
           <p>Alternatively, choose a Preset Deck for a super quick way to get started!</p>
-          <p>Or why not just play Free-for-All? Let anyone can do anything at any time and embrace the chaos!</p>
+          <p>Or why not just play Free-for-All? Let anyone do anything at any time and embrace the chaos!</p>
         </> :
         <>
-          <p><u>Submit</u> new cards to the Global Deck!</p>
+          <p><Icon name='global' />Submit new cards to the Global Deck!</p>
           <h3>Gameplay Suggestions:</h3>
-          <p>Hotseat Mode - Take turns to pick up, do the action (or not), and pass to the next player.</p>
-          <p>(Try Multiplayer for more possibilities!)</p>
+          <p><Icon name='shuffle' />Hotseat: Take turns to pick up, do the action (or not), and pass to the next player.</p>
+          <p><Icon name='multi' />Try Multiplayer for more possibilities!</p>
         </>
       }
     </div>
