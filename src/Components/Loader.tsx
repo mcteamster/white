@@ -303,19 +303,18 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
               </wired-card> :
               <div style={styles.instructionsContainer} >
                 {
-                  !isMultiplayer &&
+                  !isMultiplayer ?
                   <>
                     <wired-card style={{...styles.instructions }} onClick={() => { setGlobalSubmit(true); document.getElementById('fileselector')?.click() }}>
                       <Icon name='global' />
-                      Submit to the Global Deck
+                      Submit a card to the Global Deck
                     </wired-card>
-                    or
-                  </>
+                  </> :
+                  <wired-card style={{...styles.instructions }} onClick={() => { setGlobalSubmit(false); document.getElementById('fileselector')?.click() }}>
+                    <Icon name='display' />
+                    Load cards into this session
+                  </wired-card>
                 }
-                <wired-card style={{...styles.instructions }} onClick={() => { setGlobalSubmit(false); document.getElementById('fileselector')?.click() }}>
-                  <Icon name='display' />
-                  Load cards into this session
-                </wired-card>
                 <div id="fileCard" style={styles.prompt}>
                   From a Saved Deck File
                 </div>
