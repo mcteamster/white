@@ -6,7 +6,7 @@ const roomCodeGen = customAlphabet('BCDFGHJKLMNPQRSTVWXZ', 4);
 // Initialise Server
 const server = Server({
   games: [BlankWhiteCards],
-  origins: [process.env.VITE_ORIGIN || '', Origins.LOCALHOST_IN_DEVELOPMENT],
+  origins: [process.env.VITE_ORIGIN || '', Origins.LOCALHOST],
   uuid: roomCodeGen,
   generateCredentials: () => nanoid(),
 });
