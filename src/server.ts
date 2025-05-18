@@ -1,7 +1,22 @@
 import { Server, Origins } from 'boardgame.io/server';
 import { BlankWhiteCards } from './Game';
 import { customAlphabet, nanoid } from 'nanoid';
-const roomCodeGen = customAlphabet('BCDFGHJKLMNPQRSTVWXZ', 4);
+
+// Custom alphabet for room codes
+const roomCodeGen = () => {
+  let roomCode = customAlphabet('BCDFGHJKLMNPQRSTVWXZ', 3)()
+
+  // Regional Partitioning
+  if (process.env.AWS_REGION == 'ap-southeast-2') {
+    roomCode += customAlphabet('BCDFGHJKLM', 1)() // First Half for Asia Pacific
+  } else if (process.env.AWS_REGION == 'us-east-1') {
+    roomCode += customAlphabet('NPQRSTVWXZ', 1)() // Last Half for North America
+  } else {
+    roomCode += customAlphabet('BCDFGHJKLMNPQRSTVWXZ', 1)()
+  }
+
+  return roomCode
+ };
 
 // Initialise Server
 const server = Server({

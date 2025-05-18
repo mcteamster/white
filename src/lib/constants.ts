@@ -26,5 +26,5 @@ const refreshDeck = (deck: string) => {
   }
 }
 
-setTimeout(refreshDeck, 1000 * 10, 'global'); // 10 second delay
-setTimeout(refreshDeck, 1000 * 20, 'standard'); // 20 second delay
+setTimeout(refreshDeck, 1000 * 5, 'global'); // 5 second delay
+setTimeout(refreshDeck, 1000 * 10, 'standard'); // 10 second delay
