@@ -16,7 +16,7 @@ const roomCodeGen = () => {
   }
 
   return roomCode
- };
+};
 
 // Initialise Server
 const server = Server({
