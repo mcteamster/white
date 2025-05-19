@@ -3,7 +3,7 @@ import { Properties } from 'csstype';
 import { Icon } from './Icons';
 import { useCallback, useContext, useEffect, useState } from "react";
 import { AuthContext, HotkeysContext } from "../lib/contexts";
-import { lobbyClient } from "../lib/clients";
+import { lobbyClient, setClients } from "../lib/clients";
 
 const styles: { [key: string]: Properties<string | number> } = {
   dialog: {
@@ -168,6 +168,7 @@ export function Lobby(props: { globalSize: number }) {
     if (playerName) {
       const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
       if (roomCode.value.toUpperCase().match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
+        setClients(roomCode.value.toUpperCase());
         try {
           const { playerID, playerCredentials } = await lobbyClient.joinMatch(
             'blank-white-cards',
@@ -196,6 +197,7 @@ export function Lobby(props: { globalSize: number }) {
   const checkForRoomCode = useCallback(() => {
     const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
     if (roomCode.value && roomCode.value.toUpperCase().match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
+      setClients(roomCode.value.toUpperCase());
       lobbyClient.getMatch('blank-white-cards', roomCode.value.toUpperCase()).then(async () => {
         setAuth({ ...auth, matchID: roomCode.value.toUpperCase() });
         setStage('join');
@@ -208,8 +210,9 @@ export function Lobby(props: { globalSize: number }) {
   }, [auth, setAuth, roomCodeError])
 
   const checkLobbyConnection = useCallback(() => {
+    const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
+    setClients(roomCode.value.toUpperCase());
     lobbyClient.listMatches('blank-white-cards').then(() => {
-      const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
       if (roomCode.value) {
         checkForRoomCode();
       } else {

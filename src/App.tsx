@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Lobby } from './Components/Lobby';
 import { About } from "./Components/About";
 import { AuthContext, AuthType, FocusContext, HotkeysContext, LoadingContext } from "./lib/contexts";
-import { GlobalBlankWhiteCardsClient, lobbyClient, MultiplayerBlankWhiteCardsClient, parsePathCode, startingDeck } from "./lib/clients";
+import { GlobalBlankWhiteCardsClient, MultiplayerBlankWhiteCardsClient, lobbyClient, parsePathCode, setClients, startingDeck } from "./lib/clients";
 import { Rotate } from "./Components/Icons";
 import { useHotkeys, useWindowDimensions } from "./lib/hooks";
 import { Gallery } from "./Components/Gallery";
@@ -34,6 +34,7 @@ const App = () => {
   const [validMatch, setValidMatch] = useState(false);
   useEffect(() => {
     if (auth.matchID) {
+      setClients(auth.matchID);
       try {
         lobbyClient.getMatch('blank-white-cards', auth.matchID).then(async () => {
           if (auth.matchID && auth.playerID && auth.credentials) {

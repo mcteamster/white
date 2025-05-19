@@ -6,9 +6,7 @@ import { SocketIO } from 'boardgame.io/multiplayer';
 import { BlankWhiteCards, GameState } from '../Game';
 import { BlankWhiteCardsBoard } from '../Board';
 import { Card } from '../Cards';
-
-// Lobby
-export const lobbyClient = new LobbyClient({ server: (import.meta.env.VITE_LOBBY_SERVER) });
+import { SERVERS } from './constants';
 
 // Global Deck Singleplayer
 export let startingDeck: GameState;
@@ -29,18 +27,63 @@ export const GlobalBlankWhiteCardsClient = Client({
 });
 
 // Multiplayer Custom Rooms
-const serverUrl = import.meta.env.VITE_GAME_SERVER;
-export const MultiplayerBlankWhiteCardsClient = Client({
+export let lobbyClient = new LobbyClient({ server: import.meta.env.VITE_DEFAULT_LOBBY_SERVER });
+export let MultiplayerBlankWhiteCardsClient = Client({
   game: BlankWhiteCards,
   board: BlankWhiteCardsBoard,
   debug: false,
-  multiplayer: SocketIO({ server: serverUrl }),
+  multiplayer: SocketIO({ server: import.meta.env.VITE_DEFAULT_GAME_SERVER }),
 });
+
+export const setClients = (room: string) => {
+  if (import.meta.env.VITE_MULTI_REGION === 'true') {
+    // This implementation is specific to a 2 or 3 global region server setup, adjust balancing accordingly
+    let server;
+    if (room.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
+      // Set server region based on room code
+      if (room.match(/[BCDFGHJKLM]$/)) {
+        server = SERVERS.AP
+      } else if (room.match(/[FGHJKLM]$/)) { // Will be caught by AP until an EU server is available
+        server = SERVERS.EU
+      } else if (room.match(/[NPQRSTVWXZ]$/)) {
+        server = SERVERS.NA
+      }
+    } else {
+      // Set server region based on time of day (measuring latency accurately is actually kinda hard?)
+      const hour = new Date().getUTCHours();
+      if (hour >= 4 && hour < 16) { // Asia Pacific peak: 4-16 UTC (12pm-12am UTC+8)
+        server = SERVERS.AP;
+      } else if (hour >= 16 || hour < 4) { // North America peak: 16-4 UTC (12pm-12am UTC-4)
+        server = SERVERS.NA;
+      } else {
+        server = SERVERS.EU; // Default to EU for other hours (currently none)
+      }
+    }
+
+    // Connect Lobby and Game Server
+    lobbyClient = new LobbyClient({ server });
+    MultiplayerBlankWhiteCardsClient = Client({
+      game: BlankWhiteCards,
+      board: BlankWhiteCardsBoard,
+      debug: false,
+      multiplayer: SocketIO({ server }),
+    });
+  } else {
+    // Connect to Default Lobby and Game Servers
+    lobbyClient = new LobbyClient({ server: import.meta.env.VITE_DEFAULT_LOBBY_SERVER });
+    MultiplayerBlankWhiteCardsClient = Client({
+      game: BlankWhiteCards,
+      board: BlankWhiteCardsBoard,
+      debug: false,
+      multiplayer: SocketIO({ server: import.meta.env.VITE_DEFAULT_GAME_SERVER }),
+    });
+  }
+}
 
 export const parsePathCode = () => {
   const pathname = window.location.pathname;
   if (pathname.match(/^\/[BCDFGHJKLMNPQRSTVWXZ]{4}$/i)) {
-    const room = pathname.slice(1,5).toUpperCase();
+    const room = pathname.slice(1, 5).toUpperCase();
     return room
   } else {
     return

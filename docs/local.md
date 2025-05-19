@@ -24,10 +24,11 @@ This will run a `boardgame.io` server at http://localhost:3000
 # Game Info
 VITE_ORIGIN='http://<YOUR_LAN_IP_ADDRESS>:5173'
 VITE_COMPRESS_IMAGES='true' # Compressing image improves network performance at the cost of decompression lag
+VITE_MULTI_REGION='false' # Distribute traffic to multiple servers in different regions to lower latency
 
 # Client Side Environment
-VITE_LOBBY_SERVER='http://<YOUR_LAN_IP_ADDRESS>:<PORT>'
-VITE_GAME_SERVER='http://<YOUR_LAN_IP_ADDRESS>:<PORT>'
+VITE_DEFAULT_LOBBY_SERVER='http://<YOUR_LAN_IP_ADDRESS>:<PORT>'
+VITE_DEFAULT_GAME_SERVER='http://<YOUR_LAN_IP_ADDRESS>:<PORT>'
 
 # Server Side Environment
 NODE_ENV=development
@@ -51,11 +52,12 @@ Update `.env.production` with the details of your hosting setup:
 # Game Info
 VITE_ORIGIN='<WEBSITE>' # Website where this game is served from
 VITE_COMPRESS_IMAGES='false' # Compressing image improves network performance at the cost of decompression lag
+VITE_MULTI_REGION='false' # Distribute traffic to multiple servers in different regions to lower latency
 
 # Client Side Environment
 VITE_API_SERVER='' # For Global Deck Cards - leave this empty
-VITE_LOBBY_SERVER='<LOBBY_SERVER>' # Boardgame.io Lobby
-VITE_GAME_SERVER='<GAME_SERVER>' # Boardgame.io Game Server (can be the same as the Lobby)
+VITE_DEFAULT_LOBBY_SERVER='<LOBBY_SERVER>' # Boardgame.io Lobby
+VITE_DEFAULT_GAME_SERVER='<GAME_SERVER>' # Boardgame.io Game Server (can be the same as the Lobby)
 
 # Server Side Environment
 NODE_ENV=production
