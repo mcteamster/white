@@ -37,26 +37,17 @@ export let MultiplayerBlankWhiteCardsClient = Client({
 
 export const setClients = (room: string) => {
   if (import.meta.env.VITE_MULTI_REGION === 'true') {
+    let server = import.meta.env.VITE_DEFAULT_LOBBY_SERVER;
+
     // This implementation is specific to a 2 or 3 global region server setup, adjust balancing accordingly
-    let server;
     if (room.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
       // Set server region based on room code
       if (room.match(/[BCDFGHJKLM]$/)) {
-        server = SERVERS.AP
+        server = SERVERS.AP || import.meta.env.VITE_DEFAULT_GAME_SERVER;
       } else if (room.match(/[FGHJKLM]$/)) { // Will be caught by AP until an EU server is available
-        server = SERVERS.EU
+        server = SERVERS.EU || import.meta.env.VITE_DEFAULT_GAME_SERVER;
       } else if (room.match(/[NPQRSTVWXZ]$/)) {
-        server = SERVERS.NA
-      }
-    } else {
-      // Set server region based on time of day (measuring latency accurately is actually kinda hard?)
-      const hour = new Date().getUTCHours();
-      if (hour >= 4 && hour < 16) { // Asia Pacific peak: 4-16 UTC (12pm-12am UTC+8)
-        server = SERVERS.AP;
-      } else if (hour >= 16 || hour < 4) { // North America peak: 16-4 UTC (12pm-12am UTC-4)
-        server = SERVERS.NA;
-      } else {
-        server = SERVERS.EU; // Default to EU for other hours (currently none)
+        server = SERVERS.NA || import.meta.env.VITE_DEFAULT_GAME_SERVER;
       }
     }
 
