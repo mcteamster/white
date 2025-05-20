@@ -124,7 +124,7 @@ export function About() {
       <div>
         <Link style={styles.subheading} to='https://github.com/mcteamster/white' target='_blank' rel="noreferrer">
           <Icon name='github' />
-          <p>v2.0.0</p>
+          <p>v2.0.1</p>
         </Link>
       </div>
       <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { navigate('/') }} elevation={2}><Icon name='logout' />Lobby</wired-card>
