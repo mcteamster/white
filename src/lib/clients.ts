@@ -18,6 +18,11 @@ try {
   }
 } catch (e) {
   console.error(e)
+
+  // Redirect to canonical origin
+  if (window.location.href != `${import.meta.env.VITE_ORIGIN}/`) {
+    window.location.href = `${import.meta.env.VITE_ORIGIN}/`;
+  }
 }
 
 export const GlobalBlankWhiteCardsClient = Client({
