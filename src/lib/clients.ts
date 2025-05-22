@@ -39,15 +39,17 @@ export const setClients = (room: string) => {
   if (import.meta.env.VITE_MULTI_REGION === 'true') {
     let server = import.meta.env.VITE_DEFAULT_LOBBY_SERVER;
 
-    // This implementation is specific to a 2 or 3 global region server setup, adjust balancing accordingly
+    // This implementation is specific to a 2 or 3 global region server setup, adjust balancing accordingly here and in server.ts
     if (room.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
       // Set server region based on room code
-      if (room.match(/[BCDFGHJKLM]$/)) {
+      if (room.match(/[BCDFG]$/)) {
         server = SERVERS.AP || import.meta.env.VITE_DEFAULT_GAME_SERVER;
-      } else if (room.match(/[FGHJKLM]$/)) { // Will be caught by AP until an EU server is available
+      } else if (room.match(/[HJKLM]$/)) {
         server = SERVERS.EU || import.meta.env.VITE_DEFAULT_GAME_SERVER;
-      } else if (room.match(/[NPQRSTVWXZ]$/)) {
+      } else if (room.match(/[NPQRS]$/)) {
         server = SERVERS.NA || import.meta.env.VITE_DEFAULT_GAME_SERVER;
+      } else { // Fallback to default server (TVWXZ)
+        server = import.meta.env.VITE_DEFAULT_GAME_SERVER;
       }
     }
 
