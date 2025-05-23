@@ -67,6 +67,16 @@ const App = () => {
   // Check Screen Size
   const dimensions = useWindowDimensions();
 
+  // Check for In-App Browsers
+  if (navigator.userAgent.match(/FBAN|FBAV|Instagram/i)) {
+    console.log('In-app browser detected');
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', textAlign: 'center', height: '50vh', width: '80vw', fontSize: '1.5em' }}>
+        please open this page in your default browser for the best gameplay experience
+      </div>
+    )
+  }
+
   return (
     <LoadingContext.Provider value={{ loading, setLoading }}>
       <AuthContext.Provider value={{ auth, setAuth }}>
