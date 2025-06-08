@@ -9,6 +9,7 @@ import { GlobalBlankWhiteCardsClient, MultiplayerBlankWhiteCardsClient, lobbyCli
 import { Rotate } from "./Components/Icons";
 import { useHotkeys, useWindowDimensions } from "./lib/hooks";
 import { Gallery } from "./Components/Gallery";
+import { Editor } from "./Components/Editor";
 
 // Landing Page
 const App = () => {
@@ -92,6 +93,7 @@ const App = () => {
                     </>} />
                     <Route path="/about" element={<About />} />
                     <Route path="/app" element={<GlobalBlankWhiteCardsClient playerID='0' />} />
+                    <Route path="/build" element={<Editor />} />
                     <Route path="/card" element={<Gallery />}>
                       <Route path=":cardID" element={<Gallery />} />
                     </Route>
