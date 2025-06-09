@@ -148,12 +148,11 @@ export function Focus(props: BoardProps<GameState>) {
       let tray = <></>
       if (owned) {
         tray = <div style={styles.tray}>
-          {<wired-card style={{ ...styles.button, color: props.isMultiplayer ? undefined : 'grey' }} id="sendButton" onClick={() => { if (props.isMultiplayer) { setSendCardMode(true) } }}><Icon name='send' />Send</wired-card>}
-          {<wired-card style={{ ...styles.button }} id="returnButton" onClick={() => { moveCardTo(card.id, 'deck') }}><Icon name='shuffle' />Reshuffle</wired-card>}
           {<wired-card style={{ ...styles.button, color: 'red' }} id="discardButton" onClick={() => { moveCardTo(card.id, 'discard') }}><Icon name='discard' />Discard</wired-card>}
-          {<wired-card style={{ ...styles.button }} id="handButton" onClick={() => { moveCardTo(card.id, 'hand') }}><Icon name='take' />Hand</wired-card>}
-          {<wired-card style={{ ...styles.button }} id="pileButton" onClick={() => { moveCardTo(card.id, 'pile') }}><Icon name='pile' />Pile</wired-card>}
-          {<wired-card style={{ ...styles.button }} id="tableButton" onClick={() => { moveCardTo(card.id, 'table') }}><Icon name='display' />Table</wired-card>}
+          {props.isMultiplayer && card.location != 'hand' &&<wired-card style={{ ...styles.button }} id="handButton" onClick={() => { moveCardTo(card.id, 'hand') }}><Icon name='take' />Hand</wired-card>}
+          {props.isMultiplayer && card.location != 'table' && <wired-card style={{ ...styles.button }} id="tableButton" onClick={() => { moveCardTo(card.id, 'table') }}><Icon name='display' />Table</wired-card>}
+          {props.isMultiplayer && <wired-card style={{ ...styles.button }} id="sendButton" onClick={() => { setSendCardMode(true) }}><Icon name='send' />Send</wired-card>}
+          {<wired-card style={{ ...styles.button }} id="pileButton" onClick={() => { moveCardTo(card.id, 'pile') }}><Icon name='pile' />Play on Pile</wired-card>}
         </div>
       } else if (card.location == 'pile') {
         tray = <div style={styles.tray}>
@@ -188,12 +187,16 @@ export function Focus(props: BoardProps<GameState>) {
       const sendMenu = <wired-dialog open={sendCardMode === true || undefined}>
         <div style={styles.sendmenu} onClick={(e) => e.stopPropagation()}>
           <div>
-            <div style={styles.title}>Send to Another Player</div>
-            <div>Card will be placed on their Table</div>
+            <div style={styles.title}>Send-A-Card</div>
+            <div>Card will be placed on a player's Table</div>
           </div>
           <wired-card>
-            <div>Connected Players</div>
+            <div>Destinations</div>
             <div style={styles.sendlist}>
+              <wired-card key={`reshuffle`} style={styles.sendbutton} onClick={() => { moveCardTo(card.id, 'deck') }}>
+                <Icon name='shuffle' />
+                Reshuffle into the Deck
+              </wired-card>
               {props.matchData?.map((player, i) => {
                 if (player.isConnected && player.name && player.id != Number(props.playerID)) {
                   return (
@@ -233,13 +236,13 @@ export function Focus(props: BoardProps<GameState>) {
 
       if (hotkeys.escape) {
         unfocusCards();
-      } else if (owned && hotkeys.enter) {
+      } else if (props.isMultiplayer && owned && hotkeys.enter) {
         setSendCardMode(true);
       } else if (hotkeys.left && card.id) {
         changeFocus('prev');
       } else if (hotkeys.right && card.id) {
         changeFocus('next');
-      } else if (owned && hotkeys.up) {
+      } else if (props.isMultiplayer && owned && hotkeys.up) {
         if (card.location != "table") {
           const adjacentCard = getAdjacentCard(props.G.cards, card.id, 'prev', props.playerID) || getAdjacentCard(props.G.cards, card.id, 'next', props.playerID);
           props.moves.moveCard(card.id, "table");
@@ -251,7 +254,7 @@ export function Focus(props: BoardProps<GameState>) {
         } else {
           unfocusCards();
         }
-      } else if (owned && hotkeys.down) {
+      } else if (props.isMultiplayer && owned && hotkeys.down) {
         if (card.location != "hand") {
           const adjacentCard = getAdjacentCard(props.G.cards, card.id, 'prev', props.playerID) || getAdjacentCard(props.G.cards, card.id, 'next', props.playerID);
           props.moves.moveCard(card.id, "hand");
@@ -271,7 +274,7 @@ export function Focus(props: BoardProps<GameState>) {
         } else {
           unfocusCards();
         }
-      } else if (owned && hotkeys.backspace) {
+      } else if (props.isMultiplayer && owned && hotkeys.backspace) {
         const adjacentCard = getAdjacentCard(props.G.cards, card.id, 'prev', props.playerID) || getAdjacentCard(props.G.cards, card.id, 'next', props.playerID);
         props.moves.moveCard(card.id, "deck");
         if (adjacentCard) {
