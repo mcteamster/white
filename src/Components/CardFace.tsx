@@ -125,10 +125,10 @@ export function CardFace(card: Card) {
           textAlign: 'center',
         },
         heading: {
-          fontSize: '4em',
+          fontSize: '3.5em',
           fontWeight: 'bold',
           textAlign: 'center',
-          margin: '0.5em 0',
+          margin: '0.5em 0 0 0',
         }
       };
 

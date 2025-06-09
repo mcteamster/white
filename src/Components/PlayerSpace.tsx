@@ -53,7 +53,6 @@ export function Table(props: BoardProps<GameState>) {
 
   const styles: { [key: string]: Properties<string | number> } = {
     table: {
-      width: '100%',
       gridRow: '7',
       gridColumn: '2 / 9',
       display: 'flex',
@@ -62,16 +61,30 @@ export function Table(props: BoardProps<GameState>) {
       justifyContent: 'center',
       alignItems: 'center',
     },
+    tableCards: {
+      minWidth: '5em',
+      display: 'flex',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.1)',
+      borderRadius: '1em',
+      margin: '0.25em',
+      padding: '0.25em',
+    }
   };
 
   const table = getCardsByLocation(props.playerID ? getCardsByOwner(props.G.cards, props.playerID) : [], "table").sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)); // Oldest to Newest
   return (
     <div style={styles.table}>
-      {table.map((card, i) => {
-        return <div key={`${props.playerID}-table-${i}`} onClick={() => focusCard(card.id, true)}>
-          <CardFace {...card} />
-        </div>
-      })}
+      <div style={styles.tableCards}>
+        {table.map((card, i) => {
+          return <div key={`${props.playerID}-table-${i}`} onClick={() => focusCard(card.id, true)}>
+            <CardFace {...card} />
+          </div>
+        })}
+      </div>
     </div>
   );
 }
