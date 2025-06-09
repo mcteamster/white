@@ -202,8 +202,9 @@ export function Tutorial({ isMultiplayer, playerID, mode, setMode }: TutorialPro
 
   const tutorialText = <>
     <div style={styles.paragraph}>
-      <p>This is a sandbox drawing party game with NO SET RULES. However, common card game conventions apply:</p>
-      <p><Icon name='copy' />Deck: Cards to pick up</p>
+      <p>Blank White Cards is a drawing sandbox party game with NO RULES. Define your own cards for a uniquely evolving gameplay experience.</p>
+      <p>There are some features to help with basic card game logistics:</p>
+      <p><Icon name='copy' />Deck: Cards to be picked up</p>
       <p><Icon name='pile' />Pile: Played cards seen by all</p>
       <p><Icon name='take' />Hand: Your hidden cards</p>
       <p><Icon name='display' />Table: Your displayed cards</p>
@@ -217,7 +218,7 @@ export function Tutorial({ isMultiplayer, playerID, mode, setMode }: TutorialPro
           <p><Icon name='heart' />Save and Load them next time!</p>
           <h3>Gameplay Suggestions:</h3>
           <p>Multiplayer tends to work better with a "Gamemaster" - usually the host, as they have the ability to Load cards and Reset the game.</p>
-          <p>Start with everyone creating some new cards - about 3 per player is good. Reset to shuffle all cards into the deck.</p>
+          <p>Start with everyone creating some new cards - about 5 per player is good. Reset to shuffle all cards into the deck.</p>
           <p>Have everyone pick up a few cards to make a Hand, then take turns to play and pickup more.</p>
           <p>It's highly encouraged to keep creating cards between turns in response to what gets played.</p>
           <p>If playing for points, find somewhere to take notes. Points get complicated very fast!</p>
