@@ -7,11 +7,11 @@ import { BLANK_IMAGE, decompressImage } from '../lib/images.ts';
 import { ImageCacheContext } from '../lib/contexts.ts';
 
 export function CardFace(card: Card) {
-  const [ image, setImage ] = useState(BLANK_IMAGE);
+  const [image, setImage] = useState(BLANK_IMAGE);
   const { imageCache, dispatchImage } = useContext(ImageCacheContext);
   const cachedImage = imageCache[card.id];
-  const [ displayedCard, setDisplayedCard] = useState(<></>);
-  
+  const [displayedCard, setDisplayedCard] = useState(<></>);
+
   const display = useCallback((element: ReactElement) => {
     setDisplayedCard(element)
   }, [])
@@ -35,7 +35,7 @@ export function CardFace(card: Card) {
       }
     }
 
-    const baseStyles: {[key: string]: Properties<string | number>} = {
+    const baseStyles: { [key: string]: Properties<string | number> } = {
       card: {
         borderRadius: '0.5em',
         backgroundColor: 'white',
@@ -51,7 +51,7 @@ export function CardFace(card: Card) {
     }
 
     if (card.location === 'hand') {
-      const styles: {[key: string]: Properties<string | number>} = {
+      const styles: { [key: string]: Properties<string | number> } = {
         card: {
           height: '10em',
           width: '6em',
@@ -69,13 +69,13 @@ export function CardFace(card: Card) {
         },
       };
       display(
-        <wired-card style={{...baseStyles.card, ...styles.card}} elevation={1}>
+        <wired-card style={{ ...baseStyles.card, ...styles.card }} elevation={1}>
           <div style={styles.title}>{card.content.title}</div>
           <img style={styles.image} src={image || BLANK_IMAGE}></img>
         </wired-card>
       );
     } else if (card.location === 'table') {
-      const styles: {[key: string]: Properties<string | number>} = {
+      const styles: { [key: string]: Properties<string | number> } = {
         card: {
           height: '3em',
           width: '3em',
@@ -88,13 +88,13 @@ export function CardFace(card: Card) {
         },
       };
       display(
-        <wired-card style={{...baseStyles.card, ...styles.card}} elevation={1}>
+        <wired-card style={{ ...baseStyles.card, ...styles.card }} elevation={1}>
           <img style={styles.image} src={image || BLANK_IMAGE}></img>
         </wired-card>
       );
     }
     else if (card.location === 'pile') {
-      const styles: {[key: string]: Properties<string | number>} = {
+      const styles: { [key: string]: Properties<string | number> } = {
         card: {
           height: '100%',
           minHeight: '20em',
@@ -124,13 +124,21 @@ export function CardFace(card: Card) {
           fontSize: '0.75em',
           textAlign: 'center',
         },
+        heading: {
+          fontSize: '4em',
+          fontWeight: 'bold',
+          textAlign: 'center',
+          margin: '0.5em 0',
+        }
       };
 
       let content = <></>;
       if (card.id == 0) {
         content = <>
-          <div style={{fontSize: '2.5em'}}>Blank White Cards</div>
-          <div style={{...styles.description, fontSize: '1.5em'}}>
+          <div style={{ ...styles.heading }}>
+            Blank<br></br>White<br></br>Cards
+          </div>
+          <div style={{ ...styles.description, fontSize: '1.5em' }}>
             Pick up cards.<br></br>
             Do what they say.<br></br>
             Create your own!
@@ -150,7 +158,7 @@ export function CardFace(card: Card) {
       }
 
       display(
-        <wired-card style={{...baseStyles.card, ...styles.card}} elevation={1}>
+        <wired-card style={{ ...baseStyles.card, ...styles.card }} elevation={1}>
           {content}
         </wired-card>
       );

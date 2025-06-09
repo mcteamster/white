@@ -229,51 +229,72 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
       backgroundColor: '#eee',
       borderRadius: '1em',
     },
+    mainButtonContent: {
+      display: 'flex',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: '0.25em',
+      fontSize: '1.25em',
+    },
   };
 
   // Initialise Buttons
   let toolset = <></>
   if (mode === 'play') {
-    let mainButtonIcon = <></>
-    let mainButtonText = ''
+    let mainButtonContent = <></>
     if (deck.length > 0) {
       if (loading) {
-        mainButtonIcon = <div className='spin'>
+        mainButtonContent = <div className='spin'>
           <Icon name='loading' />
         </div>
       } else {
-        mainButtonIcon = <Icon name='play' />
+        mainButtonContent = <>
+          <Icon name='play'></Icon>
+          PICK UP CARD
+        </>
       }
-      mainButtonText = `Pickup (${deck.length})`
     } else if (G.cards.length == 0) {
       if (playerID == '0') {
-        mainButtonIcon = <Icon name='display' /> 
-        mainButtonText = 'Load Saved Deck?'
+        mainButtonContent = <>
+          <Icon name='display' />
+          Load Deck?
+        </>
       } else {
-        mainButtonIcon = <Icon name='create' />
-        mainButtonText = 'Create Cards to Begin'
+        mainButtonContent = <>
+          <Icon name='create' />
+          Create to Begin
+        </>
       }
+    } else if (pile.length + discard.length > 0) {
+      mainButtonContent = <>
+        <Icon name='shuffle' />
+        {`Reshuffle: ${pile.length + discard.length}`}
+      </>
     } else {
-      mainButtonIcon = <Icon name='shuffle' />
-      mainButtonText = `Reshuffle (${pile.length + discard.length})`
+      mainButtonContent = <>
+        <div style={{ color: 'grey' }}><Icon name='discard' /></div>
+        <div style={{ color: 'grey' }}>Deck is Empty</div>
+      </>
     }
 
     toolset = <>
       <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='menu' />Menu</wired-card>
       <wired-card style={{ ...styles.button, width: '9.75em', margin: '0' }} onClick={() => {
-          if (G.cards.length > 0) {
-            if (!loading) { 
-              setLoading(true);
-              moves.pickupCard(true);
-            }
-          } else if (playerID == '0') {
-            setMode('menu-tools-loader')
-          } else {
-            setMode('create-sketch') 
+        if (G.cards.length > 0) {
+          if (!loading) {
+            setLoading(true);
+            moves.pickupCard(true);
           }
-        }} elevation={2}>
-        {mainButtonIcon}
-        {mainButtonText}
+        } else if (playerID == '0') {
+          setMode('menu-tools-loader')
+        } else {
+          setMode('create-sketch')
+        }
+      }} elevation={2}>
+        <div style={{ ...styles.mainButtonContent }}>
+          {mainButtonContent}
+        </div>
       </wired-card>
       <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('create-sketch') }} elevation={2}><Icon name='create' />Create</wired-card>
     </>
@@ -286,7 +307,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
   } else if (mode === 'create-finalise') {
     toolset = <>
       <wired-card style={{ ...styles.button }} onClick={() => { setMode('create-sketch') }} elevation={2}><Icon name='back' />Back</wired-card>
-      <wired-card style={{ ...styles.button }} onClick={() => { if(submitStatus != 'Submitting') { submitCard() } }} elevation={2} id='submitCardButton' key='submitCardButton'>
+      <wired-card style={{ ...styles.button }} onClick={() => { if (submitStatus != 'Submitting') { submitCard() } }} elevation={2} id='submitCardButton' key='submitCardButton'>
         {
           submitStatus == 'Submitting' ? <div className='spin'><Icon name='loading' /></div> : submitStatus == 'Retry?' ? <Icon name='shuffle' /> : <Icon name='done' />
         }
@@ -313,32 +334,32 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
       {
         // Show Save Button if Multiplayer, else Gallery Button
         isMultiplayer ?
-        <wired-card style={{
+          <wired-card style={{
             ...styles.button,
             width: '3em',
             color: ((G.cards.length > 0) ? undefined : 'grey'),
-          }} 
-          onClick={() => { 
-            if (G.cards.length > 0) {
-              downloadDeck(G)
-            }
-          }} elevation={2}>
-          <Icon name='take' />Save
-        </wired-card> :
-        <Link to="/card" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='pile' />Gallery</wired-card></Link>
+          }}
+            onClick={() => {
+              if (G.cards.length > 0) {
+                downloadDeck(G)
+              }
+            }} elevation={2}>
+            <Icon name='take' />Save
+          </wired-card> :
+          <Link to="/card" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='pile' />Gallery</wired-card></Link>
       }
       <wired-card style={{
-          ...styles.button,
-          width: '3em',
-          color: ((playerID == '0') ? undefined : 'grey'), // Only the host can load cards
-        }} onClick={() => { if (playerID == '0') { setMode('menu-tools-loader') }}} elevation={2}>
+        ...styles.button,
+        width: '3em',
+        color: ((playerID == '0') ? undefined : 'grey'), // Only the host can load cards
+      }} onClick={() => { if (playerID == '0') { setMode('menu-tools-loader') } }} elevation={2}>
         <Icon name='display' />Load
       </wired-card>
-      <wired-card style={{ 
-        ...styles.button, 
-        width: '3em', 
+      <wired-card style={{
+        ...styles.button,
+        width: '3em',
         color: ((playerID == '0' && G.cards.length > 0) ? undefined : 'grey') // Only the host can reset the game
-      }} onClick={() => { if (playerID == '0' && G.cards.length > 0) { setMode('menu-tools-reset') }}} elevation={2}><Icon name='shuffle' />Reset</wired-card>
+      }} onClick={() => { if (playerID == '0' && G.cards.length > 0) { setMode('menu-tools-reset') } }} elevation={2}><Icon name='shuffle' />Reset</wired-card>
     </>
   } else if (mode === 'menu-tools-reset') {
     toolset = <>

@@ -35,7 +35,11 @@ export function Pile(props: BoardProps<GameState>) {
 
   return (
     <div style={styles.pile}>
-      <div onClick={() => { if (pile.length > 0) { focusCard(pile[0].id, true) }}}>
+      <div onClick={() => { 
+        if (pile.length > 0) { 
+          focusCard(pile[0].id, true) 
+        }
+      }}>
         {pile.length > 0 ?
           <CardFace {...pile[0]} /> :
           <CardFace {...{
