@@ -27,8 +27,7 @@ VITE_COMPRESS_IMAGES='true' # Compressing image improves network performance at 
 VITE_MULTI_REGION='false' # Distribute traffic to multiple servers in different regions to lower latency
 
 # Client Side Environment
-VITE_DEFAULT_LOBBY_SERVER='http://<YOUR_LAN_IP_ADDRESS>:<PORT>'
-VITE_DEFAULT_GAME_SERVER='http://<YOUR_LAN_IP_ADDRESS>:<PORT>'
+VITE_DEFAULT_SERVER='http://<YOUR_LAN_IP_ADDRESS>:<PORT>'
 
 # Server Side Environment
 NODE_ENV=development
@@ -56,8 +55,7 @@ VITE_MULTI_REGION='false' # Distribute traffic to multiple servers in different 
 
 # Client Side Environment
 VITE_API_SERVER='' # For Global Deck Cards - leave this empty
-VITE_DEFAULT_LOBBY_SERVER='<LOBBY_SERVER>' # Boardgame.io Lobby
-VITE_DEFAULT_GAME_SERVER='<GAME_SERVER>' # Boardgame.io Game Server (can be the same as the Lobby)
+VITE_DEFAULT_SERVER='<GAME_SERVER>' # Boardgame.io Lobby & Game Server
 
 # Server Side Environment
 NODE_ENV=production

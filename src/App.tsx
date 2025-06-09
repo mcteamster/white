@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Lobby } from './Components/Lobby';
 import { About } from "./Components/About";
 import { AuthContext, AuthType, FocusContext, HotkeysContext, LoadingContext } from "./lib/contexts";
-import { GlobalBlankWhiteCardsClient, MultiplayerBlankWhiteCardsClient, lobbyClient, parsePathCode, setClients, startingDeck } from "./lib/clients";
+import { GlobalBlankWhiteCardsClient, parsePathCode, getRegion, startingDeck, lobbyClients, gameClients } from "./lib/clients";
 import { Rotate } from "./Components/Icons";
 import { useHotkeys, useWindowDimensions } from "./lib/hooks";
 import { Gallery } from "./Components/Gallery";
@@ -30,11 +30,41 @@ const App = () => {
     setAuthState({ matchID, playerID, credentials, playerName: playerName || localStorage.getItem("playerName") || undefined });
   }, [])
 
+  // Region
+  const [region, setRegion] = useState<'AP' | 'EU' | 'NA' | 'default'>(() => {
+    // Predefined Match IDs
+    if (auth.matchID) {
+      return getRegion(auth.matchID);
+    } else 
+    if (import.meta.env.VITE_MULTI_REGION == 'true') {
+      // Follow the Sun(set)
+      const hour = new Date().getUTCHours();
+      if (hour >= 7 && hour < 15) {
+        // 3pm to 11pm in Singapore (SGT / UTC+8)
+        // 5pm to 1am in Sydney (AEST / UTC+10)
+        return 'AP';
+      } else if (hour >= 15 && hour < 23) {
+        // 4pm to 12am in Frankfurt (CET / UTC+1)
+        // 3pm to 11pm in London (GMT / UTC+0)
+        return 'EU';
+      } else {
+        // 6pm to 2am in Washington D.C. (EST / UTC-5)
+        // 3pm to 11pm in San Francisco (PST / UTC-8)
+        return 'NA';
+      }
+    }
+    return 'default'
+  });
+
+  // Multiplayer Client
+  const MultiplayerClient = gameClients[region];
+
   // Check Credential Validity
   const [validMatch, setValidMatch] = useState(false);
   useEffect(() => {
     if (auth.matchID) {
-      setClients(auth.matchID);
+      setRegion(getRegion(auth.matchID))
+      const lobbyClient = lobbyClients[region];
       try {
         lobbyClient.getMatch('blank-white-cards', auth.matchID).then(async () => {
           if (auth.matchID && auth.playerID && auth.credentials) {
@@ -55,7 +85,7 @@ const App = () => {
         setAuth({});
       }
     }
-  }, [auth, setAuth])
+  }, [auth, setAuth, region])
 
   // Focused Card
   const [focus, setFocus] = useState({});
@@ -87,7 +117,7 @@ const App = () => {
                 <BrowserRouter>
                   <Routes>
                     <Route path="/" element={<>
-                      <Lobby globalSize={startingDeck.cards.length || 0} />
+                      <Lobby globalSize={startingDeck.cards.length || 0} region={region} setRegion={setRegion} />
                       <GlobalBlankWhiteCardsClient />
                     </>} />
                     <Route path="/about" element={<About />} />
@@ -97,9 +127,9 @@ const App = () => {
                     </Route>
                     <Route path="/*" element={<>
                       {(validMatch) ?
-                        <MultiplayerBlankWhiteCardsClient playerID={auth.playerID} matchID={auth.matchID} credentials={auth.credentials} /> :
+                        <MultiplayerClient playerID={auth.playerID} matchID={auth.matchID} credentials={auth.credentials} /> :
                         <>
-                          <Lobby globalSize={startingDeck.cards.length || 0} />
+                          <Lobby globalSize={startingDeck.cards.length || 0} region={region} setRegion={setRegion} />
                           <GlobalBlankWhiteCardsClient />
                         </>}
                     </>}></Route>

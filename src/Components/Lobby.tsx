@@ -3,7 +3,7 @@ import { Properties } from 'csstype';
 import { Icon } from './Icons';
 import { useCallback, useContext, useEffect, useState } from "react";
 import { AuthContext, HotkeysContext } from "../lib/contexts";
-import { lobbyClient, setClients } from "../lib/clients";
+import { lobbyClients, getRegion } from "../lib/clients";
 
 const styles: { [key: string]: Properties<string | number> } = {
   dialog: {
@@ -43,6 +43,14 @@ const styles: { [key: string]: Properties<string | number> } = {
     justifyContent: 'center',
     fontSize: "1.25em",
   },
+  flavourbox: {
+    maxWidth: '15em',
+    margin: '0.25em 0',
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    fontSize: "1.25em",
+  },
   name: {
     width: '12em',
   },
@@ -75,6 +83,13 @@ const styles: { [key: string]: Properties<string | number> } = {
     alignItems: 'center',
     textAlign: 'center',
   },
+  region: {
+    width: '3.5em',
+    margin: '0.25em',
+    backgroundColor: '#eee',
+    borderRadius: '0.5em',
+    fontSize: '1.25em',
+  },
   action: {
     minWidth: '3.5em',
     margin: '0.25em',
@@ -92,7 +107,13 @@ const styles: { [key: string]: Properties<string | number> } = {
   },
 }
 
-export function Lobby(props: { globalSize: number }) {
+interface LobbyProps {
+  globalSize: number;
+  region: 'AP' | 'EU' | 'NA' | 'default';
+  setRegion: (region: 'AP' | 'EU' | 'NA' | 'default') => void;
+}
+
+export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
   const navigate = useNavigate();
   const { auth, setAuth } = useContext(AuthContext);
   const [stage, setStage] = useState('landing');
@@ -134,7 +155,7 @@ export function Lobby(props: { globalSize: number }) {
     const playerName = checkForPlayerName();
     if (playerName) {
       // Create Match on Server
-      const { matchID } = await lobbyClient.createMatch('blank-white-cards', {
+      const { matchID } = await lobbyClients[region].createMatch('blank-white-cards', {
         unlisted: true,
         numPlayers: 100, // TODO: What is a realistic upper bound?
         setupData: {
@@ -144,7 +165,7 @@ export function Lobby(props: { globalSize: number }) {
 
       if (matchID.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
         // Join Match as playerID 0
-        const { playerCredentials } = await lobbyClient.joinMatch(
+        const { playerCredentials } = await lobbyClients[region].joinMatch(
           'blank-white-cards',
           matchID,
           {
@@ -161,14 +182,15 @@ export function Lobby(props: { globalSize: number }) {
         navigate(`/${matchID}`);
       }
     }
-  }, [navigate, setAuth, checkForPlayerName])
+  }, [navigate, setAuth, checkForPlayerName, region])
 
   const joinGame = useCallback(async () => {
     const playerName = checkForPlayerName();
     if (playerName) {
       const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
       if (roomCode.value.toUpperCase().match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
-        setClients(roomCode.value.toUpperCase());
+        setRegion(getRegion(roomCode.value.toUpperCase()))
+        const lobbyClient = lobbyClients[getRegion(roomCode.value.toUpperCase())];
         try {
           const { playerID, playerCredentials } = await lobbyClient.joinMatch(
             'blank-white-cards',
@@ -192,12 +214,13 @@ export function Lobby(props: { globalSize: number }) {
         roomCodeError();
       }
     }
-  }, [navigate, setAuth, checkForPlayerName, roomCodeError])
+  }, [navigate, setAuth, checkForPlayerName, roomCodeError, setRegion])
 
   const checkForRoomCode = useCallback(() => {
     const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
     if (roomCode.value && roomCode.value.toUpperCase().match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
-      setClients(roomCode.value.toUpperCase());
+      setRegion(getRegion(roomCode.value.toUpperCase()))
+      const lobbyClient = lobbyClients[getRegion(roomCode.value.toUpperCase())];
       lobbyClient.getMatch('blank-white-cards', roomCode.value.toUpperCase()).then(async () => {
         setAuth({ ...auth, matchID: roomCode.value.toUpperCase() });
         setStage('join');
@@ -207,11 +230,11 @@ export function Lobby(props: { globalSize: number }) {
     } else {
       roomCodeError();
     }
-  }, [auth, setAuth, roomCodeError])
+  }, [auth, setAuth, roomCodeError, setRegion])
 
   const checkLobbyConnection = useCallback(() => {
     const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
-    setClients(roomCode.value.toUpperCase());
+    const lobbyClient = lobbyClients[region];
     lobbyClient.listMatches('blank-white-cards').then(() => {
       if (roomCode.value) {
         checkForRoomCode();
@@ -222,7 +245,7 @@ export function Lobby(props: { globalSize: number }) {
       setStage('down');
       setTimeout(checkLobbyConnection, 30000);
     });
-  }, [setStage, checkForRoomCode])
+  }, [setStage, checkForRoomCode, region]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(checkLobbyConnection, []);
 
@@ -250,7 +273,7 @@ export function Lobby(props: { globalSize: number }) {
           </div>
 
           <div style={{ display: (stage == 'landing') ? undefined : 'none' }}>
-            <wired-card style={{...styles.action, fontSize: '1.5em'}} onClick={() => { setStage('create') }}>
+            <wired-card style={{...styles.action, fontSize: '1.5em'}} onClick={() => { setStage('create-setup') }}>
               Create New Game
             </wired-card>
             <div>or</div>
@@ -267,18 +290,41 @@ export function Lobby(props: { globalSize: number }) {
             <wired-card style={{ ...styles.code, fontSize: '1.5em', color: 'grey' }}>{auth?.matchID}</wired-card>
           </div>
 
-          <div style={{ ...styles.presets, display: (stage == 'create') ? undefined : 'none' }}>
+          <div style={{ ...styles.presets, display: (stage == 'create-setup') ? undefined : 'none' }}>
             <div style={styles.subheading}>Select a Starting Deck</div>
             <wired-card style={{...styles.action, backgroundColor: (preset == 'blank') ? '#eee' : undefined }} onClick={() => { setPreset('blank'); }}><Icon name="copy" />Blank</wired-card>
             <wired-card style={{...styles.action, backgroundColor: (preset == 'global') ? '#eee' : undefined }} onClick={() => { setPreset('global'); }}><Icon name="global" />Global</wired-card>
             <wired-card style={{...styles.action, backgroundColor: (preset == 'standard') ? '#eee' : undefined }} onClick={() => { setPreset('standard'); }}><Icon name="die" />Standard</wired-card>
+            <div style={styles.flavourbox}>
+              {preset == 'blank' && 'A blank deck to create your own game. Save and Load to continue the fun!'}
+              {preset == 'global' && `Start with the ${globalSize} card global deck. (Cards made here are not submitted)`}
+              {preset == 'standard' && 'A standard 52 card deck'}
+            </div>
+            <div style={{ ...styles.presets}}>
+              <wired-card style={styles.action} onClick={() => { roomCodeError(); setStage('landing') }}><Icon name="back" />Back</wired-card>
+              <wired-card style={styles.action} onClick={() => { roomCodeError(); setStage('create') }}><Icon name="done" />Confirm</wired-card>
+            </div>
+          </div>
+
+          <div style={{ ...styles.presets, display: (stage == 'create') ? undefined : 'none' }}>
+            <div style={styles.subheading}>Choose Region</div>
+            <wired-card style={{...styles.region, backgroundColor: (region == 'NA') ? '#eee' : undefined }} onClick={() => { setRegion('NA'); }}>America</wired-card>
+            <wired-card style={{...styles.region, backgroundColor: (region == 'EU') ? '#eee' : undefined }} onClick={() => { setRegion('EU'); }}>Europe</wired-card>
+            <wired-card style={{...styles.region, backgroundColor: (region == 'AP') ? '#eee' : undefined }} onClick={() => { setRegion('AP'); }}>Asia</wired-card>
           </div>
 
           <div style={{ display: (['join', 'create'].includes(stage)) ? undefined : 'none' }}>
             <div style={styles.subheading}>Who's Playing?</div>
             <wired-input style={{ ...styles.name, display: (['join', 'create'].includes(stage)) ? undefined : 'none' }} id="nameInput" placeholder="Player Name" maxlength={25} value={auth?.playerName}></wired-input>
             <div style={{ ...styles.presets}}>
-              <wired-card style={styles.action} onClick={() => { roomCodeError(); setStage('landing') }}><Icon name="back" />Back</wired-card>
+              <wired-card style={styles.action} onClick={() => { 
+                roomCodeError();
+                if (stage == 'join') {
+                  setStage('landing');
+                } else if (stage == 'create') {
+                  setStage('create-setup')
+                };
+              }}><Icon name="back" />Back</wired-card>
               <wired-card style={styles.action} onClick={() => {
                 if (stage == 'join') {
                   joinGame(); 
@@ -295,7 +341,7 @@ export function Lobby(props: { globalSize: number }) {
             <div style={styles.heading}><Icon name="single" />&nbsp;Single Device</div>
             <div style={styles.subheading}>With the Global Deck</div>
             <wired-card style={styles.action} onClick={enterSinglePlayer}>
-              <div style={styles.subheading}>&nbsp;{props.globalSize}&nbsp;<Icon name='global' />&nbsp;Cards </div>
+              <div style={styles.subheading}>&nbsp;{globalSize}&nbsp;<Icon name='global' />&nbsp;Cards </div>
               <div style={styles.subheading}>Play Now</div>
             </wired-card>
             <div style={styles.subheading}>Draw and add your own!</div>
