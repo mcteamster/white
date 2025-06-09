@@ -32,50 +32,57 @@ export const GlobalBlankWhiteCardsClient = Client({
 });
 
 // Multiplayer Custom Rooms
-export let lobbyClient = new LobbyClient({ server: import.meta.env.VITE_DEFAULT_LOBBY_SERVER });
-export let MultiplayerBlankWhiteCardsClient = Client({
-  game: BlankWhiteCards,
-  board: BlankWhiteCardsBoard,
-  debug: false,
-  multiplayer: SocketIO({ server: import.meta.env.VITE_DEFAULT_GAME_SERVER }),
-});
+export const lobbyClients: Record<'AP' | 'EU' | 'NA' | 'default', LobbyClient> = {
+  AP: new LobbyClient({ server: SERVERS.AP }),
+  EU: new LobbyClient({ server: SERVERS.EU }),
+  NA: new LobbyClient({ server: SERVERS.NA }),
+  default: new LobbyClient({ server: import.meta.env.VITE_DEFAULT_SERVER }),
+};
 
-export const setClients = (room: string) => {
+export const gameClients = {
+  AP: Client({
+    game: BlankWhiteCards,
+    board: BlankWhiteCardsBoard,
+    debug: false,
+    multiplayer: SocketIO({ server: SERVERS.AP }),
+  }),
+  EU: Client({
+    game: BlankWhiteCards,
+    board: BlankWhiteCardsBoard,
+    debug: false,
+    multiplayer: SocketIO({ server: SERVERS.EU }),
+  }),
+  NA: Client({
+    game: BlankWhiteCards,
+    board: BlankWhiteCardsBoard,
+    debug: false,
+    multiplayer: SocketIO({ server: SERVERS.NA }),
+  }),
+  default: Client({
+    game: BlankWhiteCards,
+    board: BlankWhiteCardsBoard,
+    debug: false,
+    multiplayer: SocketIO({ server: import.meta.env.VITE_DEFAULT_SERVER }),
+  }),
+}
+
+export const getRegion = (room: string) => {
   if (import.meta.env.VITE_MULTI_REGION === 'true') {
-    let server = import.meta.env.VITE_DEFAULT_LOBBY_SERVER;
-
-    // This implementation is specific to a 2 or 3 global region server setup, adjust balancing accordingly here and in server.ts
+    // This implementation is specific to a 3 global region server setup, adjust balancing accordingly here and in server.ts
     if (room.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
       // Set server region based on room code
       if (room.match(/[BCDFG]$/)) {
-        server = SERVERS.AP || import.meta.env.VITE_DEFAULT_GAME_SERVER;
+        return 'AP';
       } else if (room.match(/[HJKLM]$/)) {
-        server = SERVERS.EU || import.meta.env.VITE_DEFAULT_GAME_SERVER;
+        return 'EU';
       } else if (room.match(/[NPQRS]$/)) {
-        server = SERVERS.NA || import.meta.env.VITE_DEFAULT_GAME_SERVER;
+        return 'NA';
       } else { // Fallback to default server (TVWXZ)
-        server = import.meta.env.VITE_DEFAULT_GAME_SERVER;
+        return 'default';
       }
     }
-
-    // Connect Lobby and Game Server
-    lobbyClient = new LobbyClient({ server });
-    MultiplayerBlankWhiteCardsClient = Client({
-      game: BlankWhiteCards,
-      board: BlankWhiteCardsBoard,
-      debug: false,
-      multiplayer: SocketIO({ server }),
-    });
-  } else {
-    // Connect to Default Lobby and Game Servers
-    lobbyClient = new LobbyClient({ server: import.meta.env.VITE_DEFAULT_LOBBY_SERVER });
-    MultiplayerBlankWhiteCardsClient = Client({
-      game: BlankWhiteCards,
-      board: BlankWhiteCardsBoard,
-      debug: false,
-      multiplayer: SocketIO({ server: import.meta.env.VITE_DEFAULT_GAME_SERVER }),
-    });
   }
+  return 'default';
 }
 
 export const parsePathCode = () => {
