@@ -84,7 +84,7 @@ const styles: { [key: string]: Properties<string | number> } = {
     textAlign: 'center',
   },
   region: {
-    width: '3.5em',
+    width: '3em',
     margin: '0.25em',
     backgroundColor: '#eee',
     borderRadius: '0.5em',
@@ -297,8 +297,8 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
             <wired-card style={{...styles.action, backgroundColor: (preset == 'standard') ? '#eee' : undefined }} onClick={() => { setPreset('standard'); }}><Icon name="die" />Standard</wired-card>
             <div style={styles.flavourbox}>
               {preset == 'blank' && 'A blank deck to create your own game. Save and Load to continue the fun!'}
-              {preset == 'global' && `Start with the ${globalSize} card global deck. (Cards made here are not submitted)`}
-              {preset == 'standard' && 'A standard 52 card deck'}
+              {preset == 'global' && `A copy of the ${globalSize} card global deck. (Cards made here are not submitted)`}
+              {preset == 'standard' && 'The standard 52 card deck for more traditional games.'}
             </div>
             <div style={{ ...styles.presets}}>
               <wired-card style={styles.action} onClick={() => { roomCodeError(); setStage('landing') }}><Icon name="back" />Back</wired-card>
@@ -339,10 +339,10 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
           (stage == 'landing' || stage == 'down') &&
           <wired-card style={styles.singleplayer}>
             <div style={styles.heading}><Icon name="single" />&nbsp;Single Device</div>
-            <div style={styles.subheading}>With the Global Deck</div>
+            <div style={styles.subheading}>Use the Global Deck</div>
             <wired-card style={styles.action} onClick={enterSinglePlayer}>
-              <div style={styles.subheading}>&nbsp;{globalSize}&nbsp;<Icon name='global' />&nbsp;Cards </div>
-              <div style={styles.subheading}>Play Now</div>
+              <div style={styles.heading}>Play Now</div>
+              <div>{globalSize} Cards</div>
             </wired-card>
             <div style={styles.subheading}>Draw and add your own!</div>
           </wired-card>
