@@ -113,19 +113,26 @@ export function Focus(props: BoardProps<GameState>) {
         alignItems: 'center',
       },
       sendlist: {
+        width: '15em',
         maxHeight: '40vh',
         overflowY: 'scroll',
+        scrollbarWidth: 'none',
       },
-      sendbutton: {
-        height: '3em',
-        width: '15em',
-        margin: '0.5em',
-        borderRadius: '1em',
+      sendplayer: {
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      sendicon: {
+        margin: '0.25em',
+        padding: '0.5em',
+        borderRadius: '0.5em',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#eee'
-      }
+      },
     };
 
     let card: Card | undefined;
@@ -188,27 +195,39 @@ export function Focus(props: BoardProps<GameState>) {
         <div style={styles.sendmenu} onClick={(e) => e.stopPropagation()}>
           <div>
             <div style={styles.title}>Send-A-Card</div>
-            <div>Card will be placed on a player's Table</div>
+            <div>Transfer this card to another location</div>
           </div>
           <wired-card>
-            <div>Destinations</div>
+            <div style={styles.heading}>Destinations</div>
             <div style={styles.sendlist}>
-              <wired-card key={`reshuffle`} style={styles.sendbutton} onClick={() => { moveCardTo(card.id, 'deck') }}>
-                <Icon name='shuffle' />
-                Reshuffle into the Deck
-              </wired-card>
+              <div key={`deck-connected`} style={styles.sendplayer}>
+                <div style={styles.title}>Reshuffle into Deck</div>
+                <div style={styles.sendicon} onClick={() => { props.moves.moveCard(card.id, "deck"); setSendCardMode(false); unfocusCards() }}>
+                  <Icon name='shuffle'></Icon>
+                </div>
+              </div>
               {props.matchData?.map((player, i) => {
                 if (player.isConnected && player.name && player.id != Number(props.playerID)) {
                   return (
-                    <wired-card key={`player-connected-${i}`} style={styles.sendbutton} onClick={() => { props.moves.moveCard(card.id, "table", String(player.id)); setSendCardMode(false); unfocusCards() }}>
-                      {player.name}
-                    </wired-card>
+                    <div key={`player-connected-${i}`} style={styles.sendplayer}>
+                      <div style={styles.title}>{player.name.length > 12 ? `${player.name.slice(0,12)}...` : player.name}</div>
+                      <div style={styles.sendplayer}>
+                        <div style={styles.sendicon} onClick={() => { props.moves.moveCard(card.id, "table", String(player.id)); setSendCardMode(false); unfocusCards() }}>
+                          <Icon name='display'></Icon>
+                        </div>
+                        <div style={styles.sendicon} onClick={() => { props.moves.moveCard(card.id, "hand", String(player.id)); setSendCardMode(false); unfocusCards() }}>
+                          <Icon name='take'></Icon>
+                        </div>
+                      </div>
+                    </div>
                   )
                 }
               })}
             </div>
           </wired-card>
-          <wired-card style={{ ...styles.sendbutton }} id="backButton" onClick={() => { setSendCardMode(false) }}><Icon name='back' />Back</wired-card>
+          <div style={styles.sendplayer}>
+          <wired-card style={{ ...styles.button }} id="backButton" onClick={() => { setSendCardMode(false) }}><Icon name='back' />Back</wired-card>
+          </div>
         </div>
       </wired-dialog>
 
