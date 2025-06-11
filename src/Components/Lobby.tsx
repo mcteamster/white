@@ -339,10 +339,10 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
           (stage == 'landing' || stage == 'down') &&
           <wired-card style={styles.singleplayer}>
             <div style={styles.heading}><Icon name="single" />&nbsp;Single Device</div>
-            <div style={styles.subheading}>Use the Global Deck</div>
+            <div style={styles.subheading}>Using the Global Deck</div>
             <wired-card style={styles.action} onClick={enterSinglePlayer}>
-              <div style={styles.heading}>Play Now</div>
-              <div>{globalSize} Cards</div>
+              <div style={{ ...styles.heading, padding: '0 0.25em' }}>Play Now</div>
+              <div >{globalSize} Cards</div>
             </wired-card>
             <div style={styles.subheading}>Draw and add your own!</div>
           </wired-card>
