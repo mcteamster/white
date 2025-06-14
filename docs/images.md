@@ -5,7 +5,7 @@ The nature of this game demands real-time low-latency network transfer for a lot
 When creating cards you'll notice that the canvas only lets you draw in black (on a white background). Consider it an aesthetic decision. This has always been the case since version 1, and helps with resulting output `.png` image's built-in compression.
 
 ### Standard Resolution
-The size of displayed images as well as the sketchpad canvas adapt dynamically to the player's screen. Originally, this directly influenced the size of created images. As a result, cards could have wildly differernt resolutions and file sizes.
+The size of displayed images as well as the sketchpad canvas adapt dynamically to the player's screen. Originally, this directly influenced the size of created images. As a result, cards could have wildly different resolutions and file sizes.
 
 The base64 data URI encoding of the PNG has varied in length from only a few hundred characters to over `100kB` on occasion.
 
