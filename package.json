@@ -11,9 +11,9 @@
     "pull:global": "curl https://blankwhite.cards/decks/global.json > ./public/decks/global.json",
     "serve": "node --env-file=.env.production -r ts-node/register ./src/server.ts",
     "serve:local": "node --env-file=.env.development -r ts-node/register ./src/server.ts",
-    "deploy": "mcdeploy white-service; mcdeploy white",
-    "deploy:client": "mcdeploy white",
-    "deploy:service": "mcdeploy white-service"
+    "deploy": "mcdeploy white",
+    "deploy:client": "mcdeploy white client",
+    "deploy:service": "mcdeploy white service"
   },
   "dependencies": {
     "@emotion/styled": "^11.14.0",
