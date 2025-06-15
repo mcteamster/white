@@ -8,8 +8,6 @@ import { GlobalBlankWhiteCardsClient, parsePathCode, getRegion, startingDeck, lo
 import { Rotate } from "./Components/Icons";
 import { useHotkeys, useWindowDimensions } from "./lib/hooks";
 import { Gallery } from "./Components/Gallery";
-
-// @ts-expect-error - Module WIP, types TBD
 import { Virgo2AWS } from 'virgo';
 
 // Landing Page
