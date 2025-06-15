@@ -1,7 +1,6 @@
 // Blank White Cards React App
 import { BrowserRouter, Routes, Route } from "react-router";
 import { useCallback, useEffect, useState } from 'react';
-import { Virgo2AWS } from 'virgo';
 import { Lobby } from './Components/Lobby';
 import { About } from "./Components/About";
 import { AuthContext, AuthType, FocusContext, HotkeysContext, LoadingContext } from "./lib/contexts";
@@ -9,6 +8,9 @@ import { GlobalBlankWhiteCardsClient, parsePathCode, getRegion, startingDeck, lo
 import { Rotate } from "./Components/Icons";
 import { useHotkeys, useWindowDimensions } from "./lib/hooks";
 import { Gallery } from "./Components/Gallery";
+
+// @ts-expect-error - Module WIP, types TBD
+import { Virgo2AWS } from 'virgo';
 
 // Landing Page
 const App = () => {
