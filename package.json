@@ -26,6 +26,7 @@
     "react-dom": "^18.3.1",
     "react-qr-code": "^2.0.15",
     "react-router": "^7.5.2",
+    "virgo": "github:mcteamster/virgo",
     "wired-elements": "^3.0.0-rc.6"
   },
   "devDependencies": {

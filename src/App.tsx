@@ -1,7 +1,7 @@
 // Blank White Cards React App
 import { BrowserRouter, Routes, Route } from "react-router";
-
 import { useCallback, useEffect, useState } from 'react';
+import { Virgo2AWS } from 'virgo';
 import { Lobby } from './Components/Lobby';
 import { About } from "./Components/About";
 import { AuthContext, AuthType, FocusContext, HotkeysContext, LoadingContext } from "./lib/contexts";
@@ -35,24 +35,18 @@ const App = () => {
     // Predefined Match IDs
     if (auth.matchID) {
       return getRegion(auth.matchID);
-    } else 
-    if (import.meta.env.VITE_MULTI_REGION == 'true') {
-      // Follow the Sun(set)
-      const hour = new Date().getUTCHours();
-      if (hour >= 7 && hour < 15) {
-        // 3pm to 11pm in Singapore (SGT / UTC+8)
-        // 5pm to 1am in Sydney (AEST / UTC+10)
-        return 'AP';
-      } else if (hour >= 15 && hour < 23) {
-        // 4pm to 12am in Frankfurt (CET / UTC+1)
-        // 3pm to 11pm in London (GMT / UTC+0)
-        return 'EU';
-      } else {
-        // 6pm to 2am in Washington D.C. (EST / UTC-5)
-        // 3pm to 11pm in San Francisco (PST / UTC-8)
-        return 'NA';
+    } else
+      if (import.meta.env.VITE_MULTI_REGION == 'true') {
+        // Guess Region based on Timezone using https://github.com/mcteamster/virgo
+        const { closestRegion } = Virgo2AWS.getClosestRegion({ regions: ['us-east-1', 'eu-central-1', 'ap-southeast-1'] });
+        console.info('Closest Region:', closestRegion);
+        const awsToRegionMap: { [key: string]: 'AP' | 'EU' | 'NA'}  = {
+          'us-east-1': 'NA',
+          'eu-central-1': 'EU',
+          'ap-southeast-1': 'AP',
+        }
+        return awsToRegionMap[closestRegion] || 'default'
       }
-    }
     return 'default'
   });
 
@@ -113,7 +107,7 @@ const App = () => {
         <FocusContext.Provider value={{ focus, setFocus }}>
           <HotkeysContext.Provider value={{ hotkeys, setHotkeys }}>
             {(dimensions.height > 500) ?
-              <div style={{backgroundColor: (dimensions.upright) ? 'white' : '#eee'}}>
+              <div style={{ backgroundColor: (dimensions.upright) ? 'white' : '#eee' }}>
                 <BrowserRouter>
                   <Routes>
                     <Route path="/" element={<>
