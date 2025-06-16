@@ -263,33 +263,53 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
       } else {
         mainButtonContent = <>
           <Icon name='create' />
-          Create to Begin
+          Create Cards
         </>
       }
     } else if (pile.length + discard.length > 0) {
       mainButtonContent = <>
-        <Icon name='shuffle' />
-        {`Reshuffle: ${pile.length + discard.length}`}
+        <Icon name='discard' />
+        Reset Pile ({pile.length + discard.length})
       </>
     } else {
-      mainButtonContent = <>
-        <div style={{ color: 'grey' }}><Icon name='discard' /></div>
-        <div style={{ color: 'grey' }}>Deck is Empty</div>
-      </>
+      if (playerID == '0') {
+        mainButtonContent = <>
+          <Icon name='shuffle' />
+          Shuffle ALL ({G.cards.length})
+        </>
+      } else {
+        mainButtonContent = <>
+          <Icon name='create' />
+          Create Cards
+        </>
+      }
     }
 
     toolset = <>
       <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='menu' />Menu</wired-card>
       <wired-card style={{ ...styles.button, width: '9.75em', margin: '0' }} onClick={() => {
-        if (G.cards.length > 0) {
+        if (deck.length > 0) {
           if (!loading) {
             setLoading(true);
             moves.pickupCard(true);
           }
-        } else if (playerID == '0') {
-          setMode('menu-tools-loader')
+        } else if (G.cards.length == 0) {
+          if (playerID == '0') {
+            setMode('menu-tools-loader')
+          } else {
+            setMode('create-sketch')
+          }
+        } else if (pile.length + discard.length > 0) {
+          if (!loading) {
+            setLoading(true);
+            moves.pickupCard(true);
+          }
         } else {
-          setMode('create-sketch')
+          if (playerID == '0') {
+            setMode('menu-tools-reset')
+          } else {
+            setMode('create-sketch')
+          }   
         }
       }} elevation={2}>
         <div style={{ ...styles.mainButtonContent }}>
@@ -363,7 +383,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
     </>
   } else if (mode === 'menu-tools-reset') {
     toolset = <>
-      <wired-card style={{ ...styles.button, width: '14em', color: 'red' }} onClick={() => { moves.shuffleCards(); setMode('play') }} elevation={2}><Icon name='shuffle' />Reshuffle all cards{isMultiplayer && " for ALL PLAYERS"}</wired-card>
+      <wired-card style={{ ...styles.button, width: '14em', color: 'red' }} onClick={() => { moves.shuffleCards(); setMode('play') }} elevation={2}><Icon name='shuffle' />Shuffle ALL CARDS into the deck</wired-card>
       <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Cancel</wired-card>
     </>
   } else if (mode === 'menu-leave') {

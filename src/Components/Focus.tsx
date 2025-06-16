@@ -153,7 +153,7 @@ export function Focus(props: BoardProps<GameState>) {
 
       // Generate Buttons
       let tray = <></>
-      if (owned) {
+      if (owned && card.location != 'deck') {
         tray = <div style={styles.tray}>
           {<wired-card style={{ ...styles.button, color: 'red' }} id="discardButton" onClick={() => { moveCardTo(card.id, 'discard') }}><Icon name='discard' />Discard</wired-card>}
           {props.isMultiplayer && card.location != 'hand' &&<wired-card style={{ ...styles.button }} id="handButton" onClick={() => { moveCardTo(card.id, 'hand') }}><Icon name='take' />Hand</wired-card>}
