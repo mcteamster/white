@@ -8,7 +8,7 @@ import { GlobalBlankWhiteCardsClient, parsePathCode, getRegion, startingDeck, lo
 import { Rotate } from "./Components/Icons";
 import { useHotkeys, useWindowDimensions } from "./lib/hooks";
 import { Gallery } from "./Components/Gallery";
-import { Virgo, Virgo2AWS } from 'virgo';
+import { Virgo2AWS } from 'virgo';
 
 // Landing Page
 const App = () => {
