@@ -8,7 +8,7 @@ import { GlobalBlankWhiteCardsClient, parsePathCode, getRegion, startingDeck, lo
 import { Rotate } from "./Components/Icons";
 import { useHotkeys, useWindowDimensions } from "./lib/hooks";
 import { Gallery } from "./Components/Gallery";
-import { Virgo2AWS } from 'virgo';
+import { Virgo, Virgo2AWS } from 'virgo';
 
 // Landing Page
 const App = () => {
@@ -39,13 +39,18 @@ const App = () => {
       if (import.meta.env.VITE_MULTI_REGION == 'true') {
         // Guess Region based on Timezone using https://github.com/mcteamster/virgo
         const { closestRegion } = Virgo2AWS.getClosestRegion({ regions: ['us-east-1', 'eu-central-1', 'ap-southeast-1'] });
-        console.info('Closest Region:', closestRegion);
-        const awsToRegionMap: { [key: string]: 'AP' | 'EU' | 'NA'}  = {
-          'us-east-1': 'NA',
-          'eu-central-1': 'EU',
-          'ap-southeast-1': 'AP',
+        if (closestRegion) {
+          console.info('Closest Region:', closestRegion);
+          const awsToRegionMap: { [key: string]: 'AP' | 'EU' | 'NA'}  = {
+            'us-east-1': 'NA',
+            'eu-central-1': 'EU',
+            'ap-southeast-1': 'AP',
+          }
+          return awsToRegionMap[closestRegion] || 'default'
+        } else {
+          console.warn('No region autodetected, falling back to default.');
+          return 'default'
         }
-        return awsToRegionMap[closestRegion] || 'default'
       }
     return 'default'
   });
