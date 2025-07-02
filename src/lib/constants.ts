@@ -1,12 +1,7 @@
 import { GameState } from "../Game";
 
 // Config Constants
-export const ORIGIN = 'https://blankwhite.cards';
-export const SERVERS = {
-  'AP': 'https://ap.blankwhite.cards',
-  'EU': 'https://eu.blankwhite.cards',
-  'NA': 'https://na.blankwhite.cards',
-}
+export const ORIGIN = (typeof process === 'object') ? 'https://blankwhite.cards' : '';
 
 // Preload Preset Decks
 export const presetDecks: {[key: string]: GameState} = {

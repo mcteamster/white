@@ -372,7 +372,7 @@ export function Likes({ card, likeCard, matchId }: LikesProps) {
       setLikes(abbreviate(card.likes));
     } else if (matchId == 'default') {
       // Fetch from CDN for Single Device Mode Only
-      const cardData = await (await fetch(`${import.meta.env.VITE_ORIGIN}/card/${card.id}.json`)).json();
+      const cardData = await (await fetch(`/card/${card.id}.json`)).json();
       setLikes(abbreviate(++cardData.likes || 0));
     } else {
       setLikes('-')

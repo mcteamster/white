@@ -6,13 +6,16 @@ import { SocketIO } from 'boardgame.io/multiplayer';
 import { BlankWhiteCards, GameState } from '../Game';
 import { BlankWhiteCardsBoard } from '../Board';
 import { Card } from '../Cards';
-import { SERVERS } from './constants';
+import { initaliseDiscord } from './discord';
+
+// Initialise Discord
+initaliseDiscord();
 
 // Global Deck Singleplayer
 export let startingDeck: GameState;
 let SetupGame: Game = BlankWhiteCards;
 try {
-  startingDeck = await (await fetch(`${import.meta.env.VITE_ORIGIN}/decks/global.json`)).json();
+  startingDeck = await (await fetch(`/decks/global.json`)).json();
   if (startingDeck.cards && startingDeck.cards.length > 0) {
     SetupGame = { ...BlankWhiteCards, setup: () => (startingDeck) }
   }
@@ -20,8 +23,8 @@ try {
   console.error(e)
 
   // Redirect to canonical origin
-  if (window.location.href != `${import.meta.env.VITE_ORIGIN}/`) {
-    window.location.href = `${import.meta.env.VITE_ORIGIN}/`;
+  if (window.location.href != `/`) {
+    window.location.href = `/`;
   }
 }
 
@@ -32,6 +35,12 @@ export const GlobalBlankWhiteCardsClient = Client({
 });
 
 // Multiplayer Custom Rooms
+export const SERVERS = {
+  'AP': 'https://ap.blankwhite.cards',
+  'EU': 'https://eu.blankwhite.cards',
+  'NA': 'https://na.blankwhite.cards',
+}
+
 export const lobbyClients: Record<'AP' | 'EU' | 'NA' | 'default', LobbyClient> = {
   AP: new LobbyClient({ server: SERVERS.AP }),
   EU: new LobbyClient({ server: SERVERS.EU }),
