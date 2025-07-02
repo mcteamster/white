@@ -238,7 +238,7 @@ export function Header(props: HeaderProps) {
 }
 
 export function ShareRoom(props: { matchID: string, setShowShare: React.Dispatch<React.SetStateAction<boolean>> }) {
-  const url = `${window.location.origin}/${props.matchID != 'default' ? props.matchID : ''}`;
+  const url = `${import.meta.env.VITE_ORIGIN}/${props.matchID != 'default' ? props.matchID : ''}`;
 
   const copyToClipboard = (room: string) => {
     if (room == 'default') {
@@ -252,7 +252,7 @@ export function ShareRoom(props: { matchID: string, setShowShare: React.Dispatch
         shareUrl.classList.remove('clickedLink');
       }, 250);
       try {
-        window.navigator.clipboard.writeText(`${window.location.origin}/${room}`);
+        window.navigator.clipboard.writeText(`${import.meta.env.VITE_ORIGIN}/${room}`);
       } catch (err) {
         console.warn("Unable to Copy to Clipboard", err)
       }

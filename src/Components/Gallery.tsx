@@ -311,7 +311,7 @@ export function Search(props: SearchProps) {
 }
 
 export function Permalink() {
-  const url = `${window.location.origin}${window.location.pathname}`
+  const url = `${import.meta.env.VITE_ORIGIN}${window.location.pathname}`
 
   const copyPermalink = () => {
     const sharePermalink = document.getElementById('sharePermalink');
