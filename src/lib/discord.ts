@@ -40,8 +40,9 @@ export function initaliseDiscord() {
       // Sync Room
       console.debug(`Checking room info for: ${discordSdk.instanceId}`)
       const roomData = await (await fetch(`https://api.mcteamster.com/common/rooms/${discordSdk.instanceId}`)).json()
-      if (roomData?.room.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/i)) {
+      if (roomData?.room.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/i) && (roomData.room != localStorage.getItem("matchID"))) {
         localStorage.setItem("matchID", roomData.room)
+        window.location.pathname = `/${roomData.room}`
       }
 
       await discordSdk.ready();

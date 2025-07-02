@@ -23,8 +23,8 @@ try {
   console.error(e)
 
   // Redirect to canonical origin
-  if (window.location.href != `/`) {
-    window.location.href = `/`;
+  if (window.location.pathname != "/") {
+    window.location.pathname = "/";
   }
 }
 
