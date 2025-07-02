@@ -42,6 +42,13 @@ export function initaliseDiscord() {
         localStorage.removeItem("credentials")
       }
       localStorage.setItem('instance_id', discordSdk.instanceId)
+
+      // Sync Room
+      console.debug(`Checking room info for: ${discordSdk.instanceId}`)
+      const roomData = await (await fetch(`https://api.mcteamster.com/common/rooms/${discordSdk.instanceId}`)).json()
+      if (roomData?.room.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/i)) {
+        localStorage.setItem("matchID", roomData.room)
+      }
     });
     return true
   } else {
@@ -49,4 +56,3 @@ export function initaliseDiscord() {
     return false
   }
 }
-
