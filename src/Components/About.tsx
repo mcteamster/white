@@ -202,7 +202,7 @@ export function Tutorial({ isMultiplayer, playerID, mode, setMode }: TutorialPro
 
   const tutorialText = <>
     <div style={styles.paragraph}>
-      <p>Blank White Cards is a drawing sandbox party game with NO RULES. Define your own cards for a uniquely evolving gameplay experience.</p>
+      <p>Blank White Cards is a drawing sandbox party game with NO RULES. Create your own cards for a uniquely evolving gameplay experience.</p>
       <p>There are some features to help with basic card game logistics:</p>
       <p><Icon name='copy' />Deck: Cards to be picked up</p>
       <p><Icon name='pile' />Pile: Played cards seen by all</p>

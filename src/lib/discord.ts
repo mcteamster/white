@@ -29,12 +29,6 @@ export function initaliseDiscord() {
     // Setup SDK
     const discordSdk = new DiscordSDK("1389508624774201395");
     (async () => {
-      // Configuration
-      await discordSdk.ready();
-    })().then(async () => {
-      // Usage
-      console.info("Discord SDK is ready");
-      
       // Purge local state on new sessions
       if (!localStorage.getItem('instance_id') || (localStorage.getItem('instance_id') != discordSdk.instanceId)) {
         localStorage.removeItem("matchID")
@@ -49,6 +43,11 @@ export function initaliseDiscord() {
       if (roomData?.room.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/i)) {
         localStorage.setItem("matchID", roomData.room)
       }
+
+      await discordSdk.ready();
+    })().then(async () => {
+      // Usage
+      console.info("Discord SDK is ready");
     });
     return true
   } else {
