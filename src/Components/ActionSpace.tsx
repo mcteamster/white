@@ -105,13 +105,16 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
         if (!isMultiplayer && submitCardButton) {
           submitCardButton.style.color = 'black';
           setSubmitStatus('Submitting');
-          setTimeout(() => {
-            submitError();
-          }, 15000)
-          const request = await submitGlobalCard(createdCard);
-          if (request.status == 200) {
-            setSubmitStatus('Submit');
-          } else {
+          try {
+            const request = await submitGlobalCard(createdCard);
+            if (request.status == 200) {
+              setSubmitStatus('Submit');
+            } else {
+              submitError();
+              return
+            }
+          } catch (err) {
+            console.warn(err);
             submitError();
             return
           }
