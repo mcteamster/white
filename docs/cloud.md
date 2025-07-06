@@ -1,5 +1,5 @@
-# AWS Hosting Architecture
-The game is hosted on AWS using the following services:
+# Cloud Hosting Architecture
+The game is hosted on multiple cloud providers using the following services:
 - AWS CloudFront for the Web App
 - AWS API Gateway, SQS, and Lambda for the Global Card Creation and 'Like' API
 - Virtual Machines for the `boardgame.io` Game Servers in multiple regions
