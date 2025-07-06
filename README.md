@@ -48,8 +48,8 @@ Other noteworthy features:
 This new version is made in React TypeScript and uses [`boardgame.io`](https://boardgame.io/) as the game engine and networking stack. [Writing your own multiplayer networking code](https://github.com/mcteamster/twinge?tab=readme-ov-file#twinge-service) is tricky, and `bgio` made it a breeze.
 
 ## More Docs
-[Infrastructure:](./docs/aws.md)
-The game is hosted on AWS almost entirely within the Free Tier.
+[Infrastructure:](./docs/cloud.md)
+The game is hosted with a multi-cloud deployment almost entirely within free tiers.
 Take a look if you're wondering how it's done.
 
 [Self-Hosting Guide:](./docs/local.md)
