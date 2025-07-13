@@ -27,9 +27,8 @@ export function About() {
     button: {
       position: 'fixed',
       bottom: '1em',
-      right: '1em',
       height: '3em',
-      width: '5.5em',
+      width: '3.5em',
       margin: '0.25em',
       fontWeight: 'bold',
       textAlign: 'center',
@@ -127,7 +126,11 @@ export function About() {
           <p>v2.0.1</p>
         </Link>
       </div>
-      <wired-card style={{ ...styles.button, width: '3.5em' }} onClick={() => { navigate('/') }} elevation={2}><Icon name='logout' />Lobby</wired-card>
+      <wired-card style={{ ...styles.button, right: '1em' }} onClick={() => { navigate('/') }} elevation={2}><Icon name='play' />Lobby</wired-card>
+      {
+        history.length > 1 &&
+        <wired-card style={{ ...styles.button, left: '1em' }} onClick={() => { navigate(-1) }} elevation={2}><Icon name='back' />Back</wired-card>
+      }
     </div>
   );
 }
