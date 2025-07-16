@@ -231,8 +231,8 @@ export function Gallery() {
       {viewedCard && viewDialog}
       <div style={styles.footer}>
         <div style={styles.button} onClick={() => { navigate('/') }}>
-            <Icon name='logout' />
-            Lobby
+            <Icon name='copy' />
+            Home
         </div>
         <Search allCards={globalDeck.cards} setDisplayedCards={setDisplayedCards} />
         <div style={styles.button} onClick={() => { document.getElementById(`gallery-${displayedCards.length}`)?.scrollIntoView() }}>

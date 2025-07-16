@@ -210,10 +210,12 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
   const styles: { [key: string]: Properties<string | number> } = {
     toolbar: {
       width: '100%',
+      maxWidth: '40em',
       height: '7em',
       position: 'fixed',
       bottom: '0',
-      left: '0',
+      left: '50%',
+      transform: 'translate(-50%, 0%)',
       zIndex: '8',
       display: 'flex',
       flexDirection: 'row',
