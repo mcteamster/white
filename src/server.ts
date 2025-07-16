@@ -7,11 +7,11 @@ const roomCodeGen = () => {
   let roomCode = customAlphabet('BCDFGHJKLMNPQRSTVWXZ', 3)()
 
   // Regional Partitioning
-  if (process.env.AWS_REGION == 'ap-southeast-1') {
+  if (process.env.REGION == 'AP') {
     roomCode += customAlphabet('BCDFG', 1)() // First quarter for Asia Pacific
-  } else if (process.env.AWS_REGION == 'eu-central-1') {
+  } else if (process.env.REGION == 'EU') {
     roomCode += customAlphabet('HJKLM', 1)() // Second quarter for Europe
-  } else if (process.env.AWS_REGION == 'us-east-1') {
+  } else if (process.env.REGION == 'NA') {
     roomCode += customAlphabet('NPQRS', 1)() // Third quarter for North America
   } else { 
     roomCode += customAlphabet('TVWXZ', 1)() // Last quarter reserved for fallback and local development
