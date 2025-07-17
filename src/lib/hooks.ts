@@ -1,6 +1,7 @@
 // Hooks
 import { useState, useEffect, useRef } from 'react';
 import { HotkeysContextType } from './contexts';
+import { discordSdk } from './discord';
 
 // Dimensions
 const getWindowDimensions = () => {
@@ -75,6 +76,12 @@ export const useHotkeys = ({ hotkeys, setHotkeys}: HotkeysContextType) => {
 }
 
 // Links
-export const externalLink = (url: string) => {
-  window.open(url, '_blank')
+export const externalLink = async (url: string) => {
+  if (discordSdk) {
+    await discordSdk.commands.openExternalLink({
+      url: url,
+    });
+  } else {
+    window.open(url, '_blank')
+  }
 }

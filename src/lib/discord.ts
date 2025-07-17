@@ -1,6 +1,7 @@
 import { DiscordSDK, patchUrlMappings } from "@discord/embedded-app-sdk";
 
 // Initialise Discord Integration
+export let discordSdk: DiscordSDK;
 export function initaliseDiscord() {
   const params = new URLSearchParams(window.location.href);
 
@@ -27,7 +28,7 @@ export function initaliseDiscord() {
     patchUrlMappings(urlPatches);
 
     // Setup SDK
-    const discordSdk = new DiscordSDK("1389508624774201395");
+    discordSdk = new DiscordSDK("1389508624774201395");
     (async () => {
       // Purge local state on new sessions
       if (!localStorage.getItem('instance_id') || (localStorage.getItem('instance_id') != discordSdk.instanceId)) {
