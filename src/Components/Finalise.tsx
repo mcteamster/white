@@ -22,7 +22,9 @@ export function Finalise({ multiplayer }: FinaliseProps) {
     },
     submit: {
       width: 'min(70vw, 45vh)',
+      minWidth: '280px',
       height: 'min(70vw, 45vh)',
+      minHeight: '280px',
       backgroundColor: '#eee',
       display: 'flex',
       flexDirection: 'column',
@@ -47,6 +49,7 @@ export function Finalise({ multiplayer }: FinaliseProps) {
     },
     description: {
       width: 'min(60vw, 35vh)',
+      minWidth: '240px',
       minHeight: '6em',
       margin: '0.5em',
       padding: '0.5em',

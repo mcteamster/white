@@ -4,6 +4,7 @@ import type { Properties } from 'csstype';
 import { ActionSpace } from './Components/ActionSpace.tsx';
 import { CommonSpace } from './Components/CommonSpace.tsx';
 import { PlayerSpace } from './Components/PlayerSpace.tsx';
+import { discordSdk } from './lib/discord.ts';
 
 // Web Components from https://wiredjs.com/
 import 'wired-elements';
@@ -30,7 +31,7 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
     width: '97vw',
     display: 'grid',
     gridTemplateColumns: 'auto auto auto auto auto auto auto auto auto',
-    gridTemplateRows: '5vh auto auto auto auto auto auto auto 7em',
+    gridTemplateRows: `${ discordSdk ? '6em' : '5vh'} auto auto auto auto auto auto auto 7em`,
   };
 
   // Image Cache

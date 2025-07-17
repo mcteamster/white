@@ -8,6 +8,7 @@ import { Icon } from './Icons';
 import { useCallback, useContext, useState } from 'react';
 import { useWindowDimensions } from '../lib/hooks.ts';
 import { FocusContext } from '../lib/contexts.ts';
+import { discordSdk } from '../lib/discord.ts';
 
 export function Pile(props: BoardProps<GameState>) {
   const { focus, setFocus } = useContext(FocusContext);
@@ -82,7 +83,7 @@ export function Players(props: BoardProps<GameState>) {
       overflowY: 'scroll',
       scrollbarWidth: 'none',
       position: 'fixed',
-      top: '2em',
+      top: discordSdk ? '4.75em' : '2em',
       right: '0',
       zIndex: '4',
       borderRadius: '0 0 0 1em',
@@ -196,7 +197,7 @@ export function Header(props: HeaderProps) {
   const styles: { [key: string]: Properties<string | number> } = {
     header: {
       width: '100%',
-      height: '2em',
+      height: discordSdk ? '4.75em' : '2em',
       position: 'fixed',
       top: '0',
       left: '0',
@@ -206,7 +207,7 @@ export function Header(props: HeaderProps) {
       display: 'flex',
       flexDirection: 'row',
       justifyContent: 'space-between',
-      alignItems: 'center',
+      alignItems: discordSdk ? 'flex-end' : 'center',
     },
     item: {
       display: 'flex',
@@ -262,7 +263,6 @@ export function ShareRoom(props: { matchID: string, setShowShare: React.Dispatch
   const styles: { [key: string]: Properties<string | number> } = {
     dialog: {
       width: '100%',
-      height: '2em',
       position: 'fixed',
       top: '0',
       left: '0',
@@ -298,7 +298,7 @@ export function ShareRoom(props: { matchID: string, setShowShare: React.Dispatch
         <QRCode size={256} style={styles.qr} value={url} viewBox={`0 0 256 256`} />
         <div id="shareUrl" style={styles.text}><u>{url}</u></div>
       </div>
-  </wired-dialog>
+    </wired-dialog>
   )
 }
 

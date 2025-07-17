@@ -7,6 +7,7 @@ import { Card, getAdjacentCard } from "../Cards";
 import { HotkeysContext, ImageCacheType } from "../lib/contexts";
 import { useWindowDimensions } from "../lib/hooks";
 import { BLANK_IMAGE, decompressImage } from "../lib/images";
+import { discordSdk } from "../lib/discord";
 
 export function Gallery() {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ export function Gallery() {
     },
     cards: {
       width: '100%',
-      padding: '1em 0 5em 0',
+      padding: `${discordSdk ? '3.75em' : '1em'} 0 5em 0`,
       textAlign: 'center',
       display: 'flex',
       flexDirection: 'row',
@@ -124,10 +125,10 @@ export function Gallery() {
   }
 
   // Cache All Images from Global Deck
-  const [ imageCache, setImageCache ] = useState<ImageCacheType>({});
+  const [imageCache, setImageCache] = useState<ImageCacheType>({});
   const dispatchImage = useCallback((cardImage: { id: number, value: string }) => {
-      imageCache[cardImage.id] = cardImage.value;
-      setImageCache(imageCache)
+    imageCache[cardImage.id] = cardImage.value;
+    setImageCache(imageCache)
   }, [imageCache, setImageCache])
 
   useEffect(() => {
@@ -177,7 +178,7 @@ export function Gallery() {
       setTimeout(() => {
         navigate('/card');
       }, 0)
-    } 
+    }
 
     const browse = <>
       {
@@ -219,7 +220,7 @@ export function Gallery() {
               cardLocalDate = new Date(Number(card.content.date)).toLocaleDateString();
             }
 
-            return <wired-card style={styles.card} id={`gallery-${i+1}`} key={`gallery-${card.id}`} onClick={(e) => { navigate(`/card/${card.id}`); e.stopPropagation() }}>
+            return <wired-card style={styles.card} id={`gallery-${i + 1}`} key={`gallery-${card.id}`} onClick={(e) => { navigate(`/card/${card.id}`); e.stopPropagation() }}>
               {card.id != 0 && <img style={styles.cardImage} src={imageCache[card.id] || BLANK_IMAGE}></img>}
               <div style={styles.cardTitle}>{card.content.title}</div>
               <div style={styles.cardCredit}>{card.content.author && `${card.content.author}`}</div>
@@ -231,8 +232,8 @@ export function Gallery() {
       {viewedCard && viewDialog}
       <div style={styles.footer}>
         <div style={styles.button} onClick={() => { navigate('/') }}>
-            <Icon name='copy' />
-            Home
+          <Icon name='copy' />
+          Home
         </div>
         <Search allCards={globalDeck.cards} setDisplayedCards={setDisplayedCards} />
         <div style={styles.button} onClick={() => { document.getElementById(`gallery-${displayedCards.length}`)?.scrollIntoView() }}>
@@ -282,7 +283,7 @@ export function Search(props: SearchProps) {
       }
       if (card.content.author?.toUpperCase().includes(query.toUpperCase())) {
         return true
-      }    
+      }
       if (card.content.description.toUpperCase().includes(query.toUpperCase())) {
         return true
       }
@@ -303,7 +304,7 @@ export function Search(props: SearchProps) {
     <input type='text' style={styles.searchbox} id="searchInput" placeholder="Search Card Gallery" onChange={(e) => {
       const query = e.target.value;
       props.setDisplayedCards(searchCards(query));
-    }}/>
+    }} />
     <div onClick={clearSearch}>
       <Icon name="exit" />
     </div>
@@ -341,11 +342,12 @@ export function Permalink() {
       alignItems: 'center',
     },
     permalink: {
+      height: discordSdk && '4.75em',
       padding: '0.25em 0.5em',
       display: 'flex',
       flexDirection: 'row',
       justifyContent: 'center',
-      alignItems: 'center',
+      alignItems: 'flex-end',
       textDecoration: 'underline',
       backgroundColor: 'white',
       borderRadius: '0 0 1em 1em',
