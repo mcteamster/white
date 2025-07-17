@@ -124,7 +124,7 @@ export function About() {
       <div>
         <div style={styles.subheading} onClick={() => { externalLink('https://github.com/mcteamster/white') }}>
           <Icon name='github' />
-          <p>v2.0.1</p>
+          <p>v2.1.0</p>
         </div>
       </div>
       <wired-card style={{ ...styles.button, right: '1em' }} onClick={() => { navigate('/') }} elevation={2}><Icon name='play' />Lobby</wired-card>
