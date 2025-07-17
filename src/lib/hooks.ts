@@ -73,3 +73,8 @@ export const useHotkeys = ({ hotkeys, setHotkeys}: HotkeysContextType) => {
     };
   }, [hotkeys, setHotkeys])
 }
+
+// Links
+export const externalLink = (url: string) => {
+  window.open(url, '_blank')
+}

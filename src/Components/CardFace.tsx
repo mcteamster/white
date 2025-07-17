@@ -1,10 +1,10 @@
 import type { Properties } from 'csstype';
 import type { Card } from '../Cards.ts';
-import { Link } from 'react-router';
 import { Icon } from './Icons.tsx';
 import { ReactElement, useCallback, useContext, useEffect, useState } from 'react';
 import { BLANK_IMAGE, decompressImage } from '../lib/images.ts';
 import { ImageCacheContext } from '../lib/contexts.ts';
+import { externalLink } from '../lib/hooks.ts';
 
 export function CardFace(card: Card) {
   const [image, setImage] = useState(BLANK_IMAGE);
@@ -143,10 +143,10 @@ export function CardFace(card: Card) {
             Do what they say.<br></br>
             Create your own!
           </div>
-          <Link to="https://mcteamster.com" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}>
+          <div onClick={() => { externalLink("https://mcteamster.com") }} style={{ textDecoration: 'none' }}>
             <Icon name='game' />
             <div>a game by <u>mcteamster</u></div>
-          </Link>
+          </div>
         </>
       } else {
         content = <>

@@ -4,6 +4,7 @@ import { Icon } from './Icons';
 import { useCallback, useContext, useEffect, useState } from "react";
 import { AuthContext, HotkeysContext } from "../lib/contexts";
 import { lobbyClients, getRegion } from "../lib/clients";
+import { externalLink } from "../lib/hooks";
 
 const styles: { [key: string]: Properties<string | number> } = {
   dialog: {
@@ -264,7 +265,7 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
         checkForRoomCode();
       } else if (stage == 'join') {
         joinGame();
-      } else if (stage == 'create'){
+      } else if (stage == 'create') {
         createGame(preset);
       }
     }
@@ -280,7 +281,7 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
           </div>
 
           <div style={{ display: (stage == 'landing') ? undefined : 'none' }}>
-            <wired-card style={{...styles.action, fontSize: '1.5em'}} onClick={() => { setStage('create-setup') }}>
+            <wired-card style={{ ...styles.action, fontSize: '1.5em' }} onClick={() => { setStage('create-setup') }}>
               Create New Game
             </wired-card>
             <div>or</div>
@@ -299,15 +300,15 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
 
           <div style={{ ...styles.presets, display: (stage == 'create-setup') ? undefined : 'none' }}>
             <div style={styles.subheading}>Select a Starting Deck</div>
-            <wired-card style={{...styles.action, backgroundColor: (preset == 'blank') ? '#eee' : undefined }} onClick={() => { setPreset('blank'); }}><Icon name="copy" />Blank</wired-card>
-            <wired-card style={{...styles.action, backgroundColor: (preset == 'global') ? '#eee' : undefined }} onClick={() => { setPreset('global'); }}><Icon name="global" />Global</wired-card>
-            <wired-card style={{...styles.action, backgroundColor: (preset == 'standard') ? '#eee' : undefined }} onClick={() => { setPreset('standard'); }}><Icon name="die" />Standard</wired-card>
+            <wired-card style={{ ...styles.action, backgroundColor: (preset == 'blank') ? '#eee' : undefined }} onClick={() => { setPreset('blank'); }}><Icon name="copy" />Blank</wired-card>
+            <wired-card style={{ ...styles.action, backgroundColor: (preset == 'global') ? '#eee' : undefined }} onClick={() => { setPreset('global'); }}><Icon name="global" />Global</wired-card>
+            <wired-card style={{ ...styles.action, backgroundColor: (preset == 'standard') ? '#eee' : undefined }} onClick={() => { setPreset('standard'); }}><Icon name="die" />Standard</wired-card>
             <div style={styles.flavourbox}>
               {preset == 'blank' && 'A blank deck to create your own game. Save and Load to continue the fun!'}
               {preset == 'global' && `A copy of the ${globalSize} card global deck. (Cards made here are not submitted)`}
               {preset == 'standard' && 'The standard 52 card deck for more traditional games.'}
             </div>
-            <div style={{ ...styles.presets}}>
+            <div style={{ ...styles.presets }}>
               <wired-card style={styles.action} onClick={() => { roomCodeError(); setStage('landing') }}><Icon name="back" />Back</wired-card>
               <wired-card style={styles.action} onClick={() => { roomCodeError(); setStage('create') }}><Icon name="done" />Confirm</wired-card>
             </div>
@@ -315,16 +316,16 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
 
           <div style={{ ...styles.presets, display: (stage == 'create') ? undefined : 'none' }}>
             <div style={styles.subheading}>Choose Region</div>
-            <wired-card style={{...styles.region, backgroundColor: (region == 'NA') ? '#eee' : undefined }} onClick={() => { setRegion('NA'); }}>America</wired-card>
-            <wired-card style={{...styles.region, backgroundColor: (region == 'EU') ? '#eee' : undefined }} onClick={() => { setRegion('EU'); }}>Europe</wired-card>
-            <wired-card style={{...styles.region, backgroundColor: (region == 'AP') ? '#eee' : undefined }} onClick={() => { setRegion('AP'); }}>Asia</wired-card>
+            <wired-card style={{ ...styles.region, backgroundColor: (region == 'NA') ? '#eee' : undefined }} onClick={() => { setRegion('NA'); }}>America</wired-card>
+            <wired-card style={{ ...styles.region, backgroundColor: (region == 'EU') ? '#eee' : undefined }} onClick={() => { setRegion('EU'); }}>Europe</wired-card>
+            <wired-card style={{ ...styles.region, backgroundColor: (region == 'AP') ? '#eee' : undefined }} onClick={() => { setRegion('AP'); }}>Asia</wired-card>
           </div>
 
           <div style={{ display: (['join', 'create'].includes(stage)) ? undefined : 'none' }}>
             <div style={styles.subheading}>Who's Playing?</div>
             <wired-input style={{ ...styles.name, display: (['join', 'create'].includes(stage)) ? undefined : 'none' }} id="nameInput" placeholder="Player Name" maxlength={25} value={auth?.playerName}></wired-input>
-            <div style={{ ...styles.presets}}>
-              <wired-card style={styles.action} onClick={() => { 
+            <div style={{ ...styles.presets }}>
+              <wired-card style={styles.action} onClick={() => {
                 roomCodeError();
                 if (stage == 'join') {
                   setStage('landing');
@@ -334,7 +335,7 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
               }}><Icon name="back" />Back</wired-card>
               <wired-card style={styles.action} onClick={() => {
                 if (stage == 'join') {
-                  joinGame(); 
+                  joinGame();
                 } else if (stage == 'create') {
                   createGame(preset);
                 };
@@ -357,7 +358,7 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
       </div>
       <div style={styles.terms}>
         <div>by continuing you confirm you are over 18</div>
-        <div>and accept our <a href='/about' target="_blank"><u>Terms of Service</u></a></div>
+        <div>and accept our <u onClick={() => { externalLink("https://blankwhite.cards/about") }}>Terms of Service</u></div>
       </div>
     </wired-dialog>
   );

@@ -1,10 +1,11 @@
 import type { Properties } from 'csstype';
 import { Icon } from './Icons';
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { useContext, useEffect, useState } from 'react';
 import { BoardProps } from 'boardgame.io/dist/types/packages/react';
 import { GameState } from '../Game';
 import { HotkeysContext } from '../lib/contexts';
+import { externalLink } from '../lib/hooks';
 
 export function About() {
   const navigate = useNavigate();
@@ -52,12 +53,12 @@ export function About() {
   return (
     <div style={styles.about}>
       <h1>Blank White Cards</h1>
-      <Link to="https://mcteamster.com" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}>
+      <div style={{ textDecoration: 'none' }} onClick={() => { externalLink("https://mcteamster.com") }}>
         a game by <u>mcteamster</u>
-      </Link>
+      </div>
       <div style={styles.paragraph} id='about'>
         <h2 style={styles.subheading}>About</h2>
-        <p>This is <Link to="https://en.wikipedia.org/wiki/1000_Blank_White_Cards" target="_blank" rel="noreferrer">1000 Blank White Cards</Link> online.</p>
+        <p>This is <u onClick={() => { externalLink("https://en.wikipedia.org/wiki/1000_Blank_White_Cards") }}>1000 Blank White Cards</u> online.</p>
         <p>
           A social drawing sandbox party game where you make the rules. Best played with friends around a table or on video call.
         </p>
@@ -94,7 +95,7 @@ export function About() {
         <p>
           Also feel free to share and use content from the game.
           If you do, give credit to the author and share a screenshot/permalink.
-          Please get in <Link to="https://www.buymeacoffee.com/mcteamster" target='_blank' rel="noreferrer">contact</Link> if you have questions or wanna collab!
+          Please get in <u onClick={() => { externalLink("https://www.buymeacoffee.com/mcteamster") }}>contact</u> if you have questions or wanna collab!
         </p>
       </div>
       <div style={styles.paragraph}>
@@ -108,7 +109,7 @@ export function About() {
         </p>
         <p>
           2. Waiver of Liability<br />
-          The user-generated content in this game does not express the views or opinions of the developers. 
+          The user-generated content in this game does not express the views or opinions of the developers.
           Due to the unrestricted online nature of the game, players must be over the age of 18.
           We are not liable or accountable for any damage or injury that may result from playing this game.
         </p>
@@ -117,14 +118,14 @@ export function About() {
           Cards submitted to this website fall under the Creative Commons Attribution 4.0 International licence.
           This allows for cards to be shared, adapted, and used for commercial purposes by anyone provided
           that attribution is given. Attribution must be made to the listed author of a card.
-          Please see <Link to="https://creativecommons.org/licenses/by/4.0/" target='_blank' rel="noreferrer">this link</Link> for more details.
+          Please see <u onClick={() => { externalLink("https://creativecommons.org/licenses/by/4.0/") }}>this link</u> for more details.
         </p>
       </div>
       <div>
-        <Link style={styles.subheading} to='https://github.com/mcteamster/white' target='_blank' rel="noreferrer">
+        <div style={styles.subheading} onClick={() => { externalLink('https://github.com/mcteamster/white') }}>
           <Icon name='github' />
           <p>v2.0.1</p>
-        </Link>
+        </div>
       </div>
       <wired-card style={{ ...styles.button, right: '1em' }} onClick={() => { navigate('/') }} elevation={2}><Icon name='play' />Lobby</wired-card>
       {
@@ -215,33 +216,33 @@ export function Tutorial({ isMultiplayer, playerID, mode, setMode }: TutorialPro
       <p><Icon name='loading' />Move cards between these areas</p>
       {
         isMultiplayer ?
-        <>
-          <p><Icon name='send' />Send them to other players</p>
-          <p><Icon name='create' />Create your own cards</p>
-          <p><Icon name='heart' />Save and Load them next time!</p>
-          <h3>Gameplay Suggestions:</h3>
-          <p>Multiplayer tends to work better with a "Gamemaster" - usually the host, as they have the ability to Load cards and Reset the game.</p>
-          <p>Start with everyone creating some new cards - about 5 per player is good. Reset to shuffle all cards into the deck.</p>
-          <p>Have everyone pick up a few cards to make a Hand, then take turns to play and pickup more.</p>
-          <p>It's highly encouraged to keep creating cards between turns in response to what gets played.</p>
-          <p>If playing for points, find somewhere to take notes. Points get complicated very fast!</p>
-          <p>If playing with drinks, drink-responsibly :)</p>
-          <p>Remember to Save the deck. You can filter it offline and reuse it again later.</p>
-          <p>Alternatively, choose a Preset Deck for a super quick way to get started!</p>
-          <p>Or why not just play Free-for-All? Let anyone do anything at any time and embrace the chaos!</p>
-        </> :
-        <>
-          <p><Icon name='global' />Submit new cards to the Global Deck!</p>
-          <h3>Gameplay Suggestions:</h3>
-          <p><Icon name='shuffle' />Hotseat: Take turns to pick up, do the action (or not), and pass to the next player.</p>
-          <p><Icon name='multi' />Try Multiplayer for more possibilities!</p>
-        </>
+          <>
+            <p><Icon name='send' />Send them to other players</p>
+            <p><Icon name='create' />Create your own cards</p>
+            <p><Icon name='heart' />Save and Load them next time!</p>
+            <h3>Gameplay Suggestions:</h3>
+            <p>Multiplayer tends to work better with a "Gamemaster" - usually the host, as they have the ability to Load cards and Reset the game.</p>
+            <p>Start with everyone creating some new cards - about 5 per player is good. Reset to shuffle all cards into the deck.</p>
+            <p>Have everyone pick up a few cards to make a Hand, then take turns to play and pickup more.</p>
+            <p>It's highly encouraged to keep creating cards between turns in response to what gets played.</p>
+            <p>If playing for points, find somewhere to take notes. Points get complicated very fast!</p>
+            <p>If playing with drinks, drink-responsibly :)</p>
+            <p>Remember to Save the deck. You can filter it offline and reuse it again later.</p>
+            <p>Alternatively, choose a Preset Deck for a super quick way to get started!</p>
+            <p>Or why not just play Free-for-All? Let anyone do anything at any time and embrace the chaos!</p>
+          </> :
+          <>
+            <p><Icon name='global' />Submit new cards to the Global Deck!</p>
+            <h3>Gameplay Suggestions:</h3>
+            <p><Icon name='shuffle' />Hotseat: Take turns to pick up, do the action (or not), and pass to the next player.</p>
+            <p><Icon name='multi' />Try Multiplayer for more possibilities!</p>
+          </>
       }
     </div>
   </>
 
   useEffect(() => {
-    if (mode == 'play-tutorial'  && (isMultiplayer || playerID == "0")) {
+    if (mode == 'play-tutorial' && (isMultiplayer || playerID == "0")) {
       if (hotkeys.space) {
         setDismiss(!dismiss);
         localStorage.setItem('tutorial', String(dismiss))
@@ -249,7 +250,7 @@ export function Tutorial({ isMultiplayer, playerID, mode, setMode }: TutorialPro
         setMode('play');
       }
     }
-  }, [hotkeys, dismiss, isMultiplayer, playerID, mode, setMode])  
+  }, [hotkeys, dismiss, isMultiplayer, playerID, mode, setMode])
 
   if (isMultiplayer || playerID == "0") {
     return (

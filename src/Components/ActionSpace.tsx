@@ -15,6 +15,7 @@ import { Loader } from './Loader.tsx';
 import { submitGlobalCard } from '../lib/clients.ts';
 import { Tutorial } from './About.tsx';
 import { compressImage, resizeImage } from '../lib/images.ts';
+import { externalLink } from '../lib/hooks.ts';
 
 interface ToolbarProps extends BoardProps<GameState> {
   mode: string;
@@ -351,7 +352,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
       <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='back' />Back</wired-card>
       <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('play-tutorial') }} elevation={2}><Icon name='book' />Tutorial</wired-card>
       <Link to="/about" rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='about' />About</wired-card></Link>
-      <Link to="https://www.buymeacoffee.com/mcteamster" target='_blank' rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='coffee' />Support</wired-card></Link>
+      <div onClick={() => { externalLink("https://www.buymeacoffee.com/mcteamster") }} style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='coffee' />Support</wired-card></div>
     </>
   } else if (mode === 'menu-tools') {
     toolset = <>

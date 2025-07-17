@@ -1,4 +1,5 @@
 import type { Properties } from 'csstype';
+import { externalLink } from '../lib/hooks';
 
 interface FinaliseProps {
   multiplayer: boolean;
@@ -71,7 +72,7 @@ export function Finalise({ multiplayer }: FinaliseProps) {
         <div style={styles.author}>Cards created under Creative Commons CC-BY 4.0.</div>
         <div style={{ ...styles.author, color: multiplayer ? 'black' : 'red' }}>
           {multiplayer ? 'Multiplayer data deleted periodically. ' : 'Published to the Global Deck. '}
-          <a href='/about' target='_blank' style={{ color: multiplayer ? 'black' : 'red' }}>Privacy Policy</a>
+          <u onClick={() => { externalLink("https://blankwhite.cards/about") }} style={{ color: multiplayer ? 'black' : 'red' }}>Privacy Policy</u>
         </div>
       </wired-card>
     </div>
