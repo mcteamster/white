@@ -4,6 +4,7 @@ import type { Properties } from 'csstype';
 import { ActionSpace } from './Components/ActionSpace.tsx';
 import { CommonSpace } from './Components/CommonSpace.tsx';
 import { PlayerSpace } from './Components/PlayerSpace.tsx';
+import { useWindowDimensions } from './lib/hooks.ts';
 import { discordSdk } from './lib/discord.ts';
 
 // Web Components from https://wiredjs.com/
@@ -26,12 +27,14 @@ declare global {
 
 // Board
 export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
+  const dimensions = useWindowDimensions();
+
   const boardStyle: Properties<string | number> = {
     minHeight: 'calc(90vh - 70px)',
     width: '97vw',
     display: 'grid',
     gridTemplateColumns: 'auto auto auto auto auto auto auto auto auto',
-    gridTemplateRows: `${ discordSdk ? '6em' : '5vh'} auto auto auto auto auto auto auto 7em`,
+    gridTemplateRows: `${ (discordSdk && dimensions.upright) ? '6em' : '5vh'} auto auto auto auto auto auto auto 7em`,
   };
 
   // Image Cache

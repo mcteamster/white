@@ -14,6 +14,7 @@ export function Gallery() {
   const { hotkeys } = useContext(HotkeysContext);
   const { height } = useWindowDimensions();
   const [displayedCards, setDisplayedCards] = useState<Card[]>([]);
+  const dimensions = useWindowDimensions();
 
   const styles: { [key: string]: Properties<string | number> } = {
     gallery: {
@@ -25,7 +26,7 @@ export function Gallery() {
     },
     cards: {
       width: '100%',
-      padding: `${discordSdk ? '3.75em' : '1em'} 0 5em 0`,
+      padding: `${(discordSdk && dimensions.upright) ? '3.75em' : '1em'} 0 5em 0`,
       textAlign: 'center',
       display: 'flex',
       flexDirection: 'row',
@@ -313,6 +314,7 @@ export function Search(props: SearchProps) {
 
 export function Permalink() {
   const url = `${import.meta.env.VITE_ORIGIN}${window.location.pathname}`
+  const dimensions = useWindowDimensions();
 
   const copyPermalink = () => {
     const sharePermalink = document.getElementById('sharePermalink');
@@ -342,7 +344,7 @@ export function Permalink() {
       alignItems: 'center',
     },
     permalink: {
-      height: discordSdk && '4.75em',
+      height: (discordSdk && dimensions.upright) ? '4.75em' : '',
       padding: '0.25em 0.5em',
       display: 'flex',
       flexDirection: 'row',

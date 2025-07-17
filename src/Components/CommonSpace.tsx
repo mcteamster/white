@@ -83,7 +83,7 @@ export function Players(props: BoardProps<GameState>) {
       overflowY: 'scroll',
       scrollbarWidth: 'none',
       position: 'fixed',
-      top: discordSdk ? '4.75em' : '2em',
+      top: (discordSdk && dimensions.upright) ? '4.75em' : '2em',
       right: '0',
       zIndex: '4',
       borderRadius: '0 0 0 1em',
@@ -191,13 +191,14 @@ interface HeaderProps extends BoardProps<GameState> {
 
 export function Header(props: HeaderProps) {
   const [showShare, setShowShare] = useState(false);
+  const dimensions = useWindowDimensions();
 
   const playerName = props.isMultiplayer && props.matchData?.find((player) => player.id == Number(props.playerID))?.name?.toUpperCase() || ""
 
   const styles: { [key: string]: Properties<string | number> } = {
     header: {
       width: '100%',
-      height: discordSdk ? '4.75em' : '2em',
+      height: (discordSdk && dimensions.upright) ? '4.75em' : '2em',
       position: 'fixed',
       top: '0',
       left: '0',
@@ -207,7 +208,7 @@ export function Header(props: HeaderProps) {
       display: 'flex',
       flexDirection: 'row',
       justifyContent: 'space-between',
-      alignItems: discordSdk ? 'flex-end' : 'center',
+      alignItems: (discordSdk && dimensions.upright) ? 'flex-end' : 'center',
     },
     item: {
       display: 'flex',
