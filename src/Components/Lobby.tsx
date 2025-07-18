@@ -275,6 +275,7 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
 
   return (
     <wired-dialog open>
+      <Notices region={region}/>
       <div style={styles.dialog}>
         <wired-card style={styles.multiplayer}>
           <div style={styles.heading}><Icon name="multi" />&nbsp;Multiplayer</div>
@@ -364,4 +365,40 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
       </div>
     </wired-dialog>
   );
+}
+
+interface NoticesProps {
+  region: 'AP' | 'EU' | 'NA' | 'default';
+}
+
+interface Notice {
+  id?: string;
+  message?: string;
+  regions?: string[];
+}
+
+function Notices(props: NoticesProps) {
+  const [notice, setNotice] = useState<Notice>({});
+
+  const styles: { [key: string]: Properties<string | number> } = {
+    notice: {
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  }
+
+  const checkNotices = useCallback(async () => {
+    const data = await (await fetch(`${import.meta.env.VITE_API_SERVER}/common/notices/white`)).json()
+    setNotice(data)
+  }, [])
+  
+  useEffect(() => {
+    checkNotices();
+  }, [checkNotices])
+
+  if (notice.regions && (notice.regions.length == 0 || notice?.regions.includes(props.region))) {
+    return <div style={styles.notice}>{notice.message}</div>
+  }
 }
