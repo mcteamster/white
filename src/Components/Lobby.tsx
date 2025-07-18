@@ -390,8 +390,12 @@ function Notices(props: NoticesProps) {
   }
 
   const checkNotices = useCallback(async () => {
-    const data = await (await fetch(`${import.meta.env.VITE_API_SERVER}/common/notices/white`)).json()
-    setNotice(data)
+    try {
+      const data = await (await fetch(`${import.meta.env.VITE_API_SERVER}/common/notices/white`)).json()
+      setNotice(data)
+    } catch (err) {
+      console.warn('Error fetching notices', err)
+    }
   }, [])
   
   useEffect(() => {
