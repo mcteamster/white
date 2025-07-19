@@ -5,6 +5,7 @@ import { useCallback, useContext, useEffect, useState } from "react";
 import { AuthContext, HotkeysContext } from "../lib/contexts";
 import { lobbyClients, getRegion } from "../lib/clients";
 import { externalLink } from "../lib/hooks";
+import { discordSdk } from "../lib/discord";
 
 const styles: { [key: string]: Properties<string | number> } = {
   dialog: {
@@ -37,6 +38,7 @@ const styles: { [key: string]: Properties<string | number> } = {
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center',
     fontSize: "2em",
   },
   subheading: {
@@ -108,6 +110,16 @@ const styles: { [key: string]: Properties<string | number> } = {
     textAlign: 'center',
     fontSize: '0.75em',
   },
+  discord: {
+    width: '0.8em',
+    height: '0.8em',
+    padding: '0.1em',
+    border: '1.5pt solid black',
+    borderRadius: '50%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
 }
 
 interface LobbyProps {
@@ -278,7 +290,16 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
       <Notices region={region}/>
       <div style={styles.dialog}>
         <wired-card style={styles.multiplayer}>
-          <div style={styles.heading}><Icon name="multi" />&nbsp;Multiplayer</div>
+          <div style={styles.heading}>
+            <Icon name="multi" />&nbsp;
+            Multiplayer&nbsp;
+            {
+              !discordSdk &&
+              <a href='https://discord.com/discovery/applications/1389508624774201395' target='_blank' style={styles.discord}>
+                <img height='20pt' width='20pt' src='discord.svg' /><br></br>
+              </a>
+            }
+          </div>
           <div style={{ display: (stage == 'down') ? undefined : 'none' }}>
             <div style={styles.subheading}>Server Currently Unavailable</div>
           </div>

@@ -60,7 +60,8 @@ export function About() {
         <h2 style={styles.subheading}>About</h2>
         <p>This is <u onClick={() => { externalLink("https://en.wikipedia.org/wiki/1000_Blank_White_Cards") }}>1000 Blank White Cards</u> online.</p>
         <p>
-          A social drawing sandbox party game where you make the rules. Best played with friends around a table or on video call.
+          A social drawing sandbox party game where you make the rules. Best played with friends around a table or on video call -
+          now available as a <u onClick={() => { externalLink("https://discord.com/discovery/applications/1389508624774201395") }}>Discord Activity!</u>
         </p>
         <p>
           Connect to the same Multiplayer Room to draw cards together using a common Deck.
