@@ -1,5 +1,6 @@
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import BackHandOutlinedIcon from '@mui/icons-material/BackHandOutlined';
 import BookOutlinedIcon from '@mui/icons-material/BookOutlined';
 import CasinoOutlinedIcon from '@mui/icons-material/CasinoOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
@@ -53,6 +54,7 @@ type IconName =
   'game' |
   'github' |
   'global' |
+  'hand' |
   'heart' |
   'hearted' |
   'info' |
@@ -93,6 +95,7 @@ export function Icon(props: { name: IconName }) {
     game: <SportsEsportsOutlinedIcon></SportsEsportsOutlinedIcon>,
     github: <GitHubIcon></GitHubIcon>,
     global: <LanguageOutlinedIcon></LanguageOutlinedIcon>,
+    hand: <BackHandOutlinedIcon></BackHandOutlinedIcon>,
     heart: <FavoriteBorderOutlinedIcon></FavoriteBorderOutlinedIcon>,
     hearted: <FavoriteOutlinedIcon></FavoriteOutlinedIcon>,
     info: <InfoOutlinedIcon></InfoOutlinedIcon>,

@@ -156,7 +156,7 @@ export function Focus(props: BoardProps<GameState>) {
       if (owned && card.location != 'deck') {
         tray = <div style={styles.tray}>
           {<wired-card style={{ ...styles.button, color: 'red' }} id="discardButton" onClick={() => { moveCardTo(card.id, 'discard') }}><Icon name='discard' />Discard</wired-card>}
-          {props.isMultiplayer && card.location != 'hand' &&<wired-card style={{ ...styles.button }} id="handButton" onClick={() => { moveCardTo(card.id, 'hand') }}><Icon name='take' />Hand</wired-card>}
+          {props.isMultiplayer && card.location != 'hand' &&<wired-card style={{ ...styles.button }} id="handButton" onClick={() => { moveCardTo(card.id, 'hand') }}><Icon name='hand' />Hand</wired-card>}
           {props.isMultiplayer && card.location != 'table' && <wired-card style={{ ...styles.button }} id="tableButton" onClick={() => { moveCardTo(card.id, 'table') }}><Icon name='display' />Table</wired-card>}
           {props.isMultiplayer && <wired-card style={{ ...styles.button }} id="sendButton" onClick={() => { setSendCardMode(true) }}><Icon name='send' />Send</wired-card>}
           {<wired-card style={{ ...styles.button }} id="pileButton" onClick={() => { moveCardTo(card.id, 'pile') }}><Icon name='pile' />Play on Pile</wired-card>}
@@ -169,9 +169,9 @@ export function Focus(props: BoardProps<GameState>) {
                 <div className='spin'>
                   <Icon name='loading' />
                 </div> :
-                <Icon name='take' />
+                <Icon name='hand' />
             }
-            Put in Hand
+            Yoink
           </wired-card>}
         </div>
       }
@@ -216,7 +216,7 @@ export function Focus(props: BoardProps<GameState>) {
                           <Icon name='display'></Icon>
                         </div>
                         <div style={styles.sendicon} onClick={() => { props.moves.moveCard(card.id, "hand", String(player.id)); setSendCardMode(false); unfocusCards() }}>
-                          <Icon name='take'></Icon>
+                          <Icon name='hand'></Icon>
                         </div>
                       </div>
                     </div>

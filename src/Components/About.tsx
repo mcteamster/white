@@ -211,16 +211,15 @@ export function Tutorial({ isMultiplayer, playerID, mode, setMode }: TutorialPro
       <p>There are some features to help with basic card game logistics:</p>
       <p><Icon name='copy' />Deck: Cards to be picked up</p>
       <p><Icon name='pile' />Pile: Played cards seen by all</p>
-      <p><Icon name='take' />Hand: Your hidden cards</p>
-      <p><Icon name='display' />Table: Your displayed cards</p>
       <p><Icon name='discard' />Discard: Cards removed from play</p>
-      <p><Icon name='loading' />Move cards between these areas</p>
+      <p><Icon name='hand' />Hand: Your held cards</p>
       {
         isMultiplayer ?
           <>
-            <p><Icon name='send' />Send them to other players</p>
+            <p><Icon name='display' />Table: Your shown cards</p>
             <p><Icon name='create' />Create your own cards</p>
-            <p><Icon name='heart' />Save and Load them next time!</p>
+            <p><Icon name='send' />Send them to other players</p>
+            <p><Icon name='heart' />Save and Load decks for next time!</p>
             <h3>Gameplay Suggestions:</h3>
             <p>Multiplayer tends to work better with a "Gamemaster" - usually the host, as they have the ability to Load cards and Reset the game.</p>
             <p>Start with everyone creating some new cards - about 5 per player is good. Reset to shuffle all cards into the deck.</p>
