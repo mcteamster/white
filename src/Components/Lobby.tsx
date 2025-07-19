@@ -133,6 +133,7 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
   const navigate = useNavigate();
   const { auth, setAuth } = useContext(AuthContext);
   const [stage, setStage] = useState('landing');
+  const [joining, setJoining] = useState(false);
   const [preset, setPreset] = useState('blank');
 
   const enterSinglePlayer = () => {
@@ -257,8 +258,11 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
 
   const checkLobbyConnection = useCallback(() => {
     const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
-    const lobbyClient = lobbyClients[region];
-    lobbyClient.listMatches('blank-white-cards').then(() => {
+    const lobbyMatches = Object.keys(lobbyClients).map((server) => {
+      const key = server as ('AP' | 'EU' | 'NA' | 'default')
+      return lobbyClients[key].listMatches('blank-white-cards');
+    })
+    Promise.any(lobbyMatches).then(() => {
       if (roomCode.value) {
         checkForRoomCode();
       } else {
@@ -303,7 +307,7 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
             }
           </div>
           <div style={{ display: (stage == 'down') ? undefined : 'none' }}>
-            <div style={styles.subheading}>Server Currently Unavailable</div>
+            <div style={styles.subheading}>Servers Currently Unavailable</div>
           </div>
 
           <div style={{ display: (stage == 'landing') ? undefined : 'none' }}>
@@ -359,13 +363,37 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
                   setStage('create-setup')
                 };
               }}><Icon name="back" />Back</wired-card>
-              <wired-card style={styles.action} onClick={() => {
-                if (stage == 'join') {
-                  joinGame();
-                } else if (stage == 'create') {
-                  createGame(preset);
-                };
-              }}><Icon name="play" />Play</wired-card>
+              <wired-card id='enterGameButton' style={styles.action} onClick={() => {
+                if (!joining) {
+                  if (stage == 'join') {
+                    setJoining(true);
+                    joinGame();
+                  } else if (stage == 'create') {
+                    setJoining(true);
+                    createGame(preset);
+                  };
+                  setTimeout(() => {
+                    const enterGameButton = document.getElementById('enterGameButton') as HTMLElement;
+                    enterGameButton.style.color = 'red';
+                    setTimeout(() => {
+                      enterGameButton.style.color = 'black';
+                      setJoining(false);
+                    }, 500)
+                  }, 3000)
+                }
+              }}>
+                {
+                  joining ?
+                  <>
+                    <div className="spin"><Icon name="loading" /></div>
+                    Joining
+                  </> :
+                  <>
+                    <Icon name="play" />
+                    Play
+                  </>
+                }
+              </wired-card>
             </div>
           </div>
         </wired-card>
