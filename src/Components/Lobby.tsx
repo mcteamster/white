@@ -18,7 +18,7 @@ const styles: { [key: string]: Properties<string | number> } = {
   multiplayer: {
     width: 'min(40vh, 85vw)',
     minWidth: '300px',
-    minHeight: 'min(35vh, 85vw)',
+    minHeight: 'min(33vh, 85vw)',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
@@ -28,7 +28,7 @@ const styles: { [key: string]: Properties<string | number> } = {
   singleplayer: {
     width: 'min(40vh, 85vw)',
     minWidth: '300px',
-    minHeight: 'min(35vh, 85vw)',
+    minHeight: 'min(33vh, 85vw)',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
