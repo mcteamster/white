@@ -272,7 +272,7 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
       setStage('down');
       setTimeout(checkLobbyConnection, 30000);
     });
-  }, [setStage, checkForRoomCode, region]);
+  }, [setStage, checkForRoomCode]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(checkLobbyConnection, []);
 
