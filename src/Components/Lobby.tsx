@@ -6,6 +6,7 @@ import { AuthContext, HotkeysContext } from "../lib/contexts";
 import { lobbyClients, getRegion } from "../lib/clients";
 import { externalLink } from "../lib/hooks";
 import { discordSdk } from "../lib/discord";
+import discordLogo from '../assets/discord.svg';
 
 const styles: { [key: string]: Properties<string | number> } = {
   dialog: {
@@ -296,7 +297,8 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
             {
               !discordSdk &&
               <a href='https://discord.com/discovery/applications/1389508624774201395' target='_blank' style={styles.discord}>
-                <img height='20pt' width='20pt' src='discord.svg' /><br></br>
+
+                <img height='20pt' width='20pt' src={discordLogo} /><br></br>
               </a>
             }
           </div>
