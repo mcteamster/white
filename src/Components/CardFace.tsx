@@ -32,6 +32,8 @@ export function CardFace(card: Card) {
           setImage(res)
           dispatchImage({ id: card.id, value: res })
         });
+      } else {
+        setImage(BLANK_IMAGE);
       }
     }
 
@@ -125,7 +127,7 @@ export function CardFace(card: Card) {
           textAlign: 'center',
         },
         heading: {
-          fontSize: '3.5em',
+          fontSize: '3em',
           fontWeight: 'bold',
           textAlign: 'center',
           margin: '0.5em 0 0 0',
