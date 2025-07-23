@@ -171,6 +171,8 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
         if (loading) {
           if (hand.length > 0) {
             setTimeout(() => {
+              // Scroll to latest card
+              window.scrollTo(0, document.body.scrollHeight);
               // Focus the topdecked card in Single Device mode only
               setLoading(false);
               if (!isMultiplayer) {
