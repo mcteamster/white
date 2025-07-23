@@ -156,7 +156,7 @@ export function Tutorial({ isMultiplayer, playerID, mode, setMode }: TutorialPro
     },
     buttonBox: {
       display: 'flex',
-      flexDirection: 'column',
+      flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -173,8 +173,9 @@ export function Tutorial({ isMultiplayer, playerID, mode, setMode }: TutorialPro
       borderRadius: '1em',
     },
     dismissBox: {
+      padding: '0 1em',
       display: 'flex',
-      flexDirection: 'row',
+      flexDirection: 'column',
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -198,7 +199,9 @@ export function Tutorial({ isMultiplayer, playerID, mode, setMode }: TutorialPro
       fontSize: '1.25em',
       overflowY: 'scroll',
       scrollbarWidth: 'none',
-      padding: '0.5em',
+      boxShadow: '0px -10px 5px -5px lightgrey inset',
+      padding: '0 0.5em',
+      margin: '0 0 0.5em 0',
       textAlign: 'center',
       width: '25em',
       maxWidth: '80vw',
@@ -207,7 +210,8 @@ export function Tutorial({ isMultiplayer, playerID, mode, setMode }: TutorialPro
 
   const tutorialText = <>
     <div style={styles.paragraph}>
-      <p>Blank White Cards is a drawing sandbox party game with NO RULES. Create your own cards for a uniquely evolving gameplay experience.</p>
+      <p>Blank White Cards is a drawing sandbox party game WITHOUT RULES. Create your own cards for a unique evolving gameplay experience.</p>
+      <p>Warning: this game contains user generated content, please proceed at your own risk.</p>
       <p>There are some features to help with basic card game logistics:</p>
       <p><Icon name='copy' />Deck: Cards to be picked up</p>
       <p><Icon name='pile' />Pile: Played cards seen by all</p>
@@ -260,10 +264,10 @@ export function Tutorial({ isMultiplayer, playerID, mode, setMode }: TutorialPro
           {tutorialText}
           <div style={styles.buttonBox}>
             <div style={styles.dismissBox}>
-              Don't Show Again
               <wired-card style={styles.dismiss} onClick={() => { setDismiss(!dismiss); localStorage.setItem('tutorial', String(dismiss)) }}>
                 {dismiss && <Icon name="exit" />}
               </wired-card>
+              Don't Show Again
             </div>
             <wired-card style={styles.button} onClick={() => {
               setMode('play');
