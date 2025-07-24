@@ -321,7 +321,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
               </div>
           } 
           </div>
-          <input disabled={progress[0] != -1} style={styles.uploader} type="file" id="fileselector" accept=".html" onChange={uploadDeck} />
+          <input disabled={progress[0] != -1} style={styles.uploader} type="file" id="fileselector" accept=".html,.htm" onChange={uploadDeck} />
           <div style={styles.confirmation}>
             <wired-card style={styles.button} onClick={() => { setMode('play') }}>
               <Icon name='exit' />Close
