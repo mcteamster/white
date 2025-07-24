@@ -60,7 +60,7 @@ export function About() {
         <h2 style={styles.subheading}>About</h2>
         <p>This is <u onClick={() => { externalLink("https://en.wikipedia.org/wiki/1000_Blank_White_Cards") }}>1000 Blank White Cards</u> online.</p>
         <p>
-          A social drawing sandbox party game where you make the rules. Best played with friends around a table or on video call -
+          A social drawing party game where you make the rules. Best played with friends around a table or on video call -
           now available as a <u onClick={() => { externalLink("https://discord.com/discovery/applications/1389508624774201395") }}>Discord Activity!</u>
         </p>
         <p>
@@ -210,7 +210,7 @@ export function Tutorial({ isMultiplayer, playerID, mode, setMode }: TutorialPro
 
   const tutorialText = <>
     <div style={styles.paragraph}>
-      <p>Blank White Cards is a drawing sandbox party game WITHOUT RULES. Create your own cards for a unique evolving gameplay experience.</p>
+      <p>Blank White Cards is a drawing party game WITHOUT RULES. Create your own cards for a unique evolving gameplay experience.</p>
       <p>Warning: this game contains user generated content, please proceed at your own risk.</p>
       <p>There are some features to help with basic card game logistics:</p>
       <p><Icon name='copy' />Deck: Cards to be picked up</p>
