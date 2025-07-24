@@ -16,6 +16,7 @@ import FavoriteOutlinedIcon from '@mui/icons-material/FavoriteOutlined';
 import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import IosShareIcon from '@mui/icons-material/IosShare';
 import KeyboardBackspaceOutlinedIcon from '@mui/icons-material/KeyboardBackspaceOutlined';
 import LanguageOutlinedIcon from '@mui/icons-material/LanguageOutlined';
 import LibraryAddCheckOutlinedIcon from '@mui/icons-material/LibraryAddCheckOutlined';
@@ -59,6 +60,7 @@ type IconName =
   'hearted' |
   'info' |
   'less' |
+  'link' |
   'loading' |
   'logout' |
   'menu' |
@@ -100,6 +102,7 @@ export function Icon(props: { name: IconName }) {
     hearted: <FavoriteOutlinedIcon></FavoriteOutlinedIcon>,
     info: <InfoOutlinedIcon></InfoOutlinedIcon>,
     less: <ExpandLessIcon></ExpandLessIcon>,
+    link: <IosShareIcon></IosShareIcon>,
     loading: <SyncOutlinedIcon></SyncOutlinedIcon>,
     logout: <LogoutIcon></LogoutIcon>,
     menu: <MenuOutlinedIcon></MenuOutlinedIcon>,

@@ -123,6 +123,13 @@ export function Gallery() {
       fontSize: '0.75em',
       textAlign: 'center',
     },
+    spinner: {
+      width: 'min(70vw, 45vh)',
+      aspectRatio: '1',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }
   }
 
   // Cache All Images from Global Deck
@@ -203,7 +210,13 @@ export function Gallery() {
           <div style={styles.title}>{viewedCard.content.title}</div>
           <div style={styles.credit}>by {viewedCard.content.author}</div>
           <div style={styles.credit}>{localDate ? `${localDate}` : ''}</div>
-          <img style={styles.image} src={imageCache[viewedCard.id]} />
+          {
+            imageCache[viewedCard.id] ?
+            <img style={styles.image} src={imageCache[viewedCard.id]} /> :
+            <div style={styles.spinner} className='spin'>
+              <Icon name='loading'></Icon>
+            </div>
+          }
           <div style={styles.description}>{viewedCard.content.description}</div>
           {browse}
         </div>
@@ -215,6 +228,7 @@ export function Gallery() {
     <div style={styles.gallery}>
       <div style={styles.cards}>
         {
+          displayedCards.length > 0 ?
           displayedCards.map((card: Card, i: number) => {
             let cardLocalDate;
             if (card.content.date) {
@@ -227,7 +241,10 @@ export function Gallery() {
               <div style={styles.cardCredit}>{card.content.author && `${card.content.author}`}</div>
               <div style={styles.cardCredit}>{card.content.date && `${cardLocalDate}`}</div>
             </wired-card>
-          })
+          }) :
+          <div style={styles.spinner} className='spin'>
+            <Icon name='loading'></Icon>
+          </div>
         }
       </div>
       {viewedCard && viewDialog}

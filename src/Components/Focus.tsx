@@ -7,6 +7,7 @@ import { useCallback, useContext, useEffect, useState } from 'react';
 import { FocusContext, HotkeysContext, ImageCacheContext, LoadingContext } from '../lib/contexts.ts';
 import { BLANK_IMAGE } from '../lib/images.ts';
 import { likeGlobalCard } from '../lib/clients.ts';
+import { externalLink } from '../lib/hooks.ts';
 
 export function Focus(props: BoardProps<GameState>) {
   const { loading, setLoading } = useContext(LoadingContext);
@@ -234,6 +235,7 @@ export function Focus(props: BoardProps<GameState>) {
       setDisplayedCard(<wired-dialog open onClick={() => { unfocusCards() }}>
         <div style={styles.focus} onClick={e => owned && e.stopPropagation()}>
           <Likes card={card} likeCard={props.moves.likeCard} matchId={props.matchID} />
+          { !props.isMultiplayer && <Share id={card.id} /> }
           <div style={styles.title}>{card.content.title}</div>
           <div style={styles.credit}>by {card.content.author}</div>
           <div style={styles.credit}>{localDate ? `${localDate}` : ''}</div>
@@ -403,6 +405,36 @@ export function Likes({ card, likeCard, matchId }: LikesProps) {
       <div style={styles.likes} onClick={handleLike}>
         {sessionStorage.getItem(`${matchId}-${card.id}-liked`) == '1' ? <Icon name="hearted" /> : <Icon name="heart" />}
         {sessionStorage.getItem(`${matchId}-${card.id}-liked`) == '1' && likes}
+      </div>
+    </>
+  )
+}
+
+export function Share({ id }: { id: number }) {
+  const styles: { [key: string]: Properties<string | number> } = {
+    likes: {
+      width: '1.75em',
+      height: '1.75em',
+      position: 'absolute',
+      zIndex: '1',
+      top: '2.75em',
+      right: '-2.5em',
+      padding: '1em',
+      fontSize: '0.75em',
+      textAlign: 'center',
+      backgroundColor: '#eee',
+      borderRadius: '2em',
+      boxShadow: '2px 2px 1px black',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  }
+  return (
+    <>
+      <div style={styles.likes} onClick={() => { externalLink(`https://blankwhite.cards/card/${id}`) }}>
+        <Icon name="link" />
       </div>
     </>
   )
