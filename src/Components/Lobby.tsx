@@ -183,7 +183,7 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
       if (matchID.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
         // Set room for Discord
         if (localStorage.getItem('instance_id')) {
-          fetch(`https://api.mcteamster.com/common/rooms/${localStorage.getItem('instance_id')}/${matchID}`, {
+          fetch(`https://api.mcteamster.com/common/rooms/${localStorage.getItem('instance_id')}/${matchID}?game=white`, {
             method: "PUT",
           })
         }
