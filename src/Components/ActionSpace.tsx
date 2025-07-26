@@ -374,14 +374,22 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
             }} elevation={2}>
             <Icon name='take' />Save
           </wired-card> :
-          <Link to="/card" rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='pile' />Gallery</wired-card></Link>
+          <Link to="/card" rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='search' />Gallery</wired-card></Link>
       }
       <wired-card style={{
         ...styles.button,
         width: '3em',
         color: ((playerID == '0') ? undefined : 'grey'), // Only the host can load cards
       }} onClick={() => { if (playerID == '0') { setMode('menu-tools-loader') } }} elevation={2}>
-        <Icon name='display' />Load
+        {
+          isMultiplayer ?
+          <>
+            <Icon name='display' />Load
+          </> :
+          <>
+            <Icon name='global' />Submit
+          </>
+        }
       </wired-card>
       <wired-card style={{
         ...styles.button,

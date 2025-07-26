@@ -2,6 +2,7 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import BackHandOutlinedIcon from '@mui/icons-material/BackHandOutlined';
 import BookOutlinedIcon from '@mui/icons-material/BookOutlined';
+import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
 import CasinoOutlinedIcon from '@mui/icons-material/CasinoOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import CollectionsOutlinedIcon from '@mui/icons-material/CollectionsOutlined';
@@ -32,7 +33,6 @@ import RecyclingIcon from '@mui/icons-material/Recycling';
 import SaveAltOutlinedIcon from '@mui/icons-material/SaveAltOutlined';
 import ScreenRotationOutlinedIcon from '@mui/icons-material/ScreenRotationOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import SportsEsportsOutlinedIcon from '@mui/icons-material/SportsEsportsOutlined';
 import SyncOutlinedIcon from '@mui/icons-material/SyncOutlined';
 import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
@@ -113,7 +113,7 @@ export function Icon(props: { name: IconName }) {
     pile: <CollectionsOutlinedIcon></CollectionsOutlinedIcon>,
     prev: <ArrowBackIosNewIcon></ArrowBackIosNewIcon>,
     search: <SearchOutlinedIcon></SearchOutlinedIcon>,
-    settings: <SettingsOutlinedIcon></SettingsOutlinedIcon>,
+    settings: <BuildOutlinedIcon></BuildOutlinedIcon>,
     send: <ForwardOutlinedIcon></ForwardOutlinedIcon>,
     shuffle: <RecyclingIcon></RecyclingIcon>,
     single: <PersonIcon></PersonIcon>,
