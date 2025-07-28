@@ -148,6 +148,8 @@ export function Gallery() {
           decompressImage(card.content.image).then(res => {
             dispatchImage({ id: card.id, value: res });
           });
+        } else {
+          dispatchImage({ id: card.id, value: BLANK_IMAGE })
         }
       }
     })
