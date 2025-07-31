@@ -433,6 +433,7 @@ function Notices(props: NoticesProps) {
 
   const styles: { [key: string]: Properties<string | number> } = {
     notice: {
+      textAlign: 'center',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center',
