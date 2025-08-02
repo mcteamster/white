@@ -69,7 +69,7 @@ export function Finalise({ multiplayer }: FinaliseProps) {
       <wired-card elevation={5} style={styles.submit} onClick={e => e.stopPropagation()}>
         <wired-input id="titleInput" style={styles.title} placeholder="Title" maxlength={50}></wired-input>
         <wired-card id="flavourbox" style={styles.flavourbox}>
-          <textarea id="descriptionInput" style={styles.description} placeholder="Description" maxLength={140} required></textarea>
+          <textarea id="descriptionInput" style={styles.description} placeholder="Describe what this card does here" maxLength={140} required></textarea>
         </wired-card>
         <wired-input id="authorInput" style={styles.author} placeholder="Author" maxlength={25}></wired-input>
         <div style={styles.author}>Cards created under Creative Commons CC-BY 4.0.</div>
