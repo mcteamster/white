@@ -44,6 +44,7 @@ export function CardFace(card: Card) {
         display: 'flex',
         flexDirection: 'column',
         textAlign: 'center',
+        overflowWrap: 'anywhere',
       }
     }
 

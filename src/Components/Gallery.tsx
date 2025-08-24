@@ -23,6 +23,7 @@ export function Gallery() {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
+      overflowWrap: 'anywhere',
     },
     cards: {
       width: '100%',

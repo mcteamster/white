@@ -57,6 +57,7 @@ export function Focus(props: BoardProps<GameState>) {
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
+        overflowWrap: 'anywhere',
       },
       title: {
         width: 'min(70vw, 45vh)',
