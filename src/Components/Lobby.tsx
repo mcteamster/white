@@ -346,9 +346,15 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
 
           <div style={{ ...styles.presets, display: (stage == 'create') ? undefined : 'none' }}>
             <div style={styles.subheading}>Choose Region</div>
-            <wired-card style={{ ...styles.region, backgroundColor: (region == 'NA') ? '#eee' : undefined }} onClick={() => { setRegion('NA'); }}>America</wired-card>
-            <wired-card style={{ ...styles.region, backgroundColor: (region == 'EU') ? '#eee' : undefined }} onClick={() => { setRegion('EU'); }}>Europe</wired-card>
-            <wired-card style={{ ...styles.region, backgroundColor: (region == 'AP') ? '#eee' : undefined }} onClick={() => { setRegion('AP'); }}>Asia</wired-card>
+            {
+              import.meta.env.VITE_MULTI_REGION == 'true' ?
+              <>
+                <wired-card style={{ ...styles.region, backgroundColor: (region == 'NA') ? '#eee' : undefined }} onClick={() => { setRegion('NA'); }}>America</wired-card>
+                <wired-card style={{ ...styles.region, backgroundColor: (region == 'EU') ? '#eee' : undefined }} onClick={() => { setRegion('EU'); }}>Europe</wired-card>
+                <wired-card style={{ ...styles.region, backgroundColor: (region == 'AP') ? '#eee' : undefined }} onClick={() => { setRegion('AP'); }}>Asia</wired-card>
+              </>
+              : <wired-card style={{ ...styles.region, backgroundColor: (region == 'default') ? '#eee' : undefined }} onClick={() => { setRegion('default'); }}>LAN</wired-card>
+            }
           </div>
 
           <div style={{ display: (['join', 'create'].includes(stage)) ? undefined : 'none' }}>
