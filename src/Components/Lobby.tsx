@@ -181,9 +181,14 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
       });
 
       if (matchID.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
-        // Set room for Discord
         if (localStorage.getItem('instance_id')) {
+          // Set room for Discord
           fetch(`https://api.mcteamster.com/common/rooms/${localStorage.getItem('instance_id')}/${matchID}?game=white`, {
+            method: "PUT",
+          })
+        } else if (import.meta.env.VITE_ORIGIN == 'https://blankwhite.cards') {
+          // Track room for official instance
+          fetch(`https://api.mcteamster.com/common/rooms/${new Date().getTime()}/${matchID}?game=white`, {
             method: "PUT",
           })
         }
