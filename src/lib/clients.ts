@@ -21,7 +21,11 @@ try {
     try {
       const deckChunk: GameState = await (await fetch(`/decks/global_${chunk}01.json`)).json();
       startingDeck.cards.push(...deckChunk.cards)
-      chunk++;
+      if (deckChunk.cards.length == 100) {
+        chunk++;
+      } else {
+        chunk = -1;
+      }
     } catch (e) {
       console.debug(e)
       chunk = -1;
