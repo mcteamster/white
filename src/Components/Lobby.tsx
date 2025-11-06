@@ -9,6 +9,13 @@ import { discordSdk } from "../lib/discord";
 import discordLogo from '../assets/discord.svg';
 
 const styles: { [key: string]: Properties<string | number> } = {
+  title: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    fontSize: '1.75em',
+  },
   dialog: {
     display: 'flex',
     flexDirection: 'column',
@@ -297,6 +304,7 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
 
   return (
     <wired-dialog open>
+      <div style={styles.title}><Icon name='copy' />&nbsp;Blank White Cards</div>
       <Notices region={region}/>
       <div style={styles.dialog}>
         <wired-card style={styles.multiplayer}>

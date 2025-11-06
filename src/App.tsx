@@ -114,10 +114,7 @@ const App = () => {
               <div style={{ backgroundColor: (dimensions.upright) ? 'white' : '#eee' }}>
                 <BrowserRouter>
                   <Routes>
-                    <Route path="/" element={<>
-                      <Lobby globalSize={startingDeck.cards.length || 0} region={region} setRegion={setRegion} />
-                      <GlobalBlankWhiteCardsClient />
-                    </>} />
+                    <Route path="/" element={<Lobby globalSize={startingDeck.cards.length || 0} region={region} setRegion={setRegion} />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/app" element={<GlobalBlankWhiteCardsClient playerID='0' />} />
                     <Route path="/card" element={<Gallery />}>
@@ -126,10 +123,7 @@ const App = () => {
                     <Route path="/*" element={<>
                       {(validMatch) ?
                         <MultiplayerClient playerID={auth.playerID} matchID={auth.matchID} credentials={auth.credentials} /> :
-                        <>
-                          <Lobby globalSize={startingDeck.cards.length || 0} region={region} setRegion={setRegion} />
-                          <GlobalBlankWhiteCardsClient />
-                        </>}
+                        <Lobby globalSize={startingDeck.cards.length || 0} region={region} setRegion={setRegion} />}
                     </>}></Route>
                   </Routes>
                 </BrowserRouter>
