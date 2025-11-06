@@ -12,11 +12,22 @@ import { initaliseDiscord } from './discord';
 initaliseDiscord();
 
 // Global Deck Singleplayer
-export let startingDeck: GameState;
+export let startingDeck: GameState = { cards: [] };
 let SetupGame: Game = BlankWhiteCards;
 try {
-  startingDeck = await (await fetch(`/decks/global.json`)).json();
-  if (startingDeck.cards && startingDeck.cards.length > 0) {
+  // Fetch cards chunks of 100
+  let chunk = 0;
+  while (chunk >= 0) {
+    try {
+      const deckChunk: GameState = await (await fetch(`/decks/global_${chunk}01.json`)).json();
+      startingDeck.cards.push(...deckChunk.cards)
+      chunk++;
+    } catch (e) {
+      console.debug(e)
+      chunk = -1;
+    }
+  }
+  if (startingDeck?.cards.length > 0) {
     SetupGame = { ...BlankWhiteCards, setup: () => (startingDeck) }
   }
 } catch (e) {
