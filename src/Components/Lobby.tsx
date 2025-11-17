@@ -393,11 +393,13 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
                   };
                   setTimeout(() => {
                     const enterGameButton = document.getElementById('enterGameButton') as HTMLElement;
-                    enterGameButton.style.color = 'red';
-                    setTimeout(() => {
-                      enterGameButton.style.color = 'black';
-                      setJoining(false);
-                    }, 500)
+                    if (enterGameButton) {
+                      enterGameButton.style.color = 'red';
+                      setTimeout(() => {
+                        enterGameButton.style.color = 'black';
+                        setJoining(false);
+                      }, 500)
+                    }
                   }, 3000)
                 }
               }}>
