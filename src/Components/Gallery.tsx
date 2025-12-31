@@ -103,8 +103,8 @@ export function Gallery() {
       alignItems: 'center',
     },
     card: {
-      width: '9em',
-      height: '9em',
+      width: '9.5em',
+      height: '9.5em',
       borderRadius: '0.5em',
       backgroundColor: 'white',
       textAlign: 'center',
@@ -113,7 +113,7 @@ export function Gallery() {
       justifyContent: 'center',
     },
     cardTitle: {
-      fontSize: '1em',
+      fontSize: '0.9em',
       fontWeight: 'bold',
     },
     cardImage: {
@@ -122,6 +122,10 @@ export function Gallery() {
     },
     cardCredit: {
       fontSize: '0.75em',
+      textAlign: 'center',
+    },
+    cardDate: {
+      fontSize: '0.6em',
       textAlign: 'center',
     },
     spinner: {
@@ -242,7 +246,7 @@ export function Gallery() {
               {card.id != 0 && <img style={styles.cardImage} src={imageCache[card.id] || BLANK_IMAGE}></img>}
               <div style={styles.cardTitle}>{card.content.title}</div>
               <div style={styles.cardCredit}>{card.content.author && `${card.content.author}`}</div>
-              <div style={styles.cardCredit}>{card.content.date && `${cardLocalDate}`}</div>
+              <div style={styles.cardDate}>{card.content.date && `${cardLocalDate}`}</div>
             </wired-card>
           }) :
           <div style={styles.spinner} className='spin'>
