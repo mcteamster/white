@@ -194,8 +194,7 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
             method: "PUT",
           })
         } else if (import.meta.env.VITE_ORIGIN == 'https://blankwhite.cards') {
-          // Track room for official instance
-          fetch(`https://api.mcteamster.com/common/rooms/${new Date().getTime()}/${matchID}?game=white`, {
+          fetch(`https://api.mcteamster.com/common/rooms/${matchID}/${matchID}?game=white`, {
             method: "PUT",
           })
         }
