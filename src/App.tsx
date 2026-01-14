@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Lobby } from './Components/Lobby';
 import { About } from "./Components/About";
 import { AuthContext, AuthType, FocusContext, HotkeysContext, LoadingContext } from "./lib/contexts";
-import { GlobalBlankWhiteCardsClient, parsePathCode, getRegion, startingDeck, lobbyClients, gameClients } from "./lib/clients";
+import { GlobalBlankWhiteCardsClient, parsePathCode, getRegion, startingDeck, lobbyClients, gameClients, onDeckUpdate, deckLoading } from "./lib/clients";
 import { Rotate } from "./Components/Icons";
 import { useHotkeys, useWindowDimensions } from "./lib/hooks";
 import { Gallery } from "./Components/Gallery";
@@ -14,6 +14,17 @@ import { Virgo2AWS } from '@mcteamster/virgo';
 const App = () => {
   // Loading Status
   const [loading, setLoading] = useState(false);
+
+  // Global Deck Size (reactive to chunk loading)
+  const [globalSize, setGlobalSize] = useState(startingDeck.cards.length);
+  const [isDeckLoading, setIsDeckLoading] = useState(deckLoading);
+  
+  useEffect(() => {
+    return onDeckUpdate(() => {
+      setGlobalSize(startingDeck.cards.length);
+      setIsDeckLoading(deckLoading);
+    });
+  }, []);
 
   // Authentication
   const [auth, setAuthState] = useState({
@@ -114,10 +125,7 @@ const App = () => {
               <div style={{ backgroundColor: (dimensions.upright) ? 'white' : '#eee' }}>
                 <BrowserRouter>
                   <Routes>
-                    <Route path="/" element={<>
-                      <Lobby globalSize={startingDeck.cards.length || 0} region={region} setRegion={setRegion} />
-                      <GlobalBlankWhiteCardsClient />
-                    </>} />
+                    <Route path="/" element={<Lobby globalSize={globalSize} deckLoading={isDeckLoading} region={region} setRegion={setRegion} />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/app" element={<GlobalBlankWhiteCardsClient playerID='0' />} />
                     <Route path="/card" element={<Gallery />}>
@@ -126,10 +134,8 @@ const App = () => {
                     <Route path="/*" element={<>
                       {(validMatch) ?
                         <MultiplayerClient playerID={auth.playerID} matchID={auth.matchID} credentials={auth.credentials} /> :
-                        <>
-                          <Lobby globalSize={startingDeck.cards.length || 0} region={region} setRegion={setRegion} />
-                          <GlobalBlankWhiteCardsClient />
-                        </>}
+                        <Lobby globalSize={globalSize} deckLoading={isDeckLoading} region={region} setRegion={setRegion} />
+                      }
                     </>}></Route>
                   </Routes>
                 </BrowserRouter>

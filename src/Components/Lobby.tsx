@@ -132,11 +132,12 @@ const styles: { [key: string]: Properties<string | number> } = {
 
 interface LobbyProps {
   globalSize: number;
+  deckLoading: boolean;
   region: 'AP' | 'EU' | 'NA' | 'default';
   setRegion: (region: 'AP' | 'EU' | 'NA' | 'default') => void;
 }
 
-export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
+export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps) {
   const navigate = useNavigate();
   const { auth, setAuth } = useContext(AuthContext);
   const [stage, setStage] = useState('landing');
@@ -422,9 +423,16 @@ export function Lobby({ globalSize, region, setRegion }: LobbyProps) {
           <wired-card style={styles.singleplayer}>
             <div style={styles.heading}><Icon name="single" />&nbsp;Single Device</div>
             <div style={styles.subheading}>Using the Global Deck</div>
-            <wired-card style={styles.action} onClick={enterSinglePlayer}>
+            <wired-card 
+              style={{
+                ...styles.action,
+                opacity: deckLoading ? 0.5 : 1,
+                cursor: deckLoading ? 'not-allowed' : 'pointer'
+              }} 
+              onClick={deckLoading ? undefined : enterSinglePlayer}
+            >
               <div style={{ ...styles.heading, padding: '0 0.25em' }}>Play Now</div>
-              <div >{globalSize} Cards</div>
+              <div>{deckLoading ? 'Loading...' : `${globalSize} Cards`}</div>
             </wired-card>
             <div style={styles.subheading}>Draw and add your own!</div>
           </wired-card>

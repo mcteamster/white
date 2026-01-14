@@ -1,6 +1,5 @@
 // Clients
 import { LobbyClient } from 'boardgame.io/client';
-import { Game } from 'boardgame.io';
 import { Client } from 'boardgame.io/react';
 import { SocketIO } from 'boardgame.io/multiplayer';
 import { BlankWhiteCards, GameState } from '../Game';
@@ -13,38 +12,58 @@ initaliseDiscord();
 
 // Global Deck Singleplayer
 export let startingDeck: GameState = { cards: [] };
-let SetupGame: Game = BlankWhiteCards;
-try {
-  // Fetch cards chunks of 100
-  let chunk = 0;
-  while (chunk >= 0) {
-    try {
-      const deckChunk: GameState = await (await fetch(`/decks/global_${chunk}01.json`)).json();
-      startingDeck.cards.push(...deckChunk.cards)
-      if (deckChunk.cards.length == 100) {
-        chunk++;
-      } else {
-        chunk = -1;
-      }
-    } catch (e) {
-      console.debug(e)
-      chunk = -1;
-    }
-  }
-  if (startingDeck?.cards.length > 0) {
-    SetupGame = { ...BlankWhiteCards, setup: () => (startingDeck) }
-  }
-} catch (e) {
-  console.error(e)
+export let deckLoading = true;
 
-  // Redirect to canonical origin
-  if (window.location.pathname != "/") {
-    window.location.pathname = "/";
+// Listeners for deck updates
+const deckUpdateListeners: Set<() => void> = new Set();
+export const onDeckUpdate = (callback: () => void) => {
+  deckUpdateListeners.add(callback);
+  return () => { deckUpdateListeners.delete(callback); };
+};
+
+const notifyDeckUpdate = () => {
+  deckUpdateListeners.forEach(cb => cb());
+};
+
+const fetchGlobalDeck = async () => {
+  try {
+    const fetchChunk = async (chunk: number): Promise<GameState | null> => {
+      try {
+        return await (await fetch(`/decks/global_${chunk}01.json`)).json();
+      } catch {
+        return null;
+      }
+    };
+
+    // Try fetching first 10 chunks in parallel
+    const chunks = await Promise.all(
+      Array.from({ length: 10 }, (_, i) => fetchChunk(i))
+    );
+
+    // Add cards in order and notify
+    for (const chunk of chunks) {
+      if (chunk?.cards) {
+        startingDeck.cards.push(...chunk.cards);
+        notifyDeckUpdate();
+      } else {
+        break; // Stop at first missing chunk
+      }
+    }
+    
+    deckLoading = false;
+    notifyDeckUpdate();
+  } catch (e) {
+    console.error(e)
+    deckLoading = false;
+    notifyDeckUpdate();
   }
-}
+};
+
+// Start fetching after a short delay
+setTimeout(fetchGlobalDeck, 100);
 
 export const GlobalBlankWhiteCardsClient = Client({
-  game: SetupGame,
+  game: { ...BlankWhiteCards, setup: () => (startingDeck) },
   board: BlankWhiteCardsBoard,
   debug: false,
 });
