@@ -35,13 +35,9 @@ const fetchGlobalDeck = async () => {
       }
     };
 
-    // Try fetching first 10 chunks in parallel
-    const chunks = await Promise.all(
-      Array.from({ length: 10 }, (_, i) => fetchChunk(i))
-    );
-
-    // Add cards in order and notify
-    for (const chunk of chunks) {
+    // Fetch chunks sequentially
+    for (let i = 0; i < 100; i++) {
+      const chunk = await fetchChunk(i);
       if (chunk?.cards) {
         startingDeck.cards.push(...chunk.cards);
         notifyDeckUpdate();
@@ -52,8 +48,7 @@ const fetchGlobalDeck = async () => {
     
     deckLoading = false;
     notifyDeckUpdate();
-  } catch (e) {
-    console.error(e)
+  } catch {
     deckLoading = false;
     notifyDeckUpdate();
   }
