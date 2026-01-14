@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "react-router";
 import type { Properties } from 'csstype';
 import { Browse, Icon } from './Icons';
-import { startingDeck } from '../lib/clients';
+import { startingDeck, onDeckUpdate } from '../lib/clients';
 import { useCallback, useContext, useEffect, useState } from "react";
 import { Card, getAdjacentCard } from "../Cards";
 import { HotkeysContext, ImageCacheType } from "../lib/contexts";
@@ -14,6 +14,7 @@ export function Gallery() {
   const { hotkeys } = useContext(HotkeysContext);
   const { height } = useWindowDimensions();
   const [displayedCards, setDisplayedCards] = useState<Card[]>([]);
+  const [allCards, setAllCards] = useState<Card[]>([]);
   const dimensions = useWindowDimensions();
 
   const styles: { [key: string]: Properties<string | number> } = {
@@ -139,31 +140,41 @@ export function Gallery() {
 
   // Cache All Images from Global Deck
   const [imageCache, setImageCache] = useState<ImageCacheType>({});
-  const dispatchImage = useCallback((cardImage: { id: number, value: string }) => {
-    imageCache[cardImage.id] = cardImage.value;
-    setImageCache(imageCache)
-  }, [imageCache, setImageCache])
 
   useEffect(() => {
-    startingDeck.cards.forEach((card: Card) => {
-      if (card.id) {
-        if (card.content.image?.startsWith('data:image/png;base64,')) { // Support PNG Data URIs
-          dispatchImage({ id: card.id, value: card.content.image })
-        } else if (card.content.image) { // RLE UTF-16 String
-          decompressImage(card.content.image).then(res => {
-            dispatchImage({ id: card.id, value: res });
-          });
-        } else {
-          dispatchImage({ id: card.id, value: BLANK_IMAGE })
-        }
-      }
-    })
-    setTimeout(() => {
-      setDisplayedCards([...startingDeck.cards]);
-    }, 500)
-  }, [setDisplayedCards, dispatchImage])
+    const updateDeck = () => {
+      const newCards = [...startingDeck.cards];
+      setAllCards(newCards);
+      setDisplayedCards(newCards);
+      
+      setImageCache(prev => {
+        const updated = { ...prev };
+        let hasChanges = false;
+        
+        newCards.forEach((card: Card) => {
+          if (card.id && !updated[card.id]) {
+            hasChanges = true;
+            if (card.content.image?.startsWith('data:image/png;base64,')) {
+              updated[card.id] = card.content.image;
+            } else if (card.content.image) {
+              decompressImage(card.content.image).then(res => {
+                setImageCache(cache => ({ ...cache, [card.id!]: res }));
+              });
+            } else {
+              updated[card.id] = BLANK_IMAGE;
+            }
+          }
+        });
+        
+        return hasChanges ? updated : prev;
+      });
+    };
 
-  const globalDeck = startingDeck;
+    updateDeck();
+    return onDeckUpdate(updateDeck);
+  }, [])
+
+  const globalDeck = { cards: allCards };
   const params = useParams();
   const viewedCard = globalDeck.cards.find((card) => card.id == Number(params.cardID));
   let localDate;
