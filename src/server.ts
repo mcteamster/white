@@ -30,6 +30,23 @@ const server = Server({
 
 server.run(Number(process.env.PORT));
 
+// Cleanup rooms older than 12 hours
+setInterval(async () => {
+  const matches = await server.db.listMatches({ gameName: 'blank-white-cards' });
+  const now = Date.now();
+  const maxAge = 12 * 60 * 60 * 1000;
+
+  for (const matchID of matches) {
+    const { metadata } = await server.db.fetch(matchID, { metadata: true });
+    const created = new Date(metadata.createdAt).getTime();
+    
+    if (now - created > maxAge) {
+      await server.db.wipe(matchID);
+      console.log(`Cleaned up room: ${matchID}`);
+    }
+  }
+}, 60 * 60 * 1000); // Run every hour
+
 process.on('SIGTERM', () => {
   console.error("Exiting due to SIGTERM");
   process.exit(1);
