@@ -9,6 +9,7 @@ import { Rotate } from "./Components/Icons";
 import { useHotkeys, useWindowDimensions } from "./lib/hooks";
 import { Gallery } from "./Components/Gallery";
 import { createAnimatedCounter } from "./lib/animation";
+import { Virgo2AWS } from '@mcteamster/virgo';
 
 // Landing Page
 const App = () => {
