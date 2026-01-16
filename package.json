@@ -10,10 +10,7 @@
     "preview": "vite preview",
     "pull:global": "curl https://blankwhite.cards/decks/global.json > ./public/decks/global.json",
     "serve": "node --env-file=.env.production -r ts-node/register ./src/server.ts",
-    "serve:local": "node --env-file=.env.development -r ts-node/register ./src/server.ts",
-    "deploy": "mcdeploy white",
-    "deploy:client": "mcdeploy white client",
-    "deploy:service": "mcdeploy white service"
+    "serve:local": "node --env-file=.env.development -r ts-node/register ./src/server.ts"
   },
   "dependencies": {
     "@discord/embedded-app-sdk": "^2.0.0",
