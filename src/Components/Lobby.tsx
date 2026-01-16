@@ -153,10 +153,11 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
     const playerName = (document.getElementById("nameInput") as HTMLInputElement);
     if (!playerName.value) {
       playerName.style.color = 'red';
-      (document.getElementById('flavourbox') as HTMLElement).style.color = 'red';
+      const flavourbox = document.getElementById('flavourbox');
+      if (flavourbox) flavourbox.style.color = 'red';
       setTimeout(() => {
         playerName.style.color = 'black';
-        (document.getElementById('flavourbox') as HTMLElement).style.color = 'black';
+        if (flavourbox) flavourbox.style.color = 'black';
       }, 500)
       return false
     } else {
@@ -169,10 +170,11 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
     const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
     roomCode.value = "";
     roomCode.style.color = 'red';
-    (document.getElementById('flavourbox') as HTMLElement).style.color = 'red';
+    const flavourbox = document.getElementById('flavourbox');
+    if (flavourbox) flavourbox.style.color = 'red';
     setTimeout(() => {
       roomCode.style.color = 'black';
-      (document.getElementById('flavourbox') as HTMLElement).style.color = 'black';
+      if (flavourbox) flavourbox.style.color = 'black';
     }, 500)
   }, [setAuth])
 
@@ -432,7 +434,7 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
               onClick={deckLoading ? undefined : enterSinglePlayer}
             >
               <div style={{ ...styles.heading, padding: '0 0.25em' }}>Play Now</div>
-              <div>{deckLoading ? 'Loading...' : `${globalSize} Cards`}</div>
+              <div>{`${globalSize} Cards`}</div>
             </wired-card>
             <div style={styles.subheading}>Draw and add your own!</div>
           </wired-card>

@@ -8,7 +8,7 @@ import { GlobalBlankWhiteCardsClient, parsePathCode, getRegion, startingDeck, lo
 import { Rotate } from "./Components/Icons";
 import { useHotkeys, useWindowDimensions } from "./lib/hooks";
 import { Gallery } from "./Components/Gallery";
-import { Virgo2AWS } from '@mcteamster/virgo';
+import { createAnimatedCounter } from "./lib/animation";
 
 // Landing Page
 const App = () => {
@@ -20,10 +20,17 @@ const App = () => {
   const [isDeckLoading, setIsDeckLoading] = useState(deckLoading);
   
   useEffect(() => {
-    return onDeckUpdate(() => {
-      setGlobalSize(startingDeck.cards.length);
+    const counter = createAnimatedCounter(setGlobalSize, 5);
+    
+    const unsubscribe = onDeckUpdate(() => {
+      counter.setTarget(startingDeck.cards.length);
       setIsDeckLoading(deckLoading);
     });
+    
+    return () => {
+      unsubscribe();
+      counter.stop();
+    };
   }, []);
 
   // Authentication
@@ -127,7 +134,7 @@ const App = () => {
                   <Routes>
                     <Route path="/" element={<Lobby globalSize={globalSize} deckLoading={isDeckLoading} region={region} setRegion={setRegion} />} />
                     <Route path="/about" element={<About />} />
-                    <Route path="/app" element={<GlobalBlankWhiteCardsClient playerID='0' />} />
+                    <Route path="/app" element={isDeckLoading ? <div>Loading cards {globalSize}</div> : <GlobalBlankWhiteCardsClient playerID='0' />} />
                     <Route path="/card" element={<Gallery />}>
                       <Route path=":cardID" element={<Gallery />} />
                     </Route>
