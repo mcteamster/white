@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Card } from '../Cards';
-import { resizeImage, compressImage } from '../lib/images';
-import { Icon } from './Icons';
+import { Card } from '../../Cards';
+import { resizeImage, compressImage } from '../../lib/images';
+import { Icon } from '../Icons';
 
 interface CardEditorProps {
   onSave: (card: Omit<Card, 'id'>) => void;

@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router";
 import { useCallback, useEffect, useState } from 'react';
 import { Lobby } from './Components/Lobby';
 import { About } from "./Components/About";
-import { DeckEditor } from "./Components/DeckEditor";
+import { DeckEditor } from "./Components/Editor/DeckEditor";
 import { AuthContext, AuthType, FocusContext, HotkeysContext, LoadingContext } from "./lib/contexts";
 import { GlobalBlankWhiteCardsClient, parsePathCode, getRegion, startingDeck, lobbyClients, gameClients, onDeckUpdate, deckLoading } from "./lib/clients";
 import { Rotate } from "./Components/Icons";
