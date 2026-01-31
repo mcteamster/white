@@ -7,11 +7,11 @@ import { Card } from '../Cards';
 import { BLANK_IMAGE, decompressImage } from '../lib/images';
 
 // Card Display Components for different view modes
-function FullCardView({ card, onDelete }: { card: Card, onDelete: () => void }) {
+function FullCardView({ card }: { card: Card }) {
   return (
     <wired-card key={card.id} style={{ 
       padding: '0.75em',
-      height: '320px',
+      height: '280px',
       width: '280px',
       backgroundColor: 'white',
       display: 'flex',
@@ -46,67 +46,50 @@ function FullCardView({ card, onDelete }: { card: Card, onDelete: () => void }) 
         <small>by {card.content.author}</small>
         {card.likes && <div style={{ fontSize: '0.8em', color: '#666' }}>❤️ {card.likes}</div>}
       </div>
-      
-      {/* Action Buttons */}
-      <div style={{ display: 'flex', gap: '0.5em', justifyContent: 'center' }}>
-        <wired-card 
-          style={{ padding: '0.25em 0.5em', cursor: 'pointer', color: 'red' }}
-          onClick={onDelete}
-        >
-          ✕ Delete
-        </wired-card>
-      </div>
     </wired-card>
   );
 }
 
-function CompactCardView({ card, onDelete }: { card: Card, onDelete: () => void }) {
+function CompactCardView({ card }: { card: Card }) {
   return (
     <wired-card key={card.id} style={{ 
-      padding: '0.75em',
-      height: '200px',
-      width: '280px',
-      backgroundColor: 'white',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      alignItems: 'center'
+      padding: '0.5em',
+      height: '100px',
+      width: '100%',
+      maxWidth: '600px',
+      backgroundColor: 'white'
     }}>
-      {/* Smaller Image */}
       <div style={{
-        width: '60px',
-        height: '60px',
-        backgroundColor: 'white',
-        marginBottom: '0.5em',
         display: 'flex',
-        justifyContent: 'center',
+        flexDirection: 'row',
         alignItems: 'center',
-        fontSize: '0.7em',
-        textAlign: 'center',
-        overflow: 'hidden'
+        justifyContent: 'center',
+        gap: '1em',
+        height: '100%'
       }}>
-        {card.content.image ? (
-          <CardImage card={card} />
-        ) : (
-          <div style={{ color: '#999', fontSize: '0.7em' }}>No Image</div>
-        )}
-      </div>
-      
-      {/* Card Details */}
-      <div style={{ marginBottom: '0.5em', textAlign: 'center' }}>
-        <h4 style={{ margin: '0 0 0.25em 0', fontSize: '1em' }}>{card.content.title}</h4>
-        <p style={{ margin: '0 0 0.25em 0', fontSize: '0.8em' }}>{card.content.description}</p>
-        <small>by {card.content.author}</small>
-      </div>
-      
-      {/* Action Buttons */}
-      <div style={{ display: 'flex', gap: '0.5em', justifyContent: 'center' }}>
-        <wired-card 
-          style={{ padding: '0.25em 0.5em', cursor: 'pointer', color: 'red' }}
-          onClick={onDelete}
-        >
-          ✕
-        </wired-card>
+        {/* Thumbnail */}
+        <div style={{
+          width: '100px',
+          height: '100px',
+          backgroundColor: 'white',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          overflow: 'hidden',
+          flexShrink: 0
+        }}>
+          {card.content.image ? (
+            <CardImage card={card} />
+          ) : (
+            <div style={{ color: '#999', fontSize: '0.7em' }}>No Image</div>
+          )}
+        </div>
+        
+        {/* Title and Description */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+          <h4 style={{ margin: '0 0 0.25em 0', fontSize: '1em' }}>{card.content.title}</h4>
+          <p style={{ margin: 0, fontSize: '0.8em', color: '#666' }}>{card.content.description}</p>
+        </div>
       </div>
     </wired-card>
   );
@@ -116,8 +99,8 @@ function ImageOnlyCardView({ card }: { card: Card }) {
   return (
     <wired-card key={card.id} style={{ 
       padding: '0.25em',
-      height: '90px',
-      width: '90px',
+      height: '60px',
+      width: '60px',
       backgroundColor: 'white',
       display: 'flex',
       justifyContent: 'center',
@@ -125,8 +108,8 @@ function ImageOnlyCardView({ card }: { card: Card }) {
     }}>
       {/* Image Only */}
       <div style={{
-        width: '80px',
-        height: '80px',
+        width: '50px',
+        height: '50px',
         backgroundColor: 'white',
         display: 'flex',
         justifyContent: 'center',
@@ -147,13 +130,46 @@ function CardImage({ card }: { card: Card }) {
 
   const handleQuotaExceeded = (e: any) => {
     if (e instanceof DOMException && e.name === 'QuotaExceededError') {
-      console.warn('LocalStorage quota exceeded, clearing image cache');
-      // Clear all editor image cache
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('editor_image_')) {
-          localStorage.removeItem(key);
-        }
-      });
+      console.warn('LocalStorage quota exceeded, clearing old cache entries');
+      clearOldCacheEntries();
+    }
+  };
+
+  const clearOldCacheEntries = () => {
+    const cacheEntries: Array<{key: string, timestamp: number}> = [];
+    
+    // Collect all editor cache entries with timestamps
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('editor_image_')) {
+        const timestampKey = `${key}_timestamp`;
+        const timestamp = parseInt(localStorage.getItem(timestampKey) || '0');
+        cacheEntries.push({ key, timestamp });
+      }
+    });
+
+    // Sort by timestamp (oldest first) and remove oldest 50%
+    cacheEntries.sort((a, b) => a.timestamp - b.timestamp);
+    const toRemove = Math.ceil(cacheEntries.length * 0.5);
+    
+    for (let i = 0; i < toRemove; i++) {
+      localStorage.removeItem(cacheEntries[i].key);
+      localStorage.removeItem(`${cacheEntries[i].key}_timestamp`);
+    }
+  };
+
+  const setCacheWithTimestamp = (key: string, value: string) => {
+    try {
+      localStorage.setItem(key, value);
+      localStorage.setItem(`${key}_timestamp`, Date.now().toString());
+    } catch (e) {
+      handleQuotaExceeded(e);
+      // Try once more after cleanup
+      try {
+        localStorage.setItem(key, value);
+        localStorage.setItem(`${key}_timestamp`, Date.now().toString());
+      } catch (e2) {
+        console.warn('Still cannot cache image after cleanup');
+      }
     }
   };
 
@@ -165,6 +181,8 @@ function CardImage({ card }: { card: Card }) {
       const cached = localStorage.getItem(cacheKey);
       
       if (cached) {
+        // Update timestamp for LRU
+        localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
         setImageSrc(cached);
         return;
       }
@@ -172,20 +190,12 @@ function CardImage({ card }: { card: Card }) {
       if (card.content.image?.startsWith('data:image/png;base64,')) {
         // PNG Data URI
         setImageSrc(card.content.image);
-        try {
-          localStorage.setItem(cacheKey, card.content.image);
-        } catch (e) {
-          handleQuotaExceeded(e);
-        }
+        setCacheWithTimestamp(cacheKey, card.content.image);
       } else if (card.content.image) {
         // Compressed image - decompress it
         decompressImage(card.content.image).then(decompressed => {
           setImageSrc(decompressed);
-          try {
-            localStorage.setItem(cacheKey, decompressed);
-          } catch (e) {
-            handleQuotaExceeded(e);
-          }
+          setCacheWithTimestamp(cacheKey, decompressed);
         });
       } else {
         setImageSrc(BLANK_IMAGE);
@@ -213,7 +223,6 @@ export function DeckEditor() {
     deck,
     saveDeck,
     addCard,
-    deleteCard,
     updateDeck
   } = useDeckEditor();
 
@@ -403,7 +412,7 @@ export function DeckEditor() {
           {/* Center - Title */}
           <div style={{ textAlign: 'center', flex: 1, margin: '0 1em' }}>
             <h1 style={{ margin: 0, fontSize: '1.5em' }}>
-              Deck Editor
+              Deck Editor (Beta)
               {deck.modified && <span style={{ color: 'orange', marginLeft: '0.5em' }}>●</span>}
             </h1>
             
@@ -411,39 +420,48 @@ export function DeckEditor() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25em', marginTop: '0.5em' }}>
               <wired-card 
                 style={{ 
-                  padding: '0.25em 0.5em', 
+                  padding: '0.5em', 
                   cursor: 'pointer',
-                  backgroundColor: viewMode === 'full' ? '#4CAF50' : '#eee',
-                  color: viewMode === 'full' ? 'white' : 'black',
-                  fontSize: '0.8em'
+                  backgroundColor: viewMode === 'full' ? '#ccc' : 'white',
+                  color: 'black',
+                  borderRadius: '1em',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
                 onClick={() => setViewMode('full')}
               >
-                Full
+                <Icon name="stop" />
               </wired-card>
               <wired-card 
                 style={{ 
-                  padding: '0.25em 0.5em', 
+                  padding: '0.5em', 
                   cursor: 'pointer',
-                  backgroundColor: viewMode === 'compact' ? '#4CAF50' : '#eee',
-                  color: viewMode === 'compact' ? 'white' : 'black',
-                  fontSize: '0.8em'
+                  backgroundColor: viewMode === 'compact' ? '#ccc' : 'white',
+                  color: 'black',
+                  borderRadius: '1em',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
                 onClick={() => setViewMode('compact')}
               >
-                Compact
+                <Icon name="view_list" />
               </wired-card>
               <wired-card 
                 style={{ 
-                  padding: '0.25em 0.5em', 
+                  padding: '0.5em', 
                   cursor: 'pointer',
-                  backgroundColor: viewMode === 'image' ? '#4CAF50' : '#eee',
-                  color: viewMode === 'image' ? 'white' : 'black',
-                  fontSize: '0.8em'
+                  backgroundColor: viewMode === 'image' ? '#ccc' : 'white',
+                  color: 'black',
+                  borderRadius: '1em',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
                 onClick={() => setViewMode('image')}
               >
-                Image
+                <Icon name="view_module" />
               </wired-card>
             </div>
           </div>
@@ -503,12 +521,10 @@ export function DeckEditor() {
           </div>
         ) : (
           filteredCards.map(card => {
-            const handleDelete = () => deleteCard(card.id);
-            
             if (viewMode === 'full') {
-              return <FullCardView key={card.id} card={card} onDelete={handleDelete} />;
+              return <FullCardView key={card.id} card={card} />;
             } else if (viewMode === 'compact') {
-              return <CompactCardView key={card.id} card={card} onDelete={handleDelete} />;
+              return <CompactCardView key={card.id} card={card} />;
             } else {
               return <ImageOnlyCardView key={card.id} card={card} />;
             }
