@@ -57,13 +57,15 @@ export function SelectionActions({
         <Icon name={allSelectedHidden ? "show" : "hide"} /> {allSelectedHidden ? 'Show' : 'Hide'}
       </wired-card>
       
-      <wired-card 
-        style={{...styles.selectionButton, ...styles.deleteButton}} 
-        onClick={onDelete} 
-        elevation={2}
-      >
-        <Icon name="discard" /> Delete
-      </wired-card>
+      {allSelectedHidden && (
+        <wired-card 
+          style={{...styles.selectionButton, ...styles.deleteButton}} 
+          onClick={onDelete} 
+          elevation={2}
+        >
+          <Icon name="discard" /> Delete
+        </wired-card>
+      )}
     </>
   );
 }
@@ -81,8 +83,7 @@ export function ViewModeToggle({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '0.25em',
-      marginTop: '0.5em'
+      gap: '0.25em'
     },
     viewModeButton: {
       padding: '0.5em', 

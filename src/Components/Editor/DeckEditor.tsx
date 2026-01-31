@@ -20,6 +20,7 @@ export function DeckEditor() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showCardCreator, setShowCardCreator] = useState(false);
+  const [editingCard, setEditingCard] = useState<Card | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [showLoadDialog, setShowLoadDialog] = useState(false);
@@ -75,8 +76,8 @@ export function DeckEditor() {
     const cardId = Array.from(selectedCards)[0];
     const cardToEdit = deck.cards.find(card => card.id === cardId);
     if (cardToEdit) {
-      // TODO: Open CardEditor modal with cardToEdit
-      console.log('Edit card:', cardToEdit);
+      setEditingCard(cardToEdit);
+      setShowCardCreator(true);
     }
   };
 
@@ -98,7 +99,7 @@ export function DeckEditor() {
       display: 'flex', 
       alignItems: 'center', 
       justifyContent: 'space-between',
-      padding: '1em 1em 0.5em 1em'
+      padding: '0.5em 1em'
     },
     loadButton: {
       height: '3em',
@@ -112,11 +113,6 @@ export function DeckEditor() {
       backgroundColor: '#eee',
       borderRadius: '1em',
       cursor: 'pointer'
-    },
-    centerTitle: {
-      textAlign: 'center',
-      flex: 1,
-      margin: '0 1em'
     },
     title: {
       margin: 0,
@@ -171,7 +167,7 @@ export function DeckEditor() {
       right: 0,
       backgroundColor: 'white',
       borderTop: '2px solid #ccc',
-      padding: '0.5em 1em 1em 1em',
+      padding: '0.5em',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -379,12 +375,24 @@ export function DeckEditor() {
   };
 
   const handleCardSave = (card: Omit<Card, 'id'>) => {
-    addCard(card);
+    if (editingCard) {
+      // Update existing card
+      const updatedCards = deck.cards.map(c => 
+        c.id === editingCard.id ? { ...card, id: editingCard.id } : c
+      );
+      updateDeck({ ...deck, cards: updatedCards, modified: true });
+    } else {
+      // Create new card
+      addCard(card);
+    }
     setShowCardCreator(false);
+    setEditingCard(undefined);
+    clearSelection();
   };
 
   const handleCardCancel = () => {
     setShowCardCreator(false);
+    setEditingCard(undefined);
   };
 
   const filteredCards = useMemo(() => {
@@ -405,53 +413,20 @@ export function DeckEditor() {
     <div style={styles.container}>
       <div style={styles.header}>
         <div style={styles.topRow}>
-          <wired-card style={styles.loadButton} onClick={() => fileInputRef.current?.click()} elevation={2}>
-            <Icon name="display" /> Load
-          </wired-card>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".html"
-            onChange={handleFileLoad}
-            style={styles.hiddenInput}
+          <h1 style={styles.title}>
+            Deck Editor [beta]
+            {deck.modified && <span style={{ color: 'orange', marginLeft: '0.5em' }}>●</span>}
+          </h1>
+          
+          <ViewModeToggle 
+            viewMode={viewMode} 
+            onViewModeChange={handleViewModeChange} 
           />
-
-          <div style={styles.centerTitle}>
-            <h1 style={styles.title}>
-              Deck Editor
-              {deck.modified && <span style={{ color: 'orange', marginLeft: '0.5em' }}>●</span>}
-            </h1>
-            
-            <ViewModeToggle 
-              viewMode={viewMode} 
-              onViewModeChange={handleViewModeChange} 
-            />
-          </div>
-
-          <wired-card 
-            style={{ 
-              ...styles.saveButton,
-              cursor: deck.cards.length === 0 ? 'not-allowed' : 'pointer',
-              opacity: deck.cards.length === 0 ? 0.5 : 1,
-              color: deck.cards.length === 0 ? 'grey' : undefined
-            }}
-            onClick={deck.cards.length === 0 ? undefined : saveDeck}
-            elevation={2}
-          >
-            <Icon name="take" /> Save
-          </wired-card>
         </div>
       </div>
 
       <div style={styles.cardsContainer}>
-        {showCardCreator ? (
-          <div style={styles.fullWidthContainer}>
-            <CardEditor 
-              onSave={handleCardSave}
-              onCancel={handleCardCancel}
-            />
-          </div>
-        ) : filteredCards.length === 0 ? (
+        {filteredCards.length === 0 ? (
           <div style={styles.emptyState}>
             {debouncedSearchTerm ? 'No cards match your search.' : 'No cards in deck. Create a new card or load an existing deck.'}
           </div>
@@ -508,6 +483,30 @@ export function DeckEditor() {
               <Icon name="create" /> Create
             </wired-card>
           )}
+          
+          <wired-card style={styles.loadButton} onClick={() => fileInputRef.current?.click()} elevation={2}>
+            <Icon name="display" /> Load
+          </wired-card>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".html"
+            onChange={handleFileLoad}
+            style={styles.hiddenInput}
+          />
+          
+          <wired-card 
+            style={{ 
+              ...styles.saveButton,
+              cursor: deck.cards.length === 0 ? 'not-allowed' : 'pointer',
+              opacity: deck.cards.length === 0 ? 0.5 : 1,
+              color: deck.cards.length === 0 ? 'grey' : undefined
+            }}
+            onClick={deck.cards.length === 0 ? undefined : saveDeck}
+            elevation={2}
+          >
+            <Icon name="take" /> Save
+          </wired-card>
         </div>
 
         <div style={styles.searchContainer}>
@@ -549,6 +548,14 @@ export function DeckEditor() {
               </div>
             </wired-card>
           </div>
+        )}
+
+        {showCardCreator && (
+          <CardEditor 
+            onSave={handleCardSave}
+            onCancel={handleCardCancel}
+            editingCard={editingCard}
+          />
         )}
       </div>
     </div>

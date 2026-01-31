@@ -21,6 +21,40 @@ export function CardEditor({ onSave, onCancel, editingCard }: CardEditorProps) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
 
+  const modalStyles = {
+    overlay: {
+      position: 'fixed' as const,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000
+    },
+    modal: {
+      backgroundColor: 'white',
+      borderRadius: '1em',
+      padding: '2em',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      overflow: 'auto',
+      position: 'relative' as const
+    },
+    closeButton: {
+      position: 'absolute' as const,
+      top: '1em',
+      right: '1em',
+      background: 'none',
+      border: 'none',
+      fontSize: '1.5em',
+      cursor: 'pointer',
+      color: '#666'
+    }
+  };
+
   useEffect(() => {
     if (mode === 'draw' && canvasRef.current) {
       const canvas = canvasRef.current;
@@ -86,12 +120,16 @@ export function CardEditor({ onSave, onCancel, editingCard }: CardEditorProps) {
 
     let imageData;
     if (hasDrawing && canvasRef.current) {
+      // New drawing created
       const image = await resizeImage(canvasRef.current.toDataURL("image/png"));
       if (import.meta.env.VITE_COMPRESS_IMAGES === 'true') {
         imageData = await compressImage(image);
       } else {
         imageData = image;
       }
+    } else if (editingCard?.content.image) {
+      // Preserve existing image when editing
+      imageData = editingCard.content.image;
     }
 
     const card: Omit<Card, 'id'> = {
@@ -122,18 +160,21 @@ export function CardEditor({ onSave, onCancel, editingCard }: CardEditorProps) {
 
   if (mode === 'draw') {
     return (
-      <wired-card style={{ padding: '1em' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1em' }}>
-          <h3>Draw Your Card</h3>
-          <div style={{ display: 'flex', gap: '0.5em' }}>
-            <wired-card style={{ padding: '0.5em', cursor: 'pointer' }} onClick={clearCanvas}>
-              Clear
-            </wired-card>
-            <wired-card style={{ padding: '0.5em', cursor: 'pointer' }} onClick={() => setMode('form')}>
-              <Icon name="create" /> Back to Form
-            </wired-card>
-          </div>
-        </div>
+      <div style={modalStyles.overlay} onClick={(e) => e.target === e.currentTarget && onCancel()}>
+        <div style={modalStyles.modal}>
+          <button style={modalStyles.closeButton} onClick={onCancel}>×</button>
+          <wired-card style={{ padding: '1em' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1em' }}>
+              <h3>Draw Your Card</h3>
+              <div style={{ display: 'flex', gap: '0.5em' }}>
+                <wired-card style={{ padding: '0.5em', cursor: 'pointer' }} onClick={clearCanvas}>
+                  Clear
+                </wired-card>
+                <wired-card style={{ padding: '0.5em', cursor: 'pointer' }} onClick={() => setMode('form')}>
+                  <Icon name="create" /> Back to Form
+                </wired-card>
+              </div>
+            </div>
         
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1em' }}>
           <canvas 
@@ -160,12 +201,17 @@ export function CardEditor({ onSave, onCancel, editingCard }: CardEditorProps) {
           </wired-card>
         </div>
       </wired-card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <wired-card style={{ padding: '1em' }}>
-      <h3>{editingCard ? 'Edit Card' : 'Create New Card'}</h3>
+    <div style={modalStyles.overlay} onClick={(e) => e.target === e.currentTarget && onCancel()}>
+      <div style={modalStyles.modal}>
+        <button style={modalStyles.closeButton} onClick={onCancel}>×</button>
+        <wired-card style={{ padding: '1em' }}>
+          <h3>{editingCard ? 'Edit Card' : 'Create New Card'}</h3>
       
       <div style={{ marginBottom: '1em' }}>
         <label style={{ display: 'block', marginBottom: '0.5em' }}>Title:</label>
@@ -237,5 +283,7 @@ export function CardEditor({ onSave, onCancel, editingCard }: CardEditorProps) {
         </wired-card>
       </div>
     </wired-card>
+      </div>
+    </div>
   );
 }
