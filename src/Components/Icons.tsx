@@ -36,6 +36,11 @@ import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import SportsEsportsOutlinedIcon from '@mui/icons-material/SportsEsportsOutlined';
 import SyncOutlinedIcon from '@mui/icons-material/SyncOutlined';
 import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
+import StopIcon from '@mui/icons-material/Stop';
+import ViewListIcon from '@mui/icons-material/ViewList';
+import ViewModuleIcon from '@mui/icons-material/ViewModule';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { Properties } from 'csstype';
 import { useWindowDimensions } from '../lib/hooks';
 
@@ -76,7 +81,12 @@ type IconName =
   'shuffle' | 
   'single' |
   'take' |
-  'undo';
+  'undo' |
+  'stop' |
+  'view_list' |
+  'view_module' |
+  'show' |
+  'hide';
 
 type BrowseType = 'prev' | 'next'
 
@@ -119,6 +129,11 @@ export function Icon(props: { name: IconName }) {
     single: <PersonIcon></PersonIcon>,
     take: <SaveAltOutlinedIcon></SaveAltOutlinedIcon>,
     undo: <UndoOutlinedIcon></UndoOutlinedIcon>,
+    view_list: <ViewListIcon></ViewListIcon>,
+    view_module: <ViewModuleIcon></ViewModuleIcon>,
+    stop: <StopIcon></StopIcon>,
+    show: <VisibilityIcon></VisibilityIcon>,
+    hide: <VisibilityOffIcon></VisibilityOffIcon>,
   }
 
   const styles: { [key: string]: Properties<string | number> } = {
