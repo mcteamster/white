@@ -67,6 +67,100 @@ Uses existing deck format - self-contained HTML files with embedded JSON data (s
 - Visual card creation matches in-game experience
 - File format compatibility with existing deck system
 - Advanced operations (duplicate, merge, search) work reliably
+- Card selection system enables efficient bulk operations
+- Single card editing provides full property modification
+- Hidden/reported cards are properly managed and filtered
+
+## Card Selection System Extension
+
+### Overview
+Extend the deck editor with interactive card selection capabilities, enabling users to select single or multiple cards for various operations including editing, hiding, and deletion.
+
+### Selection Requirements
+- **Selection Method**: Single click to select/deselect cards (toggle behavior)
+- **Multi-selection**: Support selecting multiple cards simultaneously
+- **Visual Feedback**: Selected cards show background color change
+- **Persistence**: Selection state preserved when switching between view modes (Full/List/Tile)
+
+### Selection-Based Operations
+
+#### Single Card Selected
+- **Edit Action**: Opens CardEditor component in modal overlay for full property editing
+- **All Properties Editable**: Title, description, author, date, and image replacement
+
+#### Multiple Cards Selected  
+- **Hide Action**: Sets `location: 'box'` on selected cards (uses existing card location field)
+- **Delete Action**: Removes selected cards from deck entirely
+- **No Bulk Edit**: Editing disabled when multiple cards selected
+
+### UI Components
+
+#### Selection Feedback
+- **Selected State**: Background color change on selected cards
+- **Hidden Cards**: Visual indicator (opacity/strikethrough) for cards with `location: 'box'`
+- **Consistent Styling**: Selection appearance works across all view modes
+
+#### Selection Controls
+- **Deselect Button**: Shows selection count and clears all selections ("Deselect (X)")
+- **Action Buttons**: Context-sensitive buttons appear in bottom panel when cards selected
+  - Single selection: "Edit" button
+  - Multiple selection: "Hide" and "Delete" buttons
+- **Integration**: Selection controls added to existing bottom controls area
+
+### Technical Implementation
+
+#### State Management
+- `selectedCards: Set<number>` - Track selected card IDs
+- `handleCardSelect(cardId: number)` - Toggle card selection
+- `clearSelection()` - Clear all selections
+
+#### Card Component Extensions
+- Add click handlers to all card view components (FullCardView, CompactCardView, ImageOnlyCardView)
+- Pass selection state and handlers as props
+- Apply conditional styling based on selection and report status
+
+#### Hide/Show Functionality
+- Leverage existing `location` field in card metadata (`'deck'` = visible, `'box'` = hidden)
+- Update game view filtering to respect `location: 'box'` status (already implemented in existing system)
+- Provide visual distinction for hidden cards in editor
+
+### Implementation Tasks Extension
+
+#### Task 6: Card Selection State Management
+**Objective**: Core selection functionality
+- Add selection state (`selectedCards` Set) to DeckEditor component
+- Implement `handleCardSelect` toggle function
+- Add `clearSelection` function
+- **Demo**: Click cards to see selection state logged to console
+
+#### Task 7: Visual Selection Feedback
+**Objective**: User interface for selection
+- Extend all card view components with click handlers and selection props
+- Add conditional background styling for selected state
+- Implement visual indicators for hidden/reported cards
+- **Demo**: Cards change appearance when selected, hidden cards visually distinct
+
+#### Task 8: Selection Action Panel
+**Objective**: Operations on selected cards
+- Add selection count display to bottom controls
+- Create "Deselect (X)" button with dynamic count
+- Add context-sensitive action buttons (Edit/Hide/Show/Delete)
+- Implement modal CardEditor for single card editing
+- **Demo**: All selection actions work correctly, edit modal functions properly, Hide/Show toggles based on card visibility
+
+#### Task 9: Hide/Show Card Management
+**Objective**: Card visibility control
+- Implement Hide action (sets `location: 'box'`)
+- Add Show action for unhiding cards (sets `location: 'deck'`)
+- Leverage existing filtering logic that respects `location: 'box'` in game contexts
+- **Demo**: Cards can be hidden/shown, filtering works in game views, compatible with deck export/import
+
+#### Task 10: Selection Persistence
+**Objective**: Maintain selection across view changes
+- Preserve `selectedCards` Set when switching view modes
+- Handle edge cases (filtered cards, deleted cards, cleared deck)
+- Ensure consistent selection behavior across all views
+- **Demo**: Selection maintained when switching between Full/List/Tile views
 
 ## Files to Create/Modify
 - `src/Components/DeckEditor.tsx` (new)

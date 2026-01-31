@@ -7,7 +7,11 @@ import { sanitiseCard } from '../lib/data';
 import { Card } from '../Cards';
 import { BLANK_IMAGE, decompressImage } from '../lib/images';
 
-function FullCardView({ card }: { card: Card }) {
+function FullCardView({ card, isSelected, onCardSelect }: { 
+  card: Card; 
+  isSelected: boolean; 
+  onCardSelect: (cardId: number) => void; 
+}) {
   let localDate;
   if (card.content.date) {
     localDate = new Date(Number(card.content.date)).toLocaleDateString();
@@ -20,7 +24,14 @@ function FullCardView({ card }: { card: Card }) {
       minHeight: '20em',
       maxHeight: '36em',
       width: '20em',
-      alignSelf: 'flex-start'
+      alignSelf: 'flex-start',
+      cursor: 'pointer'
+    },
+    cardSelected: {
+      color: 'red'
+    },
+    cardHidden: {
+      opacity: 0.5
     },
     cardContent: {
       display: 'flex',
@@ -43,7 +54,8 @@ function FullCardView({ card }: { card: Card }) {
       alignSelf: 'center'
     },
     title: {
-      fontSize: '1.5em'
+      fontSize: '1.5em',
+      color: 'black'
     },
     description: {
       width: '100%',
@@ -51,16 +63,27 @@ function FullCardView({ card }: { card: Card }) {
       fontSize: '1em',
       display: 'flex',
       justifyContent: 'center',
-      alignItems: 'center'
+      alignItems: 'center',
+      color: 'black'
     },
     credit: {
       fontSize: '0.75em',
-      textAlign: 'center'
+      textAlign: 'center',
+      color: 'black'
     }
   };
 
   return (
-    <wired-card key={card.id} style={styles.card} elevation={1}>
+    <wired-card 
+      key={card.id} 
+      style={{
+        ...styles.card,
+        ...(isSelected ? styles.cardSelected : {}),
+        ...(card.location === 'box' ? styles.cardHidden : {})
+      }} 
+      elevation={1}
+      onClick={() => onCardSelect(card.id)}
+    >
       <div style={styles.cardContent}>
         <div style={styles.imageContainer}>
           <CardImage card={card} />
@@ -77,14 +100,19 @@ function FullCardView({ card }: { card: Card }) {
   );
 }
 
-function CompactCardView({ card }: { card: Card }) {
+function CompactCardView({ card, isSelected, onCardSelect }: { 
+  card: Card; 
+  isSelected: boolean; 
+  onCardSelect: (cardId: number) => void; 
+}) {
   const styles: { [key: string]: Properties<string | number> } = {
     card: {
       padding: '0.5em',
       height: '100px',
       width: '100%',
       maxWidth: '600px',
-      backgroundColor: 'white'
+      backgroundColor: 'white',
+      cursor: 'pointer'
     },
     container: {
       display: 'flex',
@@ -113,7 +141,8 @@ function CompactCardView({ card }: { card: Card }) {
     },
     title: {
       margin: '0 0 0.25em 0',
-      fontSize: '1em'
+      fontSize: '1em',
+      color: 'black'
     },
     description: {
       margin: 0,
@@ -127,7 +156,16 @@ function CompactCardView({ card }: { card: Card }) {
   };
 
   return (
-    <wired-card key={card.id} style={styles.card}>
+    <wired-card 
+      key={card.id} 
+      style={{
+        ...styles.card,
+        backgroundColor: 'white',
+        color: isSelected ? 'red' : 'black',
+        opacity: card.location === 'box' ? 0.5 : 1
+      }}
+      onClick={() => onCardSelect(card.id)}
+    >
       <div style={styles.container}>
         <div style={styles.thumbnail}>
           {card.content.image ? (
@@ -146,7 +184,11 @@ function CompactCardView({ card }: { card: Card }) {
   );
 }
 
-function ImageOnlyCardView({ card }: { card: Card }) {
+function ImageOnlyCardView({ card, isSelected, onCardSelect }: { 
+  card: Card; 
+  isSelected: boolean; 
+  onCardSelect: (cardId: number) => void; 
+}) {
   const styles: { [key: string]: Properties<string | number> } = {
     card: {
       padding: '0.25em',
@@ -155,7 +197,8 @@ function ImageOnlyCardView({ card }: { card: Card }) {
       backgroundColor: 'white',
       display: 'flex',
       justifyContent: 'center',
-      alignItems: 'center'
+      alignItems: 'center',
+      cursor: 'pointer'
     },
     imageContainer: {
       width: '50px',
@@ -174,7 +217,16 @@ function ImageOnlyCardView({ card }: { card: Card }) {
   };
 
   return (
-    <wired-card key={card.id} style={styles.card}>
+    <wired-card 
+      key={card.id} 
+      style={{
+        ...styles.card,
+        backgroundColor: 'white',
+        color: isSelected ? 'red' : 'black',
+        opacity: card.location === 'box' ? 0.5 : 1
+      }}
+      onClick={() => onCardSelect(card.id)}
+    >
       <div style={styles.imageContainer}>
         {card.content.image ? (
           <CardImage card={card} />
@@ -255,7 +307,61 @@ export function DeckEditor() {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [showLoadDialog, setShowLoadDialog] = useState(false);
   const [loadedDeckData, setLoadedDeckData] = useState<{cards: Card[], name: string} | null>(null);
-  const [viewMode, setViewMode] = useState<'full' | 'compact' | 'image'>('full');
+  const [viewMode, setViewMode] = useState<'full' | 'compact' | 'image'>(() => {
+    const saved = localStorage.getItem('deckEditor_viewMode');
+    return (saved as 'full' | 'compact' | 'image') || 'full';
+  });
+
+  const handleViewModeChange = (mode: 'full' | 'compact' | 'image') => {
+    setViewMode(mode);
+    localStorage.setItem('deckEditor_viewMode', mode);
+  };
+  const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
+
+  const handleCardSelect = (cardId: number) => {
+    setSelectedCards(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(cardId)) {
+        newSet.delete(cardId);
+      } else {
+        newSet.add(cardId);
+      }
+      return newSet;
+    });
+  };
+
+  const clearSelection = () => {
+    setSelectedCards(new Set());
+  };
+
+  const handleHideCards = () => {
+    const updatedCards = deck.cards.map(card => 
+      selectedCards.has(card.id) ? { ...card, location: 'box' } : card
+    );
+    updateDeck({ ...deck, cards: updatedCards, modified: true });
+  };
+
+  const handleShowCards = () => {
+    const updatedCards = deck.cards.map(card => 
+      selectedCards.has(card.id) ? { ...card, location: 'deck' } : card
+    );
+    updateDeck({ ...deck, cards: updatedCards, modified: true });
+  };
+
+  const handleDeleteCards = () => {
+    const updatedCards = deck.cards.filter(card => !selectedCards.has(card.id));
+    updateDeck({ ...deck, cards: updatedCards, modified: true });
+    clearSelection();
+  };
+
+  const handleEditCard = () => {
+    const cardId = Array.from(selectedCards)[0];
+    const cardToEdit = deck.cards.find(card => card.id === cardId);
+    if (cardToEdit) {
+      // TODO: Open CardEditor modal with cardToEdit
+      console.log('Edit card:', cardToEdit);
+    }
+  };
 
   const styles: { [key: string]: Properties<string | number> } = {
     container: {
@@ -349,7 +455,7 @@ export function DeckEditor() {
     bottomControls: {
       backgroundColor: 'white',
       borderTop: '2px solid #ccc',
-      padding: '1em 2em',
+      padding: '1em',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -374,6 +480,22 @@ export function DeckEditor() {
       backgroundColor: '#eee',
       borderRadius: '1em',
       cursor: 'pointer'
+    },
+    selectionButton: {
+      height: '3em',
+      width: '3em',
+      margin: '0.25em',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#eee',
+      borderRadius: '1em',
+      cursor: 'pointer'
+    },
+    deleteButton: {
+      color: 'red'
     },
     searchContainer: {
       display: 'flex',
@@ -443,6 +565,18 @@ export function DeckEditor() {
   useEffect(() => {
     document.title = `Editor - ${deck.name}`;
   }, [deck.name]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (deck.modified) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [deck.modified]);
 
   const handleFileLoad = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -581,7 +715,7 @@ export function DeckEditor() {
                   ...styles.viewModeButton,
                   backgroundColor: viewMode === 'full' ? '#ccc' : 'white'
                 }}
-                onClick={() => setViewMode('full')}
+                onClick={() => handleViewModeChange('full')}
               >
                 <Icon name="stop" />
               </wired-card>
@@ -590,7 +724,7 @@ export function DeckEditor() {
                   ...styles.viewModeButton,
                   backgroundColor: viewMode === 'compact' ? '#ccc' : 'white'
                 }}
-                onClick={() => setViewMode('compact')}
+                onClick={() => handleViewModeChange('compact')}
               >
                 <Icon name="view_list" />
               </wired-card>
@@ -599,7 +733,7 @@ export function DeckEditor() {
                   ...styles.viewModeButton,
                   backgroundColor: viewMode === 'image' ? '#ccc' : 'white'
                 }}
-                onClick={() => setViewMode('image')}
+                onClick={() => handleViewModeChange('image')}
               >
                 <Icon name="view_module" />
               </wired-card>
@@ -636,11 +770,26 @@ export function DeckEditor() {
         ) : (
           filteredCards.map(card => {
             if (viewMode === 'full') {
-              return <FullCardView key={card.id} card={card} />;
+              return <FullCardView 
+                key={card.id} 
+                card={card} 
+                isSelected={selectedCards.has(card.id)}
+                onCardSelect={handleCardSelect}
+              />;
             } else if (viewMode === 'compact') {
-              return <CompactCardView key={card.id} card={card} />;
+              return <CompactCardView 
+                key={card.id} 
+                card={card}
+                isSelected={selectedCards.has(card.id)}
+                onCardSelect={handleCardSelect}
+              />;
             } else {
-              return <ImageOnlyCardView key={card.id} card={card} />;
+              return <ImageOnlyCardView 
+                key={card.id} 
+                card={card}
+                isSelected={selectedCards.has(card.id)}
+                onCardSelect={handleCardSelect}
+              />;
             }
           })
         )}
@@ -648,13 +797,98 @@ export function DeckEditor() {
 
       <div style={styles.bottomControls}>
         <div style={styles.actionButtons}>
-          <wired-card 
-            style={styles.createButton}
-            onClick={() => setShowCardCreator(true)}
-            elevation={2}
-          >
-            <Icon name="create" /> Create
-          </wired-card>
+          {selectedCards.size > 0 ? (
+            <>
+              {selectedCards.size === 1 ? (
+                <>
+                  <wired-card 
+                    style={styles.selectionButton}
+                    onClick={handleEditCard}
+                    elevation={2}
+                  >
+                    <Icon name="create" /> Edit
+                  </wired-card>
+                  {Array.from(selectedCards).every(id => 
+                    deck.cards.find(card => card.id === id)?.location === 'box'
+                  ) ? (
+                    <wired-card 
+                      style={styles.selectionButton}
+                      onClick={handleShowCards}
+                      elevation={2}
+                    >
+                      Show
+                    </wired-card>
+                  ) : (
+                    <wired-card 
+                      style={styles.selectionButton}
+                      onClick={handleHideCards}
+                      elevation={2}
+                    >
+                      Hide
+                    </wired-card>
+                  )}
+                  <wired-card 
+                    style={{
+                      ...styles.selectionButton,
+                      ...styles.deleteButton
+                    }}
+                    onClick={handleDeleteCards}
+                    elevation={2}
+                  >
+                    <Icon name="discard" /> Delete
+                  </wired-card>
+                </>
+              ) : (
+                <>
+                  {Array.from(selectedCards).every(id => 
+                    deck.cards.find(card => card.id === id)?.location === 'box'
+                  ) ? (
+                    <wired-card 
+                      style={styles.selectionButton}
+                      onClick={handleShowCards}
+                      elevation={2}
+                    >
+                      Show
+                    </wired-card>
+                  ) : (
+                    <wired-card 
+                      style={styles.selectionButton}
+                      onClick={handleHideCards}
+                      elevation={2}
+                    >
+                      Hide
+                    </wired-card>
+                  )}
+                  <wired-card 
+                    style={{
+                      ...styles.selectionButton,
+                      ...styles.deleteButton
+                    }}
+                    onClick={handleDeleteCards}
+                    elevation={2}
+                  >
+                    <Icon name="discard" /> Delete
+                  </wired-card>
+                </>
+              )}
+              
+              <wired-card 
+                style={styles.selectionButton}
+                onClick={clearSelection}
+                elevation={2}
+              >
+                Clear ({selectedCards.size})
+              </wired-card>
+            </>
+          ) : (
+            <wired-card 
+              style={styles.createButton}
+              onClick={() => setShowCardCreator(true)}
+              elevation={2}
+            >
+              <Icon name="create" /> Create
+            </wired-card>
+          )}
         </div>
 
         <div style={styles.searchContainer}>
