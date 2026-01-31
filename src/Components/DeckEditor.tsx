@@ -1,94 +1,145 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
+import { Properties } from 'csstype';
 import { Icon } from './Icons';
-import { CardCreator } from './CardCreator';
+import { CardEditor } from './CardEditor';
 import { useDeckEditor } from '../lib/deckEditor';
 import { sanitiseCard } from '../lib/data';
 import { Card } from '../Cards';
 import { BLANK_IMAGE, decompressImage } from '../lib/images';
 
-// Card Display Components for different view modes
 function FullCardView({ card }: { card: Card }) {
-  return (
-    <wired-card key={card.id} style={{ 
-      padding: '0.75em',
-      height: '280px',
-      width: '280px',
+  let localDate;
+  if (card.content.date) {
+    localDate = new Date(Number(card.content.date)).toLocaleDateString();
+  }
+
+  const styles: { [key: string]: Properties<string | number> } = {
+    card: {
+      borderRadius: '0.5em',
       backgroundColor: 'white',
+      minHeight: '20em',
+      maxHeight: '36em',
+      width: '20em',
+      alignSelf: 'flex-start'
+    },
+    cardContent: {
       display: 'flex',
       flexDirection: 'column',
-      justifyContent: 'space-between',
+      textAlign: 'center',
+      overflowWrap: 'anywhere',
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+      height: '100%',
+      padding: '0.5em'
+    },
+    imageContainer: {
+      width: '18em',
+      height: '18em',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      overflow: 'hidden',
+      flexShrink: 0,
+      alignSelf: 'center'
+    },
+    title: {
+      fontSize: '1.5em'
+    },
+    description: {
+      width: '100%',
+      height: '8em',
+      fontSize: '1em',
+      display: 'flex',
+      justifyContent: 'center',
       alignItems: 'center'
-    }}>
-      {/* Card Preview */}
-      <div style={{
-        width: '100%',
-        aspectRatio: '1',
-        backgroundColor: 'white',
-        marginBottom: '0.5em',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        fontSize: '0.8em',
-        textAlign: 'center',
-        overflow: 'hidden'
-      }}>
-        {card.content.image ? (
+    },
+    credit: {
+      fontSize: '0.75em',
+      textAlign: 'center'
+    }
+  };
+
+  return (
+    <wired-card key={card.id} style={styles.card} elevation={1}>
+      <div style={styles.cardContent}>
+        <div style={styles.imageContainer}>
           <CardImage card={card} />
-        ) : (
-          <div style={{ color: '#999', fontSize: '0.8em' }}>No Image</div>
-        )}
-      </div>
-      
-      {/* Card Details */}
-      <div style={{ marginBottom: '0.5em' }}>
-        <h4 style={{ margin: '0 0 0.25em 0' }}>{card.content.title}</h4>
-        <p style={{ margin: '0 0 0.25em 0', fontSize: '0.85em' }}>{card.content.description}</p>
-        <small>by {card.content.author}</small>
-        {card.likes && <div style={{ fontSize: '0.8em', color: '#666' }}>❤️ {card.likes}</div>}
+        </div>
+        <div style={styles.title}>{card.content.title}</div>
+        <div style={styles.description}>
+          {card.content.description}
+        </div>
+        <div style={styles.credit}>
+          {card.content.author && `by ${card.content.author}`}{card.content.date && ` - ${localDate}`}
+        </div>
       </div>
     </wired-card>
   );
 }
 
 function CompactCardView({ card }: { card: Card }) {
-  return (
-    <wired-card key={card.id} style={{ 
+  const styles: { [key: string]: Properties<string | number> } = {
+    card: {
       padding: '0.5em',
       height: '100px',
       width: '100%',
       maxWidth: '600px',
       backgroundColor: 'white'
-    }}>
-      <div style={{
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '1em',
-        height: '100%'
-      }}>
-        {/* Thumbnail */}
-        <div style={{
-          width: '100px',
-          height: '100px',
-          backgroundColor: 'white',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          overflow: 'hidden',
-          flexShrink: 0
-        }}>
+    },
+    container: {
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '1em',
+      height: '100%'
+    },
+    thumbnail: {
+      width: '100px',
+      height: '100px',
+      backgroundColor: 'white',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      overflow: 'hidden',
+      flexShrink: 0
+    },
+    content: {
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      height: '100%'
+    },
+    title: {
+      margin: '0 0 0.25em 0',
+      fontSize: '1em'
+    },
+    description: {
+      margin: 0,
+      fontSize: '0.8em',
+      color: '#666'
+    },
+    noImage: {
+      color: '#999',
+      fontSize: '0.7em'
+    }
+  };
+
+  return (
+    <wired-card key={card.id} style={styles.card}>
+      <div style={styles.container}>
+        <div style={styles.thumbnail}>
           {card.content.image ? (
             <CardImage card={card} />
           ) : (
-            <div style={{ color: '#999', fontSize: '0.7em' }}>No Image</div>
+            <div style={styles.noImage}>No Image</div>
           )}
         </div>
         
-        {/* Title and Description */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
-          <h4 style={{ margin: '0 0 0.25em 0', fontSize: '1em' }}>{card.content.title}</h4>
-          <p style={{ margin: 0, fontSize: '0.8em', color: '#666' }}>{card.content.description}</p>
+        <div style={styles.content}>
+          <h4 style={styles.title}>{card.content.title}</h4>
+          <p style={styles.description}>{card.content.description}</p>
         </div>
       </div>
     </wired-card>
@@ -96,8 +147,8 @@ function CompactCardView({ card }: { card: Card }) {
 }
 
 function ImageOnlyCardView({ card }: { card: Card }) {
-  return (
-    <wired-card key={card.id} style={{ 
+  const styles: { [key: string]: Properties<string | number> } = {
+    card: {
       padding: '0.25em',
       height: '60px',
       width: '60px',
@@ -105,21 +156,30 @@ function ImageOnlyCardView({ card }: { card: Card }) {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center'
-    }}>
-      {/* Image Only */}
-      <div style={{
-        width: '50px',
-        height: '50px',
-        backgroundColor: 'white',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        overflow: 'hidden'
-      }}>
+    },
+    imageContainer: {
+      width: '50px',
+      height: '50px',
+      backgroundColor: 'white',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      overflow: 'hidden'
+    },
+    noImage: {
+      color: '#999',
+      fontSize: '0.7em',
+      textAlign: 'center'
+    }
+  };
+
+  return (
+    <wired-card key={card.id} style={styles.card}>
+      <div style={styles.imageContainer}>
         {card.content.image ? (
           <CardImage card={card} />
         ) : (
-          <div style={{ color: '#999', fontSize: '0.7em', textAlign: 'center' }}>No Image</div>
+          <div style={styles.noImage}>No Image</div>
         )}
       </div>
     </wired-card>
@@ -127,94 +187,55 @@ function ImageOnlyCardView({ card }: { card: Card }) {
 }
 function CardImage({ card }: { card: Card }) {
   const [imageSrc, setImageSrc] = useState(BLANK_IMAGE);
+  const [loading, setLoading] = useState(false);
 
-  const handleQuotaExceeded = (e: any) => {
-    if (e instanceof DOMException && e.name === 'QuotaExceededError') {
-      console.warn('LocalStorage quota exceeded, clearing old cache entries');
-      clearOldCacheEntries();
-    }
-  };
-
-  const clearOldCacheEntries = () => {
-    const cacheEntries: Array<{key: string, timestamp: number}> = [];
-    
-    // Collect all editor cache entries with timestamps
-    Object.keys(localStorage).forEach(key => {
-      if (key.startsWith('editor_image_')) {
-        const timestampKey = `${key}_timestamp`;
-        const timestamp = parseInt(localStorage.getItem(timestampKey) || '0');
-        cacheEntries.push({ key, timestamp });
-      }
-    });
-
-    // Sort by timestamp (oldest first) and remove oldest 50%
-    cacheEntries.sort((a, b) => a.timestamp - b.timestamp);
-    const toRemove = Math.ceil(cacheEntries.length * 0.5);
-    
-    for (let i = 0; i < toRemove; i++) {
-      localStorage.removeItem(cacheEntries[i].key);
-      localStorage.removeItem(`${cacheEntries[i].key}_timestamp`);
-    }
-  };
-
-  const setCacheWithTimestamp = (key: string, value: string) => {
-    try {
-      localStorage.setItem(key, value);
-      localStorage.setItem(`${key}_timestamp`, Date.now().toString());
-    } catch (e) {
-      handleQuotaExceeded(e);
-      // Try once more after cleanup
-      try {
-        localStorage.setItem(key, value);
-        localStorage.setItem(`${key}_timestamp`, Date.now().toString());
-      } catch (e2) {
-        console.warn('Still cannot cache image after cleanup');
-      }
+  const styles: { [key: string]: Properties<string | number> } = {
+    image: {
+      width: '100%',
+      maxWidth: '18em',
+      height: '100%',
+      maxHeight: '18em',
+      objectFit: 'cover'
+    },
+    spinner: {
+      width: '2em',
+      height: '2em',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center'
     }
   };
 
   useEffect(() => {
-    // Check editor-specific cache first
-    const cacheKey = `editor_image_${card.id}`;
-    
-    try {
-      const cached = localStorage.getItem(cacheKey);
-      
-      if (cached) {
-        // Update timestamp for LRU
-        localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
-        setImageSrc(cached);
-        return;
-      }
-
-      if (card.content.image?.startsWith('data:image/png;base64,')) {
-        // PNG Data URI
-        setImageSrc(card.content.image);
-        setCacheWithTimestamp(cacheKey, card.content.image);
-      } else if (card.content.image) {
-        // Compressed image - decompress it
-        decompressImage(card.content.image).then(decompressed => {
-          setImageSrc(decompressed);
-          setCacheWithTimestamp(cacheKey, decompressed);
-        });
-      } else {
-        setImageSrc(BLANK_IMAGE);
-      }
-    } catch (e) {
-      console.error('Error loading image:', e);
+    if (card.content.image?.startsWith('data:image/png;base64,')) {
+      setImageSrc(card.content.image);
+      setLoading(false);
+    } else if (card.content.image) {
+      setLoading(true);
+      decompressImage(card.content.image).then(decompressed => {
+        setImageSrc(decompressed);
+        setLoading(false);
+      });
+    } else {
       setImageSrc(BLANK_IMAGE);
+      setLoading(false);
     }
   }, [card.id, card.content.image]);
 
+  if (loading) {
+    return (
+      <div style={styles.spinner} className="spin">
+        <Icon name="loading" />
+      </div>
+    );
+  }
+
   return (
-    <div style={{
-      width: '100%',
-      height: '100%',
-      backgroundImage: `url(${imageSrc})`,
-      backgroundSize: 'contain',
-      backgroundRepeat: 'no-repeat',
-      backgroundPosition: 'center'
-    }} />
+    <img 
+      src={imageSrc} 
+      alt={card.content.title || 'Card image'} 
+      style={styles.image}
+    />
   );
 }
 
@@ -236,7 +257,181 @@ export function DeckEditor() {
   const [loadedDeckData, setLoadedDeckData] = useState<{cards: Card[], name: string} | null>(null);
   const [viewMode, setViewMode] = useState<'full' | 'compact' | 'image'>('full');
 
-  // Debounce search term
+  const styles: { [key: string]: Properties<string | number> } = {
+    container: {
+      height: '100vh', 
+      display: 'flex', 
+      flexDirection: 'column',
+      backgroundColor: '#f0f0f0'
+    },
+    header: {
+      backgroundColor: 'white',
+      borderBottom: '2px solid #ccc',
+      width: '100%',
+      boxSizing: 'border-box'
+    },
+    topRow: {
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'space-between',
+      padding: '1em'
+    },
+    loadButton: {
+      height: '3em',
+      width: '3em',
+      margin: '0.25em',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#eee',
+      borderRadius: '1em',
+      cursor: 'pointer'
+    },
+    centerTitle: {
+      textAlign: 'center',
+      flex: 1,
+      margin: '0 1em'
+    },
+    title: {
+      margin: 0,
+      fontSize: '1.5em'
+    },
+    viewModeToggle: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '0.25em',
+      marginTop: '0.5em'
+    },
+    viewModeButton: {
+      padding: '0.5em', 
+      cursor: 'pointer',
+      color: 'black',
+      borderRadius: '1em',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    saveButton: {
+      height: '3em',
+      width: '3em',
+      margin: '0.25em',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#eee',
+      borderRadius: '1em'
+    },
+    cardsContainer: {
+      flex: 1, 
+      padding: '1em',
+      overflowY: 'auto',
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: '1em',
+      alignContent: 'flex-start',
+      justifyContent: 'center'
+    },
+    fullWidthContainer: {
+      width: '100%'
+    },
+    emptyState: {
+      width: '100%',
+      textAlign: 'center', 
+      padding: '4em 2em', 
+      color: '#666',
+      fontSize: '1.2em'
+    },
+    bottomControls: {
+      backgroundColor: 'white',
+      borderTop: '2px solid #ccc',
+      padding: '1em 2em',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '1em'
+    },
+    actionButtons: {
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      gap: '0.5em',
+      flexWrap: 'wrap'
+    },
+    createButton: {
+      height: '3em',
+      width: '3em',
+      margin: '0.25em',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#eee',
+      borderRadius: '1em',
+      cursor: 'pointer'
+    },
+    searchContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5em',
+      maxWidth: '90vw'
+    },
+    searchInput: {
+      width: '250px',
+      maxWidth: 'calc(90vw - 100px)'
+    },
+    clearSearch: {
+      cursor: 'pointer'
+    },
+    loadingText: {
+      color: 'blue'
+    },
+    errorText: {
+      color: 'red'
+    },
+    dialogOverlay: {
+      position: 'fixed', 
+      top: 0, 
+      left: 0, 
+      right: 0, 
+      bottom: 0, 
+      backgroundColor: 'rgba(0,0,0,0.5)', 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center',
+      zIndex: 1000
+    },
+    dialogCard: {
+      backgroundColor: 'white', 
+      padding: '2em', 
+      maxWidth: '400px'
+    },
+    dialogButtons: {
+      display: 'flex',
+      gap: '1em',
+      justifyContent: 'center',
+      flexWrap: 'wrap'
+    },
+    dialogButton: {
+      padding: '0.5em 1em',
+      cursor: 'pointer'
+    },
+    replaceButton: {
+      padding: '0.5em 1em',
+      cursor: 'pointer',
+      backgroundColor: '#f44336',
+      color: 'white'
+    },
+    hiddenInput: {
+      display: 'none'
+    }
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
@@ -245,7 +440,6 @@ export function DeckEditor() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Update document title when deck name changes
   useEffect(() => {
     document.title = `Editor - ${deck.name}`;
   }, [deck.name]);
@@ -282,7 +476,6 @@ export function DeckEditor() {
             name: file.name.replace(/\.[^/.]+$/, '') || 'Loaded Deck'
           };
 
-          // If current deck is empty, just load directly
           if (deck.cards.length === 0) {
             updateDeck({
               cards: deckData.cards,
@@ -291,7 +484,6 @@ export function DeckEditor() {
             });
             setLoading(false);
           } else {
-            // Show dialog to choose replace or merge
             setLoadedDeckData(deckData);
             setShowLoadDialog(true);
             setLoading(false);
@@ -353,11 +545,9 @@ export function DeckEditor() {
     
     const query = debouncedSearchTerm.toUpperCase();
     return deck.cards.filter(card => {
-      // Search by ID
       if (card.id === Number(debouncedSearchTerm)) {
         return true;
       }
-      // Search by title, description, or author
       return card.content.title.toUpperCase().includes(query) ||
              card.content.description.toUpperCase().includes(query) ||
              card.content.author?.toUpperCase().includes(query);
@@ -365,40 +555,10 @@ export function DeckEditor() {
   }, [deck.cards, debouncedSearchTerm]);
 
   return (
-    <div style={{ 
-      height: '100vh', 
-      display: 'flex', 
-      flexDirection: 'column',
-      backgroundColor: '#f0f0f0'
-    }}>
-      {/* Header */}
-      <div style={{ 
-        backgroundColor: 'white',
-        borderBottom: '2px solid #ccc',
-        width: '100%',
-        boxSizing: 'border-box'
-      }}>
-        {/* Top Row - Title */}
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between',
-          padding: '1em'
-        }}>
-          {/* Load Button - Left */}
-          <wired-card style={{ 
-            height: '3em',
-            width: '3em',
-            margin: '0.25em',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: '#eee',
-            borderRadius: '1em',
-            cursor: 'pointer'
-          }} onClick={() => fileInputRef.current?.click()} elevation={2}>
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <div style={styles.topRow}>
+          <wired-card style={styles.loadButton} onClick={() => fileInputRef.current?.click()} elevation={2}>
             <Icon name="display" /> Load
           </wired-card>
           <input
@@ -406,28 +566,20 @@ export function DeckEditor() {
             type="file"
             accept=".html"
             onChange={handleFileLoad}
-            style={{ display: 'none' }}
+            style={styles.hiddenInput}
           />
 
-          {/* Center - Title */}
-          <div style={{ textAlign: 'center', flex: 1, margin: '0 1em' }}>
-            <h1 style={{ margin: 0, fontSize: '1.5em' }}>
-              Deck Editor (Beta)
+          <div style={styles.centerTitle}>
+            <h1 style={styles.title}>
+              Deck Editor
               {deck.modified && <span style={{ color: 'orange', marginLeft: '0.5em' }}>●</span>}
             </h1>
             
-            {/* View Mode Toggle */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25em', marginTop: '0.5em' }}>
+            <div style={styles.viewModeToggle}>
               <wired-card 
                 style={{ 
-                  padding: '0.5em', 
-                  cursor: 'pointer',
-                  backgroundColor: viewMode === 'full' ? '#ccc' : 'white',
-                  color: 'black',
-                  borderRadius: '1em',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
+                  ...styles.viewModeButton,
+                  backgroundColor: viewMode === 'full' ? '#ccc' : 'white'
                 }}
                 onClick={() => setViewMode('full')}
               >
@@ -435,14 +587,8 @@ export function DeckEditor() {
               </wired-card>
               <wired-card 
                 style={{ 
-                  padding: '0.5em', 
-                  cursor: 'pointer',
-                  backgroundColor: viewMode === 'compact' ? '#ccc' : 'white',
-                  color: 'black',
-                  borderRadius: '1em',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
+                  ...styles.viewModeButton,
+                  backgroundColor: viewMode === 'compact' ? '#ccc' : 'white'
                 }}
                 onClick={() => setViewMode('compact')}
               >
@@ -450,14 +596,8 @@ export function DeckEditor() {
               </wired-card>
               <wired-card 
                 style={{ 
-                  padding: '0.5em', 
-                  cursor: 'pointer',
-                  backgroundColor: viewMode === 'image' ? '#ccc' : 'white',
-                  color: 'black',
-                  borderRadius: '1em',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
+                  ...styles.viewModeButton,
+                  backgroundColor: viewMode === 'image' ? '#ccc' : 'white'
                 }}
                 onClick={() => setViewMode('image')}
               >
@@ -466,19 +606,9 @@ export function DeckEditor() {
             </div>
           </div>
 
-          {/* Save Button - Right */}
           <wired-card 
             style={{ 
-              height: '3em',
-              width: '3em',
-              margin: '0.25em',
-              fontWeight: 'bold',
-              textAlign: 'center',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              backgroundColor: '#eee',
-              borderRadius: '1em',
+              ...styles.saveButton,
               cursor: deck.cards.length === 0 ? 'not-allowed' : 'pointer',
               opacity: deck.cards.length === 0 ? 0.5 : 1,
               color: deck.cards.length === 0 ? 'grey' : undefined
@@ -491,32 +621,16 @@ export function DeckEditor() {
         </div>
       </div>
 
-      {/* Cards Background */}
-      <div style={{ 
-        flex: 1, 
-        padding: '1em',
-        overflowY: 'auto',
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '1em',
-        alignContent: 'flex-start',
-        justifyContent: 'center'
-      }}>
+      <div style={styles.cardsContainer}>
         {showCardCreator ? (
-          <div style={{ gridColumn: '1 / -1' }}>
-            <CardCreator 
+          <div style={styles.fullWidthContainer}>
+            <CardEditor 
               onSave={handleCardSave}
               onCancel={handleCardCancel}
             />
           </div>
         ) : filteredCards.length === 0 ? (
-          <div style={{ 
-            gridColumn: '1 / -1',
-            textAlign: 'center', 
-            padding: '4em 2em', 
-            color: '#666',
-            fontSize: '1.2em'
-          }}>
+          <div style={styles.emptyState}>
             {debouncedSearchTerm ? 'No cards match your search.' : 'No cards in deck. Create a new card or load an existing deck.'}
           </div>
         ) : (
@@ -532,38 +646,10 @@ export function DeckEditor() {
         )}
       </div>
 
-      {/* Bottom Controls */}
-      <div style={{ 
-        backgroundColor: 'white',
-        borderTop: '2px solid #ccc',
-        padding: '1em 2em',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '1em'
-      }}>
-        {/* Action Buttons */}
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          gap: '0.5em',
-          flexWrap: 'wrap'
-        }}>
+      <div style={styles.bottomControls}>
+        <div style={styles.actionButtons}>
           <wired-card 
-            style={{ 
-              height: '3em',
-              width: '3em',
-              margin: '0.25em',
-              fontWeight: 'bold',
-              textAlign: 'center',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              backgroundColor: '#eee',
-              borderRadius: '1em',
-              cursor: 'pointer'
-            }}
+            style={styles.createButton}
             onClick={() => setShowCardCreator(true)}
             elevation={2}
           >
@@ -571,56 +657,40 @@ export function DeckEditor() {
           </wired-card>
         </div>
 
-        {/* Search */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5em', maxWidth: '90vw' }}>
+        <div style={styles.searchContainer}>
           <Icon name="search" />
           <wired-input
             id="deckEditorSearch"
             placeholder={`Search from ${deck.cards.length} cards...`}
             value={searchTerm}
             onInput={(e: any) => setSearchTerm(e.target.value)}
-            style={{ width: '250px', maxWidth: 'calc(90vw - 100px)' }}
+            style={styles.searchInput}
           />
           <div onClick={() => {
             setSearchTerm('');
             const input = document.getElementById('deckEditorSearch') as any;
             if (input) input.value = '';
-          }} style={{ cursor: 'pointer' }}>
+          }} style={styles.clearSearch}>
             <Icon name="exit" />
           </div>
         </div>
 
-        {loading && <div style={{ color: 'blue' }}>Loading...</div>}
-        {error && <div style={{ color: 'red' }}>{error}</div>}
+        {loading && <div style={styles.loadingText}>Loading...</div>}
+        {error && <div style={styles.errorText}>{error}</div>}
 
         {showLoadDialog && loadedDeckData && (
-          <div style={{ 
-            position: 'fixed', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
-            bottom: 0, 
-            backgroundColor: 'rgba(0,0,0,0.5)', 
-            display: 'flex', 
-            justifyContent: 'center', 
-            alignItems: 'center',
-            zIndex: 1000
-          }}>
-            <wired-card style={{ 
-              backgroundColor: 'white', 
-              padding: '2em', 
-              maxWidth: '400px'
-            }}>
+          <div style={styles.dialogOverlay}>
+            <wired-card style={styles.dialogCard}>
               <h3>Load Deck</h3>
               <p>You have cards in your current deck. What would you like to do with "{loadedDeckData.name}"?</p>
-              <div style={{ display: 'flex', gap: '1em', justifyContent: 'center', flexWrap: 'wrap' }}>
-                <wired-card style={{ padding: '0.5em 1em', cursor: 'pointer' }} onClick={() => setShowLoadDialog(false)}>
+              <div style={styles.dialogButtons}>
+                <wired-card style={styles.dialogButton} onClick={() => setShowLoadDialog(false)}>
                   Cancel
                 </wired-card>
-                <wired-card style={{ padding: '0.5em 1em', cursor: 'pointer' }} onClick={handleMergeDecks}>
+                <wired-card style={styles.dialogButton} onClick={handleMergeDecks}>
                   Add to Current
                 </wired-card>
-                <wired-card style={{ padding: '0.5em 1em', cursor: 'pointer', backgroundColor: '#f44336', color: 'white' }} onClick={handleReplaceDeck}>
+                <wired-card style={styles.replaceButton} onClick={handleReplaceDeck}>
                   Replace Current
                 </wired-card>
               </div>

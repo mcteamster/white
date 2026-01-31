@@ -3,13 +3,13 @@ import { Card } from '../Cards';
 import { resizeImage, compressImage } from '../lib/images';
 import { Icon } from './Icons';
 
-interface CardCreatorProps {
+interface CardEditorProps {
   onSave: (card: Omit<Card, 'id'>) => void;
   onCancel: () => void;
   editingCard?: Card;
 }
 
-export function CardCreator({ onSave, onCancel, editingCard }: CardCreatorProps) {
+export function CardEditor({ onSave, onCancel, editingCard }: CardEditorProps) {
   const [title, setTitle] = useState(editingCard?.content.title || '');
   const [description, setDescription] = useState(editingCard?.content.description || '');
   const [author, setAuthor] = useState(editingCard?.content.author || '');
