@@ -165,7 +165,7 @@ export function Focus(props: BoardProps<GameState>) {
         </div>
       } else if (card.location == 'pile') {
         tray = <div style={styles.tray}>
-          {<wired-card style={{ ...styles.button }} id="claimButton" onClick={(e) => { props.moves.claimCard(card.id); setLoading(true); e.stopPropagation() }}>
+          {<wired-card style={{ ...styles.button }} id="claimButton" onClick={(e) => { props.moves.claimCard(card.id); setLoading(true); if (!props.isMultiplayer) unfocusCards(); e.stopPropagation() }}>
             {
               loading ?
                 <div className='spin'>
@@ -375,8 +375,17 @@ export function Likes({ card, likeCard, matchId }: LikesProps) {
       setLikes(abbreviate(card.likes));
     } else if (matchId == 'default') {
       // Fetch from CDN for Single Device Mode Only
-      const cardData = await (await fetch(`/card/${card.id}.json`)).json();
-      setLikes(abbreviate(++cardData.likes || 1));
+      try {
+        const response = await fetch(`/card/${card.id}.json`);
+        if (response.ok) {
+          const cardData = await response.json();
+          setLikes(abbreviate(++cardData.likes || 1));
+        } else {
+          setLikes('1'); // Default to 1 if fetch fails
+        }
+      } catch (error) {
+        setLikes('1'); // Default to 1 if JSON parsing fails
+      }
     } else {
       setLikes('-')
     }

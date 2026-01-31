@@ -9,6 +9,7 @@ import { useCallback, useContext, useState } from 'react';
 import { useWindowDimensions } from '../lib/hooks.ts';
 import { FocusContext } from '../lib/contexts.ts';
 import { discordSdk } from '../lib/discord.ts';
+import { Likes } from './Focus.tsx';
 
 export function Pile(props: BoardProps<GameState>) {
   const { focus, setFocus } = useContext(FocusContext);
@@ -40,7 +41,12 @@ export function Pile(props: BoardProps<GameState>) {
         if (pile.length > 0) { 
           focusCard(pile[0].id, true) 
         }
-      }}>
+      }} style={{ position: 'relative' }}>
+        {pile.length > 0 && (
+          <div style={{ position: 'absolute', bottom: '1.25em', right: '1.75em', zIndex: 1 }}>
+            <Likes card={pile[0]} likeCard={props.moves.likeCard} matchId={props.matchID} />
+          </div>
+        )}
         {pile.length > 0 ?
           <CardFace {...pile[0]} /> :
           <CardFace {...{
