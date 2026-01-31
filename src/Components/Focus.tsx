@@ -370,39 +370,35 @@ export function Likes({ card, likeCard, matchId }: LikesProps) {
 
   // Fetch and Set Likes
   const [likes, setLikes] = useState("-");
-  const getLikes = useCallback(async () => {
+  const getLikes = useCallback(() => {
     if (card.likes && (matchId != 'default')) {
       setLikes(abbreviate(card.likes));
-    } else if (matchId == 'default') {
-      // Fetch from CDN for Single Device Mode Only
-      try {
-        const response = await fetch(`/card/${card.id}.json`);
-        if (response.ok) {
-          const cardData = await response.json();
-          setLikes(abbreviate(++cardData.likes || 1));
-        } else {
-          setLikes('1'); // Default to 1 if fetch fails
-        }
-      } catch (error) {
-        setLikes('1'); // Default to 1 if JSON parsing fails
-      }
     } else {
       setLikes('-')
     }
   }, [abbreviate, card, matchId]);
 
-  const handleLike = useCallback((e: React.MouseEvent) => {
+  const handleLike = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (sessionStorage.getItem(`${matchId}-${card.id}-liked`) != '1') {
       sessionStorage.setItem(`${matchId}-${card.id}-liked`, '1');
       likeCard(card.id);
-      // Update in CDN for Global Deck
+      // Update like count only for this specific card
       if (matchId == 'default') {
-        likeGlobalCard(card.id);
+        const newLikes = await likeGlobalCard(card.id);
+        if (newLikes !== null) {
+          setLikes(abbreviate(newLikes));
+        }
+      } else {
+        // For multiplayer, set the like count from the updated card state
+        if (card.likes) {
+          setLikes(abbreviate(card.likes + 1));
+        } else {
+          setLikes(abbreviate(1));
+        }
       }
-    } // Can only like, cannot unlike
-    getLikes();
-    e.stopPropagation();
-  }, [card.id, likeCard, getLikes, matchId]);
+    }
+  }, [card.id, card.likes, likeCard, matchId, abbreviate]);
 
   useEffect(() => {
     if (matchId != 'default') {
