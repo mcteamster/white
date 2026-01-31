@@ -1,38 +1,197 @@
-import { useState, useRef, useMemo, useCallback, useEffect, useContext } from 'react';
-import { Link } from 'react-router';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { Icon } from './Icons';
 import { CardCreator } from './CardCreator';
 import { useDeckEditor } from '../lib/deckEditor';
 import { sanitiseCard } from '../lib/data';
 import { Card } from '../Cards';
 import { BLANK_IMAGE, decompressImage } from '../lib/images';
-import { ImageCacheContext } from '../lib/contexts';
 
-// Card Image Component with Editor Cache
+// Card Display Components for different view modes
+function FullCardView({ card, onDelete }: { card: Card, onDelete: () => void }) {
+  return (
+    <wired-card key={card.id} style={{ 
+      padding: '0.75em',
+      height: '320px',
+      width: '280px',
+      backgroundColor: 'white',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      alignItems: 'center'
+    }}>
+      {/* Card Preview */}
+      <div style={{
+        width: '100%',
+        aspectRatio: '1',
+        backgroundColor: 'white',
+        marginBottom: '0.5em',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        fontSize: '0.8em',
+        textAlign: 'center',
+        overflow: 'hidden'
+      }}>
+        {card.content.image ? (
+          <CardImage card={card} />
+        ) : (
+          <div style={{ color: '#999', fontSize: '0.8em' }}>No Image</div>
+        )}
+      </div>
+      
+      {/* Card Details */}
+      <div style={{ marginBottom: '0.5em' }}>
+        <h4 style={{ margin: '0 0 0.25em 0' }}>{card.content.title}</h4>
+        <p style={{ margin: '0 0 0.25em 0', fontSize: '0.85em' }}>{card.content.description}</p>
+        <small>by {card.content.author}</small>
+        {card.likes && <div style={{ fontSize: '0.8em', color: '#666' }}>❤️ {card.likes}</div>}
+      </div>
+      
+      {/* Action Buttons */}
+      <div style={{ display: 'flex', gap: '0.5em', justifyContent: 'center' }}>
+        <wired-card 
+          style={{ padding: '0.25em 0.5em', cursor: 'pointer', color: 'red' }}
+          onClick={onDelete}
+        >
+          ✕ Delete
+        </wired-card>
+      </div>
+    </wired-card>
+  );
+}
+
+function CompactCardView({ card, onDelete }: { card: Card, onDelete: () => void }) {
+  return (
+    <wired-card key={card.id} style={{ 
+      padding: '0.75em',
+      height: '200px',
+      width: '280px',
+      backgroundColor: 'white',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      alignItems: 'center'
+    }}>
+      {/* Smaller Image */}
+      <div style={{
+        width: '60px',
+        height: '60px',
+        backgroundColor: 'white',
+        marginBottom: '0.5em',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        fontSize: '0.7em',
+        textAlign: 'center',
+        overflow: 'hidden'
+      }}>
+        {card.content.image ? (
+          <CardImage card={card} />
+        ) : (
+          <div style={{ color: '#999', fontSize: '0.7em' }}>No Image</div>
+        )}
+      </div>
+      
+      {/* Card Details */}
+      <div style={{ marginBottom: '0.5em', textAlign: 'center' }}>
+        <h4 style={{ margin: '0 0 0.25em 0', fontSize: '1em' }}>{card.content.title}</h4>
+        <p style={{ margin: '0 0 0.25em 0', fontSize: '0.8em' }}>{card.content.description}</p>
+        <small>by {card.content.author}</small>
+      </div>
+      
+      {/* Action Buttons */}
+      <div style={{ display: 'flex', gap: '0.5em', justifyContent: 'center' }}>
+        <wired-card 
+          style={{ padding: '0.25em 0.5em', cursor: 'pointer', color: 'red' }}
+          onClick={onDelete}
+        >
+          ✕
+        </wired-card>
+      </div>
+    </wired-card>
+  );
+}
+
+function ImageOnlyCardView({ card }: { card: Card }) {
+  return (
+    <wired-card key={card.id} style={{ 
+      padding: '0.25em',
+      height: '90px',
+      width: '90px',
+      backgroundColor: 'white',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center'
+    }}>
+      {/* Image Only */}
+      <div style={{
+        width: '80px',
+        height: '80px',
+        backgroundColor: 'white',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden'
+      }}>
+        {card.content.image ? (
+          <CardImage card={card} />
+        ) : (
+          <div style={{ color: '#999', fontSize: '0.7em', textAlign: 'center' }}>No Image</div>
+        )}
+      </div>
+    </wired-card>
+  );
+}
 function CardImage({ card }: { card: Card }) {
   const [imageSrc, setImageSrc] = useState(BLANK_IMAGE);
+
+  const handleQuotaExceeded = (e: any) => {
+    if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+      console.warn('LocalStorage quota exceeded, clearing image cache');
+      // Clear all editor image cache
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('editor_image_')) {
+          localStorage.removeItem(key);
+        }
+      });
+    }
+  };
 
   useEffect(() => {
     // Check editor-specific cache first
     const cacheKey = `editor_image_${card.id}`;
-    const cached = localStorage.getItem(cacheKey);
     
-    if (cached) {
-      setImageSrc(cached);
-      return;
-    }
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      
+      if (cached) {
+        setImageSrc(cached);
+        return;
+      }
 
-    if (card.content.image?.startsWith('data:image/png;base64,')) {
-      // PNG Data URI
-      setImageSrc(card.content.image);
-      localStorage.setItem(cacheKey, card.content.image);
-    } else if (card.content.image) {
-      // Compressed image - decompress it
-      decompressImage(card.content.image).then(decompressed => {
-        setImageSrc(decompressed);
-        localStorage.setItem(cacheKey, decompressed);
-      });
-    } else {
+      if (card.content.image?.startsWith('data:image/png;base64,')) {
+        // PNG Data URI
+        setImageSrc(card.content.image);
+        try {
+          localStorage.setItem(cacheKey, card.content.image);
+        } catch (e) {
+          handleQuotaExceeded(e);
+        }
+      } else if (card.content.image) {
+        // Compressed image - decompress it
+        decompressImage(card.content.image).then(decompressed => {
+          setImageSrc(decompressed);
+          try {
+            localStorage.setItem(cacheKey, decompressed);
+          } catch (e) {
+            handleQuotaExceeded(e);
+          }
+        });
+      } else {
+        setImageSrc(BLANK_IMAGE);
+      }
+    } catch (e) {
+      console.error('Error loading image:', e);
       setImageSrc(BLANK_IMAGE);
     }
   }, [card.id, card.content.image]);
@@ -40,7 +199,7 @@ function CardImage({ card }: { card: Card }) {
   return (
     <div style={{
       width: '100%',
-      height: '80%',
+      height: '100%',
       backgroundImage: `url(${imageSrc})`,
       backgroundSize: 'contain',
       backgroundRepeat: 'no-repeat',
@@ -52,26 +211,21 @@ function CardImage({ card }: { card: Card }) {
 export function DeckEditor() {
   const {
     deck,
-    createNewDeck,
-    loadDeckFromFile,
     saveDeck,
     addCard,
-    updateCard,
     deleteCard,
-    duplicateDeck,
-    setDeckName
+    updateDeck
   } = useDeckEditor();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showCardCreator, setShowCardCreator] = useState(false);
-  const [editingCard, setEditingCard] = useState<Card | undefined>();
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [showLoadDialog, setShowLoadDialog] = useState(false);
   const [loadedDeckData, setLoadedDeckData] = useState<{cards: Card[], name: string} | null>(null);
-  const mergeFileInputRef = useRef<HTMLInputElement>(null);
+  const [viewMode, setViewMode] = useState<'full' | 'compact' | 'image'>('full');
 
   // Debounce search term
   useEffect(() => {
@@ -81,6 +235,11 @@ export function DeckEditor() {
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  // Update document title when deck name changes
+  useEffect(() => {
+    document.title = `Editor - ${deck.name}`;
+  }, [deck.name]);
 
   const handleFileLoad = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -172,23 +331,12 @@ export function DeckEditor() {
   };
 
   const handleCardSave = (card: Omit<Card, 'id'>) => {
-    if (editingCard) {
-      updateCard(editingCard.id, card);
-    } else {
-      addCard(card);
-    }
+    addCard(card);
     setShowCardCreator(false);
-    setEditingCard(undefined);
   };
 
   const handleCardCancel = () => {
     setShowCardCreator(false);
-    setEditingCard(undefined);
-  };
-
-  const handleEditCard = (card: Card) => {
-    setEditingCard(card);
-    setShowCardCreator(true);
   };
 
   const filteredCards = useMemo(() => {
@@ -207,10 +355,6 @@ export function DeckEditor() {
     });
   }, [deck.cards, debouncedSearchTerm]);
 
-  const deckStats = {
-    totalCards: deck.cards.length
-  };
-
   return (
     <div style={{ 
       height: '100vh', 
@@ -228,26 +372,104 @@ export function DeckEditor() {
         {/* Top Row - Title */}
         <div style={{ 
           display: 'flex', 
-          flexDirection: 'column',
           alignItems: 'center', 
-          justifyContent: 'center',
-          padding: '1em 2em'
+          justifyContent: 'space-between',
+          padding: '1em'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <h1 style={{ 
-              margin: 0, 
-              fontSize: '1.5em'
-            }}>Deck Editor</h1>
-            {deck.modified && <span style={{ color: 'orange', marginLeft: '0.5em' }}>●</span>}
+          {/* Load Button - Left */}
+          <wired-card style={{ 
+            height: '3em',
+            width: '3em',
+            margin: '0.25em',
+            fontWeight: 'bold',
+            textAlign: 'center',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: '#eee',
+            borderRadius: '1em',
+            cursor: 'pointer'
+          }} onClick={() => fileInputRef.current?.click()} elevation={2}>
+            <Icon name="display" /> Load
+          </wired-card>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".html"
+            onChange={handleFileLoad}
+            style={{ display: 'none' }}
+          />
+
+          {/* Center - Title */}
+          <div style={{ textAlign: 'center', flex: 1, margin: '0 1em' }}>
+            <h1 style={{ margin: 0, fontSize: '1.5em' }}>
+              Deck Editor
+              {deck.modified && <span style={{ color: 'orange', marginLeft: '0.5em' }}>●</span>}
+            </h1>
+            
+            {/* View Mode Toggle */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25em', marginTop: '0.5em' }}>
+              <wired-card 
+                style={{ 
+                  padding: '0.25em 0.5em', 
+                  cursor: 'pointer',
+                  backgroundColor: viewMode === 'full' ? '#4CAF50' : '#eee',
+                  color: viewMode === 'full' ? 'white' : 'black',
+                  fontSize: '0.8em'
+                }}
+                onClick={() => setViewMode('full')}
+              >
+                Full
+              </wired-card>
+              <wired-card 
+                style={{ 
+                  padding: '0.25em 0.5em', 
+                  cursor: 'pointer',
+                  backgroundColor: viewMode === 'compact' ? '#4CAF50' : '#eee',
+                  color: viewMode === 'compact' ? 'white' : 'black',
+                  fontSize: '0.8em'
+                }}
+                onClick={() => setViewMode('compact')}
+              >
+                Compact
+              </wired-card>
+              <wired-card 
+                style={{ 
+                  padding: '0.25em 0.5em', 
+                  cursor: 'pointer',
+                  backgroundColor: viewMode === 'image' ? '#4CAF50' : '#eee',
+                  color: viewMode === 'image' ? 'white' : 'black',
+                  fontSize: '0.8em'
+                }}
+                onClick={() => setViewMode('image')}
+              >
+                Image
+              </wired-card>
+            </div>
           </div>
-          <div style={{ 
-            fontSize: '0.9em',
-            color: '#666',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            maxWidth: '80%'
-          }}>{deck.name}</div>
+
+          {/* Save Button - Right */}
+          <wired-card 
+            style={{ 
+              height: '3em',
+              width: '3em',
+              margin: '0.25em',
+              fontWeight: 'bold',
+              textAlign: 'center',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: '#eee',
+              borderRadius: '1em',
+              cursor: deck.cards.length === 0 ? 'not-allowed' : 'pointer',
+              opacity: deck.cards.length === 0 ? 0.5 : 1,
+              color: deck.cards.length === 0 ? 'grey' : undefined
+            }}
+            onClick={deck.cards.length === 0 ? undefined : saveDeck}
+            elevation={2}
+          >
+            <Icon name="take" /> Save
+          </wired-card>
         </div>
       </div>
 
@@ -267,7 +489,6 @@ export function DeckEditor() {
             <CardCreator 
               onSave={handleCardSave}
               onCancel={handleCardCancel}
-              editingCard={editingCard}
             />
           </div>
         ) : filteredCards.length === 0 ? (
@@ -281,62 +502,17 @@ export function DeckEditor() {
             {debouncedSearchTerm ? 'No cards match your search.' : 'No cards in deck. Create a new card or load an existing deck.'}
           </div>
         ) : (
-          filteredCards.map(card => (
-            <wired-card key={card.id} style={{ 
-              padding: '0.75em',
-              height: '320px',
-              width: '280px',
-              backgroundColor: 'white',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              {/* Card Preview */}
-              <div style={{
-                width: '100%',
-                aspectRatio: '1',
-                backgroundColor: 'white',
-                marginBottom: '0.5em',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                fontSize: '0.8em',
-                textAlign: 'center',
-                overflow: 'hidden'
-              }}>
-                {card.content.image ? (
-                  <CardImage card={card} />
-                ) : (
-                  <div style={{ color: '#999', fontSize: '0.8em' }}>No Image</div>
-                )}
-              </div>
-              
-              {/* Card Details */}
-              <div style={{ marginBottom: '0.5em' }}>
-                <h4 style={{ margin: '0 0 0.25em 0' }}>{card.content.title}</h4>
-                <p style={{ margin: '0 0 0.25em 0', fontSize: '0.85em' }}>{card.content.description}</p>
-                <small>by {card.content.author}</small>
-                {card.likes && <div style={{ fontSize: '0.8em', color: '#666' }}>❤️ {card.likes}</div>}
-              </div>
-              
-              {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: '0.5em', justifyContent: 'center' }}>
-                <wired-card 
-                  style={{ padding: '0.25em 0.5em', cursor: 'pointer', flex: 1, textAlign: 'center' }}
-                  onClick={() => handleEditCard(card)}
-                >
-                  ✏️ Edit
-                </wired-card>
-                <wired-card 
-                  style={{ padding: '0.25em 0.5em', cursor: 'pointer', color: 'red' }}
-                  onClick={() => deleteCard(card.id)}
-                >
-                  ✕
-                </wired-card>
-              </div>
-            </wired-card>
-          ))
+          filteredCards.map(card => {
+            const handleDelete = () => deleteCard(card.id);
+            
+            if (viewMode === 'full') {
+              return <FullCardView key={card.id} card={card} onDelete={handleDelete} />;
+            } else if (viewMode === 'compact') {
+              return <CompactCardView key={card.id} card={card} onDelete={handleDelete} />;
+            } else {
+              return <ImageOnlyCardView key={card.id} card={card} />;
+            }
+          })
         )}
       </div>
 
@@ -358,33 +534,24 @@ export function DeckEditor() {
           gap: '0.5em',
           flexWrap: 'wrap'
         }}>
-          <wired-card style={{ padding: '0.5em', cursor: 'pointer' }} onClick={() => fileInputRef.current?.click()}>
-            <Icon name="upload" /> Load
-          </wired-card>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".html"
-            onChange={handleFileLoad}
-            style={{ display: 'none' }}
-          />
-          
           <wired-card 
             style={{ 
-              padding: '0.5em', 
-              cursor: deck.cards.length === 0 ? 'not-allowed' : 'pointer',
-              opacity: deck.cards.length === 0 ? 0.5 : 1
+              height: '3em',
+              width: '3em',
+              margin: '0.25em',
+              fontWeight: 'bold',
+              textAlign: 'center',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: '#eee',
+              borderRadius: '1em',
+              cursor: 'pointer'
             }}
-            onClick={deck.cards.length === 0 ? undefined : saveDeck}
-          >
-            <Icon name="take" /> Save
-          </wired-card>
-
-          <wired-card 
-            style={{ padding: '0.5em', cursor: 'pointer', backgroundColor: '#4CAF50', color: 'white' }}
             onClick={() => setShowCardCreator(true)}
+            elevation={2}
           >
-            <Icon name="add" /> Add Card
+            <Icon name="create" /> Create
           </wired-card>
         </div>
 

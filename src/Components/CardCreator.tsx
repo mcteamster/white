@@ -130,7 +130,7 @@ export function CardCreator({ onSave, onCancel, editingCard }: CardCreatorProps)
               Clear
             </wired-card>
             <wired-card style={{ padding: '0.5em', cursor: 'pointer' }} onClick={() => setMode('form')}>
-              <Icon name="edit" /> Back to Form
+              <Icon name="create" /> Back to Form
             </wired-card>
           </div>
         </div>
@@ -212,7 +212,7 @@ export function CardCreator({ onSave, onCancel, editingCard }: CardCreatorProps)
           style={{ padding: '0.5em 1em', cursor: 'pointer', backgroundColor: '#2196F3', color: 'white' }}
           onClick={() => setMode('draw')}
         >
-          <Icon name="edit" /> Add Drawing
+          <Icon name="create" /> Add Drawing
         </wired-card>
         {(editingCard?.content.image || hasDrawing) && (
           <span style={{ fontSize: '0.9em', color: '#666' }}>📷 Has image</span>

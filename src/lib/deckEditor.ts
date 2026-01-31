@@ -182,6 +182,7 @@ export const useDeckEditor = () => {
     deleteCard,
     duplicateDeck,
     mergeDeck,
+    updateDeck,
     setDeckName: (name: string) => updateDeck(prev => ({ ...prev, name, modified: true }))
   };
 };
