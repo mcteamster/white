@@ -39,6 +39,8 @@ import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
 import StopIcon from '@mui/icons-material/Stop';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { Properties } from 'csstype';
 import { useWindowDimensions } from '../lib/hooks';
 
@@ -82,7 +84,9 @@ type IconName =
   'undo' |
   'stop' |
   'view_list' |
-  'view_module';
+  'view_module' |
+  'show' |
+  'hide';
 
 type BrowseType = 'prev' | 'next'
 
@@ -128,6 +132,8 @@ export function Icon(props: { name: IconName }) {
     view_list: <ViewListIcon></ViewListIcon>,
     view_module: <ViewModuleIcon></ViewModuleIcon>,
     stop: <StopIcon></StopIcon>,
+    show: <VisibilityIcon></VisibilityIcon>,
+    hide: <VisibilityOffIcon></VisibilityOffIcon>,
   }
 
   const styles: { [key: string]: Properties<string | number> } = {

@@ -108,7 +108,9 @@ export function FullCardView({ card, isSelected, onCardSelect }: {
     },
     title: {
       fontSize: '1.5em',
-      color: 'black'
+      color: 'black',
+      wordBreak: 'break-word',
+      overflowWrap: 'break-word'
     },
     description: {
       width: '100%',
@@ -117,7 +119,9 @@ export function FullCardView({ card, isSelected, onCardSelect }: {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      color: 'black'
+      color: 'black',
+      wordBreak: 'break-word',
+      overflowWrap: 'break-word'
     },
     credit: {
       fontSize: '0.75em',
@@ -196,12 +200,16 @@ export function CompactCardView({ card, isSelected, onCardSelect }: {
     title: {
       margin: '0 0 0.25em 0',
       fontSize: '1em',
-      color: 'black'
+      color: 'black',
+      wordBreak: 'break-word',
+      overflowWrap: 'break-word'
     },
     description: {
       margin: 0,
       fontSize: '0.8em',
-      color: '#666'
+      color: '#666',
+      wordBreak: 'break-word',
+      overflowWrap: 'break-word'
     },
     noImage: {
       color: '#999',

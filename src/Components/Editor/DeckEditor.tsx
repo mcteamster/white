@@ -85,7 +85,8 @@ export function DeckEditor() {
       height: '100vh', 
       display: 'flex', 
       flexDirection: 'column',
-      backgroundColor: '#f0f0f0'
+      backgroundColor: '#f0f0f0',
+      position: 'relative'
     },
     header: {
       backgroundColor: 'white',
@@ -97,7 +98,7 @@ export function DeckEditor() {
       display: 'flex', 
       alignItems: 'center', 
       justifyContent: 'space-between',
-      padding: '1em'
+      padding: '1em 1em 0.5em 1em'
     },
     loadButton: {
       height: '3em',
@@ -145,6 +146,7 @@ export function DeckEditor() {
     cardsContainer: {
       flex: 1, 
       padding: '1em',
+      paddingBottom: '200px',
       overflowY: 'auto',
       display: 'flex',
       flexWrap: 'wrap',
@@ -163,13 +165,18 @@ export function DeckEditor() {
       fontSize: '1.2em'
     },
     bottomControls: {
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
       backgroundColor: 'white',
       borderTop: '2px solid #ccc',
-      padding: '1em',
+      padding: '0.5em 1em 1em 1em',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      gap: '1em'
+      gap: '1em',
+      zIndex: 5
     },
     actionButtons: {
       display: 'flex', 
@@ -242,6 +249,18 @@ export function DeckEditor() {
       cursor: 'pointer',
       backgroundColor: '#f44336',
       color: 'white'
+    },
+    clearButtonInline: {
+      height: '3em',
+      margin: '0.25em',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#eee',
+      borderRadius: '1em',
+      cursor: 'pointer'
     },
     hiddenInput: {
       display: 'none'
@@ -467,15 +486,19 @@ export function DeckEditor() {
       <div style={styles.bottomControls}>
         <div style={styles.actionButtons}>
           {selectedCards.size > 0 ? (
-            <SelectionActions
-              selectedCards={selectedCards}
-              deck={deck}
-              onEdit={handleEditCard}
-              onHide={handleHideCards}
-              onShow={handleShowCards}
-              onDelete={handleDeleteCards}
-              onClear={clearSelection}
-            />
+            <>
+              <SelectionActions
+                selectedCards={selectedCards}
+                deck={deck}
+                onEdit={handleEditCard}
+                onHide={handleHideCards}
+                onShow={handleShowCards}
+                onDelete={handleDeleteCards}
+              />
+              <wired-card style={styles.clearButtonInline} onClick={clearSelection} elevation={2}>
+                <Icon name="exit" /> Clear ({selectedCards.size})
+              </wired-card>
+            </>
           ) : (
             <wired-card 
               style={styles.createButton}

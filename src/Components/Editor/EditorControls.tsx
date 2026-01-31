@@ -9,8 +9,7 @@ export function SelectionActions({
   onEdit, 
   onHide, 
   onShow, 
-  onDelete, 
-  onClear 
+  onDelete
 }: {
   selectedCards: Set<number>;
   deck: any;
@@ -18,7 +17,6 @@ export function SelectionActions({
   onHide: () => void;
   onShow: () => void;
   onDelete: () => void;
-  onClear: () => void;
 }) {
   const styles: { [key: string]: Properties<string | number> } = {
     selectionButton: {
@@ -56,7 +54,7 @@ export function SelectionActions({
         onClick={allSelectedHidden ? onShow : onHide} 
         elevation={2}
       >
-        {allSelectedHidden ? 'Show' : 'Hide'}
+        <Icon name={allSelectedHidden ? "show" : "hide"} /> {allSelectedHidden ? 'Show' : 'Hide'}
       </wired-card>
       
       <wired-card 
@@ -65,10 +63,6 @@ export function SelectionActions({
         elevation={2}
       >
         <Icon name="discard" /> Delete
-      </wired-card>
-      
-      <wired-card style={styles.selectionButton} onClick={onClear} elevation={2}>
-        Clear ({selectedCards.size})
       </wired-card>
     </>
   );
