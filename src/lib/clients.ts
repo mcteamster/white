@@ -150,9 +150,14 @@ export const submitGlobalCard = async (createdCard: Card) => {
   }))
 }
 
-export const likeGlobalCard = async (id: number) => {
+export const likeGlobalCard = async (id: number): Promise<number | null> => {
   const likeEndpoint = import.meta.env.MODE === 'development' ? undefined : `${import.meta.env.VITE_API_SERVER}/white/like/${id}`
   if (likeEndpoint) {
-    await fetch(likeEndpoint, { method: "POST" })
+    const response = await fetch(likeEndpoint, { method: "POST" })
+    if (response.ok) {
+      const data = await response.json()
+      return data.likes
+    }
   }
+  return null
 }
