@@ -23,6 +23,7 @@ export function DeckEditor() {
   const [editingCard, setEditingCard] = useState<Card | undefined>(undefined);
   const [modalState, setModalState] = useState<'closed' | 'file' | 'reset' | 'save' | 'loadConfirm'>('closed');
   const [saveFileName, setSaveFileName] = useState('');
+  const [merging, setMerging] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [loadedDeckData, setLoadedDeckData] = useState<{cards: Card[], name: string} | null>(null);
@@ -409,8 +410,9 @@ export function DeckEditor() {
   };
 
   const handleMergeDecks = () => {
-    if (!loadedDeckData) return;
+    if (!loadedDeckData || merging) return;
     
+    setMerging(true);
     const maxId = Math.max(...deck.cards.map(c => c.id), 0);
     const mergedCards = loadedDeckData.cards.map((card, index) => ({
       ...card,
@@ -426,6 +428,7 @@ export function DeckEditor() {
     
     setModalState('closed');
     setLoadedDeckData(null);
+    setMerging(false);
   };
 
   const handleCardSave = (card: Omit<Card, 'id'>) => {

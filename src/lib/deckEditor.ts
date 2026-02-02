@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Card } from '../Cards';
 import { GameState } from '../Game';
 import { sanitiseCard } from './data';
+import { dbManager } from './indexedDB';
 
 export interface DeckEditorState {
   cards: Card[];
@@ -11,15 +12,6 @@ export interface DeckEditorState {
 
 export const useDeckEditor = () => {
   const [deck, setDeck] = useState<DeckEditorState>(() => {
-    // Load from localStorage on initialization
-    const saved = localStorage.getItem('deckEditor_currentDeck');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        // If parsing fails, return default
-      }
-    }
     return {
       cards: [],
       name: 'New Deck',
@@ -27,23 +19,31 @@ export const useDeckEditor = () => {
     };
   });
 
-  // Save to localStorage whenever deck changes
-  const updateDeck = (newDeck: DeckEditorState | ((prev: DeckEditorState) => DeckEditorState)) => {
+  // Load from IndexedDB on mount
+  useEffect(() => {
+    const loadDeck = async () => {
+      try {
+        const savedDeck = await dbManager.get('deckEditor_currentDeck');
+        if (savedDeck) {
+          setDeck(savedDeck);
+        }
+      } catch (error) {
+        console.warn('Failed to load deck from IndexedDB:', error);
+      }
+    };
+    loadDeck();
+  }, []);
+
+  // Save to IndexedDB whenever deck changes
+  const updateDeck = useCallback(async (newDeck: DeckEditorState | ((prev: DeckEditorState) => DeckEditorState)) => {
     const updatedDeck = typeof newDeck === 'function' ? newDeck(deck) : newDeck;
     setDeck(updatedDeck);
     try {
-      localStorage.setItem('deckEditor_currentDeck', JSON.stringify(updatedDeck));
+      await dbManager.set('deckEditor_currentDeck', updatedDeck);
     } catch (error) {
-      console.warn('Failed to save deck to localStorage (quota exceeded):', error);
-      // Clear old data and try again
-      localStorage.removeItem('deckEditor_currentDeck');
-      try {
-        localStorage.setItem('deckEditor_currentDeck', JSON.stringify(updatedDeck));
-      } catch (retryError) {
-        console.error('Failed to save deck even after clearing localStorage:', retryError);
-      }
+      console.warn('Failed to save deck to IndexedDB:', error);
     }
-  };
+  }, [deck]);
 
   const createNewDeck = useCallback(() => {
     const newDeck = {
