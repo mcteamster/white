@@ -87,7 +87,8 @@ export function CardEditor({ onSave, onCancel, editingCard }: CardEditorProps) {
       marginTop: '1em'
     },
     button: {
-      cursor: 'pointer'
+      cursor: 'pointer',
+      width: '3em'
     }
   };
 

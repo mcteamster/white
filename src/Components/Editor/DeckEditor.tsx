@@ -566,8 +566,11 @@ export function DeckEditor() {
             )
           ) : (
             <wired-card 
-              style={styles.createButton}
-              onClick={() => setShowCardCreator(true)}
+              style={{
+                ...styles.createButton,
+                opacity: 0.5,
+                cursor: 'not-allowed'
+              }}
               elevation={2}
             >
               <Icon name="create" /> Create
