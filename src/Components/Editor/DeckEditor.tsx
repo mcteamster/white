@@ -4,14 +4,13 @@ import { Icon } from '../Icons';
 import { CardEditor } from './CardEditor';
 import { FullCardView, CompactCardView, ImageOnlyCardView } from './CardViews';
 import { ViewModeToggle } from './EditorControls';
-import { useDeckEditor } from '../../lib/deckEditor';
-import { sanitiseCard } from '../../lib/data';
+import { useDeckEditor } from '../../lib/editor';
+import { sanitiseCard, downloadDeck } from '../../lib/data';
 import { Card } from '../../Cards';
 
 export function DeckEditor() {
   const {
     deck,
-    saveDeck,
     addCard,
     updateDeck
   } = useDeckEditor();
@@ -422,7 +421,6 @@ export function DeckEditor() {
     updateDeck({
       ...deck,
       cards: [...deck.cards, ...mergedCards],
-      name: `${deck.name} + ${loadedDeckData.name}`,
       modified: true
     });
     
@@ -548,6 +546,20 @@ export function DeckEditor() {
               <wired-card 
                 style={{...styles.selectionButton, color: 'red'}} 
                 onClick={handleDeleteCards} 
+                elevation={2}
+              >
+                <Icon name="discard" /> Delete
+              </wired-card>
+            ) : Array.from(selectedCards).some(id => 
+              deck.cards.find((card: Card) => card.id === id)?.location === 'box'
+            ) ? (
+              <wired-card 
+                style={{
+                  ...styles.selectionButton,
+                  opacity: 0.5,
+                  cursor: 'not-allowed',
+                  color: 'red'
+                }}
                 elevation={2}
               >
                 <Icon name="discard" /> Delete
@@ -687,7 +699,7 @@ export function DeckEditor() {
                       style={styles.saveButton}
                       onClick={() => {
                         updateDeck({ ...deck, name: saveFileName });
-                        saveDeck();
+                        downloadDeck({ cards: deck.cards }, saveFileName);
                         setModalState('closed');
                       }}
                       elevation={2}
