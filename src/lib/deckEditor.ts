@@ -31,7 +31,18 @@ export const useDeckEditor = () => {
   const updateDeck = (newDeck: DeckEditorState | ((prev: DeckEditorState) => DeckEditorState)) => {
     const updatedDeck = typeof newDeck === 'function' ? newDeck(deck) : newDeck;
     setDeck(updatedDeck);
-    localStorage.setItem('deckEditor_currentDeck', JSON.stringify(updatedDeck));
+    try {
+      localStorage.setItem('deckEditor_currentDeck', JSON.stringify(updatedDeck));
+    } catch (error) {
+      console.warn('Failed to save deck to localStorage (quota exceeded):', error);
+      // Clear old data and try again
+      localStorage.removeItem('deckEditor_currentDeck');
+      try {
+        localStorage.setItem('deckEditor_currentDeck', JSON.stringify(updatedDeck));
+      } catch (retryError) {
+        console.error('Failed to save deck even after clearing localStorage:', retryError);
+      }
+    }
   };
 
   const createNewDeck = useCallback(() => {
@@ -85,10 +96,8 @@ export const useDeckEditor = () => {
   }, []);
 
   const saveDeck = useCallback(() => {
-    // Prompt for filename
-    const filename = prompt('Enter filename for deck:', deck.name) || deck.name;
+    const filename = deck.name;
     
-    // Create GameState format for existing downloadDeck function
     const gameState: GameState = { cards: deck.cards };
     
     // Strip unnecessary data and format for export

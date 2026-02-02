@@ -3,7 +3,7 @@ import { Properties } from 'csstype';
 import { Icon } from '../Icons';
 import { CardEditor } from './CardEditor';
 import { FullCardView, CompactCardView, ImageOnlyCardView } from './CardViews';
-import { SelectionActions, ViewModeToggle } from './EditorControls';
+import { ViewModeToggle } from './EditorControls';
 import { useDeckEditor } from '../../lib/deckEditor';
 import { sanitiseCard } from '../../lib/data';
 import { Card } from '../../Cards';
@@ -21,9 +21,10 @@ export function DeckEditor() {
   const [error, setError] = useState<string | null>(null);
   const [showCardCreator, setShowCardCreator] = useState(false);
   const [editingCard, setEditingCard] = useState<Card | undefined>(undefined);
+  const [modalState, setModalState] = useState<'closed' | 'file' | 'reset' | 'save' | 'loadConfirm'>('closed');
+  const [saveFileName, setSaveFileName] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [showLoadDialog, setShowLoadDialog] = useState(false);
   const [loadedDeckData, setLoadedDeckData] = useState<{cards: Card[], name: string} | null>(null);
   const [viewMode, setViewMode] = useState<'full' | 'compact' | 'image'>(() => {
     const saved = localStorage.getItem('deckEditor_viewMode');
@@ -83,7 +84,8 @@ export function DeckEditor() {
 
   const styles: { [key: string]: Properties<string | number> } = {
     container: {
-      height: '100vh', 
+      height: '100vh',
+      width: '100vw',
       display: 'flex', 
       flexDirection: 'column',
       backgroundColor: '#f0f0f0',
@@ -103,7 +105,7 @@ export function DeckEditor() {
     },
     loadButton: {
       height: '3em',
-      width: '3em',
+      width: '4em',
       margin: '0.25em',
       fontWeight: 'bold',
       textAlign: 'center',
@@ -116,7 +118,13 @@ export function DeckEditor() {
     },
     title: {
       margin: 0,
-      fontSize: '1.5em'
+      fontSize: '1.5em',
+      cursor: 'pointer',
+      userSelect: 'none',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '0.5em'
     },
     viewModeButton: {
       padding: '0.5em', 
@@ -129,7 +137,7 @@ export function DeckEditor() {
     },
     saveButton: {
       height: '3em',
-      width: '3em',
+      width: '4em',
       margin: '0.25em',
       fontWeight: 'bold',
       textAlign: 'center',
@@ -183,7 +191,7 @@ export function DeckEditor() {
     },
     createButton: {
       height: '3em',
-      width: '3em',
+      width: '4em',
       margin: '0.25em',
       fontWeight: 'bold',
       textAlign: 'center',
@@ -246,8 +254,51 @@ export function DeckEditor() {
       backgroundColor: '#f44336',
       color: 'white'
     },
+    fileModalOverlay: {
+      position: 'fixed' as const,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000
+    },
+    fileModal: {
+      backgroundColor: 'white',
+      borderRadius: '1em',
+      padding: '1em',
+      maxWidth: '300px',
+      width: '80vw',
+      textAlign: 'center'
+    },
+    modalTitle: {
+      margin: 0
+    },
+    fileModalButtons: {
+      display: 'flex',
+      gap: '1em',
+      justifyContent: 'center',
+      marginTop: '1em'
+    },
+    selectionButton: {
+      height: '3em',
+      width: '4em',
+      margin: '0.25em',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#eee',
+      borderRadius: '1em',
+      cursor: 'pointer'
+    },
     clearButtonInline: {
       height: '3em',
+      width: '4em',
       margin: '0.25em',
       fontWeight: 'bold',
       textAlign: 'center',
@@ -325,10 +376,11 @@ export function DeckEditor() {
               name: deckData.name,
               modified: false
             });
+            setModalState('closed');
             setLoading(false);
           } else {
             setLoadedDeckData(deckData);
-            setShowLoadDialog(true);
+            setModalState('loadConfirm');
             setLoading(false);
           }
         } catch (error) {
@@ -344,45 +396,45 @@ export function DeckEditor() {
   };
 
   const handleReplaceDeck = () => {
-    if (loadedDeckData) {
-      updateDeck({
-        cards: loadedDeckData.cards,
-        name: loadedDeckData.name,
-        modified: false
-      });
-    }
-    setShowLoadDialog(false);
+    if (!loadedDeckData) return;
+    
+    updateDeck({
+      cards: loadedDeckData.cards,
+      name: loadedDeckData.name,
+      modified: false
+    });
+    
+    setModalState('closed');
     setLoadedDeckData(null);
   };
 
   const handleMergeDecks = () => {
-    if (loadedDeckData) {
-      const maxId = Math.max(...deck.cards.map(c => c.id), 0);
-      const mergedCards = loadedDeckData.cards.map((card, index) => ({
-        ...card,
-        id: maxId + index + 1
-      }));
-      
-      updateDeck({
-        ...deck,
-        cards: [...deck.cards, ...mergedCards],
-        name: `${deck.name} + ${loadedDeckData.name}`,
-        modified: true
-      });
-    }
-    setShowLoadDialog(false);
+    if (!loadedDeckData) return;
+    
+    const maxId = Math.max(...deck.cards.map(c => c.id), 0);
+    const mergedCards = loadedDeckData.cards.map((card, index) => ({
+      ...card,
+      id: maxId + index + 1
+    }));
+    
+    updateDeck({
+      ...deck,
+      cards: [...deck.cards, ...mergedCards],
+      name: `${deck.name} + ${loadedDeckData.name}`,
+      modified: true
+    });
+    
+    setModalState('closed');
     setLoadedDeckData(null);
   };
 
   const handleCardSave = (card: Omit<Card, 'id'>) => {
     if (editingCard) {
-      // Update existing card
       const updatedCards = deck.cards.map(c => 
         c.id === editingCard.id ? { ...card, id: editingCard.id } : c
       );
       updateDeck({ ...deck, cards: updatedCards, modified: true });
     } else {
-      // Create new card
       addCard(card);
     }
     setShowCardCreator(false);
@@ -393,6 +445,16 @@ export function DeckEditor() {
   const handleCardCancel = () => {
     setShowCardCreator(false);
     setEditingCard(undefined);
+  };
+
+  const handleClearDeck = () => {
+    updateDeck({
+      cards: [],
+      name: 'New Deck',
+      modified: false
+    });
+    setModalState('closed');
+    clearSelection();
   };
 
   const filteredCards = useMemo(() => {
@@ -413,9 +475,9 @@ export function DeckEditor() {
     <div style={styles.container}>
       <div style={styles.header}>
         <div style={styles.topRow}>
-          <h1 style={styles.title}>
-            Deck Editor [beta]
-            {deck.modified && <span style={{ color: 'orange', marginLeft: '0.5em' }}>●</span>}
+          <h1 style={styles.title} onClick={() => setModalState('file')}>
+            <Icon name="menu" /> Deck Editor
+            {deck.modified && <span style={{ color: 'orange' }}>●</span>}
           </h1>
           
           <ViewModeToggle 
@@ -460,20 +522,45 @@ export function DeckEditor() {
 
       <div style={styles.bottomControls}>
         <div style={styles.actionButtons}>
-          {selectedCards.size > 0 ? (
-            <>
-              <SelectionActions
-                selectedCards={selectedCards}
-                deck={deck}
-                onEdit={handleEditCard}
-                onHide={handleHideCards}
-                onShow={handleShowCards}
-                onDelete={handleDeleteCards}
-              />
-              <wired-card style={styles.clearButtonInline} onClick={clearSelection} elevation={2}>
-                <Icon name="exit" /> Clear ({selectedCards.size})
+          {selectedCards.size === 1 ? (
+            Array.from(selectedCards).every(id => 
+              deck.cards.find((card: Card) => card.id === id)?.location === 'box'
+            ) ? (
+              <wired-card 
+                style={{...styles.selectionButton, color: 'red'}} 
+                onClick={handleDeleteCards} 
+                elevation={2}
+              >
+                <Icon name="discard" /> Delete
               </wired-card>
-            </>
+            ) : (
+              <wired-card style={styles.selectionButton} onClick={handleEditCard} elevation={2}>
+                <Icon name="create" /> Edit
+              </wired-card>
+            )
+          ) : selectedCards.size > 0 ? (
+            Array.from(selectedCards).every(id => 
+              deck.cards.find((card: Card) => card.id === id)?.location === 'box'
+            ) ? (
+              <wired-card 
+                style={{...styles.selectionButton, color: 'red'}} 
+                onClick={handleDeleteCards} 
+                elevation={2}
+              >
+                <Icon name="discard" /> Delete
+              </wired-card>
+            ) : (
+              <wired-card 
+                style={{
+                  ...styles.selectionButton,
+                  opacity: 0.5,
+                  cursor: 'not-allowed'
+                }}
+                elevation={2}
+              >
+                <Icon name="create" /> Edit
+              </wired-card>
+            )
           ) : (
             <wired-card 
               style={styles.createButton}
@@ -483,29 +570,35 @@ export function DeckEditor() {
               <Icon name="create" /> Create
             </wired-card>
           )}
-          
-          <wired-card style={styles.loadButton} onClick={() => fileInputRef.current?.click()} elevation={2}>
-            <Icon name="display" /> Load
-          </wired-card>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".html"
-            onChange={handleFileLoad}
-            style={styles.hiddenInput}
-          />
-          
+
           <wired-card 
-            style={{ 
-              ...styles.saveButton,
-              cursor: deck.cards.length === 0 ? 'not-allowed' : 'pointer',
-              opacity: deck.cards.length === 0 ? 0.5 : 1,
-              color: deck.cards.length === 0 ? 'grey' : undefined
+            style={{
+              ...styles.selectionButton,
+              opacity: selectedCards.size > 0 ? 1 : 0.5,
+              cursor: selectedCards.size > 0 ? 'pointer' : 'not-allowed'
             }}
-            onClick={deck.cards.length === 0 ? undefined : saveDeck}
+            onClick={selectedCards.size > 0 ? (Array.from(selectedCards).every(id => 
+              deck.cards.find((card: Card) => card.id === id)?.location === 'box'
+            ) ? handleShowCards : handleHideCards) : undefined} 
             elevation={2}
           >
-            <Icon name="take" /> Save
+            <Icon name={selectedCards.size > 0 && Array.from(selectedCards).every(id => 
+              deck.cards.find((card: Card) => card.id === id)?.location === 'box'
+            ) ? "show" : "hide"} /> {selectedCards.size > 0 && Array.from(selectedCards).every(id => 
+              deck.cards.find((card: Card) => card.id === id)?.location === 'box'
+            ) ? 'Show' : 'Hide'}
+          </wired-card>
+          
+          <wired-card 
+            style={{
+              ...styles.clearButtonInline,
+              opacity: selectedCards.size > 0 ? 1 : 0.5,
+              cursor: selectedCards.size > 0 ? 'pointer' : 'not-allowed'
+            }}
+            onClick={selectedCards.size > 0 ? clearSelection : undefined} 
+            elevation={2}
+          >
+            <Icon name="exit" /> Clear {selectedCards.size > 0 ? `(${selectedCards.size})` : ''}
           </wired-card>
         </div>
 
@@ -530,32 +623,153 @@ export function DeckEditor() {
         {loading && <div style={styles.loadingText}>Loading...</div>}
         {error && <div style={styles.errorText}>{error}</div>}
 
-        {showLoadDialog && loadedDeckData && (
-          <div style={styles.dialogOverlay}>
-            <wired-card style={styles.dialogCard}>
-              <h3>Load Deck</h3>
-              <p>You have cards in your current deck. What would you like to do with "{loadedDeckData.name}"?</p>
-              <div style={styles.dialogButtons}>
-                <wired-card style={styles.dialogButton} onClick={() => setShowLoadDialog(false)}>
-                  Cancel
-                </wired-card>
-                <wired-card style={styles.dialogButton} onClick={handleMergeDecks}>
-                  Add to Current
-                </wired-card>
-                <wired-card style={styles.replaceButton} onClick={handleReplaceDeck}>
-                  Replace Current
-                </wired-card>
-              </div>
-            </wired-card>
-          </div>
-        )}
-
         {showCardCreator && (
           <CardEditor 
             onSave={handleCardSave}
             onCancel={handleCardCancel}
             editingCard={editingCard}
           />
+        )}
+
+        {modalState !== 'closed' && (
+          <div style={styles.fileModalOverlay} onClick={(e) => e.target === e.currentTarget && setModalState('closed')}>
+            <wired-card style={styles.fileModal} elevation={3}>
+              {modalState === 'reset' ? (
+                <>
+                  <h3 style={styles.modalTitle}>Reset Deck</h3>
+                  <p>Are you sure you want to reset the deck? This will delete all cards and cannot be undone.</p>
+                  <div style={styles.fileModalButtons}>
+                    <wired-card 
+                      style={styles.saveButton} 
+                      onClick={() => setModalState('closed')} 
+                      elevation={2}
+                    >
+                      <Icon name="exit" /> Cancel
+                    </wired-card>
+                    <wired-card 
+                      style={{
+                        ...styles.saveButton,
+                        color: '#f44336'
+                      }}
+                      onClick={() => {
+                        handleClearDeck();
+                      }}
+                      elevation={2}
+                    >
+                      <Icon name="discard" /> Reset
+                    </wired-card>
+                  </div>
+                </>
+              ) : modalState === 'save' ? (
+                <>
+                  <h3 style={styles.modalTitle}>Save Deck</h3>
+                  <p>Enter a name for your deck:</p>
+                  <wired-input
+                    value={saveFileName}
+                    onInput={(e: any) => setSaveFileName(e.target.value)}
+                    style={{ width: '80%', marginBottom: '1em' }}
+                  />
+                  <div style={styles.fileModalButtons}>
+                    <wired-card 
+                      style={styles.saveButton} 
+                      onClick={() => setModalState('closed')} 
+                      elevation={2}
+                    >
+                      <Icon name="exit" /> Cancel
+                    </wired-card>
+                    <wired-card 
+                      style={styles.saveButton}
+                      onClick={() => {
+                        updateDeck({ ...deck, name: saveFileName });
+                        saveDeck();
+                        setModalState('closed');
+                      }}
+                      elevation={2}
+                    >
+                      <Icon name="take" /> Save
+                    </wired-card>
+                  </div>
+                </>
+              ) : modalState === 'loadConfirm' ? (
+                <>
+                  <h3 style={styles.modalTitle}>Load Deck</h3>
+                  <p>You have cards in your current deck. What would you like to do with "{loadedDeckData?.name}"?</p>
+                  <div style={styles.fileModalButtons}>
+                    <wired-card 
+                      style={styles.saveButton} 
+                      onClick={() => setModalState('closed')} 
+                      elevation={2}
+                    >
+                      <Icon name="exit" /> Cancel
+                    </wired-card>
+                    <wired-card 
+                      style={styles.saveButton}
+                      onClick={handleMergeDecks}
+                      elevation={2}
+                    >
+                      <Icon name="copy" /> Merge
+                    </wired-card>
+                    <wired-card 
+                      style={{
+                        ...styles.saveButton,
+                        color: '#f44336'
+                      }}
+                      onClick={handleReplaceDeck}
+                      elevation={2}
+                    >
+                      <Icon name="shuffle" /> Replace
+                    </wired-card>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h3 style={styles.modalTitle}>Welcome to the Deck Editor</h3>
+                  <p>Load in Decks from your saved files, edit cards, and Save your deck, or Reset to start fresh</p>
+                  <div style={styles.fileModalButtons}>
+                    <wired-card style={styles.loadButton} onClick={() => fileInputRef.current?.click()} elevation={2}>
+                      <Icon name="display" /> Load
+                    </wired-card>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".html"
+                      onChange={handleFileLoad}
+                      style={styles.hiddenInput}
+                    />
+                    
+                    <wired-card 
+                      style={{ 
+                        ...styles.saveButton,
+                        cursor: deck.cards.length === 0 ? 'not-allowed' : 'pointer',
+                        opacity: deck.cards.length === 0 ? 0.5 : 1,
+                        color: deck.cards.length === 0 ? 'grey' : undefined
+                      }}
+                      onClick={deck.cards.length === 0 ? undefined : () => {
+                        setSaveFileName(deck.name || 'My Deck');
+                        setModalState('save');
+                      }}
+                      elevation={2}
+                    >
+                      <Icon name="take" /> Save
+                    </wired-card>
+
+                    <wired-card 
+                      style={{
+                        ...styles.saveButton,
+                        color: '#f44336'
+                      }}
+                      onClick={() => {
+                        setModalState('reset');
+                      }}
+                      elevation={2}
+                    >
+                      <Icon name="discard" /> Reset
+                    </wired-card>
+                  </div>
+                </>
+              )}
+            </wired-card>
+          </div>
         )}
       </div>
     </div>
