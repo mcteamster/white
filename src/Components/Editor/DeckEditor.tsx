@@ -7,7 +7,10 @@ import { ViewModeToggle } from './EditorControls';
 //@ts-expect-error: JS Module
 import { undo, sketchpad, strokes } from '../../Canvas.js';
 
-function DrawingControls({ onBack }: { onBack: () => void }) {
+function DrawingControls({ onBack, onUndo }: { 
+  onBack: () => void,
+  onUndo: () => void 
+}) {
   const styles = {
     container: {
       position: 'fixed' as const,
@@ -33,6 +36,10 @@ function DrawingControls({ onBack }: { onBack: () => void }) {
 
   return (
     <div style={styles.container}>
+      <wired-card elevation={2} style={styles.button} onClick={onUndo}>
+        <Icon name="undo" />
+        Undo
+      </wired-card>
       <wired-card elevation={2} style={styles.button} onClick={onBack}>
         <Icon name="done" />
         Done
@@ -58,8 +65,9 @@ export function DeckEditor() {
   const [editingCard, setEditingCard] = useState<Card | undefined>(undefined);
   const [modalState, setModalState] = useState<'closed' | 'file' | 'reset' | 'save' | 'loadConfirm'>('closed');
   const [showDrawingControls, setShowDrawingControls] = useState(false);
-  const [drawingHandlers, setDrawingHandlers] = useState<{ onBack: () => void }>({
-    onBack: () => {}
+  const [drawingHandlers, setDrawingHandlers] = useState<{ onBack: () => void, onUndo: () => void }>({
+    onBack: () => {},
+    onUndo: () => {}
   });
   const [saveFileName, setSaveFileName] = useState('');
   const [merging, setMerging] = useState(false);
@@ -488,7 +496,7 @@ export function DeckEditor() {
     setEditingCard(undefined);
   };
 
-  const handleShowDrawingControls = (show: boolean, handlers: { onBack: () => void }) => {
+  const handleShowDrawingControls = (show: boolean, handlers: { onBack: () => void, onUndo: () => void }) => {
     setShowDrawingControls(show);
     setDrawingHandlers(handlers);
   };
@@ -536,6 +544,7 @@ export function DeckEditor() {
       {showDrawingControls && (
         <DrawingControls 
           onBack={drawingHandlers.onBack}
+          onUndo={drawingHandlers.onUndo}
         />
       )}
 

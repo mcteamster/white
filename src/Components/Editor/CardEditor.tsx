@@ -11,7 +11,7 @@ interface CardEditorProps {
   onSave: (card: Omit<Card, 'id'>) => void;
   onCancel: () => void;
   editingCard?: Card;
-  onShowDrawingControls: (show: boolean, handlers: { onBack: () => void }) => void;
+  onShowDrawingControls: (show: boolean, handlers: { onBack: () => void, onUndo: () => void }) => void;
 }
 
 export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControls }: CardEditorProps) {
@@ -25,14 +25,14 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
     if (create) {
       create.style.display = 'none';
     }
-    onShowDrawingControls(false, { onBack: () => {} });
+    onShowDrawingControls(false, { onBack: () => {}, onUndo: () => {} });
   };
 
   const showSketchpad = async () => {
     const create = document.getElementById('create') as HTMLElement;
     if (create) {
       create.style.display = 'flex';
-      onShowDrawingControls(true, { onBack: captureDrawing });
+      onShowDrawingControls(true, { onBack: captureDrawing, onUndo: undo });
       
       // Load existing image if editing
       if (image) {
@@ -73,7 +73,7 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
   useEffect(() => {
     return () => {
       // Cleanup on unmount
-      onShowDrawingControls(false, { onBack: () => {} });
+      onShowDrawingControls(false, { onBack: () => {}, onUndo: () => {} });
     };
   }, []);
 
