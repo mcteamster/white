@@ -348,8 +348,18 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
             <wired-card style={{ ...styles.action, backgroundColor: (preset == 'blank') ? '#eee' : undefined }} onClick={() => { setPreset('blank'); }}><Icon name="copy" />Blank</wired-card>
             <wired-card style={{ ...styles.action, backgroundColor: (preset == 'global') ? '#eee' : undefined }} onClick={() => { setPreset('global'); }}><Icon name="global" />Global</wired-card>
             <wired-card style={{ ...styles.action, backgroundColor: (preset == 'standard') ? '#eee' : undefined }} onClick={() => { setPreset('standard'); }}><Icon name="die" />Standard</wired-card>
+            
             <div style={styles.flavourbox}>
-              {preset == 'blank' && 'A blank deck to create your own game. Save and Load to continue the fun!'}
+              {preset == 'blank' && (
+                <div>
+                  A blank deck to create your own game. Save, Edit, and Load to continue the fun!
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <wired-card style={{ ...styles.action, fontSize: '0.9em' }} onClick={() => { externalLink('https://blankwhite.cards/editor'); }}>
+                      Open Deck Editor [beta] ↗
+                    </wired-card>
+                  </div>
+                </div>
+              )}
               {preset == 'global' && `A copy of the ${globalSize} card global deck. (Cards made here are not submitted)`}
               {preset == 'standard' && 'The standard 52 card deck for more traditional games.'}
             </div>

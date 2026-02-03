@@ -37,7 +37,7 @@ export const sanitiseCard = (inputCard) => {
 }
 
 // Download Deck Data
-export const downloadDeck = (G: GameState) => {
+export const downloadDeck = (G: GameState, customFilename?: string) => {
   // Strip Unnecessary Data from Gamestate
   const strippedCards = G.cards.map((card) => {
     const strippedCard = {
@@ -89,6 +89,7 @@ export const downloadDeck = (G: GameState) => {
           display: flex;
           justify-content: center;
           align-items: center;
+          flex-direction: column;
         }
 
         .drawn {
@@ -216,8 +217,11 @@ export const downloadDeck = (G: GameState) => {
     </head>
     <body>
       <div id="header" class="center">
-        <div id="heading">Blank White Cards Deck<br><a href="https://blankwhite.cards"><u>blankwhite.cards</u></a></div>
-        <p id="tip" class="center">Tap to Include/Exclude when importing.<br></br>Remember to SAVE THE DECK when you're finished!</p>
+        <div id="heading"><a href="https://blankwhite.cards"><u>blankwhite.cards</u></a></div>
+        <p id="tip" class="center">
+          Tap cards to toggle Show/Hide. Remember to save.<br></br>
+          <span>Use the <a href="https://blankwhite.cards/editor"><u>Deck Editor</u></a> to modify content.</span>
+        </p>
       </div>
       <div id="table" class="center"></div>
       <div id="footer">
@@ -364,7 +368,7 @@ export const downloadDeck = (G: GameState) => {
   // Create Download Element
   const dltemp = document.createElement('a');
   dltemp.setAttribute("href", 'data:text/html;charset=utf-8,' + encodeURIComponent(outputHTML));
-  dltemp.setAttribute("download", `BlankWhiteCards_${datetime}`);
+  dltemp.setAttribute("download", customFilename || `BlankWhiteCards_${datetime}`);
   dltemp.style.display = "none";
   document.body.append(dltemp);
   dltemp.click();

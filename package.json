@@ -1,14 +1,14 @@
 {
   "name": "blankwhitecards",
   "private": true,
-  "version": "2.1.0",
+  "version": "2.2.0",
   "scripts": {
     "dev": "vite --host",
     "build": "tsc -b && vite build",
     "host": "tsc -b && vite build --mode development; vite preview --host",
     "lint": "eslint .",
     "preview": "vite preview",
-    "pull:global": "curl https://blankwhite.cards/decks/global.json > ./public/decks/global.json",
+    "pull:global": "curl https://blankwhite.cards/decks/global.json > ./public/decks/global.json && node ./bin/chunk-global.js",
     "serve": "node --env-file=.env.production -r ts-node/register ./src/server.ts",
     "serve:local": "node --env-file=.env.development -r ts-node/register ./src/server.ts"
   },

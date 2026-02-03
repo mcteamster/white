@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router";
 import { useCallback, useEffect, useState } from 'react';
 import { Lobby } from './Components/Lobby';
 import { About } from "./Components/About";
+import { DeckEditor } from "./Components/Editor/DeckEditor";
 import { AuthContext, AuthType, FocusContext, HotkeysContext, LoadingContext } from "./lib/contexts";
 import { GlobalBlankWhiteCardsClient, parsePathCode, getRegion, startingDeck, lobbyClients, gameClients, onDeckUpdate, deckLoading } from "./lib/clients";
 import { Rotate } from "./Components/Icons";
@@ -135,6 +136,7 @@ const App = () => {
                   <Routes>
                     <Route path="/" element={<Lobby globalSize={globalSize} deckLoading={isDeckLoading} region={region} setRegion={setRegion} />} />
                     <Route path="/about" element={<About />} />
+                    <Route path="/editor" element={<DeckEditor />} />
                     <Route path="/app" element={isDeckLoading ? <div>Loading cards {globalSize}</div> : <GlobalBlankWhiteCardsClient playerID='0' />} />
                     <Route path="/card" element={<Gallery />}>
                       <Route path=":cardID" element={<Gallery />} />
