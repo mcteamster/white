@@ -756,7 +756,7 @@ export function DeckEditor() {
                     <wired-card 
                       style={styles.saveButton}
                       onClick={() => {
-                        updateDeck({ ...deck, name: saveFileName });
+                        updateDeck({ ...deck, name: saveFileName, modified: false });
                         downloadDeck({ cards: deck.cards }, saveFileName);
                         setModalState('closed');
                       }}
