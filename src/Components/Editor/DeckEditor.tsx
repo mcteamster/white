@@ -4,6 +4,50 @@ import { Icon } from '../Icons';
 import { CardEditor } from './CardEditor';
 import { FullCardView, CompactCardView, ImageOnlyCardView } from './CardViews';
 import { ViewModeToggle } from './EditorControls';
+//@ts-expect-error: JS Module
+import { undo, sketchpad, strokes } from '../../Canvas.js';
+
+function DrawingControls({ onBack, onUndo, onRedo }: { onBack: () => void; onUndo: () => void; onRedo: () => void }) {
+  const styles = {
+    container: {
+      position: 'fixed' as const,
+      bottom: '20px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: 10,
+      display: 'flex',
+      gap: '1em'
+    },
+    button: {
+      cursor: 'pointer',
+      width: '3em',
+      height: '3em',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'column' as const,
+      backgroundColor: 'white',
+      borderRadius: '8px'
+    }
+  };
+
+  return (
+    <div style={styles.container}>
+      <wired-card elevation={2} style={styles.button} onClick={onBack}>
+        <Icon name="back" />
+        Back
+      </wired-card>
+      <wired-card elevation={2} style={styles.button} onClick={onUndo}>
+        <Icon name="undo" />
+        Undo
+      </wired-card>
+      <wired-card elevation={2} style={styles.button} onClick={onRedo}>
+        <Icon name="redo" />
+        Redo
+      </wired-card>
+    </div>
+  );
+}
 import { useDeckEditor } from '../../lib/editor';
 import { sanitiseCard, downloadDeck } from '../../lib/data';
 import { Card } from '../../Cards';
@@ -21,6 +65,12 @@ export function DeckEditor() {
   const [showCardCreator, setShowCardCreator] = useState(false);
   const [editingCard, setEditingCard] = useState<Card | undefined>(undefined);
   const [modalState, setModalState] = useState<'closed' | 'file' | 'reset' | 'save' | 'loadConfirm'>('closed');
+  const [showDrawingControls, setShowDrawingControls] = useState(false);
+  const [drawingHandlers, setDrawingHandlers] = useState<{ onBack: () => void; onUndo: () => void; onRedo: () => void }>({
+    onBack: () => {},
+    onUndo: () => {},
+    onRedo: () => {}
+  });
   const [saveFileName, setSaveFileName] = useState('');
   const [merging, setMerging] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -448,6 +498,11 @@ export function DeckEditor() {
     setEditingCard(undefined);
   };
 
+  const handleShowDrawingControls = (show: boolean, handlers: { onBack: () => void; onUndo: () => void; onRedo: () => void }) => {
+    setShowDrawingControls(show);
+    setDrawingHandlers(handlers);
+  };
+
   const handleClearDeck = () => {
     updateDeck({
       cards: [],
@@ -487,6 +542,14 @@ export function DeckEditor() {
           />
         </div>
       </div>
+
+      {showDrawingControls && (
+        <DrawingControls 
+          onBack={drawingHandlers.onBack}
+          onUndo={drawingHandlers.onUndo}
+          onRedo={drawingHandlers.onRedo}
+        />
+      )}
 
       <div style={styles.cardsContainer}>
         {filteredCards.length === 0 ? (
@@ -643,6 +706,7 @@ export function DeckEditor() {
             onSave={handleCardSave}
             onCancel={handleCardCancel}
             editingCard={editingCard}
+            onShowDrawingControls={handleShowDrawingControls}
           />
         )}
 

@@ -36,6 +36,7 @@ import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import SportsEsportsOutlinedIcon from '@mui/icons-material/SportsEsportsOutlined';
 import SyncOutlinedIcon from '@mui/icons-material/SyncOutlined';
 import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
+import RedoOutlinedIcon from '@mui/icons-material/RedoOutlined';
 import StopIcon from '@mui/icons-material/Stop';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
@@ -75,6 +76,7 @@ type IconName =
   'play' |
   'pile' |
   'prev' |
+  'redo' |
   'search' |
   'settings' |
   'send' |
@@ -129,6 +131,7 @@ export function Icon(props: { name: IconName }) {
     single: <PersonIcon></PersonIcon>,
     take: <SaveAltOutlinedIcon></SaveAltOutlinedIcon>,
     undo: <UndoOutlinedIcon></UndoOutlinedIcon>,
+    redo: <RedoOutlinedIcon></RedoOutlinedIcon>,
     view_list: <ViewListIcon></ViewListIcon>,
     view_module: <ViewModuleIcon></ViewModuleIcon>,
     stop: <StopIcon></StopIcon>,

@@ -4,14 +4,60 @@ import { Icon } from '../Icons';
 //@ts-expect-error: JS Module
 import { sketchpad, strokes } from '../../Canvas.js';
 import { resizeImage, decompressImage, compressImage } from '../../lib/images';
+//@ts-expect-error: JS Module
+import { undo } from '../../Canvas.js';
 
 interface CardEditorProps {
   onSave: (card: Omit<Card, 'id'>) => void;
   onCancel: () => void;
   editingCard?: Card;
+  onShowDrawingControls: (show: boolean, handlers: { onBack: () => void; onUndo: () => void; onRedo: () => void }) => void;
 }
 
-export function CardEditor({ onSave, onCancel, editingCard }: CardEditorProps) {
+function DrawingControls({ onBack, onUndo, onClear }: { onBack: () => void; onUndo: () => void; onClear: () => void }) {
+  const styles = {
+    container: {
+      position: 'fixed' as const,
+      top: '20px',
+      left: '20px',
+      zIndex: 999,
+      display: 'flex',
+      gap: '1em',
+      backgroundColor: 'rgba(255,255,255,0.9)',
+      padding: '10px',
+      borderRadius: '8px'
+    },
+    button: {
+      cursor: 'pointer',
+      width: '4em',
+      height: '3em',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'column' as const,
+      fontSize: '0.8em'
+    }
+  };
+
+  return (
+    <div style={styles.container}>
+      <wired-card elevation={2} style={styles.button} onClick={onBack}>
+        <Icon name="exit" />
+        Close
+      </wired-card>
+      <wired-card elevation={2} style={styles.button} onClick={onUndo}>
+        <Icon name="undo" />
+        Undo
+      </wired-card>
+      <wired-card elevation={2} style={styles.button} onClick={onClear}>
+        <Icon name="discard" />
+        Clear
+      </wired-card>
+    </div>
+  );
+}
+
+export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControls }: CardEditorProps) {
   const [title, setTitle] = useState(editingCard?.content.title || '');
   const [description, setDescription] = useState(editingCard?.content.description || '');
   const [author, setAuthor] = useState(editingCard?.content.author || '');
@@ -21,35 +67,52 @@ export function CardEditor({ onSave, onCancel, editingCard }: CardEditorProps) {
   useEffect(() => {
     const loadThumbnail = async () => {
       if (image) {
-        if (image.startsWith('data:image/')) {
-          setThumbnailSrc(image);
-        } else {
-          const decompressed = await decompressImage(image);
-          setThumbnailSrc(decompressed);
+        setImageLoading(true);
+        try {
+          if (image.startsWith('data:image/')) {
+            // Small delay to show loading state
+            await new Promise(resolve => setTimeout(resolve, 100));
+            setThumbnailSrc(image);
+          } else {
+            console.log('Decompressing image...');
+            const decompressed = await decompressImage(image);
+            setThumbnailSrc(decompressed);
+          }
+        } catch (error) {
+          console.error('Error loading image:', error);
+        } finally {
+          setImageLoading(false);
         }
       } else {
         setThumbnailSrc('');
+        setImageLoading(false);
       }
     };
     loadThumbnail();
   }, [image]);
 
+  const handleUndo = () => {
+    undo();
+  };
+
+  const handleRedo = () => {
+    // Placeholder for redo functionality
+    console.log('Redo not implemented yet');
+  };
+
   const hideSketchpad = () => {
     const create = document.getElementById('create') as HTMLElement;
-    const overlay = document.getElementById('sketchpad-overlay');
     if (create) {
       create.style.display = 'none';
     }
-    if (overlay) {
-      overlay.remove();
-    }
-    delete (window as any).finishDrawing;
+    onShowDrawingControls(false, { onBack: () => {}, onUndo: () => {}, onRedo: () => {} });
   };
 
   const showSketchpad = async () => {
     const create = document.getElementById('create') as HTMLElement;
     if (create) {
       create.style.display = 'flex';
+      onShowDrawingControls(true, { onBack: captureDrawing, onUndo: handleUndo, onRedo: handleRedo });
       
       // Load existing image if editing
       if (image) {
@@ -69,33 +132,18 @@ export function CardEditor({ onSave, onCancel, editingCard }: CardEditorProps) {
           const decompressed = await decompressImage(image);
           img.src = decompressed;
         }
+      } else {
+        // Clear canvas for new card
+        sketchpad.clear();
+        strokes.length = 0;
       }
-      
-      // Add overlay with done button
-      const overlay = document.createElement('div');
-      overlay.id = 'sketchpad-overlay';
-      overlay.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 10;
-        background: white;
-        padding: 10px;
-        border-radius: 5px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-      `;
-      overlay.innerHTML = '<button onclick="window.finishDrawing()">Done Drawing</button>';
-      document.body.appendChild(overlay);
-      
-      // Set global function for done button
-      (window as any).finishDrawing = captureDrawing;
     }
   };
 
   useEffect(() => {
     return () => {
       // Cleanup on unmount
-      hideSketchpad();
+      onShowDrawingControls(false, { onBack: () => {}, onUndo: () => {}, onRedo: () => {} });
     };
   }, []);
 
@@ -224,13 +272,6 @@ export function CardEditor({ onSave, onCancel, editingCard }: CardEditorProps) {
     <div style={modalStyles.overlay} onClick={(e) => e.target === e.currentTarget && onCancel()}>
       <div style={modalStyles.finalise}>
         <wired-card elevation={5} style={modalStyles.submit} onClick={e => e.stopPropagation()}>
-          {!thumbnailSrc && (
-            <div style={{ marginBottom: '1em' }}>
-              <wired-card style={{ ...modalStyles.button, cursor: 'pointer' }} onClick={showSketchpad} elevation={2}>
-                <Icon name="pile" /> Add Image
-              </wired-card>
-            </div>
-          )}
           <wired-input 
             placeholder="Title" 
             value={title}
@@ -261,13 +302,21 @@ export function CardEditor({ onSave, onCancel, editingCard }: CardEditorProps) {
             <wired-card style={modalStyles.button} onClick={onCancel} elevation={2}>
               <Icon name="exit" /> Cancel
             </wired-card>
-            {thumbnailSrc && (
+            {thumbnailSrc ? (
               <wired-card elevation={2} style={{ backgroundColor: 'white', borderRadius: '8px', ...modalStyles.thumbnail }} onClick={showSketchpad}>
                 <img 
                   src={thumbnailSrc} 
                   alt="Card thumbnail" 
                   style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
                 />
+              </wired-card>
+            ) : imageLoading ? (
+              <wired-card elevation={2} style={{ backgroundColor: 'white', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', ...modalStyles.thumbnail }}>
+                <Icon name="loading" />
+              </wired-card>
+            ) : (
+              <wired-card elevation={2} style={{ backgroundColor: 'white', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', ...modalStyles.thumbnail }} onClick={showSketchpad}>
+                <Icon name="pile" />
               </wired-card>
             )}
             <wired-card 
