@@ -3,7 +3,7 @@ import { Card } from '../../Cards';
 import { Icon } from '../Icons';
 //@ts-expect-error: JS Module
 import { sketchpad, strokes } from '../../Canvas.js';
-import { resizeImage, decompressImage, compressImage } from '../../lib/images';
+import { resizeImage, compressImage, decompressImage } from '../../lib/images';
 //@ts-expect-error: JS Module
 import { undo } from '../../Canvas.js';
 
@@ -11,50 +11,7 @@ interface CardEditorProps {
   onSave: (card: Omit<Card, 'id'>) => void;
   onCancel: () => void;
   editingCard?: Card;
-  onShowDrawingControls: (show: boolean, handlers: { onBack: () => void; onUndo: () => void; onRedo: () => void }) => void;
-}
-
-function DrawingControls({ onBack, onUndo, onClear }: { onBack: () => void; onUndo: () => void; onClear: () => void }) {
-  const styles = {
-    container: {
-      position: 'fixed' as const,
-      top: '20px',
-      left: '20px',
-      zIndex: 999,
-      display: 'flex',
-      gap: '1em',
-      backgroundColor: 'rgba(255,255,255,0.9)',
-      padding: '10px',
-      borderRadius: '8px'
-    },
-    button: {
-      cursor: 'pointer',
-      width: '4em',
-      height: '3em',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexDirection: 'column' as const,
-      fontSize: '0.8em'
-    }
-  };
-
-  return (
-    <div style={styles.container}>
-      <wired-card elevation={2} style={styles.button} onClick={onBack}>
-        <Icon name="exit" />
-        Close
-      </wired-card>
-      <wired-card elevation={2} style={styles.button} onClick={onUndo}>
-        <Icon name="undo" />
-        Undo
-      </wired-card>
-      <wired-card elevation={2} style={styles.button} onClick={onClear}>
-        <Icon name="discard" />
-        Clear
-      </wired-card>
-    </div>
-  );
+  onShowDrawingControls: (show: boolean, handlers: { onBack: () => void }) => void;
 }
 
 export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControls }: CardEditorProps) {
@@ -62,57 +19,20 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
   const [description, setDescription] = useState(editingCard?.content.description || '');
   const [author, setAuthor] = useState(editingCard?.content.author || '');
   const [image, setImage] = useState(editingCard?.content.image);
-  const [thumbnailSrc, setThumbnailSrc] = useState<string>('');
-
-  useEffect(() => {
-    const loadThumbnail = async () => {
-      if (image) {
-        setImageLoading(true);
-        try {
-          if (image.startsWith('data:image/')) {
-            // Small delay to show loading state
-            await new Promise(resolve => setTimeout(resolve, 100));
-            setThumbnailSrc(image);
-          } else {
-            console.log('Decompressing image...');
-            const decompressed = await decompressImage(image);
-            setThumbnailSrc(decompressed);
-          }
-        } catch (error) {
-          console.error('Error loading image:', error);
-        } finally {
-          setImageLoading(false);
-        }
-      } else {
-        setThumbnailSrc('');
-        setImageLoading(false);
-      }
-    };
-    loadThumbnail();
-  }, [image]);
-
-  const handleUndo = () => {
-    undo();
-  };
-
-  const handleRedo = () => {
-    // Placeholder for redo functionality
-    console.log('Redo not implemented yet');
-  };
 
   const hideSketchpad = () => {
     const create = document.getElementById('create') as HTMLElement;
     if (create) {
       create.style.display = 'none';
     }
-    onShowDrawingControls(false, { onBack: () => {}, onUndo: () => {}, onRedo: () => {} });
+    onShowDrawingControls(false, { onBack: () => {} });
   };
 
   const showSketchpad = async () => {
     const create = document.getElementById('create') as HTMLElement;
     if (create) {
       create.style.display = 'flex';
-      onShowDrawingControls(true, { onBack: captureDrawing, onUndo: handleUndo, onRedo: handleRedo });
+      onShowDrawingControls(true, { onBack: captureDrawing });
       
       // Load existing image if editing
       if (image) {
@@ -141,9 +61,19 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
   };
 
   useEffect(() => {
+    // Reset sketchpad state when opening editor for new card
+    if (!editingCard) {
+      sketchpad.clear();
+      strokes.length = 0;
+      // Open sketchpad immediately for new cards
+      showSketchpad();
+    }
+  }, [editingCard]);
+
+  useEffect(() => {
     return () => {
       // Cleanup on unmount
-      onShowDrawingControls(false, { onBack: () => {}, onUndo: () => {}, onRedo: () => {} });
+      onShowDrawingControls(false, { onBack: () => {} });
     };
   }, []);
 
@@ -240,11 +170,6 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
       cursor: 'pointer',
       width: '3em',
       height: '3em'
-    },
-    thumbnail: {
-      cursor: 'pointer',
-      width: '4.5em',
-      height: '4.5em'
     }
   };
 
@@ -302,23 +227,6 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
             <wired-card style={modalStyles.button} onClick={onCancel} elevation={2}>
               <Icon name="exit" /> Cancel
             </wired-card>
-            {thumbnailSrc ? (
-              <wired-card elevation={2} style={{ backgroundColor: 'white', borderRadius: '8px', ...modalStyles.thumbnail }} onClick={showSketchpad}>
-                <img 
-                  src={thumbnailSrc} 
-                  alt="Card thumbnail" 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
-                />
-              </wired-card>
-            ) : imageLoading ? (
-              <wired-card elevation={2} style={{ backgroundColor: 'white', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', ...modalStyles.thumbnail }}>
-                <Icon name="loading" />
-              </wired-card>
-            ) : (
-              <wired-card elevation={2} style={{ backgroundColor: 'white', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', ...modalStyles.thumbnail }} onClick={showSketchpad}>
-                <Icon name="pile" />
-              </wired-card>
-            )}
             <wired-card 
               style={{
                 ...modalStyles.button,

@@ -35,14 +35,15 @@ export const useDeckEditor = () => {
 
   // Save to IndexedDB whenever deck changes
   const updateDeck = useCallback(async (newDeck: DeckEditorState | ((prev: DeckEditorState) => DeckEditorState)) => {
-    const updatedDeck = typeof newDeck === 'function' ? newDeck(deck) : newDeck;
-    setDeck(updatedDeck);
-    try {
-      await dbManager.set('deckEditor_currentDeck', updatedDeck);
-    } catch (error) {
-      console.warn('Failed to save deck to IndexedDB:', error);
-    }
-  }, [deck]);
+    setDeck(prev => {
+      const updatedDeck = typeof newDeck === 'function' ? newDeck(prev) : newDeck;
+      // Save to IndexedDB asynchronously
+      dbManager.set('deckEditor_currentDeck', updatedDeck).catch(error => {
+        console.warn('Failed to save deck to IndexedDB:', error);
+      });
+      return updatedDeck;
+    });
+  }, []);
 
   const createNewDeck = useCallback(() => {
     const newDeck = {
@@ -95,11 +96,14 @@ export const useDeckEditor = () => {
   }, []);
 
   const addCard = useCallback((card: Omit<Card, 'id'>) => {
-    updateDeck(prev => ({
-      ...prev,
-      cards: [...prev.cards, { ...card, id: prev.cards.length + 1 }],
-      modified: true
-    }));
+    updateDeck(prev => {
+      const maxId = prev.cards.length > 0 ? Math.max(...prev.cards.map(c => c.id)) : 0;
+      return {
+        ...prev,
+        cards: [...prev.cards, { ...card, id: maxId + 1 }],
+        modified: true
+      };
+    });
   }, []);
 
   const updateCard = useCallback((id: number, updates: Partial<Card>) => {
