@@ -27,8 +27,6 @@ VITE_COMPRESS_IMAGES='true' # Compressing image improves network performance at 
 VITE_MULTI_REGION='false' # Distribute traffic to multiple servers in different regions to lower latency
 
 # Client Side Environment
-# VITE_API_SERVER='https://api.mcteamster.com' # Common API for notices/announcements
-# VITE_CARD_API='https://rest.blankwhite.cards' # Global Card submission/like API (leave commented for local dev)
 VITE_DEFAULT_SERVER='http://<YOUR_LAN_IP_ADDRESS>:<PORT>'
 
 # Server Side Environment

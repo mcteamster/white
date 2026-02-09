@@ -193,11 +193,11 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
       if (matchID.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
         if (localStorage.getItem('instance_id')) {
           // Set room for Discord
-          fetch(`https://api.mcteamster.com/common/rooms/${localStorage.getItem('instance_id')}/${matchID}?game=white`, {
+          fetch(`${import.meta.env.VITE_API_SERVER}/common/rooms/${localStorage.getItem('instance_id')}/${matchID}?game=white`, {
             method: "PUT",
           })
         } else if (import.meta.env.VITE_ORIGIN == 'https://blankwhite.cards') {
-          fetch(`https://api.mcteamster.com/common/rooms/${matchID}/${matchID}?game=white`, {
+          fetch(`${import.meta.env.VITE_API_SERVER}/common/rooms/${matchID}/${matchID}?game=white`, {
             method: "PUT",
           })
         }
