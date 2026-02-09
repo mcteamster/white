@@ -13,6 +13,10 @@ export function initaliseDiscord() {
         target: 'api.mcteamster.com'
       },
       {
+        prefix: '/rest',
+        target: 'rest.blankwhite.cards'
+      },
+      {
         prefix: '/ap',
         target: 'ap.blankwhite.cards'
       },
