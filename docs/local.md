@@ -27,6 +27,8 @@ VITE_COMPRESS_IMAGES='true' # Compressing image improves network performance at 
 VITE_MULTI_REGION='false' # Distribute traffic to multiple servers in different regions to lower latency
 
 # Client Side Environment
+# VITE_API_SERVER='https://api.mcteamster.com' # Common API for notices/announcements
+# VITE_CARD_API='https://rest.blankwhite.cards' # Global Card submission/like API (leave commented for local dev)
 VITE_DEFAULT_SERVER='http://<YOUR_LAN_IP_ADDRESS>:<PORT>'
 
 # Server Side Environment
@@ -54,7 +56,8 @@ VITE_COMPRESS_IMAGES='false' # Compressing image improves network performance at
 VITE_MULTI_REGION='false' # Distribute traffic to multiple servers in different regions to lower latency
 
 # Client Side Environment
-VITE_API_SERVER='' # For Global Deck Cards - leave this empty
+VITE_API_SERVER='<COMMON_API>' # Common API for notices/announcements (e.g., https://api.mcteamster.com)
+VITE_CARD_API='<CARD_API_ENDPOINT>' # Global Card submission/like API (e.g., https://rest.blankwhite.cards)
 VITE_DEFAULT_SERVER='<GAME_SERVER>' # Boardgame.io Lobby & Game Server
 
 # Server Side Environment

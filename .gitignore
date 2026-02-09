@@ -26,3 +26,9 @@ dist-ssr
 # Card Files
 public/card
 public/decks/global*
+
+# CDK
+cdk/cdk.out
+cdk/node_modules
+lambda/node_modules
+lambda/dist
