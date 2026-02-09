@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# CDK
+cdk/cdk.out
+cdk/node_modules
+lambda/node_modules
+lambda/dist
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -26,3 +32,9 @@ dist-ssr
 # Card Files
 public/card
 public/decks/global*
+
+# CDK
+cdk/cdk.out
+cdk/node_modules
+lambda/node_modules
+lambda/dist

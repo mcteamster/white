@@ -134,7 +134,7 @@ export const parsePathCode = () => {
 }
 
 // API Client
-const submitEndpoint = import.meta.env.MODE === 'development' ? '' : `${import.meta.env.VITE_API_SERVER}/white/submit`
+const submitEndpoint = import.meta.env.MODE === 'development' ? '' : `${import.meta.env.VITE_CARD_API}/v1/submit`
 export const submitGlobalCard = async (createdCard: Card) => {
   return (await fetch(submitEndpoint, {
     method: "POST",
@@ -151,7 +151,7 @@ export const submitGlobalCard = async (createdCard: Card) => {
 }
 
 export const likeGlobalCard = async (id: number): Promise<number | null> => {
-  const likeEndpoint = import.meta.env.VITE_API_SERVER ? `${import.meta.env.VITE_API_SERVER}/white/like/${id}` : undefined
+  const likeEndpoint = import.meta.env.VITE_CARD_API ? `${import.meta.env.VITE_CARD_API}/v1/like/${id}` : undefined
   if (likeEndpoint) {
     const response = await fetch(likeEndpoint, { method: "POST" })
     if (response.ok) {
