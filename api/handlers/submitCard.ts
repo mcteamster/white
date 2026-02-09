@@ -2,7 +2,7 @@ import { SQSEvent, SQSBatchResponse } from 'aws-lambda';
 import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { CloudFrontClient, CreateInvalidationCommand } from "@aws-sdk/client-cloudfront";
 
-const s3Client = new S3Client({ region: 'eu-central-1' });
+const s3Client = new S3Client({ region: 'us-east-1' });
 const cfClient = new CloudFrontClient();
 const bucketName = process.env.WHITE_BUCKET;
 

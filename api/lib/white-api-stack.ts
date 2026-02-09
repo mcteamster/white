@@ -36,8 +36,8 @@ export class WhiteApiStack extends cdk.Stack {
     // Queue Handler Lambda
     const queueHandler = new lambda.Function(this, 'QueueHandler', {
       runtime: lambda.Runtime.NODEJS_24_X,
-      handler: 'queueCard.queueHandler',
-      code: lambda.Code.fromAsset('handlers'),
+      handler: 'handlers/queueCard.queueHandler',
+      code: lambda.Code.fromAsset('dist'),
       timeout: cdk.Duration.seconds(20),
       environment: {
         WHITE_QUEUE: queue.queueUrl,
@@ -48,8 +48,8 @@ export class WhiteApiStack extends cdk.Stack {
     // Submit Handler Lambda
     const submitHandler = new lambda.Function(this, 'SubmitHandler', {
       runtime: lambda.Runtime.NODEJS_24_X,
-      handler: 'submitCard.submitHandler',
-      code: lambda.Code.fromAsset('handlers'),
+      handler: 'handlers/submitCard.submitHandler',
+      code: lambda.Code.fromAsset('dist'),
       memorySize: 10240,
       reservedConcurrentExecutions: 1,
       timeout: cdk.Duration.seconds(20),
@@ -67,8 +67,8 @@ export class WhiteApiStack extends cdk.Stack {
     // Like Handler Lambda
     const likeHandler = new lambda.Function(this, 'LikeHandler', {
       runtime: lambda.Runtime.NODEJS_24_X,
-      handler: 'likeCard.likeHandler',
-      code: lambda.Code.fromAsset('handlers'),
+      handler: 'handlers/likeCard.likeHandler',
+      code: lambda.Code.fromAsset('dist'),
       timeout: cdk.Duration.seconds(100),
       environment: {
         WHITE_BUCKET: bucket.bucketName,
