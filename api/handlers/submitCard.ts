@@ -94,7 +94,7 @@ export const submitHandler = async (event: SQSEvent): Promise<SQSBatchResponse |
         InvalidationBatch: {
           Paths: {
             Quantity: 1,
-            Items: ["/decks/*"],
+            Items: ["decks/global.json",`decks/global_${chunkNumber}01.json`],
           },
           CallerReference: String(new Date()),
         },
