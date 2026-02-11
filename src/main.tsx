@@ -3,10 +3,19 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import Clarity from '@microsoft/clarity';
+import { initaliseDiscord } from './lib/discord';
 
-// Initialize Clarity only for official deployment
+const isDiscord = initaliseDiscord();
+
+// Initialize Clarity after patches are applied
 if (import.meta.env.VITE_CLARITY_ID && import.meta.env.VITE_ORIGIN == 'https://blankwhite.cards') {
-  Clarity.init(import.meta.env.VITE_CLARITY_ID);
+  if (isDiscord) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => Clarity.init(import.meta.env.VITE_CLARITY_ID));
+    });
+  } else {
+    Clarity.init(import.meta.env.VITE_CLARITY_ID);
+  }
   console.debug('Clarity enabled');
 }
 

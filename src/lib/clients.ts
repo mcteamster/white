@@ -5,10 +5,6 @@ import { SocketIO } from 'boardgame.io/multiplayer';
 import { BlankWhiteCards, GameState } from '../Game';
 import { BlankWhiteCardsBoard } from '../Board';
 import { Card } from '../Cards';
-import { initaliseDiscord } from './discord';
-
-// Initialise Discord
-initaliseDiscord();
 
 // Global Deck Singleplayer
 export let startingDeck: GameState = { cards: [] };

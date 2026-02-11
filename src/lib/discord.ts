@@ -28,8 +28,16 @@ export function initaliseDiscord() {
         prefix: '/na',
         target: 'na.blankwhite.cards'
       },
+      {
+        prefix: '/bing',
+        target: 'c.bing.com'
+      },
+      {
+        prefix: '/clarity/{subdomain}',
+        target: '{subdomain}.clarity.ms'
+      },
     ]
-    patchUrlMappings(urlPatches);
+    patchUrlMappings(urlPatches, { patchSrcAttributes: true });
 
     // Setup SDK
     discordSdk = new DiscordSDK("1389508624774201395");
