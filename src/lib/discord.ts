@@ -17,15 +17,15 @@ export function initaliseDiscord() {
         target: 'rest.blankwhite.cards'
       },
       {
-        prefix: '/ap',
+        prefix: '/region/ap',
         target: 'ap.blankwhite.cards'
       },
       {
-        prefix: '/eu',
+        prefix: '/region/eu',
         target: 'eu.blankwhite.cards'
       },
       {
-        prefix: '/na',
+        prefix: '/region/na',
         target: 'na.blankwhite.cards'
       },
       {
