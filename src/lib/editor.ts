@@ -117,7 +117,7 @@ export const useDeckEditor = () => {
           const cards = cardsData.map((card: any, index: number) => {
             const sanitized = sanitiseCard(card);
             sanitized.id = index + 1;
-            sanitized.location = 'deck';
+            sanitized.location = card.location || 'deck';
             return sanitized;
           });
 

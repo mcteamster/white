@@ -8,7 +8,7 @@ export const sanitiseCard = (inputCard: any) => {
       title: '',
       description: '',
     },
-    location: 'deck',
+    location: (inputCard?.location === 'box') ? 'box' : 'deck',
   };
 
   // Support for v2 and v1 card schemas
@@ -22,7 +22,7 @@ export const sanitiseCard = (inputCard: any) => {
   };
 
   // These cards are to be hidden
-  if (inputCard.location == 'box' || inputCard.reports == 1) {
+  if (inputCard.reports == 1) {
     outputCard.location = 'box'
   }
 
@@ -48,7 +48,7 @@ export const downloadDeck = (cards: Card[], customFilename?: string) => {
     const strippedCard = {
       id: card.id,
       content: card.content,
-      location: 'deck',
+      location: card.location || 'deck',
       likes: (card?.likes && card.likes > 0 && card.likes < 1_000_000_000) ? card.likes : undefined,
     }
     return strippedCard

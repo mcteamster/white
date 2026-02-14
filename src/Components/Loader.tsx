@@ -134,7 +134,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
           return {
             id: 0, // ID Assignment handled by the loadCards move
             content: card.content,
-            location: 'deck',
+            location: card.location || 'deck',
             likes: card?.likes ?? undefined,
             timestamp: Number(new Date()),
           }
@@ -267,7 +267,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
             loaded.length > 0 ?
               <wired-card>
                 <div style={styles.info}>
-                  <div style={styles.listbutton} onClick={() => { setLoaded(loaded.map((card) => { card.location = 'deck'; return card })); }}>
+                  <div style={styles.listbutton} onClick={() => { setLoaded(loaded.map((card) => { if (card.location !== 'box') card.location = 'deck'; return card })); }}>
                     <Icon name='checklist' />
                   </div>
                   {

@@ -113,8 +113,13 @@ const loadCards: Move<GameState> = ({ G, playerID }, cards: Card[]) => {
 const shuffleCards: Move<GameState> = ({ G, playerID }) => {
   if(playerID !== '0') return INVALID_MOVE; // Only the host can reset the game
 
-  // Return all cards to the deck
-  G.cards.forEach(card => { card.location = 'deck'; card.timestamp = undefined});
+  // Return all cards to the deck, except those in the box
+  G.cards.forEach(card => { 
+    if (card.location !== 'box') {
+      card.location = 'deck'; 
+      card.timestamp = undefined;
+    }
+  });
 }
 
 // Game
