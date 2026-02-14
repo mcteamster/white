@@ -48,7 +48,7 @@ export const downloadDeck = (cards: Card[], customFilename?: string) => {
     const strippedCard = {
       id: card.id,
       content: card.content,
-      location: card.location || 'deck',
+      location: (card.location === 'box') ? 'box' : 'deck',
       likes: (card?.likes && card.likes > 0 && card.likes < 1_000_000_000) ? card.likes : undefined,
     }
     return strippedCard

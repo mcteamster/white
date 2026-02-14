@@ -43,7 +43,7 @@ server.router.get('/export/:matchID', async (ctx) => {
     const strippedCards = state.G.cards.map((card: any) => ({
       id: card.id,
       content: card.content,
-      location: card.location || 'deck',
+      location: (card.location === 'box') ? 'box' : 'deck',
       likes: (card?.likes && card.likes > 0 && card.likes < 1_000_000_000) ? card.likes : undefined,
     }));
 
