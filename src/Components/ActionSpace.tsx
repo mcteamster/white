@@ -374,7 +374,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
                 openDeckEditor(matchID)
               }
             }} elevation={2}>
-            <Icon name='take' />Save
+            <Icon name='take' />Export
           </wired-card> :
           <Link to="/card" rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='search' />Gallery</wired-card></Link>
       }
