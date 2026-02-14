@@ -2,6 +2,7 @@ FROM node:24-alpine
 WORKDIR /app
 ENV NODE_ENV=production \
     PORT=80 \
+    VITE_ORIGIN=https://blankwhite.cards \
     TS_NODE_COMPILER_OPTIONS='{"module":"commonjs"}'
 COPY package.json.server package.json
 RUN npm install --omit=dev
