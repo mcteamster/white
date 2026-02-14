@@ -1,4 +1,5 @@
 import { Card } from "../Cards";
+import { externalLink } from './hooks';
 
 // Sanitise Cards
 export const sanitiseCard = (inputCard: any) => {
@@ -39,7 +40,6 @@ export const openDeckEditor = async (matchID: string) => {
   const createdAt = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
   const editorUrl = `${import.meta.env.VITE_ORIGIN}/editor/${matchID}/${createdAt}`;
   console.log('Opening editor:', editorUrl);
-  const { externalLink } = await import('./hooks');
   await externalLink(editorUrl);
 }
 

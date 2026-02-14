@@ -32,9 +32,14 @@ export const useDeckEditor = () => {
       try {
         const savedDeck = await dbManager.get(storageKey);
         if (savedDeck) {
-          setDeck(savedDeck);
-          setIsLoaded(true);
-          return;
+          // If it's a multiplayer deck (has deckId) and the cache is empty, re-fetch from server
+          if (deckId && savedDeck.cards.length === 0) {
+            // Don't use empty cached deck for multiplayer - fall through to fetch
+          } else {
+            setDeck(savedDeck);
+            setIsLoaded(true);
+            return;
+          }
         }
       } catch (error) {
         console.warn('Failed to load deck from IndexedDB:', error);

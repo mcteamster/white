@@ -123,7 +123,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
     // In Progress
     if (progress[0] >= 0 && progress[0] < progress[1]) {
       const bounds = [ progress[0], Math.min((progress[0] + 25), progress[1]) ] // 25 cards per second
-      const cards = loaded.slice(...bounds).filter((card) => card.location == 'deck');
+      const cards = loaded.slice(...bounds);
       if (cards.length == 0) {
         // Skip immediately
         setTimeout(() => {
@@ -267,7 +267,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
             loaded.length > 0 ?
               <wired-card>
                 <div style={styles.info}>
-                  <div style={styles.listbutton} onClick={() => { setLoaded(loaded.map((card) => { if (card.location !== 'box') card.location = 'deck'; return card })); }}>
+                  <div style={{...styles.listbutton, color: globalSubmit ? 'grey' : 'black'}} onClick={() => { if (!globalSubmit) setLoaded(loaded.map((card) => { card.location = 'deck'; return card })); }}>
                     <Icon name='checklist' />
                   </div>
                   {
@@ -279,7 +279,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
                       {`${((progress[0]/progress[1])*100).toFixed(0)}% Complete`}
                     </div>
                   }
-                  <div style={styles.listbutton} onClick={() => { setLoaded(loaded.map((card) => { card.location = 'box'; return card })); }}>
+                  <div style={{...styles.listbutton, color: globalSubmit ? 'grey' : 'black'}} onClick={() => { if (!globalSubmit) setLoaded(loaded.map((card) => { card.location = 'box'; return card })); }}>
                     <Icon name='exit' />
                   </div>
                 </div>
@@ -287,7 +287,21 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
                   {loaded.length > 0 && loaded.map((card: Card, i) => {
                     return (<div key={`loader-preview-${i}`} style={{ ...styles.previewItem, color: card.location == 'box' ? 'grey' : 'black', backgroundColor: card.location == 'box' ? 'white' : '#eee' }} onClick={() => {
                       if (progress[0] == -1) {
-                        loaded[i].location = (card.location == 'deck') ? 'box' : 'deck'; setLoaded([...loaded])
+                        if (globalSubmit) {
+                          // In global submit mode: deselect all others, then toggle this one
+                          loaded.forEach((c, idx) => {
+                            if (idx === i) {
+                              c.location = (c.location == 'deck') ? 'box' : 'deck';
+                            } else {
+                              c.location = 'box';
+                            }
+                          });
+                          setLoaded([...loaded]);
+                        } else {
+                          // Normal mode: just toggle
+                          loaded[i].location = (card.location == 'deck') ? 'box' : 'deck';
+                          setLoaded([...loaded]);
+                        }
                       }}}>
                       <div style={styles.previewNumber}>
                         {card.location == 'deck' && (i < progress[0]) && '*'}{i + 1}
