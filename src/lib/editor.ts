@@ -23,6 +23,8 @@ export const useDeckEditor = () => {
     };
   });
 
+  const [isLoaded, setIsLoaded] = useState(false);
+
   // Load from IndexedDB or server on mount
   useEffect(() => {
     const loadDeck = async () => {
@@ -31,6 +33,7 @@ export const useDeckEditor = () => {
         const savedDeck = await dbManager.get(storageKey);
         if (savedDeck) {
           setDeck(savedDeck);
+          setIsLoaded(true);
           return;
         }
       } catch (error) {
@@ -57,12 +60,14 @@ export const useDeckEditor = () => {
             dbManager.set(storageKey, loadedDeck).catch(error => {
               console.warn('Failed to save deck to IndexedDB:', error);
             });
+            setIsLoaded(true);
             return;
           }
         } catch (error) {
           console.error('Failed to load deck from server:', error);
         }
       }
+      setIsLoaded(true);
     };
     loadDeck();
   }, [deckId, timestamp, storageKey]);
@@ -185,6 +190,7 @@ export const useDeckEditor = () => {
 
   return {
     deck,
+    isLoaded,
     createNewDeck,
     loadDeckFromFile,
     addCard,
