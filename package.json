@@ -18,7 +18,7 @@
   "dependencies": {
     "@discord/embedded-app-sdk": "^2.0.0",
     "@emotion/styled": "^11.14.0",
-    "@mcteamster/virgo": "^0.2.2",
+    "@mcteamster/virgo": "^0.2.3",
     "@microsoft/clarity": "^1.0.0",
     "@mui/icons-material": "^6.4.5",
     "atrament": "^4.6.0",
