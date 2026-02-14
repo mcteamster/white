@@ -3,9 +3,9 @@
   "private": true,
   "type": "commonjs",
   "dependencies": {
-    "boardgame.io": "^0.50.2",
-    "nanoid": "^5.0.0",
-    "ts-node": "^10.0.0",
-    "typescript": "^5.6.3"
+    "boardgame.io": "0.50.2",
+    "nanoid": "5.1.0",
+    "ts-node": "10.9.2",
+    "typescript": "5.6.3"
   }
 }
