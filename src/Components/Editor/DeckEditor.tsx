@@ -54,6 +54,7 @@ import { Card } from '../../Cards';
 export function DeckEditor() {
   const {
     deck,
+    isLoaded,
     addCard,
     updateDeck
   } = useDeckEditor();
@@ -100,6 +101,13 @@ export function DeckEditor() {
   const clearSelection = () => {
     setSelectedCards(new Set());
   };
+
+  // Auto-open load menu if deck is empty
+  useEffect(() => {
+    if (isLoaded && deck.cards.length === 0 && deck.name === 'New Deck') {
+      setModalState('file');
+    }
+  }, [isLoaded, deck.cards.length, deck.name]);
 
   const handleHideCards = () => {
     const updatedCards = deck.cards.map(card => 
@@ -757,7 +765,7 @@ export function DeckEditor() {
                       style={styles.saveButton}
                       onClick={() => {
                         updateDeck({ ...deck, name: saveFileName, modified: false });
-                        downloadDeck({ cards: deck.cards }, saveFileName);
+                downloadDeck(deck.cards, saveFileName);
                         setModalState('closed');
                       }}
                       elevation={2}

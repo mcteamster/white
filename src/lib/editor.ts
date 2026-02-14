@@ -1,7 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useParams } from 'react-router';
 import { Card } from '../Cards';
 import { sanitiseCard } from './data';
 import { dbManager } from './indexedDB';
+import { getRegion, SERVERS } from './clients';
 
 export interface DeckEditorState {
   cards: Card[];
@@ -10,6 +12,9 @@ export interface DeckEditorState {
 }
 
 export const useDeckEditor = () => {
+  const { deckId, timestamp } = useParams<{ deckId?: string; timestamp?: string }>();
+  const storageKey = (deckId && timestamp) ? `deckEditor_${deckId}_${timestamp}` : 'deckEditor_currentDeck';
+  
   const [deck, setDeck] = useState<DeckEditorState>(() => {
     return {
       cards: [],
@@ -18,32 +23,66 @@ export const useDeckEditor = () => {
     };
   });
 
-  // Load from IndexedDB on mount
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load from IndexedDB or server on mount
   useEffect(() => {
     const loadDeck = async () => {
+      // Try IndexedDB first
       try {
-        const savedDeck = await dbManager.get('deckEditor_currentDeck');
+        const savedDeck = await dbManager.get(storageKey);
         if (savedDeck) {
           setDeck(savedDeck);
+          setIsLoaded(true);
+          return;
         }
       } catch (error) {
         console.warn('Failed to load deck from IndexedDB:', error);
       }
+      
+      // If not in IndexedDB and deckId exists, fetch from server
+      if (deckId) {
+        try {
+          const region = getRegion(deckId);
+          const serverUrl = region === 'default' ? import.meta.env.VITE_DEFAULT_SERVER : SERVERS[region];
+          const response = await fetch(`${serverUrl}/export/${deckId}`);
+          if (response.ok) {
+            const rawData = await response.text();
+            const cardsData = JSON.parse(decodeURI(atob(rawData)));
+            const cards = cardsData.map((card: any) => sanitiseCard(card));
+            const loadedDeck = {
+              cards,
+              name: `Deck from ${deckId}`,
+              modified: false
+            };
+            setDeck(loadedDeck);
+            // Save to IndexedDB for future loads
+            dbManager.set(storageKey, loadedDeck).catch(error => {
+              console.warn('Failed to save deck to IndexedDB:', error);
+            });
+            setIsLoaded(true);
+            return;
+          }
+        } catch (error) {
+          console.error('Failed to load deck from server:', error);
+        }
+      }
+      setIsLoaded(true);
     };
     loadDeck();
-  }, []);
+  }, [deckId, timestamp, storageKey]);
 
   // Save to IndexedDB whenever deck changes
   const updateDeck = useCallback(async (newDeck: DeckEditorState | ((prev: DeckEditorState) => DeckEditorState)) => {
     setDeck(prev => {
       const updatedDeck = typeof newDeck === 'function' ? newDeck(prev) : newDeck;
       // Save to IndexedDB asynchronously
-      dbManager.set('deckEditor_currentDeck', updatedDeck).catch(error => {
+      dbManager.set(storageKey, updatedDeck).catch(error => {
         console.warn('Failed to save deck to IndexedDB:', error);
       });
       return updatedDeck;
     });
-  }, []);
+  }, [storageKey]);
 
   const createNewDeck = useCallback(() => {
     const newDeck = {
@@ -151,6 +190,7 @@ export const useDeckEditor = () => {
 
   return {
     deck,
+    isLoaded,
     createNewDeck,
     loadDeckFromFile,
     addCard,

@@ -1,9 +1,7 @@
 import { Card } from "../Cards";
-import { GameState } from "../Game";
 
 // Sanitise Cards
-// @ts-expect-error Legacy Card Input Compatibiity
-export const sanitiseCard = (inputCard) => {
+export const sanitiseCard = (inputCard: any) => {
   const outputCard: Card = {
     id: 0,
     content: {
@@ -37,9 +35,16 @@ export const sanitiseCard = (inputCard) => {
 }
 
 // Download Deck Data
-export const downloadDeck = (G: GameState, customFilename?: string) => {
-  // Strip Unnecessary Data from Gamestate
-  const strippedCards = G.cards.map((card) => {
+export const openDeckEditor = async (matchID: string) => {
+  const createdAt = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const editorUrl = `${import.meta.env.VITE_ORIGIN}/editor/${matchID}/${createdAt}`;
+  console.log('Opening editor:', editorUrl);
+  const { externalLink } = await import('./hooks');
+  await externalLink(editorUrl);
+}
+
+export const downloadDeck = (cards: Card[], customFilename?: string) => {
+  const strippedCards = cards.map((card) => {
     const strippedCard = {
       id: card.id,
       content: card.content,
@@ -49,203 +54,185 @@ export const downloadDeck = (G: GameState, customFilename?: string) => {
     return strippedCard
   })
 
-  // Create Data String
-  const rawData = btoa(encodeURI(JSON.stringify(strippedCards)));
+  const outputHTML = generateDeckHTML(strippedCards);
+  const today = new Date();
+  const datetime = today.getFullYear() + '-' + (today.getMonth() + 1).toString().padStart(2, "0") + '-' + today.getDate().toString().padStart(2, "0") + "_" + today.getHours().toString().padStart(2, "0") + today.getMinutes().toString().padStart(2, "0") + today.getSeconds().toString().padStart(2, "0");
 
-  // Format Deck
-  const outputHTML = `<!DOCTYPE html><html><head><script>const rawData =
+  const dltemp = document.createElement('a');
+  dltemp.setAttribute("href", 'data:text/html;charset=utf-8,' + encodeURIComponent(outputHTML));
+  dltemp.setAttribute("download", customFilename || `BlankWhiteCards_${datetime}`);
+  dltemp.style.display = "none";
+  document.body.append(dltemp);
+  dltemp.click();
+  document.body.removeChild(dltemp);
+}
+
+// Generate Deck HTML (shared between client and server)
+export const generateDeckHTML = (cards: any[]) => {
+  const rawData = btoa(encodeURI(JSON.stringify(cards)));
+  return `<!DOCTYPE html><html><head><script>const rawData =
       '${rawData}';
       const cards = JSON.parse(decodeURI(atob(rawData)));
       </script>
       <title>Blank White Cards</title>
       <link rel="icon" type="image/png" href="https://blankwhite.cards/favicon.png"/>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <style>
         @import url(https://fonts.googleapis.com/css?family=Patrick+Hand+SC);
 
+        * {
+          box-sizing: border-box;
+        }
+
         body {
-          width: 100%;
-          padding: 0;
           margin: 0;
+          padding: 0;
           font-family: "Patrick Hand SC", Arial, Helvetica, sans-serif;
-          color: black;
-          background: grey;
-          user-select: none;
-          -webkit-user-select: none;
-          touch-action: manipulation;
-          -webkit-tap-highlight-color: transparent;
-          overflow-x: hidden;
-          overflow-y: scroll;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-        }
-
-        a {
-          color: black;
-        }
-
-        .center {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          flex-direction: column;
-        }
-
-        .drawn {
-          border-radius: 0.5em;
-          border: 0.25em black solid;
-        }
-
-        .card {
-          width: 90vw;
-          max-width: 600px;
-          min-height: 7em;
-          background: white;
-          margin: 0.5em;
-          padding: 0.5em;
-          position: relative;
-          display: flex;
-          justify-content: flex-start;
-          align-items: center;
-          flex-direction: row;
-        }
-
-        .picture {
-          height: 6em;
-          min-height: 6em;
-          width: 6em;
-          min-width: 6em;
-          margin: 0.5em;
-          background-position: center;
-          background-size: contain;
-          background-repeat: no-repeat;
-        }
-
-        .details {
-          padding: 0.5em;
-          display: flex;
-          justify-content: center;
-          align-items: flex-start;
-          flex-direction: column;
-        }
-
-        .title {
-          text-align: center;
-          font-weight: bold;
-        }
-        
-        .credit {
-          margin: 0.25em 0;
-          text-align: center;
-        }
-
-        .number {
-          position: absolute;
-          right: 0.75em;
-          top: 0;
-        }
-        
-        .exclude {
-          opacity: 0.5;
-        }
-
-        .button {
-          font-size: 1.25em;
-          height: 3em;
-          width: 3em;
-          margin: 0.5em;
-          text-align: center;
-          font-weight: bold;
-          background: white;
-          cursor: pointer;
+          background: #f5f5f5;
         }
 
         #header {
-          padding: 0.5em;
           background: white;
-          border-bottom: 0.25em black solid;
-          text-align: center;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          flex-direction: column;
-        }
-
-        #heading {
-          font-size: 2em;
-          font-weight: bold;
-        }
-
-        #tip {
-          text-align: center;
-          padding: 0.5em;
-        }
-
-        #table {
           padding: 1em;
-          margin-bottom: 6em;
-          flex-wrap: wrap;
-        }
-
-        #footer {
-          width: 100%;
-          position: fixed;
-          bottom: 0;
-          background: white;
-          border-top: 0.25em black solid;
+          border-bottom: 2px solid #333;
           text-align: center;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          flex-direction: row;
         }
 
-        #saveIcon {
-          background-color: #eee;
+        #header h2 {
+          margin: 0 0 0.5em 0;
+          font-size: 1.5em;
+        }
+
+        #header a {
+          color: #0066cc;
+          text-decoration: none;
+        }
+
+        #header a:hover {
+          text-decoration: underline;
         }
 
         #filter {
+          width: 100%;
+          max-width: 600px;
+          padding: 0.75em;
+          margin: 1em auto;
+          display: block;
           font-family: "Patrick Hand SC", Arial, Helvetica, sans-serif;
-          font-size: 1.5em;
-          max-width: 8em;
-          margin: 0.5em;
-          padding: 0.5em;
-          flex-grow: 1;
+          font-size: 1.2em;
+          border: 2px solid #333;
+          border-radius: 0.5em;
+        }
+
+        table {
+          width: 100%;
+          max-width: 1200px;
+          margin: 0 auto 2em auto;
+          border-collapse: collapse;
+          background: white;
+        }
+
+        th, td {
+          padding: 0.75em;
+          text-align: left;
+          border-bottom: 1px solid #ddd;
+        }
+
+        th {
+          background: #333;
+          color: white;
+          font-weight: bold;
+          position: sticky;
+          top: 0;
+          cursor: pointer;
+          user-select: none;
+        }
+
+        th:hover {
+          background: #555;
+        }
+
+        th.sorted-asc::after {
+          content: ' ▲';
+        }
+
+        th.sorted-desc::after {
+          content: ' ▼';
+        }
+
+        tr:hover {
+          background: #f9f9f9;
+        }
+
+        .card-image {
+          width: 60px;
+          height: 60px;
+          background-size: contain;
+          background-position: center;
+          background-repeat: no-repeat;
+          border: 1px solid #ddd;
+        }
+
+        .card-title {
+          font-weight: bold;
+          font-size: 1.1em;
+        }
+
+        .card-description {
+          color: #666;
+          font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+          th, td {
+            padding: 0.5em;
+            font-size: 0.9em;
+          }
+          
+          .card-image {
+            width: 40px;
+            height: 40px;
+          }
         }
       </style>
     </head>
     <body>
-      <div id="header" class="center">
-        <div id="heading"><a href="https://blankwhite.cards"><u>blankwhite.cards</u></a></div>
-        <p id="tip" class="center">
-          Tap cards to toggle Show/Hide. Remember to save.<br></br>
-          <span>Use the <a href="https://blankwhite.cards/editor"><u>Deck Editor</u></a> to modify content.</span>
-        </p>
+      <div id="header">
+        <h2><a href="https://blankwhite.cards/editor">Blank White Cards - Edit Online</a></h2>
+        <input type="text" id="filter" placeholder="Search cards..." oninput="renderCards(this.value)">
       </div>
-      <div id="table" class="center"></div>
-      <div id="footer">
-        <input type="text" id="filter" class="drawn" placeholder="Search Cards" oninput="renderCards(this.value)">
-        <div id="saveIcon" class="drawn button center" onclick="saveDeck()">&#8595;<br>SAVE</div>
-      </div>
+      <table id="table">
+        <thead>
+          <tr>
+            <th onclick="sortTable('id')">#</th>
+            <th>Image</th>
+            <th onclick="sortTable('title')">Title</th>
+            <th onclick="sortTable('author')">Author</th>
+            <th onclick="sortTable('date')">Date</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
       <script>
-        // Toggle Inclusion
-        const toggleCard = (id) => {
-          const card = document.getElementById(id);
-          card.classList.toggle("exclude");
-          const index = cards.findIndex(card => card.id == id);
-          (cards[index].location == 'box') ? (cards[index].location = 'deck') : (cards[index].location = 'box'); // Cards in the Box are not imported
-          window.onbeforeunload = () => { return true }; // Warn about leaving without saving changes
-        }
+        let sortColumn = null;
+        let sortDirection = 'asc';
 
-        // Decompression Algorithm
+        const sortTable = (column) => {
+          if (sortColumn === column) {
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+          } else {
+            sortColumn = column;
+            sortDirection = 'asc';
+          }
+          renderCards(document.getElementById('filter').value);
+        };
+
         const decompressImage = async (compressedImage) => {
-          // Convert from UTF-16 String to Run Length Encoding
-          const input = compressedImage.split('').map((char) => { return (char.charCodeAt(0) - 32) });
-
+          const input = compressedImage.split('').map((char) => char.charCodeAt(0) - 32);
           return new Promise((resolve) => {
             const img = new Image();
-            img.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='; // Dummy white image to trigger the onload
+            img.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
             img.onload = () => {
               const canvas = document.createElement('canvas');
               canvas.width = 500;
@@ -256,7 +243,7 @@ export const downloadDeck = (G: GameState, customFilename?: string) => {
                 const pixels = imageData.data;
                 let pixelTracker = 0;
                 for (let i = 0; i < input.length; i++) {
-                  const colour = i & 1 ? 0 : 255 // Odd is white, Even is black
+                  const colour = i & 1 ? 0 : 255;
                   let count = input[i];
                   while (count > 0) {
                     pixels[pixelTracker] = colour;
@@ -274,103 +261,85 @@ export const downloadDeck = (G: GameState, customFilename?: string) => {
           });
         };
 
-        // Render Cards
-        const renderCards = (filterText) => {
-          const table = document.getElementById('table');
-          table.textContent = '';
-          cards.forEach(async (card) => {
-            // Filter
-            if (filterText && !card.content.title.toLowerCase().includes(filterText.toLowerCase()) && !card.content.author.toLowerCase().includes(filterText.toLowerCase()) && !card.content.description.toLowerCase().includes(filterText.toLowerCase())) {
-              return;
+        const renderCards = (filterText = '') => {
+          const tbody = document.getElementById('tbody');
+          tbody.innerHTML = '';
+          
+          // Update header sort indicators
+          document.querySelectorAll('th').forEach(th => {
+            th.classList.remove('sorted-asc', 'sorted-desc');
+          });
+          if (sortColumn) {
+            const thIndex = { 'id': 0, 'title': 2, 'author': 3, 'date': 4 }[sortColumn];
+            const th = document.querySelectorAll('th')[thIndex];
+            th.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
+          }
+          
+          // Filter cards
+          let filteredCards = cards.filter(card => {
+            if (card.location === 'box') return false;
+            
+            const searchText = filterText.toLowerCase();
+            if (searchText && 
+                !card.content.title.toLowerCase().includes(searchText) && 
+                !card.content.author.toLowerCase().includes(searchText) && 
+                !card.content.description.toLowerCase().includes(searchText)) {
+              return false;
             }
-
-            // Create new div for card
-            const cardDiv = document.createElement("div");
-            cardDiv.classList.add("card");
-            cardDiv.classList.add("drawn");
-            if (card.location == 'box') {
-              cardDiv.classList.add("exclude");
+            return true;
+          });
+          
+          // Sort cards
+          if (sortColumn) {
+            filteredCards.sort((a, b) => {
+              let aVal, bVal;
+              if (sortColumn === 'id') {
+                aVal = a.id;
+                bVal = b.id;
+              } else if (sortColumn === 'title') {
+                aVal = a.content.title.toLowerCase();
+                bVal = b.content.title.toLowerCase();
+              } else if (sortColumn === 'author') {
+                aVal = a.content.author.toLowerCase();
+                bVal = b.content.author.toLowerCase();
+              } else if (sortColumn === 'date') {
+                aVal = Number(a.content.date);
+                bVal = Number(b.content.date);
+              }
+              
+              if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+              if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+              return 0;
+            });
+          }
+          
+          // Render cards
+          filteredCards.forEach(async (card) => {
+            const row = tbody.insertRow();
+            
+            row.insertCell().textContent = '#' + card.id;
+            
+            const imgCell = row.insertCell();
+            const imgDiv = document.createElement('div');
+            imgDiv.className = 'card-image';
+            if (card.content.image) {
+              if (card.content.image.startsWith('data:image/png;base64,')) {
+                imgDiv.style.backgroundImage = 'url(' + card.content.image + ')';
+              } else {
+                imgDiv.style.backgroundImage = 'url(' + (await decompressImage(card.content.image)) + ')';
+              }
             }
-            cardDiv.id = Number(card.id);
-            cardDiv.onclick = () => toggleCard(Number(card.id));
-            table.appendChild(cardDiv);
-
-            // Mount Image
-            const imgDiv = document.createElement("div");
-            imgDiv.classList.add("picture");
-            imgDiv.classList.add("center");
-
-            if (card.content.image.startsWith('data:image/png;base64,')) {
-              imgDiv.style.backgroundImage = 'url('+card.content.image+')';
-            } else if (card.content.image) {
-              imgDiv.style.backgroundImage = 'url('+(await decompressImage(card.content.image))+')';
-            }
-            cardDiv.appendChild(imgDiv);
-
-            // Mount Details
-            const detailsDiv = document.createElement("div");
-            detailsDiv.classList.add("details");
-            cardDiv.appendChild(detailsDiv);
-
-            // Mount Title
-            const titleDiv = document.createElement("div");
-            titleDiv.classList.add("title");
-            titleDiv.classList.add("center");
-            titleDiv.innerText = card.content.title;
-            detailsDiv.appendChild(titleDiv);
-
-            // Mount Credit
-            const creditDiv = document.createElement("div");
-            creditDiv.classList.add("credit");
-            creditDiv.innerText = 'by '+card.content.author+' on '+new Date(Number(card.content.date)).toLocaleDateString();
-            detailsDiv.appendChild(creditDiv);
-
-            // Mount Description
-            const descriptionDiv = document.createElement("div");
-            descriptionDiv.classList.add("description");
-            descriptionDiv.innerText = card.content.description;
-            detailsDiv.appendChild(descriptionDiv);
-
-            // Mount Number
-            const numberDiv = document.createElement("div");
-            numberDiv.classList.add("number");
-            numberDiv.innerText = '#'+card.id;
-            cardDiv.appendChild(numberDiv);
+            imgCell.appendChild(imgDiv);
+            
+            row.insertCell().innerHTML = '<div class="card-title">' + card.content.title + '</div>';
+            row.insertCell().textContent = card.content.author;
+            row.insertCell().textContent = new Date(Number(card.content.date)).toLocaleDateString();
+            row.insertCell().innerHTML = '<div class="card-description">' + card.content.description + '</div>';
           });
         };
-        renderCards();
         
-        // Save Deck
-        const saveDeck = () => {
-          const currentDeck = document.documentElement.outerHTML
-          const splitDeck = currentDeck.split('\\n');
-          splitDeck[1] = '"'+btoa(encodeURI(JSON.stringify(cards)))+'";';
-          const newDeck = splitDeck.join('\\n');
-          const today = new Date();
-          const datetime = today.getFullYear()+'-'+(today.getMonth()+1).toString().padStart(2, "0")+'-'+today.getDate().toString().padStart(2, "0")+"_"+today.getHours().toString().padStart(2, "0")+today.getMinutes().toString().padStart(2, "0")+today.getSeconds().toString().padStart(2, "0");
-          const dltemp = document.createElement('a');
-          dltemp.setAttribute("href", 'data:text/html;charset=utf-8,'+encodeURIComponent(newDeck));
-          dltemp.setAttribute("download","BlankWhiteCards_"+datetime);
-          dltemp.style.display = "none";
-          document.body.append(dltemp);
-          dltemp.click();
-          document.body.removeChild(dltemp);
-          window.onbeforeunload = null;
-        }
+        renderCards();
       </script>
     </body>
-  </html>`
-
-  // Set Timestamp
-  const today = new Date();
-  const datetime = today.getFullYear() + '-' + (today.getMonth() + 1).toString().padStart(2, "0") + '-' + today.getDate().toString().padStart(2, "0") + "_" + today.getHours().toString().padStart(2, "0") + today.getMinutes().toString().padStart(2, "0") + today.getSeconds().toString().padStart(2, "0"); // Use string concatenation for consistency
-
-  // Create Download Element
-  const dltemp = document.createElement('a');
-  dltemp.setAttribute("href", 'data:text/html;charset=utf-8,' + encodeURIComponent(outputHTML));
-  dltemp.setAttribute("download", customFilename || `BlankWhiteCards_${datetime}`);
-  dltemp.style.display = "none";
-  document.body.append(dltemp);
-  dltemp.click();
-  document.body.removeChild(dltemp);
+  </html>`;
 }
