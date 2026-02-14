@@ -49,7 +49,11 @@ export const useDeckEditor = () => {
           if (response.ok) {
             const rawData = await response.text();
             const cardsData = JSON.parse(decodeURI(atob(rawData)));
-            const cards = cardsData.map((card: any) => sanitiseCard(card));
+            const cards = cardsData.map((card: any, index: number) => {
+              const sanitized = sanitiseCard(card);
+              sanitized.id = index + 1;
+              return sanitized;
+            });
             const loadedDeck = {
               cards,
               name: `Deck from ${deckId}`,
