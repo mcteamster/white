@@ -757,7 +757,7 @@ export function DeckEditor() {
                       style={styles.saveButton}
                       onClick={() => {
                         updateDeck({ ...deck, name: saveFileName, modified: false });
-                        downloadDeck({ cards: deck.cards }, saveFileName);
+                downloadDeck(deck.cards, saveFileName);
                         setModalState('closed');
                       }}
                       elevation={2}

@@ -10,7 +10,7 @@ import { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { undo, strokes, sketchpad } from '../Canvas.js';
 import { Link, useNavigate } from 'react-router';
 import { AuthContext, FocusContext, LoadingContext } from '../lib/contexts.ts';
-import { downloadDeck } from '../lib/data.ts';
+import { openDeckEditor } from '../lib/data.ts';
 import { Loader } from './Loader.tsx';
 import { submitGlobalCard } from '../lib/clients.ts';
 import { Tutorial } from './About.tsx';
@@ -22,7 +22,7 @@ interface ToolbarProps extends BoardProps<GameState> {
   setMode: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, setMode, ctx }: ToolbarProps) {
+export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID, mode, setMode, ctx }: ToolbarProps) {
   const navigate = useNavigate();
   const { setAuth } = useContext(AuthContext);
   const { loading, setLoading } = useContext(LoadingContext);
@@ -371,7 +371,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, mode, se
           }}
             onClick={() => {
               if (G.cards.length > 0) {
-                downloadDeck(G)
+                openDeckEditor(matchID)
               }
             }} elevation={2}>
             <Icon name='take' />Save

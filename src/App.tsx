@@ -137,6 +137,7 @@ const App = () => {
                     <Route path="/" element={<Lobby globalSize={globalSize} deckLoading={isDeckLoading} region={region} setRegion={setRegion} />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/editor" element={<DeckEditor />} />
+                    <Route path="/editor/:deckId/:timestamp" element={<DeckEditor />} />
                     <Route path="/app" element={isDeckLoading ? <div>Loading cards {globalSize}</div> : <GlobalBlankWhiteCardsClient playerID='0' />} />
                     <Route path="/card" element={<Gallery />}>
                       <Route path=":cardID" element={<Gallery />} />

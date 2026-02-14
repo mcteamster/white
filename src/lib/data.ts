@@ -1,9 +1,7 @@
 import { Card } from "../Cards";
-import { GameState } from "../Game";
 
 // Sanitise Cards
-// @ts-expect-error Legacy Card Input Compatibiity
-export const sanitiseCard = (inputCard) => {
+export const sanitiseCard = (inputCard: any) => {
   const outputCard: Card = {
     id: 0,
     content: {
@@ -37,9 +35,16 @@ export const sanitiseCard = (inputCard) => {
 }
 
 // Download Deck Data
-export const downloadDeck = (G: GameState, customFilename?: string) => {
-  // Strip Unnecessary Data from Gamestate
-  const strippedCards = G.cards.map((card) => {
+export const openDeckEditor = async (matchID: string) => {
+  const createdAt = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const editorUrl = `${import.meta.env.VITE_ORIGIN}/editor/${matchID}/${createdAt}`;
+  console.log('Opening editor:', editorUrl);
+  const { externalLink } = await import('./hooks');
+  await externalLink(editorUrl);
+}
+
+export const downloadDeck = (cards: Card[], customFilename?: string) => {
+  const strippedCards = cards.map((card) => {
     const strippedCard = {
       id: card.id,
       content: card.content,
@@ -49,11 +54,23 @@ export const downloadDeck = (G: GameState, customFilename?: string) => {
     return strippedCard
   })
 
-  // Create Data String
-  const rawData = btoa(encodeURI(JSON.stringify(strippedCards)));
+  const outputHTML = generateDeckHTML(strippedCards);
+  const today = new Date();
+  const datetime = today.getFullYear() + '-' + (today.getMonth() + 1).toString().padStart(2, "0") + '-' + today.getDate().toString().padStart(2, "0") + "_" + today.getHours().toString().padStart(2, "0") + today.getMinutes().toString().padStart(2, "0") + today.getSeconds().toString().padStart(2, "0");
 
-  // Format Deck
-  const outputHTML = `<!DOCTYPE html><html><head><script>const rawData =
+  const dltemp = document.createElement('a');
+  dltemp.setAttribute("href", 'data:text/html;charset=utf-8,' + encodeURIComponent(outputHTML));
+  dltemp.setAttribute("download", customFilename || `BlankWhiteCards_${datetime}`);
+  dltemp.style.display = "none";
+  document.body.append(dltemp);
+  dltemp.click();
+  document.body.removeChild(dltemp);
+}
+
+// Generate Deck HTML (shared between client and server)
+export const generateDeckHTML = (cards: any[]) => {
+  const rawData = btoa(encodeURI(JSON.stringify(cards)));
+  return `<!DOCTYPE html><html><head><script>const rawData =
       '${rawData}';
       const cards = JSON.parse(decodeURI(atob(rawData)));
       </script>
@@ -359,18 +376,5 @@ export const downloadDeck = (G: GameState, customFilename?: string) => {
         }
       </script>
     </body>
-  </html>`
-
-  // Set Timestamp
-  const today = new Date();
-  const datetime = today.getFullYear() + '-' + (today.getMonth() + 1).toString().padStart(2, "0") + '-' + today.getDate().toString().padStart(2, "0") + "_" + today.getHours().toString().padStart(2, "0") + today.getMinutes().toString().padStart(2, "0") + today.getSeconds().toString().padStart(2, "0"); // Use string concatenation for consistency
-
-  // Create Download Element
-  const dltemp = document.createElement('a');
-  dltemp.setAttribute("href", 'data:text/html;charset=utf-8,' + encodeURIComponent(outputHTML));
-  dltemp.setAttribute("download", customFilename || `BlankWhiteCards_${datetime}`);
-  dltemp.style.display = "none";
-  document.body.append(dltemp);
-  dltemp.click();
-  document.body.removeChild(dltemp);
+  </html>`;
 }
