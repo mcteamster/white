@@ -533,6 +533,20 @@ export function DeckEditor() {
     });
   }, [deck.cards, debouncedSearchTerm]);
 
+  if (!isLoaded) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        fontSize: '2em'
+      }}>
+        Loading...
+      </div>
+    );
+  }
+
   return (
     <div style={styles.container}>
       <div style={styles.header}>
