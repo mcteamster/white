@@ -23,6 +23,17 @@ const notifyDeckUpdate = () => {
 
 const fetchGlobalDeck = async () => {
   try {
+    // Try to fetch manifest first
+    let chunkCount: number | null = null;
+    try {
+      const manifest = await (await fetch('/decks/global_manifest.json')).json();
+      if (manifest.chunks && typeof manifest.chunks === 'number') {
+        chunkCount = manifest.chunks;
+      }
+    } catch {
+      // Manifest fetch failed, will fall back to old behavior
+    }
+
     const fetchChunk = async (chunk: number, retries = 3): Promise<{ chunk: number; data: GameState | null }> => {
       for (let attempt = 0; attempt < retries; attempt++) {
         try {
@@ -36,38 +47,51 @@ const fetchGlobalDeck = async () => {
       return { chunk, data: null };
     };
 
-    // Fetch first chunk to determine if deck exists
-    const first = await fetchChunk(0);
-    if (!first.data?.cards) {
-      deckLoading = false;
-      notifyDeckUpdate();
-      return;
-    }
-    
-    startingDeck.cards.push(...first.data.cards);
-    notifyDeckUpdate();
-
-    // Fetch remaining chunks in parallel batches
-    const BATCH_SIZE = 2;
-    let chunkIndex = 1;
-    
-    while (chunkIndex < 100) {
-      const batch = Array.from({ length: BATCH_SIZE }, (_, i) => chunkIndex + i)
-        .filter(i => i < 100)
-        .map(i => fetchChunk(i));
+    if (chunkCount !== null) {
+      // Use manifest to fetch all chunks in parallel
+      const chunks = Array.from({ length: chunkCount }, (_, i) => i);
+      const results = await Promise.all(chunks.map(i => fetchChunk(i)));
       
-      const results = await Promise.all(batch);
-      const validResults = results
+      results
         .filter(r => r.data?.cards)
-        .sort((a, b) => a.chunk - b.chunk);
+        .sort((a, b) => a.chunk - b.chunk)
+        .forEach(r => startingDeck.cards.push(...r.data!.cards));
       
-      if (validResults.length === 0) break;
-      
-      validResults.forEach(r => startingDeck.cards.push(...r.data!.cards));
       notifyDeckUpdate();
+    } else {
+      // Fallback: Fetch first chunk to determine if deck exists
+      const first = await fetchChunk(0);
+      if (!first.data?.cards) {
+        deckLoading = false;
+        notifyDeckUpdate();
+        return;
+      }
       
-      if (validResults.length < batch.length) break;
-      chunkIndex += BATCH_SIZE;
+      startingDeck.cards.push(...first.data.cards);
+      notifyDeckUpdate();
+
+      // Fetch remaining chunks in parallel batches
+      const BATCH_SIZE = 2;
+      let chunkIndex = 1;
+      
+      while (chunkIndex < 100) {
+        const batch = Array.from({ length: BATCH_SIZE }, (_, i) => chunkIndex + i)
+          .filter(i => i < 100)
+          .map(i => fetchChunk(i));
+        
+        const results = await Promise.all(batch);
+        const validResults = results
+          .filter(r => r.data?.cards)
+          .sort((a, b) => a.chunk - b.chunk);
+        
+        if (validResults.length === 0) break;
+        
+        validResults.forEach(r => startingDeck.cards.push(...r.data!.cards));
+        notifyDeckUpdate();
+        
+        if (validResults.length < batch.length) break;
+        chunkIndex += BATCH_SIZE;
+      }
     }
     
     deckLoading = false;

@@ -27,4 +27,12 @@ for (let i = 0; i < cards.length; i += CHUNK_SIZE) {
     console.log(`Created ${filename} with ${chunk.length} cards (${i+1} to ${Math.min(i+CHUNK_SIZE, cards.length)})`);
 }
 
+const manifest = {
+    chunks: Math.ceil(cards.length / CHUNK_SIZE),
+    totalCards: cards.length
+};
+const manifestPath = path.join(OUTPUT_DIR, 'global_manifest.json');
+fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+console.log(`Created ${manifestPath} with ${manifest.chunks} chunks and ${manifest.totalCards} total cards`);
+
 console.log('Chunking complete!');

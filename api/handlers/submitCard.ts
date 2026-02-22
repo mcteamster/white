@@ -89,12 +89,22 @@ export const submitHandler = async (event: SQSEvent): Promise<SQSBatchResponse |
         Body: JSON.stringify(newDeckChunk),
       }));
 
+      const manifest = {
+        chunks: Math.ceil(newDeck.cards.length / 100),
+        totalCards: newDeck.cards.length
+      };
+      await s3Client.send(new PutObjectCommand({
+        Bucket: bucketName,
+        Key: "decks/global_manifest.json",
+        Body: JSON.stringify(manifest),
+      }));
+
       await cfClient.send(new CreateInvalidationCommand({
         DistributionId: "E2MD2AEBRBIW7P",
         InvalidationBatch: {
           Paths: {
             Quantity: 1,
-            Items: ["decks/global.json",`decks/global_${chunkNumber}01.json`],
+            Items: ["decks/global.json",`decks/global_${chunkNumber}01.json`,"decks/global_manifest.json"],
           },
           CallerReference: String(new Date()),
         },
