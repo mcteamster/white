@@ -48,7 +48,7 @@ const fetchGlobalDeck = async () => {
     notifyDeckUpdate();
 
     // Fetch remaining chunks in parallel batches
-    const BATCH_SIZE = 3;
+    const BATCH_SIZE = 2;
     let chunkIndex = 1;
     
     while (chunkIndex < 100) {
