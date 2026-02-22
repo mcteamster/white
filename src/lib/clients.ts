@@ -23,23 +23,51 @@ const notifyDeckUpdate = () => {
 
 const fetchGlobalDeck = async () => {
   try {
-    const fetchChunk = async (chunk: number): Promise<GameState | null> => {
-      try {
-        return await (await fetch(`/decks/global_${chunk}01.json`)).json();
-      } catch {
-        return null;
+    const fetchChunk = async (chunk: number, retries = 3): Promise<{ chunk: number; data: GameState | null }> => {
+      for (let attempt = 0; attempt < retries; attempt++) {
+        try {
+          const data = await (await fetch(`/decks/global_${chunk}01.json`)).json();
+          return { chunk, data };
+        } catch {
+          if (attempt === retries - 1) return { chunk, data: null };
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+        }
       }
+      return { chunk, data: null };
     };
 
-    // Fetch chunks sequentially
-    for (let i = 0; i < 100; i++) {
-      const chunk = await fetchChunk(i);
-      if (chunk?.cards) {
-        startingDeck.cards.push(...chunk.cards);
-        notifyDeckUpdate();
-      } else {
-        break; // Stop at first missing chunk
-      }
+    // Fetch first chunk to determine if deck exists
+    const first = await fetchChunk(0);
+    if (!first.data?.cards) {
+      deckLoading = false;
+      notifyDeckUpdate();
+      return;
+    }
+    
+    startingDeck.cards.push(...first.data.cards);
+    notifyDeckUpdate();
+
+    // Fetch remaining chunks in parallel batches
+    const BATCH_SIZE = 3;
+    let chunkIndex = 1;
+    
+    while (chunkIndex < 100) {
+      const batch = Array.from({ length: BATCH_SIZE }, (_, i) => chunkIndex + i)
+        .filter(i => i < 100)
+        .map(i => fetchChunk(i));
+      
+      const results = await Promise.all(batch);
+      const validResults = results
+        .filter(r => r.data?.cards)
+        .sort((a, b) => a.chunk - b.chunk);
+      
+      if (validResults.length === 0) break;
+      
+      validResults.forEach(r => startingDeck.cards.push(...r.data!.cards));
+      notifyDeckUpdate();
+      
+      if (validResults.length < batch.length) break;
+      chunkIndex += BATCH_SIZE;
     }
     
     deckLoading = false;
