@@ -5,7 +5,7 @@ import { CardEditor } from './CardEditor';
 import { FullCardView, CompactCardView, ImageOnlyCardView } from './CardViews';
 import { ViewModeToggle } from './EditorControls';
 //@ts-expect-error: JS Module
-import { undo, redo, sketchpad, strokes, redoStack } from '../../Canvas.js';
+import { undo, redo, sketchpad, strokes, redoStack, fillWhite, cycleBrushSize, getCurrentBrushSize, getMode, setMode, MODE_DRAW, MODE_ERASE } from '../../Canvas.js';
 
 function DrawingControls({ onBack, onUndo, onRedo, onCancel }: { 
   onBack: () => void,
@@ -13,6 +13,32 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
   onRedo: () => void,
   onCancel: () => void
 }) {
+  const [eraserActive, setEraserActive] = useState(false);
+  const [brushSize, setBrushSize] = useState('Medium');
+
+  // Reset to draw mode when component mounts
+  useEffect(() => {
+    setMode(MODE_DRAW);
+    setEraserActive(false);
+    setBrushSize(getCurrentBrushSize());
+  }, []);
+
+  const handleEraserToggle = () => {
+    const newMode = getMode() === MODE_ERASE ? MODE_DRAW : MODE_ERASE;
+    setMode(newMode);
+    setEraserActive(newMode === MODE_ERASE);
+  };
+
+  const handleBrushSizeToggle = () => {
+    const newSize = cycleBrushSize();
+    setBrushSize(newSize);
+  };
+
+  const handleClear = () => {
+    fillWhite();
+    setEraserActive(false);
+  };
+
   const styles = {
     container: {
       position: 'fixed' as const,
@@ -21,7 +47,13 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
       transform: 'translateX(-50%)',
       zIndex: 10,
       display: 'flex',
+      flexDirection: 'column' as const,
       gap: '1em'
+    },
+    row: {
+      display: 'flex',
+      gap: '1em',
+      justifyContent: 'center'
     },
     button: {
       cursor: 'pointer',
@@ -38,22 +70,45 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
 
   return (
     <div style={styles.container}>
-      <wired-card elevation={2} style={styles.button} onClick={onCancel}>
-        <Icon name="exit" />
-        Cancel
-      </wired-card>
-      <wired-card elevation={2} style={styles.button} onClick={onUndo}>
-        <Icon name="undo" />
-        Undo
-      </wired-card>
-      <wired-card elevation={2} style={styles.button} onClick={onRedo}>
-        <Icon name="redo" />
-        Redo
-      </wired-card>
-      <wired-card elevation={2} style={styles.button} onClick={onBack}>
-        <Icon name="done" />
-        Done
-      </wired-card>
+      <div style={styles.row}>
+        <wired-card elevation={2} style={{ ...styles.button, color: 'red' }} onClick={handleClear}>
+          <Icon name="discard" />
+          Clear
+        </wired-card>
+        <wired-card elevation={2} style={styles.button} onClick={handleBrushSizeToggle}>
+          <Icon name="weight" />
+          {brushSize}
+        </wired-card>
+        <wired-card 
+          elevation={2} 
+          style={{
+            ...styles.button,
+            color: eraserActive ? 'red' : undefined
+          }} 
+          onClick={handleEraserToggle}
+        >
+          <Icon name="wand" />
+          Erase
+        </wired-card>
+      </div>
+      <div style={styles.row}>
+        <wired-card elevation={2} style={styles.button} onClick={onCancel}>
+          <Icon name="exit" />
+          Cancel
+        </wired-card>
+        <wired-card elevation={2} style={styles.button} onClick={onUndo}>
+          <Icon name="undo" />
+          Undo
+        </wired-card>
+        <wired-card elevation={2} style={styles.button} onClick={onRedo}>
+          <Icon name="redo" />
+          Redo
+        </wired-card>
+        <wired-card elevation={2} style={styles.button} onClick={onBack}>
+          <Icon name="done" />
+          Done
+        </wired-card>
+      </div>
     </div>
   );
 }
@@ -675,7 +730,10 @@ export function DeckEditor() {
           ) : (
             <wired-card 
               style={styles.createButton}
-              onClick={() => setShowCardCreator(true)}
+              onClick={() => {
+                setEditingCard(undefined);
+                setShowCardCreator(true);
+              }}
               elevation={2}
             >
               <Icon name="create" /> Create

@@ -1,5 +1,6 @@
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import BackHandOutlinedIcon from '@mui/icons-material/BackHandOutlined';
 import BookOutlinedIcon from '@mui/icons-material/BookOutlined';
 import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
@@ -21,6 +22,7 @@ import IosShareIcon from '@mui/icons-material/IosShare';
 import KeyboardBackspaceOutlinedIcon from '@mui/icons-material/KeyboardBackspaceOutlined';
 import LanguageOutlinedIcon from '@mui/icons-material/LanguageOutlined';
 import LibraryAddCheckOutlinedIcon from '@mui/icons-material/LibraryAddCheckOutlined';
+import LineWeightSharpIcon from '@mui/icons-material/LineWeightSharp';
 import LocalCafeOutlinedIcon from '@mui/icons-material/LocalCafeOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined';
@@ -88,7 +90,9 @@ type IconName =
   'view_list' |
   'view_module' |
   'show' |
-  'hide';
+  'hide' |
+  'wand' |
+  'weight';
 
 type BrowseType = 'prev' | 'next'
 
@@ -137,6 +141,8 @@ export function Icon(props: { name: IconName }) {
     stop: <StopIcon></StopIcon>,
     show: <VisibilityIcon></VisibilityIcon>,
     hide: <VisibilityOffIcon></VisibilityOffIcon>,
+    wand: <AutoFixHighIcon></AutoFixHighIcon>,
+    weight: <LineWeightSharpIcon></LineWeightSharpIcon>,
   }
 
   const styles: { [key: string]: Properties<string | number> } = {

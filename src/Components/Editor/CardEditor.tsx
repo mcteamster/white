@@ -39,6 +39,13 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
     loadImage();
   }, [image]);
 
+  // Auto-open sketchpad for new cards
+  useEffect(() => {
+    if (!editingCard) {
+      showSketchpad();
+    }
+  }, []);
+
   const hideSketchpad = () => {
     const create = document.getElementById('create') as HTMLElement;
     if (create) {
