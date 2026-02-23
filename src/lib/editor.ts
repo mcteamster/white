@@ -180,23 +180,6 @@ export const useDeckEditor = () => {
     }));
   }, []);
 
-  const mergeDeck = useCallback((otherDeck: DeckEditorState) => {
-    updateDeck(prev => {
-      const maxId = Math.max(...prev.cards.map(c => c.id), 0);
-      const mergedCards = otherDeck.cards.map((card, index) => ({
-        ...card,
-        id: maxId + index + 1
-      }));
-      
-      return {
-        ...prev,
-        cards: [...prev.cards, ...mergedCards],
-        name: `${prev.name} + ${otherDeck.name}`,
-        modified: true
-      };
-    });
-  }, []);
-
   return {
     deck,
     isLoaded,
@@ -206,7 +189,6 @@ export const useDeckEditor = () => {
     updateCard,
     deleteCard,
     duplicateDeck,
-    mergeDeck,
     updateDeck,
     setDeckName: (name: string) => updateDeck(prev => ({ ...prev, name, modified: true }))
   };

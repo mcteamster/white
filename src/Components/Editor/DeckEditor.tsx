@@ -1,16 +1,45 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { Properties } from 'csstype';
+import { useNavigate } from 'react-router';
 import { Icon } from '../Icons';
 import { CardEditor } from './CardEditor';
 import { FullCardView, CompactCardView, ImageOnlyCardView } from './CardViews';
 import { ViewModeToggle } from './EditorControls';
 //@ts-expect-error: JS Module
-import { undo, sketchpad, strokes } from '../../Canvas.js';
+import { undo, redo, sketchpad, strokes, redoStack, fillWhite, cycleBrushSize, getCurrentBrushSize, getMode, setMode, MODE_DRAW, MODE_ERASE } from '../../Canvas.js';
 
-function DrawingControls({ onBack, onUndo }: { 
+function DrawingControls({ onBack, onUndo, onRedo, onCancel }: { 
   onBack: () => void,
-  onUndo: () => void 
+  onUndo: () => void,
+  onRedo: () => void,
+  onCancel: () => void
 }) {
+  const [eraserActive, setEraserActive] = useState(false);
+  const [brushSize, setBrushSize] = useState('Medium');
+
+  // Reset to draw mode when component mounts
+  useEffect(() => {
+    setMode(MODE_DRAW);
+    setEraserActive(false);
+    setBrushSize(getCurrentBrushSize());
+  }, []);
+
+  const handleEraserToggle = () => {
+    const newMode = getMode() === MODE_ERASE ? MODE_DRAW : MODE_ERASE;
+    setMode(newMode);
+    setEraserActive(newMode === MODE_ERASE);
+  };
+
+  const handleBrushSizeToggle = () => {
+    const newSize = cycleBrushSize();
+    setBrushSize(newSize);
+  };
+
+  const handleClear = () => {
+    fillWhite();
+    setEraserActive(false);
+  };
+
   const styles = {
     container: {
       position: 'fixed' as const,
@@ -19,7 +48,13 @@ function DrawingControls({ onBack, onUndo }: {
       transform: 'translateX(-50%)',
       zIndex: 10,
       display: 'flex',
+      flexDirection: 'column' as const,
       gap: '1em'
+    },
+    row: {
+      display: 'flex',
+      gap: '1em',
+      justifyContent: 'center'
     },
     button: {
       cursor: 'pointer',
@@ -36,14 +71,45 @@ function DrawingControls({ onBack, onUndo }: {
 
   return (
     <div style={styles.container}>
-      <wired-card elevation={2} style={styles.button} onClick={onUndo}>
-        <Icon name="undo" />
-        Undo
-      </wired-card>
-      <wired-card elevation={2} style={styles.button} onClick={onBack}>
-        <Icon name="done" />
-        Done
-      </wired-card>
+      <div style={styles.row}>
+        <wired-card elevation={2} style={{ ...styles.button, color: 'red' }} onClick={handleClear}>
+          <Icon name="discard" />
+          Clear
+        </wired-card>
+        <wired-card elevation={2} style={styles.button} onClick={handleBrushSizeToggle}>
+          <Icon name="weight" />
+          {brushSize}
+        </wired-card>
+        <wired-card 
+          elevation={2} 
+          style={{
+            ...styles.button,
+            color: eraserActive ? 'red' : undefined
+          }} 
+          onClick={handleEraserToggle}
+        >
+          <Icon name="wand" />
+          Erase
+        </wired-card>
+      </div>
+      <div style={styles.row}>
+        <wired-card elevation={2} style={styles.button} onClick={onCancel}>
+          <Icon name="exit" />
+          Cancel
+        </wired-card>
+        <wired-card elevation={2} style={styles.button} onClick={onUndo}>
+          <Icon name="undo" />
+          Undo
+        </wired-card>
+        <wired-card elevation={2} style={styles.button} onClick={onRedo}>
+          <Icon name="redo" />
+          Redo
+        </wired-card>
+        <wired-card elevation={2} style={styles.button} onClick={onBack}>
+          <Icon name="done" />
+          Done
+        </wired-card>
+      </div>
     </div>
   );
 }
@@ -52,6 +118,7 @@ import { sanitiseCard, downloadDeck } from '../../lib/data';
 import { Card } from '../../Cards';
 
 export function DeckEditor() {
+  const navigate = useNavigate();
   const {
     deck,
     isLoaded,
@@ -66,9 +133,11 @@ export function DeckEditor() {
   const [editingCard, setEditingCard] = useState<Card | undefined>(undefined);
   const [modalState, setModalState] = useState<'closed' | 'file' | 'reset' | 'save' | 'loadConfirm'>('closed');
   const [showDrawingControls, setShowDrawingControls] = useState(false);
-  const [drawingHandlers, setDrawingHandlers] = useState<{ onBack: () => void, onUndo: () => void }>({
+  const [drawingHandlers, setDrawingHandlers] = useState<{ onBack: () => void, onUndo: () => void, onRedo: () => void, onCancel: () => void }>({
     onBack: () => {},
-    onUndo: () => {}
+    onUndo: () => {},
+    onRedo: () => {},
+    onCancel: () => {}
   });
   const [saveFileName, setSaveFileName] = useState('');
   const [merging, setMerging] = useState(false);
@@ -335,9 +404,15 @@ export function DeckEditor() {
     },
     fileModalButtons: {
       display: 'flex',
+      flexDirection: 'column',
       gap: '1em',
-      justifyContent: 'center',
+      alignItems: 'center',
       marginTop: '1em'
+    },
+    fileModalRow: {
+      display: 'flex',
+      gap: '1em',
+      justifyContent: 'center'
     },
     selectionButton: {
       height: '3em',
@@ -504,7 +579,7 @@ export function DeckEditor() {
     setEditingCard(undefined);
   };
 
-  const handleShowDrawingControls = (show: boolean, handlers: { onBack: () => void, onUndo: () => void }) => {
+  const handleShowDrawingControls = (show: boolean, handlers: { onBack: () => void, onUndo: () => void, onRedo: () => void, onCancel: () => void }) => {
     setShowDrawingControls(show);
     setDrawingHandlers(handlers);
   };
@@ -567,6 +642,8 @@ export function DeckEditor() {
         <DrawingControls 
           onBack={drawingHandlers.onBack}
           onUndo={drawingHandlers.onUndo}
+          onRedo={drawingHandlers.onRedo}
+          onCancel={drawingHandlers.onCancel}
         />
       )}
 
@@ -661,7 +738,10 @@ export function DeckEditor() {
           ) : (
             <wired-card 
               style={styles.createButton}
-              onClick={() => setShowCardCreator(true)}
+              onClick={() => {
+                setEditingCard(undefined);
+                setShowCardCreator(true);
+              }}
               elevation={2}
             >
               <Icon name="create" /> Create
@@ -734,8 +814,8 @@ export function DeckEditor() {
             <wired-card style={styles.fileModal} elevation={3}>
               {modalState === 'reset' ? (
                 <>
-                  <h3 style={styles.modalTitle}>Reset Deck</h3>
-                  <p>Are you sure you want to reset the deck? This will delete all cards and cannot be undone.</p>
+                  <h3 style={styles.modalTitle}>Restart</h3>
+                  <p>Are you sure you want to restart? This will clear all cards from the editor and cannot be undone.</p>
                   <div style={styles.fileModalButtons}>
                     <wired-card 
                       style={styles.saveButton} 
@@ -754,7 +834,7 @@ export function DeckEditor() {
                       }}
                       elevation={2}
                     >
-                      <Icon name="discard" /> Reset
+                      <Icon name="shuffle" /> Restart
                     </wired-card>
                   </div>
                 </>
@@ -779,7 +859,7 @@ export function DeckEditor() {
                       style={styles.saveButton}
                       onClick={() => {
                         updateDeck({ ...deck, name: saveFileName, modified: false });
-                downloadDeck(deck.cards, saveFileName);
+                        downloadDeck(deck.cards, saveFileName);
                         setModalState('closed');
                       }}
                       elevation={2}
@@ -822,47 +902,67 @@ export function DeckEditor() {
               ) : (
                 <>
                   <h3 style={styles.modalTitle}>Welcome to the Deck Editor</h3>
-                  <p>Load in Decks from your saved files, edit cards, and Save your deck, or Reset to start fresh</p>
+                  <p>Load decks from your saved files, edit cards, and Save a new deck</p>
                   <div style={styles.fileModalButtons}>
-                    <wired-card style={styles.loadButton} onClick={() => fileInputRef.current?.click()} elevation={2}>
-                      <Icon name="display" /> Load
-                    </wired-card>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".html"
-                      onChange={handleFileLoad}
-                      style={styles.hiddenInput}
-                    />
-                    
-                    <wired-card 
-                      style={{ 
-                        ...styles.saveButton,
-                        cursor: deck.cards.length === 0 ? 'not-allowed' : 'pointer',
-                        opacity: deck.cards.length === 0 ? 0.5 : 1,
-                        color: deck.cards.length === 0 ? 'grey' : undefined
-                      }}
-                      onClick={deck.cards.length === 0 ? undefined : () => {
-                        setSaveFileName(deck.name || 'My Deck');
-                        setModalState('save');
-                      }}
-                      elevation={2}
-                    >
-                      <Icon name="take" /> Save
-                    </wired-card>
+                    <div style={styles.fileModalRow}>
+                      <wired-card 
+                        style={styles.saveButton}
+                        onClick={() => {
+                          if (deck.modified) {
+                            if (confirm('You have unsaved changes. Are you sure you want to leave?')) {
+                              navigate('/');
+                            }
+                          } else {
+                            navigate('/');
+                          }
+                        }}
+                        elevation={2}
+                      >
+                        <Icon name="copy" /> Home
+                      </wired-card>
 
-                    <wired-card 
-                      style={{
-                        ...styles.saveButton,
-                        color: '#f44336'
-                      }}
-                      onClick={() => {
-                        setModalState('reset');
-                      }}
-                      elevation={2}
-                    >
-                      <Icon name="discard" /> Reset
-                    </wired-card>
+                      <wired-card 
+                        style={{
+                          ...styles.saveButton,
+                          color: '#f44336'
+                        }}
+                        onClick={() => {
+                          setModalState('reset');
+                        }}
+                        elevation={2}
+                      >
+                        <Icon name="shuffle" /> Restart
+                      </wired-card>
+                    </div>
+
+                    <div style={styles.fileModalRow}>
+                      <wired-card style={styles.loadButton} onClick={() => fileInputRef.current?.click()} elevation={2}>
+                        <Icon name="display" /> Load
+                      </wired-card>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".html"
+                        onChange={handleFileLoad}
+                        style={styles.hiddenInput}
+                      />
+                      
+                      <wired-card 
+                        style={{ 
+                          ...styles.saveButton,
+                          cursor: deck.cards.length === 0 ? 'not-allowed' : 'pointer',
+                          opacity: deck.cards.length === 0 ? 0.5 : 1,
+                          color: deck.cards.length === 0 ? 'grey' : undefined
+                        }}
+                        onClick={deck.cards.length === 0 ? undefined : () => {
+                          setSaveFileName(deck.name || 'My Deck');
+                          setModalState('save');
+                        }}
+                        elevation={2}
+                      >
+                        <Icon name="take" /> Save
+                      </wired-card>
+                    </div>
                   </div>
                 </>
               )}

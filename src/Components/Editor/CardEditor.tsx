@@ -1,17 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from '../../Cards';
 import { Icon } from '../Icons';
 //@ts-expect-error: JS Module
-import { sketchpad, strokes } from '../../Canvas.js';
+import { sketchpad, strokes, redoStack } from '../../Canvas.js';
 import { resizeImage, compressImage, decompressImage } from '../../lib/images';
 //@ts-expect-error: JS Module
-import { undo } from '../../Canvas.js';
+import { undo, redo } from '../../Canvas.js';
 
 interface CardEditorProps {
   onSave: (card: Omit<Card, 'id'>) => void;
   onCancel: () => void;
   editingCard?: Card;
-  onShowDrawingControls: (show: boolean, handlers: { onBack: () => void, onUndo: () => void }) => void;
+  onShowDrawingControls: (show: boolean, handlers: { onBack: () => void, onUndo: () => void, onRedo: () => void, onCancel: () => void }) => void;
 }
 
 export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControls }: CardEditorProps) {
@@ -19,20 +19,59 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
   const [description, setDescription] = useState(editingCard?.content.description || '');
   const [author, setAuthor] = useState(editingCard?.content.author || '');
   const [image, setImage] = useState(editingCard?.content.image);
+  const [displayImage, setDisplayImage] = useState<string | undefined>(undefined);
+  const baseImageRef = useRef<HTMLImageElement | null>(null);
+
+  // Decompress image for display
+  useEffect(() => {
+    const loadImage = async () => {
+      if (image) {
+        if (image.startsWith('data:image/')) {
+          setDisplayImage(image);
+        } else {
+          const decompressed = await decompressImage(image);
+          setDisplayImage(decompressed);
+        }
+      } else {
+        setDisplayImage(undefined);
+      }
+    };
+    loadImage();
+  }, [image]);
+
+  // Auto-open sketchpad for new cards
+  useEffect(() => {
+    if (!editingCard) {
+      showSketchpad();
+    }
+  }, []);
 
   const hideSketchpad = () => {
     const create = document.getElementById('create') as HTMLElement;
     if (create) {
       create.style.display = 'none';
     }
-    onShowDrawingControls(false, { onBack: () => {}, onUndo: () => {} });
+    onShowDrawingControls(false, { onBack: () => {}, onUndo: () => {}, onRedo: () => {}, onCancel: () => {} });
+  };
+
+  const cancelDrawing = () => {
+    hideSketchpad();
+    if (!editingCard) {
+      // For new cards, cancel the entire card creation
+      onCancel();
+    }
   };
 
   const showSketchpad = async () => {
     const create = document.getElementById('create') as HTMLElement;
     if (create) {
       create.style.display = 'flex';
-      onShowDrawingControls(true, { onBack: captureDrawing, onUndo: undo });
+      
+      // Create undo/redo handlers that pass base image if it exists
+      const customUndo = () => undo(baseImageRef.current);
+      const customRedo = () => redo(baseImageRef.current);
+      
+      onShowDrawingControls(true, { onBack: captureDrawing, onUndo: customUndo, onRedo: customRedo, onCancel: cancelDrawing });
       
       // Load existing image if editing
       if (image) {
@@ -42,6 +81,8 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
         img.onload = () => {
           ctx?.clearRect(0, 0, canvas.width, canvas.height);
           ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+          // Cache the loaded image for undo
+          baseImageRef.current = img;
         };
         
         // Check if image is compressed (doesn't start with data:image)
@@ -56,6 +97,7 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
         // Clear canvas for new card
         sketchpad.clear();
         strokes.length = 0;
+        baseImageRef.current = null;
       }
     }
   };
@@ -65,15 +107,13 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
     if (!editingCard) {
       sketchpad.clear();
       strokes.length = 0;
-      // Open sketchpad immediately for new cards
-      showSketchpad();
     }
   }, [editingCard]);
 
   useEffect(() => {
     return () => {
       // Cleanup on unmount
-      onShowDrawingControls(false, { onBack: () => {}, onUndo: () => {} });
+      onShowDrawingControls(false, { onBack: () => {}, onUndo: () => {}, onRedo: () => {}, onCancel: () => {} });
     };
   }, []);
 
@@ -170,6 +210,26 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
       cursor: 'pointer',
       width: '3em',
       height: '3em'
+    },
+    imageThumbnail: {
+      width: '3em',
+      height: '3em',
+      backgroundColor: 'white',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      cursor: 'pointer',
+      overflow: 'hidden'
+    },
+    thumbnailImage: {
+      maxWidth: '100%',
+      maxHeight: '100%',
+      objectFit: 'contain' as const
+    },
+    noImage: {
+      color: '#999',
+      fontSize: '0.8em',
+      textAlign: 'center' as const
     }
   };
 
@@ -227,6 +287,15 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
             <wired-card style={modalStyles.button} onClick={onCancel} elevation={2}>
               <Icon name="exit" /> Cancel
             </wired-card>
+            
+            <wired-card style={modalStyles.imageThumbnail} onClick={showSketchpad} elevation={2}>
+              {displayImage ? (
+                <img src={displayImage} style={modalStyles.thumbnailImage} alt="Card image" />
+              ) : (
+                <div style={modalStyles.noImage}>Draw</div>
+              )}
+            </wired-card>
+            
             <wired-card 
               style={{
                 ...modalStyles.button,
