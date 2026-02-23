@@ -7,9 +7,10 @@ import { ViewModeToggle } from './EditorControls';
 //@ts-expect-error: JS Module
 import { undo, sketchpad, strokes } from '../../Canvas.js';
 
-function DrawingControls({ onBack, onUndo }: { 
+function DrawingControls({ onBack, onUndo, onCancel }: { 
   onBack: () => void,
-  onUndo: () => void 
+  onUndo: () => void,
+  onCancel: () => void
 }) {
   const styles = {
     container: {
@@ -36,6 +37,10 @@ function DrawingControls({ onBack, onUndo }: {
 
   return (
     <div style={styles.container}>
+      <wired-card elevation={2} style={styles.button} onClick={onCancel}>
+        <Icon name="exit" />
+        Cancel
+      </wired-card>
       <wired-card elevation={2} style={styles.button} onClick={onUndo}>
         <Icon name="undo" />
         Undo
@@ -66,9 +71,10 @@ export function DeckEditor() {
   const [editingCard, setEditingCard] = useState<Card | undefined>(undefined);
   const [modalState, setModalState] = useState<'closed' | 'file' | 'reset' | 'save' | 'loadConfirm'>('closed');
   const [showDrawingControls, setShowDrawingControls] = useState(false);
-  const [drawingHandlers, setDrawingHandlers] = useState<{ onBack: () => void, onUndo: () => void }>({
+  const [drawingHandlers, setDrawingHandlers] = useState<{ onBack: () => void, onUndo: () => void, onCancel: () => void }>({
     onBack: () => {},
-    onUndo: () => {}
+    onUndo: () => {},
+    onCancel: () => {}
   });
   const [saveFileName, setSaveFileName] = useState('');
   const [merging, setMerging] = useState(false);
@@ -504,7 +510,7 @@ export function DeckEditor() {
     setEditingCard(undefined);
   };
 
-  const handleShowDrawingControls = (show: boolean, handlers: { onBack: () => void, onUndo: () => void }) => {
+  const handleShowDrawingControls = (show: boolean, handlers: { onBack: () => void, onUndo: () => void, onCancel: () => void }) => {
     setShowDrawingControls(show);
     setDrawingHandlers(handlers);
   };
@@ -567,6 +573,7 @@ export function DeckEditor() {
         <DrawingControls 
           onBack={drawingHandlers.onBack}
           onUndo={drawingHandlers.onUndo}
+          onCancel={drawingHandlers.onCancel}
         />
       )}
 
@@ -779,7 +786,7 @@ export function DeckEditor() {
                       style={styles.saveButton}
                       onClick={() => {
                         updateDeck({ ...deck, name: saveFileName, modified: false });
-                downloadDeck(deck.cards, saveFileName);
+                        downloadDeck(deck.cards, saveFileName);
                         setModalState('closed');
                       }}
                       elevation={2}
