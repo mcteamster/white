@@ -7,7 +7,7 @@ import { Card, getCardsByLocation, getCardsByOwner } from '../Cards';
 import { Icon } from './Icons';
 import { useState, useEffect, useContext, useRef, useCallback } from 'react';
 //@ts-expect-error: JS Module
-import { undo, strokes, sketchpad } from '../Canvas.js';
+import { undo, redo, strokes, sketchpad } from '../Canvas.js';
 import { Link, useNavigate } from 'react-router';
 import { AuthContext, FocusContext, LoadingContext } from '../lib/contexts.ts';
 import { openDeckEditor } from '../lib/data.ts';
@@ -229,7 +229,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
     },
     button: {
       height: '3em',
-      width: '5.5em',
+      width: '3em',
       margin: '0.25em',
       fontWeight: 'bold',
       textAlign: 'center',
@@ -296,7 +296,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
     }
 
     toolset = <>
-      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='menu' />Menu</wired-card>
+      <wired-card style={styles.button} onClick={() => { setMode('menu') }} elevation={2}><Icon name='menu' />Menu</wired-card>
       <wired-card style={{ ...styles.button, width: '9.75em', margin: '0' }} onClick={() => {
         if (deck.length > 0) {
           if (!loading) {
@@ -326,18 +326,19 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
           {mainButtonContent}
         </div>
       </wired-card>
-      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('create-sketch') }} elevation={2}><Icon name='create' />Create</wired-card>
+      <wired-card style={styles.button} onClick={() => { setMode('create-sketch') }} elevation={2}><Icon name='create' />Create</wired-card>
     </>
   } else if (mode === 'create-sketch') {
     toolset = <>
       <wired-card style={{ ...styles.button }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Close</wired-card>
       <wired-card style={{ ...styles.button }} onClick={() => { undo() }} elevation={2}><Icon name='undo' />Undo</wired-card>
+      <wired-card style={{ ...styles.button }} onClick={() => { redo() }} elevation={2}><Icon name='redo' />Redo</wired-card>
       <wired-card style={{ ...styles.button }} onClick={() => { setMode('create-finalise') }} elevation={2}><Icon name='send' />Next</wired-card>
     </>
   } else if (mode === 'create-finalise') {
     toolset = <>
-      <wired-card style={{ ...styles.button }} onClick={() => { setMode('create-sketch') }} elevation={2}><Icon name='back' />Back</wired-card>
-      <wired-card style={{ ...styles.button }} onClick={() => { if (submitStatus != 'Submitting') { submitCard() } }} elevation={2} id='submitCardButton' key='submitCardButton'>
+      <wired-card style={{ ...styles.button, width: '6em' }} onClick={() => { setMode('create-sketch') }} elevation={2}><Icon name='back' />Back</wired-card>
+      <wired-card style={{ ...styles.button, width: '6em' }} onClick={() => { if (submitStatus != 'Submitting') { submitCard() } }} elevation={2} id='submitCardButton' key='submitCardButton'>
         {
           submitStatus == 'Submitting' ? <div className='spin'><Icon name='loading' /></div> : submitStatus == 'Retry?' ? <Icon name='shuffle' /> : <Icon name='done' />
         }
@@ -346,27 +347,26 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
     </>
   } else if (mode === 'menu') {
     toolset = <>
-      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Close</wired-card>
-      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu-tools') }} elevation={2}><Icon name='settings' />Tools</wired-card>
-      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu-info') }} elevation={2}><Icon name='info' />Info</wired-card>
-      <wired-card style={{ ...styles.button, width: '3em', color: 'red' }} onClick={() => { setMode('menu-leave') }} elevation={2}><Icon name='logout' />{isMultiplayer ? 'Leave' : 'Lobby'}</wired-card>
+      <wired-card style={styles.button} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Close</wired-card>
+      <wired-card style={styles.button} onClick={() => { setMode('menu-tools') }} elevation={2}><Icon name='settings' />Tools</wired-card>
+      <wired-card style={styles.button} onClick={() => { setMode('menu-info') }} elevation={2}><Icon name='info' />Info</wired-card>
+      <wired-card style={{ ...styles.button, color: 'red' }} onClick={() => { setMode('menu-leave') }} elevation={2}><Icon name='logout' />{isMultiplayer ? 'Leave' : 'Lobby'}</wired-card>
     </>
   } else if (mode === 'menu-info') {
     toolset = <>
-      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='back' />Back</wired-card>
-      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('play-tutorial') }} elevation={2}><Icon name='book' />Tutorial</wired-card>
-      <Link to="/about" rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='about' />About</wired-card></Link>
-      <div onClick={() => { externalLink("https://www.buymeacoffee.com/mcteamster") }} style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='coffee' />Support</wired-card></div>
+      <wired-card style={styles.button} onClick={() => { setMode('menu') }} elevation={2}><Icon name='back' />Back</wired-card>
+      <wired-card style={styles.button} onClick={() => { setMode('play-tutorial') }} elevation={2}><Icon name='book' />Tutorial</wired-card>
+      <Link to="/about" rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={styles.button} elevation={2}><Icon name='about' />About</wired-card></Link>
+      <div onClick={() => { externalLink("https://www.buymeacoffee.com/mcteamster") }} style={{ textDecoration: 'none' }}><wired-card style={styles.button} elevation={2}><Icon name='coffee' />Support</wired-card></div>
     </>
   } else if (mode === 'menu-tools') {
     toolset = <>
-      <wired-card style={{ ...styles.button, width: '3em' }} onClick={() => { setMode('menu') }} elevation={2}><Icon name='back' />Back</wired-card>
+      <wired-card style={styles.button} onClick={() => { setMode('menu') }} elevation={2}><Icon name='back' />Back</wired-card>
       {
         // Show Save Button if Multiplayer, else Gallery Button
         isMultiplayer ?
           <wired-card style={{
             ...styles.button,
-            width: '3em',
             color: ((G.cards.length > 0) ? undefined : 'grey'),
           }}
             onClick={() => {
@@ -376,11 +376,10 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
             }} elevation={2}>
             <Icon name='take' />Export
           </wired-card> :
-          <Link to="/card" rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={{ ...styles.button, width: '3em' }} elevation={2}><Icon name='search' />Gallery</wired-card></Link>
+          <Link to="/card" rel="noreferrer" style={{ textDecoration: 'none' }}><wired-card style={styles.button} elevation={2}><Icon name='search' />Gallery</wired-card></Link>
       }
       <wired-card style={{
         ...styles.button,
-        width: '3em',
         color: ((playerID == '0') ? undefined : 'grey'), // Only the host can load cards
       }} onClick={() => { if (playerID == '0') { setMode('menu-tools-loader') } }} elevation={2}>
         {

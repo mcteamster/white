@@ -2,16 +2,16 @@ import { useState, useEffect, useRef } from 'react';
 import { Card } from '../../Cards';
 import { Icon } from '../Icons';
 //@ts-expect-error: JS Module
-import { sketchpad, strokes } from '../../Canvas.js';
+import { sketchpad, strokes, redoStack } from '../../Canvas.js';
 import { resizeImage, compressImage, decompressImage } from '../../lib/images';
 //@ts-expect-error: JS Module
-import { undo } from '../../Canvas.js';
+import { undo, redo } from '../../Canvas.js';
 
 interface CardEditorProps {
   onSave: (card: Omit<Card, 'id'>) => void;
   onCancel: () => void;
   editingCard?: Card;
-  onShowDrawingControls: (show: boolean, handlers: { onBack: () => void, onUndo: () => void, onCancel: () => void }) => void;
+  onShowDrawingControls: (show: boolean, handlers: { onBack: () => void, onUndo: () => void, onRedo: () => void, onCancel: () => void }) => void;
 }
 
 export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControls }: CardEditorProps) {
@@ -44,7 +44,7 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
     if (create) {
       create.style.display = 'none';
     }
-    onShowDrawingControls(false, { onBack: () => {}, onUndo: () => {}, onCancel: () => {} });
+    onShowDrawingControls(false, { onBack: () => {}, onUndo: () => {}, onRedo: () => {}, onCancel: () => {} });
   };
 
   const cancelDrawing = () => {
@@ -60,58 +60,11 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
     if (create) {
       create.style.display = 'flex';
       
-      // Create custom undo handler that preserves base image
-      const customUndo = () => {
-        if (baseImageRef.current) {
-          // If editing with base image, only undo if there are user strokes
-          if (strokes.length === 0) {
-            return; // No user strokes to undo, keep base image
-          }
-          
-          // Remove last stroke first
-          strokes.pop();
-          
-          // Clear canvas and redraw base image + remaining strokes
-          const canvas = document.getElementById("sketchpad") as HTMLCanvasElement;
-          const ctx = canvas.getContext('2d');
-          ctx?.clearRect(0, 0, canvas.width, canvas.height);
-          
-          // Draw cached base image (synchronous, no flash)
-          ctx?.drawImage(baseImageRef.current, 0, 0, canvas.width, canvas.height);
-          
-          // Replay all remaining strokes on top
-          sketchpad.recordPaused = true;
-          for (let i = 0; i < strokes.length; i++) {
-            const stroke = strokes[i];
-            if (!stroke?.segments?.length) continue;
-
-            sketchpad.mode = stroke.mode;
-            sketchpad.weight = stroke.weight;
-            sketchpad.smoothing = stroke.smoothing;
-            sketchpad.color = stroke.color;
-            sketchpad.adaptiveStroke = stroke.adaptiveStroke;
-
-            const segments = [...stroke.segments];
-            const firstPoint = segments.shift().point;
-            sketchpad.beginStroke(firstPoint.x, firstPoint.y);
-
-            let prevPoint = firstPoint;
-            while (segments.length > 0) {
-              const point = segments.shift().point;
-              const { x, y } = sketchpad.draw(point.x, point.y, prevPoint.x, prevPoint.y);
-              prevPoint = { x, y };
-            }
-
-            sketchpad.endStroke(prevPoint.x, prevPoint.y);
-          }
-          sketchpad.recordPaused = false;
-        } else {
-          // No base image, use normal undo
-          undo();
-        }
-      };
+      // Create undo/redo handlers that pass base image if it exists
+      const customUndo = () => undo(baseImageRef.current);
+      const customRedo = () => redo(baseImageRef.current);
       
-      onShowDrawingControls(true, { onBack: captureDrawing, onUndo: customUndo, onCancel: cancelDrawing });
+      onShowDrawingControls(true, { onBack: captureDrawing, onUndo: customUndo, onRedo: customRedo, onCancel: cancelDrawing });
       
       // Load existing image if editing
       if (image) {
@@ -153,7 +106,7 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
   useEffect(() => {
     return () => {
       // Cleanup on unmount
-      onShowDrawingControls(false, { onBack: () => {}, onUndo: () => {}, onCancel: () => {} });
+      onShowDrawingControls(false, { onBack: () => {}, onUndo: () => {}, onRedo: () => {}, onCancel: () => {} });
     };
   }, []);
 

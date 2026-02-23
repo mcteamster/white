@@ -5,11 +5,12 @@ import { CardEditor } from './CardEditor';
 import { FullCardView, CompactCardView, ImageOnlyCardView } from './CardViews';
 import { ViewModeToggle } from './EditorControls';
 //@ts-expect-error: JS Module
-import { undo, sketchpad, strokes } from '../../Canvas.js';
+import { undo, redo, sketchpad, strokes, redoStack } from '../../Canvas.js';
 
-function DrawingControls({ onBack, onUndo, onCancel }: { 
+function DrawingControls({ onBack, onUndo, onRedo, onCancel }: { 
   onBack: () => void,
   onUndo: () => void,
+  onRedo: () => void,
   onCancel: () => void
 }) {
   const styles = {
@@ -45,6 +46,10 @@ function DrawingControls({ onBack, onUndo, onCancel }: {
         <Icon name="undo" />
         Undo
       </wired-card>
+      <wired-card elevation={2} style={styles.button} onClick={onRedo}>
+        <Icon name="redo" />
+        Redo
+      </wired-card>
       <wired-card elevation={2} style={styles.button} onClick={onBack}>
         <Icon name="done" />
         Done
@@ -71,9 +76,10 @@ export function DeckEditor() {
   const [editingCard, setEditingCard] = useState<Card | undefined>(undefined);
   const [modalState, setModalState] = useState<'closed' | 'file' | 'reset' | 'save' | 'loadConfirm'>('closed');
   const [showDrawingControls, setShowDrawingControls] = useState(false);
-  const [drawingHandlers, setDrawingHandlers] = useState<{ onBack: () => void, onUndo: () => void, onCancel: () => void }>({
+  const [drawingHandlers, setDrawingHandlers] = useState<{ onBack: () => void, onUndo: () => void, onRedo: () => void, onCancel: () => void }>({
     onBack: () => {},
     onUndo: () => {},
+    onRedo: () => {},
     onCancel: () => {}
   });
   const [saveFileName, setSaveFileName] = useState('');
@@ -510,7 +516,7 @@ export function DeckEditor() {
     setEditingCard(undefined);
   };
 
-  const handleShowDrawingControls = (show: boolean, handlers: { onBack: () => void, onUndo: () => void, onCancel: () => void }) => {
+  const handleShowDrawingControls = (show: boolean, handlers: { onBack: () => void, onUndo: () => void, onRedo: () => void, onCancel: () => void }) => {
     setShowDrawingControls(show);
     setDrawingHandlers(handlers);
   };
@@ -573,6 +579,7 @@ export function DeckEditor() {
         <DrawingControls 
           onBack={drawingHandlers.onBack}
           onUndo={drawingHandlers.onUndo}
+          onRedo={drawingHandlers.onRedo}
           onCancel={drawingHandlers.onCancel}
         />
       )}
