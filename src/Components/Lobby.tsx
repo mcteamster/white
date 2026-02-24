@@ -354,7 +354,7 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
                   A blank deck to create your own game. Save, Edit, and Load to continue the fun!
                   <div style={{ display: 'flex', justifyContent: 'center' }}>
                     <wired-card style={{ ...styles.action, fontSize: '0.9em' }} onClick={() => { externalLink('https://blankwhite.cards/editor'); }}>
-                      Open Deck Editor [beta]
+                      Open Deck Editor
                     </wired-card>
                   </div>
                 </div>
