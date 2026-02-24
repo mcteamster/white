@@ -65,13 +65,15 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
   const showSketchpad = async () => {
     const create = document.getElementById('create') as HTMLElement;
     if (create) {
-      create.style.display = 'flex';
-      
       // Create undo/redo handlers that pass base image if it exists
       const customUndo = () => undo(baseImageRef.current);
       const customRedo = () => redo(baseImageRef.current);
       
+      // Show controls first
       onShowDrawingControls(true, { onBack: captureDrawing, onUndo: customUndo, onRedo: customRedo, onCancel: cancelDrawing });
+      
+      // Then show sketchpad
+      create.style.display = 'flex';
       
       // Load existing image if editing
       if (image) {

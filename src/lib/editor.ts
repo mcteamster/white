@@ -11,6 +11,18 @@ export interface DeckEditorState {
   modified: boolean;
 }
 
+// Simple hash function for deck state
+const hashDeck = (deck: { cards: Card[], name: string }): string => {
+  const str = JSON.stringify({ cards: deck.cards, name: deck.name });
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return hash.toString();
+};
+
 export const useDeckEditor = () => {
   const { deckId, timestamp } = useParams<{ deckId?: string; timestamp?: string }>();
   const storageKey = (deckId && timestamp) ? `deckEditor_${deckId}_${timestamp}` : 'deckEditor_currentDeck';
@@ -24,6 +36,7 @@ export const useDeckEditor = () => {
   });
 
   const [isLoaded, setIsLoaded] = useState(false);
+  const [originalHash, setOriginalHash] = useState<string>('');
 
   // Load from IndexedDB or server on mount
   useEffect(() => {
@@ -37,6 +50,7 @@ export const useDeckEditor = () => {
             // Don't use empty cached deck for multiplayer - fall through to fetch
           } else {
             setDeck(savedDeck);
+            setOriginalHash(hashDeck(savedDeck));
             setIsLoaded(true);
             return;
           }
@@ -65,6 +79,7 @@ export const useDeckEditor = () => {
               modified: false
             };
             setDeck(loadedDeck);
+            setOriginalHash(hashDeck(loadedDeck));
             // Save to IndexedDB for future loads
             dbManager.set(storageKey, loadedDeck).catch(error => {
               console.warn('Failed to save deck to IndexedDB:', error);
@@ -85,13 +100,17 @@ export const useDeckEditor = () => {
   const updateDeck = useCallback(async (newDeck: DeckEditorState | ((prev: DeckEditorState) => DeckEditorState)) => {
     setDeck(prev => {
       const updatedDeck = typeof newDeck === 'function' ? newDeck(prev) : newDeck;
+      const currentHash = hashDeck(updatedDeck);
+      const modified = currentHash !== originalHash;
+      const deckWithModifiedFlag = { ...updatedDeck, modified };
+      
       // Save to IndexedDB asynchronously
-      dbManager.set(storageKey, updatedDeck).catch(error => {
+      dbManager.set(storageKey, deckWithModifiedFlag).catch(error => {
         console.warn('Failed to save deck to IndexedDB:', error);
       });
-      return updatedDeck;
+      return deckWithModifiedFlag;
     });
-  }, [storageKey]);
+  }, [storageKey, originalHash]);
 
   const createNewDeck = useCallback(() => {
     const newDeck = {
@@ -99,8 +118,9 @@ export const useDeckEditor = () => {
       name: 'New Deck',
       modified: false
     };
+    setOriginalHash(hashDeck(newDeck));
     updateDeck(newDeck);
-  }, []);
+  }, [updateDeck]);
 
   const loadDeckFromFile = useCallback((file: File) => {
     return new Promise<void>((resolve, reject) => {
@@ -131,6 +151,7 @@ export const useDeckEditor = () => {
             name: file.name.replace(/\.[^/.]+$/, '') || 'Loaded Deck',
             modified: false
           };
+          setOriginalHash(hashDeck(newDeck));
           updateDeck(newDeck);
           
           resolve();
@@ -141,44 +162,40 @@ export const useDeckEditor = () => {
       reader.onerror = () => reject(new Error('Failed to read file'));
       reader.readAsText(file);
     });
-  }, []);
+  }, [updateDeck]);
 
   const addCard = useCallback((card: Omit<Card, 'id'>) => {
     updateDeck(prev => {
       const maxId = prev.cards.length > 0 ? Math.max(...prev.cards.map(c => c.id)) : 0;
       return {
         ...prev,
-        cards: [...prev.cards, { ...card, id: maxId + 1 }],
-        modified: true
+        cards: [...prev.cards, { ...card, id: maxId + 1 }]
       };
     });
-  }, []);
+  }, [updateDeck]);
 
   const updateCard = useCallback((id: number, updates: Partial<Card>) => {
     updateDeck(prev => ({
       ...prev,
       cards: prev.cards.map(card => 
         card.id === id ? { ...card, ...updates } : card
-      ),
-      modified: true
+      )
     }));
-  }, []);
+  }, [updateDeck]);
 
   const deleteCard = useCallback((id: number) => {
     updateDeck(prev => ({
       ...prev,
-      cards: prev.cards.filter(card => card.id !== id),
-      modified: true
+      cards: prev.cards.filter(card => card.id !== id)
     }));
-  }, []);
+  }, [updateDeck]);
 
   const duplicateDeck = useCallback(() => {
     updateDeck(prev => ({
       ...prev,
-      name: `${prev.name} (Copy)`,
-      modified: true
+      name: `${prev.name} (Copy)`
     }));
-  }, []);
+  }, [updateDeck]);
 
   return {
     deck,
@@ -190,6 +207,6 @@ export const useDeckEditor = () => {
     deleteCard,
     duplicateDeck,
     updateDeck,
-    setDeckName: (name: string) => updateDeck(prev => ({ ...prev, name, modified: true }))
+    setDeckName: (name: string) => updateDeck(prev => ({ ...prev, name }))
   };
 };

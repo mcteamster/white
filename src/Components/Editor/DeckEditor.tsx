@@ -16,6 +16,7 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
 }) {
   const [eraserActive, setEraserActive] = useState(false);
   const [brushSize, setBrushSize] = useState('Medium');
+  const [handlersReady, setHandlersReady] = useState(false);
 
   // Reset to draw mode when component mounts
   useEffect(() => {
@@ -24,10 +25,27 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
     setBrushSize(getCurrentBrushSize());
   }, []);
 
+  // Check if handlers are ready (not empty functions)
+  useEffect(() => {
+    setHandlersReady(onBack.toString() !== '() => {}');
+  }, [onBack, onCancel]);
+
   const handleEraserToggle = () => {
     const newMode = getMode() === MODE_ERASE ? MODE_DRAW : MODE_ERASE;
     setMode(newMode);
     setEraserActive(newMode === MODE_ERASE);
+  };
+
+  const handleUndo = () => {
+    const currentMode = getMode();
+    onUndo();
+    setMode(currentMode);
+  };
+
+  const handleRedo = () => {
+    const currentMode = getMode();
+    onRedo();
+    setMode(currentMode);
   };
 
   const handleBrushSizeToggle = () => {
@@ -41,17 +59,22 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
   };
 
   const styles = {
-    container: {
+    topRow: {
+      position: 'fixed' as const,
+      top: '20px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: 10,
+      display: 'flex',
+      gap: '1em',
+      justifyContent: 'center'
+    },
+    bottomRow: {
       position: 'fixed' as const,
       bottom: '20px',
       left: '50%',
       transform: 'translateX(-50%)',
       zIndex: 10,
-      display: 'flex',
-      flexDirection: 'column' as const,
-      gap: '1em'
-    },
-    row: {
       display: 'flex',
       gap: '1em',
       justifyContent: 'center'
@@ -70,8 +93,8 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.row}>
+    <>
+      <div style={styles.topRow}>
         <wired-card elevation={2} style={{ ...styles.button, color: 'red' }} onClick={handleClear}>
           <Icon name="discard" />
           Clear
@@ -92,25 +115,25 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
           Erase
         </wired-card>
       </div>
-      <div style={styles.row}>
-        <wired-card elevation={2} style={styles.button} onClick={onCancel}>
+      <div style={styles.bottomRow}>
+        <wired-card elevation={2} style={{ ...styles.button, color: handlersReady ? undefined : 'grey' }} onClick={handlersReady ? onCancel : undefined}>
           <Icon name="exit" />
           Cancel
         </wired-card>
-        <wired-card elevation={2} style={styles.button} onClick={onUndo}>
+        <wired-card elevation={2} style={styles.button} onClick={handleUndo}>
           <Icon name="undo" />
           Undo
         </wired-card>
-        <wired-card elevation={2} style={styles.button} onClick={onRedo}>
+        <wired-card elevation={2} style={styles.button} onClick={handleRedo}>
           <Icon name="redo" />
           Redo
         </wired-card>
-        <wired-card elevation={2} style={styles.button} onClick={onBack}>
+        <wired-card elevation={2} style={{ ...styles.button, color: handlersReady ? undefined : 'grey' }} onClick={handlersReady ? onBack : undefined}>
           <Icon name="done" />
           Done
         </wired-card>
       </div>
-    </div>
+    </>
   );
 }
 import { useDeckEditor } from '../../lib/editor';
@@ -182,19 +205,19 @@ export function DeckEditor() {
     const updatedCards = deck.cards.map(card => 
       selectedCards.has(card.id) ? { ...card, location: 'box' } : card
     );
-    updateDeck({ ...deck, cards: updatedCards, modified: true });
+    updateDeck({ ...deck, cards: updatedCards });
   };
 
   const handleShowCards = () => {
     const updatedCards = deck.cards.map(card => 
       selectedCards.has(card.id) ? { ...card, location: 'deck' } : card
     );
-    updateDeck({ ...deck, cards: updatedCards, modified: true });
+    updateDeck({ ...deck, cards: updatedCards });
   };
 
   const handleDeleteCards = () => {
     const updatedCards = deck.cards.filter(card => !selectedCards.has(card.id));
-    updateDeck({ ...deck, cards: updatedCards, modified: true });
+    updateDeck({ ...deck, cards: updatedCards });
     clearSelection();
   };
 
@@ -551,8 +574,7 @@ export function DeckEditor() {
     
     updateDeck({
       ...deck,
-      cards: [...deck.cards, ...mergedCards],
-      modified: true
+      cards: [...deck.cards, ...mergedCards]
     });
     
     setModalState('closed');
@@ -565,7 +587,7 @@ export function DeckEditor() {
       const updatedCards = deck.cards.map(c => 
         c.id === editingCard.id ? { ...card, id: editingCard.id } : c
       );
-      updateDeck({ ...deck, cards: updatedCards, modified: true });
+      updateDeck({ ...deck, cards: updatedCards });
     } else {
       addCard(card);
     }
@@ -580,9 +602,29 @@ export function DeckEditor() {
   };
 
   const handleShowDrawingControls = (show: boolean, handlers: { onBack: () => void, onUndo: () => void, onRedo: () => void, onCancel: () => void }) => {
-    setShowDrawingControls(show);
     setDrawingHandlers(handlers);
+    setShowDrawingControls(show);
   };
+
+  // Ensure drawing controls sync with sketchpad visibility
+  useEffect(() => {
+    const checkSketchpad = () => {
+      const create = document.getElementById('create');
+      if (create && create.style.display === 'flex' && !showDrawingControls) {
+        setShowDrawingControls(true);
+      } else if (create && create.style.display === 'none' && showDrawingControls) {
+        setShowDrawingControls(false);
+      }
+    };
+    
+    const observer = new MutationObserver(checkSketchpad);
+    const create = document.getElementById('create');
+    if (create) {
+      observer.observe(create, { attributes: true, attributeFilter: ['style'] });
+    }
+    
+    return () => observer.disconnect();
+  }, [showDrawingControls]);
 
   const handleClearDeck = () => {
     updateDeck({
