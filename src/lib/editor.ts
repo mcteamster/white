@@ -11,18 +11,6 @@ export interface DeckEditorState {
   modified: boolean;
 }
 
-// Simple hash function for deck state
-const hashDeck = (deck: { cards: Card[], name: string }): string => {
-  const str = JSON.stringify({ cards: deck.cards, name: deck.name });
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return hash.toString();
-};
-
 export const useDeckEditor = () => {
   const { deckId, timestamp } = useParams<{ deckId?: string; timestamp?: string }>();
   const storageKey = (deckId && timestamp) ? `deckEditor_${deckId}_${timestamp}` : 'deckEditor_currentDeck';
@@ -36,7 +24,6 @@ export const useDeckEditor = () => {
   });
 
   const [isLoaded, setIsLoaded] = useState(false);
-  const [originalHash, setOriginalHash] = useState<string>('');
 
   // Load from IndexedDB or server on mount
   useEffect(() => {
@@ -50,7 +37,6 @@ export const useDeckEditor = () => {
             // Don't use empty cached deck for multiplayer - fall through to fetch
           } else {
             setDeck(savedDeck);
-            setOriginalHash(hashDeck(savedDeck));
             setIsLoaded(true);
             return;
           }
@@ -79,7 +65,6 @@ export const useDeckEditor = () => {
               modified: false
             };
             setDeck(loadedDeck);
-            setOriginalHash(hashDeck(loadedDeck));
             // Save to IndexedDB for future loads
             dbManager.set(storageKey, loadedDeck).catch(error => {
               console.warn('Failed to save deck to IndexedDB:', error);
@@ -100,17 +85,14 @@ export const useDeckEditor = () => {
   const updateDeck = useCallback(async (newDeck: DeckEditorState | ((prev: DeckEditorState) => DeckEditorState)) => {
     setDeck(prev => {
       const updatedDeck = typeof newDeck === 'function' ? newDeck(prev) : newDeck;
-      const currentHash = hashDeck(updatedDeck);
-      const modified = currentHash !== originalHash;
-      const deckWithModifiedFlag = { ...updatedDeck, modified };
       
       // Save to IndexedDB asynchronously
-      dbManager.set(storageKey, deckWithModifiedFlag).catch(error => {
+      dbManager.set(storageKey, updatedDeck).catch(error => {
         console.warn('Failed to save deck to IndexedDB:', error);
       });
-      return deckWithModifiedFlag;
+      return updatedDeck;
     });
-  }, [storageKey, originalHash]);
+  }, [storageKey]);
 
   const createNewDeck = useCallback(() => {
     const newDeck = {
@@ -118,7 +100,6 @@ export const useDeckEditor = () => {
       name: 'New Deck',
       modified: false
     };
-    setOriginalHash(hashDeck(newDeck));
     updateDeck(newDeck);
   }, [updateDeck]);
 
@@ -151,7 +132,6 @@ export const useDeckEditor = () => {
             name: file.name.replace(/\.[^/.]+$/, '') || 'Loaded Deck',
             modified: false
           };
-          setOriginalHash(hashDeck(newDeck));
           updateDeck(newDeck);
           
           resolve();

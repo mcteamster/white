@@ -482,15 +482,14 @@ export function DeckEditor() {
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (deck.modified) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
+      // Always warn about unsaved changes
+      e.preventDefault();
+      e.returnValue = '';
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [deck.modified]);
+  }, []);
 
   const handleFileLoad = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -670,7 +669,6 @@ export function DeckEditor() {
         <div style={styles.topRow}>
           <h1 style={styles.title} onClick={() => setModalState('file')}>
             <Icon name="menu" /> Deck Editor
-            {deck.modified && <span style={{ color: 'orange' }}>●</span>}
           </h1>
           
           <ViewModeToggle 
@@ -950,11 +948,7 @@ export function DeckEditor() {
                       <wired-card 
                         style={styles.saveButton}
                         onClick={() => {
-                          if (deck.modified) {
-                            if (confirm('You have unsaved changes. Are you sure you want to leave?')) {
-                              navigate('/');
-                            }
-                          } else {
+                          if (confirm('Any unsaved changes will be lost. Are you sure you want to leave?')) {
                             navigate('/');
                           }
                         }}
