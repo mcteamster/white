@@ -135,7 +135,7 @@ export function CardFace(card: Card) {
         }
       };
 
-      let content = <></>;
+      let content;
       if (card.id == 0) {
         content = <>
           <div style={{ ...styles.heading }}>

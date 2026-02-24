@@ -6,7 +6,7 @@ import { CardEditor } from './CardEditor';
 import { FullCardView, CompactCardView, ImageOnlyCardView } from './CardViews';
 import { ViewModeToggle } from './EditorControls';
 //@ts-expect-error: JS Module
-import { undo, redo, sketchpad, strokes, redoStack, fillWhite, cycleBrushSize, getCurrentBrushSize, getMode, setMode, MODE_DRAW, MODE_ERASE } from '../../Canvas.js';
+import { fillWhite, cycleBrushSize, getCurrentBrushSize, getMode, setMode, MODE_DRAW, MODE_ERASE } from '../../Canvas.js';
 
 function DrawingControls({ onBack, onUndo, onRedo, onCancel }: { 
   onBack: () => void,

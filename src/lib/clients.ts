@@ -7,7 +7,7 @@ import { BlankWhiteCardsBoard } from '../Board';
 import { Card } from '../Cards';
 
 // Global Deck Singleplayer
-export let startingDeck: GameState = { cards: [] };
+export const startingDeck: GameState = { cards: [] };
 export let deckLoading = true;
 
 // Listeners for deck updates

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Card } from '../../Cards';
 import { Icon } from '../Icons';
 //@ts-expect-error: JS Module
-import { sketchpad, strokes, redoStack } from '../../Canvas.js';
+import { sketchpad, strokes } from '../../Canvas.js';
 import { resizeImage, compressImage, decompressImage } from '../../lib/images';
 //@ts-expect-error: JS Module
 import { undo, redo } from '../../Canvas.js';

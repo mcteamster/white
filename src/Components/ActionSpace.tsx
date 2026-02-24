@@ -250,9 +250,9 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
   };
 
   // Initialise Buttons
-  let toolset = <></>
+  let toolset;
   if (mode === 'play') {
-    let mainButtonContent = <></>
+    let mainButtonContent;
     if (deck.length > 0) {
       if (loading) {
         mainButtonContent = <div className='spin'>

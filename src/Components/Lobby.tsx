@@ -287,7 +287,6 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
       setTimeout(checkLobbyConnection, 30000);
     });
   }, [setStage, checkForRoomCode]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(checkLobbyConnection, []);
 
   // Hotkeys
