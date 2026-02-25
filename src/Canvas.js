@@ -7,10 +7,15 @@ export { MODE_DRAW, MODE_ERASE };
 const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
 const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
 const canvas = document.querySelector('#sketchpad');
+const canvasSize = Math.min(vw * 0.9, vh * 0.7);
+
+// Set CSS size to control display size
+canvas.style.width = `${canvasSize}px`;
+canvas.style.height = `${canvasSize}px`;
+
 export const sketchpad = new Atrament(canvas, {
-  width: Math.min(vw * 0.9, vh * 0.7),
-  height: Math.min(vw * 0.9, vh * 0.7),
-  resolution: 1,
+  width: canvasSize,
+  height: canvasSize,
   color: 'black',
   smoothing: 0.1,
   adaptiveStroke: true,
@@ -119,17 +124,21 @@ export const undo = (baseImage = null) => {
 
     // Create a copy of segments to avoid modifying original data
     const segments = [...stroke.segments];
-    const firstPoint = segments.shift().point;
+    const firstSegment = segments.shift();
+    const firstPoint = firstSegment.point;
     sketchpad.beginStroke(firstPoint.x, firstPoint.y);
 
     let prevPoint = firstPoint;
     while (segments.length > 0) {
-      const point = segments.shift().point;
+      const segment = segments.shift();
+      const point = segment.point;
+      const pressure = segment.pressure !== undefined ? segment.pressure : 0.5;
       const { x, y } = sketchpad.draw(
         point.x,
         point.y,
         prevPoint.x,
-        prevPoint.y
+        prevPoint.y,
+        pressure
       );
       prevPoint = { x, y };
     }
@@ -221,17 +230,21 @@ export const redo = (baseImage = null) => {
       sketchpad.adaptiveStroke = stroke.adaptiveStroke;
 
       const segments = [...stroke.segments];
-      const firstPoint = segments.shift().point;
+      const firstSegment = segments.shift();
+      const firstPoint = firstSegment.point;
       sketchpad.beginStroke(firstPoint.x, firstPoint.y);
 
       let prevPoint = firstPoint;
       while (segments.length > 0) {
-        const point = segments.shift().point;
+        const segment = segments.shift();
+        const point = segment.point;
+        const pressure = segment.pressure !== undefined ? segment.pressure : 0.5;
         const { x, y } = sketchpad.draw(
           point.x,
           point.y,
           prevPoint.x,
-          prevPoint.y
+          prevPoint.y,
+          pressure
         );
         prevPoint = { x, y };
       }
