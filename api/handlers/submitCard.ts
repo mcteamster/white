@@ -100,7 +100,7 @@ export const submitHandler = async (event: SQSEvent): Promise<SQSBatchResponse |
       }));
 
       await cfClient.send(new CreateInvalidationCommand({
-        DistributionId: "E2MD2AEBRBIW7P",
+        DistributionId: "EZ5S4QE3SZ0Y7",
         InvalidationBatch: {
           Paths: {
             Quantity: 3,

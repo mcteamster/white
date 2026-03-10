@@ -9,15 +9,19 @@ import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { Construct } from 'constructs';
 
+interface WhiteApiStackProps extends cdk.StackProps {
+  bucketName: string;
+  distributionId: string;
+}
+
 export class WhiteApiStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: WhiteApiStackProps) {
     super(scope, id, props);
 
+    const { bucketName, distributionId } = props;
+
     // Reference existing S3 bucket and CloudFront distribution
-    const bucket = s3.Bucket.fromBucketName(this, 'WhiteBucket', 
-      'blankwhitecards-customresourcestack-1-s3bucketroot-lq4ytptd6zk5');
-    
-    const distributionId = 'E2MD2AEBRBIW7P';
+    const bucket = s3.Bucket.fromBucketName(this, 'WhiteBucket', bucketName);
 
     // Dead Letter Queue
     const dlq = new sqs.Queue(this, 'WhiteDLQ', {
@@ -49,9 +53,9 @@ export class WhiteApiStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_24_X,
       handler: 'handlers/submitCard.submitHandler',
       code: lambda.Code.fromAsset('dist'),
-      memorySize: 10240,
+      memorySize: 2048,
       reservedConcurrentExecutions: 1,
-      timeout: cdk.Duration.seconds(20),
+      timeout: cdk.Duration.seconds(60),
       environment: {
         WHITE_BUCKET: bucket.bucketName,
       },

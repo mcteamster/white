@@ -6,4 +6,6 @@ import { WhiteApiStack } from '../lib/white-api-stack';
 const app = new cdk.App();
 new WhiteApiStack(app, 'WhiteApiStack', {
   env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: 'eu-central-1' },
+  bucketName: 'blankwhitecards-customresourcestack-s-s3bucketroot-arssshblwe7r',
+  distributionId: 'EZ5S4QE3SZ0Y7',
 });
