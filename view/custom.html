@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Blank White Cards</title>
+        <link rel="stylesheet" href="/styles/app.css">
+        <link rel="shortcut icon" type="image/png" href="/img/favicon.png"/>
+        <link rel="apple-touch-icon" href="/img/favicon.png">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="/scripts/custom.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta property="fb:app_id" content="1477374492445407" />
+    </head>
+
+    <body onmouseover="menu(false)">
+        <div class="card bottom">
+            <div id="bar" class="drawn">
+                <h2 id="title">
+                    <p id='left' onclick='popup(2)'>Create</p>
+                    <p id='right' onclick='popup(1)'>Join</p>
+                </h2>
+            </div>
+            <p id="credit" style="text-align: center; justify-content: center;">
+                Custom games expire 3 hours after room creation.
+                Note that anyone with the room number may enter, view and create cards.
+            </p>
+            <h1 id="welcome">Custom<br>Games</h1>
+        </div>
+
+        <div id="popup">
+            <div id="dialog">
+                <h3 id="prompt"></h3>
+                <h3 id="yes"></h3>
+                <h3 id="no" onclick="popup(0)"><u>Cancel</u></h3>
+            </div>
+        </div>
+
+        <div id="menu" class="icon" onclick="menu(true)">&#9776;</div>
+
+        <div id="nav">
+            <a href="/">Home</a>
+            <a href="/custom">Custom</a>
+            <a href="/card">Gallery</a>
+            <a href="/about">About</a>
+            <a href="/guidelines">Guidelines</a>
+            <a href="/contact">Contact</a>
+            <a href="/legal" target="_blank" id="legal" style="border-bottom: none; font-size: 1.25em; justify-content: center;">Terms of Service&nbsp;</a>
+        </div>
+
+        <div id="rotate"><h1>&#8635;</h1></div>
+    </body>
+</html>

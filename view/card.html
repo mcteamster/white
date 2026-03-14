@@ -1,0 +1,63 @@
+        <!-- Starting HTML Tags Omitted for Dynamic Opengraph Meta Configuration - Still renders fine without -->
+        <title>Blank White Cards</title>
+        <link rel="stylesheet" href="/styles/app.css">
+        <link rel="shortcut icon" type="image/png" href="/img/favicon.png"/>
+        <link rel="apple-touch-icon" href="/img/favicon.png">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="/scripts/card.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta property="fb:app_id" content="1477374492445407" />
+    </head>
+
+    <body onmouseover="menu(false)">
+        <div class="card bottom">
+            <div id="bar" class="drawn" onclick="action()">
+                <p id='prev'>&lt;</p>
+                <h2 id="title" class="grow"></h2>
+                <p id='next'>&gt;</p>
+            </div>
+            <p id="credit"></p>
+            <div id="description_box">
+                <h3 id="description"></h3>
+                <div id="action" class="icon">&nbsp;?&nbsp;</div>
+            </div>
+            <div id="picture"></div>
+        </div>
+
+        <div id="report">
+            <div id='middle' class="icon"></div>
+        </div>
+
+        <div id="popup">
+            <div id="dialog">
+                <h3 id="prompt">
+                    <p>
+                        Search for a card by ID<br>
+                        Leave blank for a random card<br>
+                        <a href="/legal" target="_blank"><u>Terms&nbsp;of&nbsp;Service</u></a>
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" id="number" class="submit drawn" placeholder="Card ID" maxlength="5" required>
+                    </p>
+                </h3>
+                <h3 id="yes" onclick="action(3)"><u>Find</u></h3>
+                <h3 id="no" onclick="popup(0)"><u>Cancel</u></h3>
+            </div>
+            <input type="text" id="share" readonly>
+        </div>
+
+        <div id="menu" class="icon" onclick="menu(true)">&#9776;</div>
+
+        <div id="nav">
+            <a href="/">Home</a>
+            <a href="/custom">Custom</a>
+            <a href="/card">Gallery</a>
+            <a href="/about">About</a>
+            <a href="/guidelines">Guidelines</a>
+            <a href="/contact">Contact</a>
+            <a href="/legal" target="_blank" id="legal" style="border-bottom: none; font-size: 1.25em; justify-content: center;">Terms of Service&nbsp;</a>
+        </div>
+
+        <div id="rotate"><h1>&#8635;</h1></div>
+    </body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Blank White Cards</title>
+        <link rel="stylesheet" href="/styles/app.css">
+        <link rel="shortcut icon" type="image/png" href="/img/favicon.png"/>
+        <link rel="apple-touch-icon" href="/img/favicon.png">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="/scripts/sketchpad.js"></script>
+        <script src="/scripts/create.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta property="fb:app_id" content="1477374492445407" />
+    </head>
+
+    <body onmouseover="menu(false)">
+        <div class="card bottom" id="create">
+            <div id="easel">
+                <div id="drawing_area">
+                    <canvas id="sketchpad"></canvas>
+                    <div id="drawing_shield" onclick="unshield()"></div>
+                </div>
+                <div id="banner">
+                    <div id="menu_create" class="icon" onclick="popup('abandon')">&#10008;</div>
+                    <div id="clear" class="icon" onclick="undo()">&#8634;</div>
+                    <!--div id="undo" class="icon" onclick="undo()">&#8592;</div-->
+                    <div id="tick" class="icon" onclick="submit()">&#10004;</div>
+                </div>
+            </div>
+            <div id="notepad">
+                <div id="card_data">
+                    <input type="text" id="card_title" class="submit drawn" tabindex="1" placeholder="Title" maxlength="50" required>
+                    <input type="text" id="card_author" class="submit drawn" tabindex="3" placeholder="Author" maxlength="25">
+                </div>
+                <textarea id="card_description" class="submit drawn" tabindex="2" placeholder="Description - What is this? What does it do?" rows="3" maxlength="280" required></textarea>
+            </div>
+        </div>
+
+        <div id="menu" class="icon hidden" onclick="menu(true)">&#9776;</div>
+
+        <div id="nav">
+            <a href="/">Home</a>
+            <a href="/custom">Custom</a>
+            <a href="/card">Gallery</a>
+            <a href="/about">About</a>
+            <a href="/guidelines">Guidelines</a>
+            <a href="/contact">Contact</a>
+            <a href="/legal" target="_blank" id="legal" style="border-bottom: none; font-size: 1.25em; justify-content: center;">Terms of Service&nbsp;</a>
+        </div>
+
+        <div id="report" >
+            <div id='middle' class="icon"></div>
+        </div>
+
+        <div id="popup">
+            <div id="dialog">
+                <h3 id="prompt"></h3>
+                <h3 id="yes"><u>Yes</u></h3>
+                <h3 id="no" onclick="popup(false)"><u>No</u></h3>
+            </div>
+            <input type="text" id="share" readonly>
+        </div>
+
+        <div id="return" class="card bottom hidden">
+            <a href="./app?acceptTerms=1">
+                <div id="bar" class="drawn">
+                    <h2 id="title">Resume</h2>
+                </div>
+            </a>
+
+            <div id="welcome">
+                <span>
+                    <h2 id="new_title"></h2><br>
+                    <h2 id="note">has been created!</h2><br>
+                    <h3 id="new_id"></h3>
+                </span>
+            </div>
+        </div>
+
+        <div id="rotate"><h1>&#8635;</h1></div>
+    </body>
+</html>

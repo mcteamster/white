@@ -1,0 +1,590 @@
+@import url(https://fonts.googleapis.com/css?family=Patrick+Hand+SC);
+
+body {
+    width: 100vw;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    font-family: 'Patrick Hand SC', Arial, Helvetica, sans-serif;
+    color: black;
+    background: white;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+h1 {
+    padding: 0;
+    margin: 0;
+    font-size: 5em;
+}
+
+h2 {
+    padding: 0;
+    margin: 0;
+}
+
+h3 {
+    padding: 0;
+    margin: 0;
+}
+
+p {
+    padding: 0;
+    margin: 0;
+}
+
+a {
+    text-decoration: none;
+    color: black;
+}
+
+textarea{
+    resize: none;
+}
+
+label {
+    cursor: pointer;
+}
+
+.card {
+    min-height: calc(100vh - 70px);
+    width: 100vw;
+    display: flex;
+    flex-direction: column-reverse;
+    background: white;
+}
+
+.bottom {
+    position: fixed;
+    bottom: 0;
+}
+
+.sticky {
+    position: sticky;
+    bottom: 0;
+}
+
+#picture {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: white;
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    font-size: 5em;
+    word-wrap: break-word;
+    text-align: center;
+}
+
+#description_box {
+    display: flex;
+    flex-direction: row;
+}
+
+#description {
+    margin: 1em 0 0 1.5em;
+    display: flex;
+    flex-direction: column-reverse;
+    text-align: left;
+    word-wrap: break-word;
+    flex-grow: 1;
+}
+
+#action {
+    padding-left: 0.1em;
+    padding-right: 0.75em;
+    padding-bottom: 0em;
+    font-size: 2em;
+    align-self: flex-end;
+}
+
+#credit {
+    margin: 0 1.5em;
+    display: flex;
+    flex-direction: row-reverse;
+}
+
+#bar {
+    margin: 0 1em 1em;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+    cursor: pointer;
+    background: white;
+}
+
+.drawn {
+    border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+    border: 0.5em black solid;
+}
+
+#title {
+    height: 3em;
+    width: 100%;
+    text-decoration: underline;
+    align-self: flex-start;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    background: white;
+}
+
+#left {
+    height: 100%;
+    width: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    text-decoration: none;
+    background: white;
+}
+
+#right {
+    height: 100%;
+    width: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    text-decoration: none;
+    background: white;
+}
+
+#prev {
+    height: 100%;
+    width: 3em;
+    font-weight: bold;
+    font-size: 1.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    background: white;
+}
+
+#next {
+    height: 100%;
+    width: 3em;
+    font-weight: bold;
+    font-size: 1.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    background: white;
+}
+
+.grow {
+    flex-grow: 1;
+}
+
+.icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.5em;
+    font-weight: bold;
+    font-size: 1.5em;
+}
+
+.icon:hover {
+    cursor: pointer;
+}
+
+#report {
+    width: 100vw;
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 1;
+    color: #DDD;
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: center;
+}
+
+#middle {
+    padding: 0.75em 0 0 0;
+    font-size: 1.25em;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+#menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 2;
+}
+
+#nav {
+    height: 100vh;
+    width: 300px;
+    max-width: 75vw;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    background: white;
+    box-shadow: 0 0 1em;
+
+    display: none;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+#nav a {
+    height: 1.5em;
+    padding: 0 0 0 0.5em;
+    border-bottom: 2pt solid black;
+    font-size: 3em;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+
+}
+
+#nav a:hover {
+    background: lightgrey;
+}
+
+#legal {
+    width: 300px;
+    max-width: 75vw;
+    padding: 0 !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+}
+
+#welcome {
+    margin: 0 1em;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    word-wrap: break-word;
+}
+
+#notepad {
+    display: flex;
+    flex-direction: column;
+}
+
+#text_content {
+    margin: 3em 3em 1em;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    text-align: left;
+    word-wrap: break-word;
+}
+
+#text_content p {
+    margin-bottom: 1em;
+}
+
+.submit {
+    font-family: 'Patrick Hand SC', cursive;
+    margin: 0.5em 2em;
+    padding: 0.5em;
+    font-size: 1em;
+    border: none;
+}
+
+.submit:focus {
+    outline: none;
+}
+
+#card_data {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#card_title {
+    flex-grow: 1;
+    margin-right: 0;
+}
+
+#card_author {
+    width: 30%;
+    margin-left: 0.5em;
+}
+
+#sketchpad {
+    position: absolute;
+    z-index: 2;
+    width: 80vw;
+    height: 80vw;
+    max-width: 100%;
+    max-height: 100%;
+    border: 5px black solid;
+    border-radius: 255px 10px 225px 10px/10px 225px 10px 255px;
+    background: white;
+}
+
+#create {
+    justify-content: space-evenly;
+    flex-direction: column;
+}
+
+#easel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#drawing_area {
+    position: relative;
+    width: calc(80vw + 10px);
+    height: calc(80vw + 10px);
+}
+
+#drawing_shield {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    background: rgba(0,0,0,0);
+    cursor: pointer;
+}
+
+#banner {
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-evenly;
+}
+
+.hidden {
+    display: none;
+}
+
+#new_title {
+    font-size: 3em;
+    padding: 0 0.5em;
+    word-wrap: break-word;
+}
+
+#popup {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    bottom: 0;
+    z-index: -1;
+    background: rgba(0,0,0,0);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#dialog {
+    width: 300px;
+    max-width: 75vw;
+    height: 180px;
+    max-height: 35vh;
+    padding: 1em;
+    background: white;
+    display: grid;
+    grid-template-rows: 2fr 1fr;
+    grid-template-columns: 1fr 1fr;
+    border-radius: 255px 15px 225px 15px/25px 225px 25px 255px;
+    border: 0.5em black solid;
+}
+
+#dialog h3 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#prompt {
+    grid-row: 1;
+    grid-column-start: 1;
+    grid-column-end: 3;
+    width: 100%;
+    text-align: center;
+}
+
+#number {
+    text-align: center;
+    margin: 0 0 0 0;
+}
+
+#secret {
+    text-align: center;
+    margin: 0 0 0 0;
+}
+
+.fourdigit {
+    width: 3em;
+}
+
+#linktext {
+    background: lightgrey;
+    cursor: pointer;
+}
+
+#share {
+    position: absolute;
+    bottom: -3em;
+}
+
+#yes {
+    cursor: pointer;
+    text-align: center;
+}
+
+#no {
+    cursor: pointer;
+    text-align: center;
+}
+
+.reportthis {
+    color: red;
+}
+
+#rotate {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    z-index: -2;
+    background: rgba(0,0,0,0);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.cc45 {
+    -webkit-transform: rotate(-45deg) translate(-0.25em, -0.25em);
+    -moz-transform: rotate(-45deg) translate(-0.25em, -0.25em);
+    -o-transform: rotate(-45deg) translate(-0.25em, -0.25em);
+    transform: rotate(45deg) translate(-0.25em, -0.25em);
+}
+
+.cw90 {
+    -webkit-transform: rotate(90deg) translate(0.5em, 0em);
+    -moz-transform: rotate(90deg) translate(0.5em, 0em);
+    -o-transform: rotate(90deg) translate(0.5em, 0em);
+    transform: rotate(90deg) translate(0.5em, 0em);
+}
+
+#logs {
+    background: #EEE;
+    list-style: none;
+    font-size: 0.75em;
+    padding: 0 1em;
+    margin: 1em;
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+.scroll {
+    overflow-y: scroll;
+    overflow-x: hidden;
+    height: 65vh;
+}
+
+.summary {
+    width: 100%;
+    text-align: center;
+}
+
+::-webkit-scrollbar {
+    width: 0.25em;
+}
+  
+::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 5px #DDD;
+    border-radius: 10px;
+}
+  
+::-webkit-scrollbar-thumb {
+    background: lightgray;
+    border-radius: 10px;
+}
+
+@media only screen and (min-height: 540px) and (min-aspect-ratio: 3/2) {
+    body {
+        font-size: 1.5vh;
+        align-items: center;
+        background: rgba(0,0,0,0.75);
+    }
+
+    .card {
+        position: fixed;
+        bottom: 35px;
+        min-height: calc(90vh - 70px);
+        width: 60vh;
+        border-radius: 0.5em;
+        box-shadow: 15px -15px #222;
+    }
+    
+    .bottom {
+        bottom: 35px;
+    }
+
+    #picture {
+        border-radius: 0.5em 0.5em 0 0;
+    }
+
+    #menu {
+        color: white;
+    }
+
+    #report {
+        color: #666;
+    }
+
+    #sketchpad {
+        width: 55vh;
+        height: 55vh;
+    }
+
+    #drawing_area {
+        position: relative;
+        width: calc(55vh + 10px);
+        height: calc(55vh + 10px);
+    }
+
+    #banner {
+        max-width: calc(55vh + 10px);
+    }
+}
+
+@media only screen and (max-height: 540px) and (min-aspect-ratio: 3/2) {
+    body {
+        overflow-x: hidden;
+        overflow-y: hidden;
+    }
+
+    #rotate {
+        z-index: 3;
+        background: white;
+    }
+}

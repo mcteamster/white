@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Blank White Cards</title>
+        <link rel="stylesheet" href="/styles/app.css">
+        <link rel="shortcut icon" type="image/png" href="/img/favicon.png"/>
+        <link rel="apple-touch-icon" href="/img/favicon.png">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="/scripts/index.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta property="fb:app_id" content="1477374492445407" />
+    </head>
+
+    <body onmouseover="menu(false)">
+        <div class="card">
+            <div id="bar" class="drawn" onclick="back()">
+                <h2 id="title">Go Back</h2>
+            </div>
+
+            <h3 id="text_content">
+                <p style="font-size: 1.5em;"><u>Contact</u></p>
+                <p>
+                    Instagram: <a href="https://instagram.com/blankwhitecards"><u>@blankwhitecards</u></a><br>
+                    Email: <a href="mailto:hello@tonz.io"><u>hello@tonz.io</u></a><br>
+                    Blog: <a href="https://mcteamster.itch.io/blankwhitecards"><u>mcteamster.itch.io</u></a>
+                </p>
+                <p>
+                    *Remove a Card*<br>
+                    If you encounter a card that you believe should be taken out of circulation
+                    please send us a message with an explanation and a link to the card.
+                    In the interest of freedom, we typically don't censor cards manually.
+                    The rating algorithm should suppress inherently bad cards.
+                    However, if the card does explicitly infringe on the rights of individual persons or entities, 
+                    we are reasonable and will review reports on a case-by-case basis.
+                </p>
+                <p>
+                    *International Versions*<br>
+                    The game is hosted from a server in Australia, with a de-facto language
+                    of English. We may add global decks or servers in other countries and for 
+                    languages other than English in the future. In the meantime please
+                    feel welcome to use the custom rooms for non-English games.
+                </p>
+                <p>
+                    *Download/Upload*<br>
+                    Saving and loading cards is currently in beta and only fully supported on desktop.
+                    This allows you to keep and re-use your prized card collections. Decks can be viewed
+                    offline by opening the file and edited for future games.
+                </p>
+            </h3>
+        </div>
+
+        <div id="popup"></div>
+
+        <div id="menu" class="icon" onclick="menu(true)">&#9776;</div>
+
+        <div id="nav">
+            <a href="/">Home</a>
+            <a href="/custom">Custom</a>
+            <a href="/card">Gallery</a>
+            <a href="/about">About</a>
+            <a href="/guidelines">Guidelines</a>
+            <a href="/contact">Contact</a>
+            <a href="/legal" target="_blank" id="legal" style="border-bottom: none; font-size: 1.25em; justify-content: center;">Terms of Service&nbsp;</a>
+        </div>
+
+        <div id="rotate"><h1>&#8635;</h1></div>
+    </body>
+</html>

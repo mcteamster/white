@@ -1,0 +1,4 @@
+log.txt
+node_modules/*
+view/img/share/share*
+.DS_Store

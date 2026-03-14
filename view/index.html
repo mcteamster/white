@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Blank White Cards</title>
+        <link rel="stylesheet" href="/styles/app.css">
+        <link rel="shortcut icon" type="image/png" href="/img/favicon.png"/>
+        <link rel="apple-touch-icon" href="/img/favicon.png">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="/scripts/index.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta property="og:title" content="Blank White Cards" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://blankcard.me/" />
+        <meta property="og:image" content="https://blankcard.me/img/1200x627.png" />
+        <meta property="og:description" content="You make the cards! You make the rules! Just start drawing and play!" />
+        <meta property="fb:app_id" content="1477374492445407" />
+    </head>
+
+    <body onmouseover="menu(false)">
+        <div class="card bottom">
+            <div id="bar" class="drawn">
+                <h2 id="title">
+                    <a href="./app" id='left'>Play Now!</a>
+                    <a href="./custom" id='right'>Rooms</a>
+                </h2>
+            </div>
+
+            <p id="credit">v1.53 / by mcteamster</p>
+
+            <h1 id="welcome">
+                Blank<br>White<br>Cards
+            </h1>
+        </div>
+
+        <div id="popup"></div>
+
+        <div id="menu" class="icon" onclick="menu(true)">&#9776;</div>
+
+        <div id="nav">
+            <a href="/">Home</a>
+            <a href="/custom">Custom</a>
+            <a href="/card">Gallery</a>
+            <a href="/about">About</a>
+            <a href="/guidelines">Guidelines</a>
+            <a href="/contact">Contact</a>
+            <a href="/legal" target="_blank" id="legal" style="border-bottom: none; font-size: 1.25em; justify-content: center;">Terms of Service&nbsp;</a>
+        </div>
+
+        <div id="rotate"><h1>&#8635;</h1></div>
+    </body>
+</html>

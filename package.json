@@ -1,0 +1,28 @@
+{
+  "name": "blank-white-cards",
+  "version": "1.5.3",
+  "description": "Blank White Cards - blankcard.me",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "mcteamster",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "express": "^4.17.1",
+    "express-validator": "^6.10.0",
+    "mongodb": "^3.6.4",
+    "saslprep": "^1.0.3",
+    "sketchpad": "^0.1.0",
+    "validator": "^11.1.0"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mcteamster/blankwhitecards.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mcteamster/blankwhitecards/issues"
+  },
+  "homepage": "https://github.com/mcteamster/blankwhitecards#readme"
+}

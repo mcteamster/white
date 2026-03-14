@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Blank White Cards</title>
+        <link rel="stylesheet" href="/styles/app.css">
+        <link rel="shortcut icon" type="image/png" href="/img/favicon.png"/>
+        <link rel="apple-touch-icon" href="/img/favicon.png">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="/scripts/lobby.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta property="fb:app_id" content="1477374492445407" />
+    </head>
+
+    <body onmouseover="menu(false)">
+        <div class="card bottom">
+            <div id="bar" class="drawn">
+                <h2 id="title">Continue</h2>
+            </div>
+
+            <p id="credit" style="text-align: center; justify-content: center; display: inline;">
+                By continuing you confirm that you are over 18 years old
+                and accept our&nbsp;<a href="/legal" target="_blank"><u>Terms of Service</u>.</a>
+            </p>
+
+            <div id="description_box">
+                <h3 id="description" style="text-align: center; margin: 0;">&nbsp;</h3>
+            </div>
+
+            <h1 id="welcome"></h1>
+        </div>
+
+        <div id="report" >
+            <div id='middle' class="icon"></div>
+        </div>
+
+        <div id="popup">
+            <div id="dialog">
+                <h3 id="prompt">
+                    <p>
+                        Enter code for advanced setup<br><br>
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" id="number" class="submit drawn" placeholder="0000" maxlength="4" required>
+                    </p>
+                </h3>
+                <h3 id="yes" onclick="download()"><u>Submit</u></h3>
+                <h3 id="no" onclick="popup(false)"><u>Cancel</u></h3>
+            </div>
+            <input type="text" id="share" readonly>
+        </div>
+
+        <div id="menu" class="icon" onclick="menu(true)">&#9776;</div>
+
+        <div id="nav">
+            <a href="/">Home</a>
+            <a href="/custom">Custom</a>
+            <a href="/card">Gallery</a>
+            <a href="/about">About</a>
+            <a href="/guidelines">Guidelines</a>
+            <a href="/contact">Contact</a>
+            <a href="/legal" target="_blank" id="legal" style="border-bottom: none; font-size: 1.25em; justify-content: center;">Terms of Service&nbsp;</a>
+        </div>
+
+        <div id="rotate"><h1>&#8635;</h1></div>
+    </body>
+</html>
