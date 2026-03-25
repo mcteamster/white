@@ -22,6 +22,7 @@ body {
   user-select: none;
   -ms-user-select: none;
   -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 a {
@@ -73,11 +74,13 @@ input:focus {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #sketchpad {
   background-color: white;
   box-shadow: 5px 5px black;
+  -webkit-tap-highlight-color: transparent;
 }
 
 @media only screen and (max-aspect-ratio: 1/1) {
