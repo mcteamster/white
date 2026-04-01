@@ -463,8 +463,7 @@ interface NoticesProps {
 
 interface Notice {
   id?: string;
-  message?: string;
-  regions?: string[];
+  messages?: Record<string, string>;
 }
 
 function Notices(props: NoticesProps) {
@@ -493,7 +492,8 @@ function Notices(props: NoticesProps) {
     checkNotices();
   }, [checkNotices])
 
-  if (notice.regions && (notice.regions.length == 0 || notice?.regions.includes(props.region))) {
-    return <div style={styles.notice}>{notice.message}</div>
+  if (notice.messages) {
+    const message = notice.messages[props.region] ?? notice.messages.ALL ?? ''
+    return <div style={styles.notice}>{message}</div>
   }
 }
