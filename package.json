@@ -30,6 +30,9 @@
     "react-router": "^7.5.2",
     "wired-elements": "^3.0.0-rc.6"
   },
+  "overrides": {
+    "atrament": "^4.6.0"
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/react": "^18.3.18",
