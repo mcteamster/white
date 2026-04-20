@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as route53targets from 'aws-cdk-lib/aws-route53-targets';
@@ -27,6 +28,16 @@ export class WhiteApiStack extends cdk.Stack {
     const dlq = new sqs.Queue(this, 'WhiteDLQ', {
       queueName: 'BlankWhiteCardsDeadLetterQueue',
       retentionPeriod: cdk.Duration.days(14),
+    });
+
+    // DLQ alarm — fires when any message lands in the dead letter queue
+    new cloudwatch.Alarm(this, 'DlqAlarm', {
+      alarmName: 'white-submit-dlq',
+      metric: dlq.metricApproximateNumberOfMessagesVisible(),
+      threshold: 1,
+      evaluationPeriods: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     });
 
     // Main Queue
