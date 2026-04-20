@@ -3,6 +3,9 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cloudwatchActions from 'aws-cdk-lib/aws-cloudwatch-actions';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as route53targets from 'aws-cdk-lib/aws-route53-targets';
@@ -30,8 +33,13 @@ export class WhiteApiStack extends cdk.Stack {
       retentionPeriod: cdk.Duration.days(14),
     });
 
+    // Alerts topic from monitoring stack
+    const alertsTopic = sns.Topic.fromTopicArn(this, 'AlertsTopic',
+      ssm.StringParameter.valueForStringParameter(this, '/monitoring/alerts-topic-arn'),
+    );
+
     // DLQ alarm — fires when any message lands in the dead letter queue
-    new cloudwatch.Alarm(this, 'DlqAlarm', {
+    const dlqAlarm = new cloudwatch.Alarm(this, 'DlqAlarm', {
       alarmName: 'white-submit-dlq',
       metric: dlq.metricApproximateNumberOfMessagesVisible(),
       threshold: 1,
@@ -39,6 +47,8 @@ export class WhiteApiStack extends cdk.Stack {
       comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     });
+    dlqAlarm.addAlarmAction(new cloudwatchActions.SnsAction(alertsTopic));
+    dlqAlarm.addOkAction(new cloudwatchActions.SnsAction(alertsTopic));
 
     // Main Queue
     const queue = new sqs.Queue(this, 'WhiteQueue', {
