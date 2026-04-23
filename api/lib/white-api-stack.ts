@@ -35,7 +35,7 @@ export class WhiteApiStack extends cdk.Stack {
 
     // Alerts topic from monitoring stack
     const alertsTopic = sns.Topic.fromTopicArn(this, 'AlertsTopic',
-      ssm.StringParameter.valueForStringParameter(this, '/monitoring/alerts-topic-arn'),
+      ssm.StringParameter.valueForStringParameter(this, '/ohnomer/monitoring/alerts-topic-arn'),
     );
 
     // DLQ alarm — fires when any message lands in the dead letter queue
