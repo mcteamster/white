@@ -968,7 +968,7 @@ export function DeckEditor() {
                 </>
               ) : (
                 <>
-                  <h3 style={styles.modalTitle}>Deck Editor</h3>
+                  <h3 style={styles.modalTitle}>{deck.cards.length === 0 ? 'Welcome to the Deck Editor' : 'Deck Editor'}</h3>
                   <div style={styles.fileModalButtons}>
                     {deck.cards.length === 0 ? (
                       <div style={styles.fileModalRow}>
