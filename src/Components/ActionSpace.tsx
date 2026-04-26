@@ -348,13 +348,13 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
     topRow = (
       <div style={{ position: 'fixed', top: 'calc(2em + 12px)', left: '50%', transform: 'translateX(-50%)', zIndex: 10, display: 'flex', gap: '1em' }}>
         <wired-card style={{ ...styles.button, color: 'red' }} onClick={() => { fillWhite(); setEraserActive(false); }} elevation={2}><Icon name='discard' />Clear</wired-card>
-        <wired-card style={{ ...styles.button }} onClick={() => { setBrushSize(cycleBrushSize()); }} elevation={2}><Icon name='weight' />{brushSize}</wired-card>
         <wired-card style={{ ...styles.button, color: eraserActive ? 'red' : undefined }} onClick={() => {
           const newMode = getMode() === MODE_ERASE ? MODE_DRAW : MODE_ERASE;
           setCanvasMode(newMode);
           setEraserActive(newMode === MODE_ERASE);
           if (newMode === MODE_ERASE) { resetStipple(); setStippleDensity(null); }
         }} elevation={2}><Icon name='wand' />Erase</wired-card>
+        <wired-card style={{ ...styles.button }} onClick={() => { setBrushSize(cycleBrushSize()); }} elevation={2}><Icon name='weight' />{brushSize}</wired-card>
         <wired-card style={{ ...styles.button, backgroundColor: stippleDensity ? '#ddd' : '#eee' }} onClick={() => {
           const next = cycleStippleDensity();
           setStippleDensity(next);
