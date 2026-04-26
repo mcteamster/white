@@ -6,7 +6,7 @@ import { CardEditor } from './CardEditor';
 import { FullCardView, CompactCardView, ImageOnlyCardView } from './CardViews';
 import { ViewModeToggle } from './EditorControls';
 //@ts-expect-error: JS Module
-import { fillWhite, cycleBrushSize, getCurrentBrushSize, getMode, setMode, MODE_DRAW, MODE_ERASE } from '../../Canvas.js';
+import { fillWhite, cycleBrushSize, getCurrentBrushSize, getMode, setMode, MODE_DRAW, MODE_ERASE, cycleStippleDensity, getStippleDensity, resetStipple } from '../../Canvas.js';
 
 function DrawingControls({ onBack, onUndo, onRedo, onCancel }: { 
   onBack: () => void,
@@ -16,12 +16,15 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
 }) {
   const [eraserActive, setEraserActive] = useState(false);
   const [brushSize, setBrushSize] = useState('Medium');
+  const [stippleDensity, setStippleDensity] = useState<string | null>(null);
   const [handlersReady, setHandlersReady] = useState(false);
 
   // Reset to draw mode when component mounts
   useEffect(() => {
     setMode(MODE_DRAW);
     setEraserActive(false);
+    resetStipple();
+    setStippleDensity(null);
     setBrushSize(getCurrentBrushSize());
   }, []);
 
@@ -34,6 +37,20 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
     const newMode = getMode() === MODE_ERASE ? MODE_DRAW : MODE_ERASE;
     setMode(newMode);
     setEraserActive(newMode === MODE_ERASE);
+    // Deactivate stipple when switching to eraser
+    if (newMode === MODE_ERASE) {
+      resetStipple();
+      setStippleDensity(null);
+    }
+  };
+
+  const handleStippleToggle = () => {
+    const next = cycleStippleDensity();
+    setStippleDensity(next);
+    // Deactivate eraser when stipple is turned on
+    if (next) {
+      setEraserActive(false);
+    }
   };
 
   const handleUndo = () => {
@@ -103,12 +120,23 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
           <Icon name="weight" />
           {brushSize}
         </wired-card>
-        <wired-card 
-          elevation={2} 
+        <wired-card
+          elevation={2}
+          style={{
+            ...styles.button,
+            backgroundColor: stippleDensity ? '#ddd' : 'white'
+          }}
+          onClick={handleStippleToggle}
+        >
+          <Icon name="wand" />
+          {stippleDensity ? stippleDensity.charAt(0).toUpperCase() + stippleDensity.slice(1) : 'Stipple'}
+        </wired-card>
+        <wired-card
+          elevation={2}
           style={{
             ...styles.button,
             color: eraserActive ? 'red' : undefined
-          }} 
+          }}
           onClick={handleEraserToggle}
         >
           <Icon name="wand" />
