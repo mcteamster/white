@@ -107,7 +107,7 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
       justifyContent: 'center',
       flexDirection: 'column' as const,
       backgroundColor: 'white',
-      borderRadius: '8px'
+      borderRadius: '1em'
     }
   };
 
