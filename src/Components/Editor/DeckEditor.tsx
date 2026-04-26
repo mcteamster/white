@@ -885,13 +885,6 @@ export function DeckEditor() {
                   <p>Are you sure you want to restart? This will clear all cards from the editor and cannot be undone.</p>
                   <div style={styles.fileModalRow}>
                     <wired-card
-                      style={styles.saveButton}
-                      onClick={() => setModalState('closed')}
-                      elevation={2}
-                    >
-                      <Icon name="exit" /> Cancel
-                    </wired-card>
-                    <wired-card
                       style={{
                         ...styles.saveButton,
                         color: '#f44336'
@@ -902,6 +895,13 @@ export function DeckEditor() {
                       elevation={2}
                     >
                       <Icon name="shuffle" /> Restart
+                    </wired-card>
+                    <wired-card
+                      style={styles.saveButton}
+                      onClick={() => setModalState('closed')}
+                      elevation={2}
+                    >
+                      <Icon name="exit" /> Cancel
                     </wired-card>
                   </div>
                 </>
