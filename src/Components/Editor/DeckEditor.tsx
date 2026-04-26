@@ -135,10 +135,7 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
         </wired-card>
         <wired-card
           elevation={2}
-          style={{
-            ...styles.button,
-            backgroundColor: stippleDensity ? '#ddd' : 'white'
-          }}
+          style={styles.button}
           onClick={handleStippleToggle}
         >
           <Icon name="stipple" />
