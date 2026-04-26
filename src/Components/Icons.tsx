@@ -3,6 +3,7 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import GrainIcon from '@mui/icons-material/Grain';
+import SignalCellular0BarIcon from '@mui/icons-material/SignalCellular0Bar';
 import SignalCellular1BarIcon from '@mui/icons-material/SignalCellular1Bar';
 import SignalCellular2BarIcon from '@mui/icons-material/SignalCellular2Bar';
 import SignalCellular4BarIcon from '@mui/icons-material/SignalCellular4Bar';
@@ -151,7 +152,7 @@ export function Icon(props: { name: IconName }) {
     stop: <StopIcon></StopIcon>,
     show: <VisibilityIcon></VisibilityIcon>,
     hide: <VisibilityOffIcon></VisibilityOffIcon>,
-    size_sm: <SignalCellular1BarIcon></SignalCellular1BarIcon>,
+    size_sm: <SignalCellular0BarIcon></SignalCellular0BarIcon>,
     size_md: <SignalCellular2BarIcon></SignalCellular2BarIcon>,
     size_lg: <SignalCellular4BarIcon></SignalCellular4BarIcon>,
     solid: <FiberManualRecordIcon></FiberManualRecordIcon>,
