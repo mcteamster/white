@@ -265,6 +265,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
   };
 
   // Initialise Buttons
+  let topRow = null;
   let toolset;
   if (mode === 'play') {
     let mainButtonContent;
@@ -344,7 +345,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
       <wired-card style={styles.button} onClick={() => { setMode('create-sketch') }} elevation={2}><Icon name='create' />Create</wired-card>
     </>
   } else if (mode === 'create-sketch') {
-    const sketchTopRow = (
+    topRow = (
       <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 10, display: 'flex', gap: '1em' }}>
         <wired-card style={{ ...styles.button, color: 'red' }} onClick={() => { fillWhite(); setEraserActive(false); }} elevation={2}><Icon name='discard' />Clear</wired-card>
         <wired-card style={{ ...styles.button }} onClick={() => { setBrushSize(cycleBrushSize()); }} elevation={2}><Icon name='weight' />{brushSize}</wired-card>
@@ -362,7 +363,6 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
       </div>
     );
     toolset = <>
-      {sketchTopRow}
       <wired-card style={{ ...styles.button }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Close</wired-card>
       <wired-card style={{ ...styles.button }} onClick={() => { undo() }} elevation={2}><Icon name='undo' />Undo</wired-card>
       <wired-card style={{ ...styles.button }} onClick={() => { redo() }} elevation={2}><Icon name='redo' />Redo</wired-card>
@@ -444,9 +444,12 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
   }
 
   return (
-    <div style={styles.toolbar} >
-      {toolset}
-    </div>
+    <>
+      {topRow}
+      <div style={styles.toolbar} >
+        {toolset}
+      </div>
+    </>
   );
 }
 
