@@ -62,10 +62,12 @@ canvas.addEventListener('pointerdown', (e) => {
 canvas.addEventListener('pointermove', (e) => {
   if (!stippleDensity || !stippleActive || !e.isPrimary) return;
   const { offsetX: x, offsetY: y } = e;
-  stippleSegments.push({ point: { x, y }, time: performance.now() });
   const dx = x - stippleLastPoint.x;
   const dy = y - stippleLastPoint.y;
-  stippleDistSinceDot += Math.sqrt(dx * dx + dy * dy);
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist < 1) return;
+  stippleSegments.push({ point: { x, y }, time: performance.now() });
+  stippleDistSinceDot += dist;
   if (stippleDistSinceDot >= STIPPLE_PRESETS[stippleDensity].spacing) {
     plotDot(x, y);
     stippleDistSinceDot = 0;
@@ -106,6 +108,7 @@ sketchpad.addEventListener('strokerecorded', (obj) => {
 canvas.addEventListener('click', (e) => {
   // Stipple clicks are already handled by pointerdown/pointerup — skip
   if (stippleDensity) return;
+  if (strokes.length === 0) return;
   const bounds = sketchpad.canvas.getBoundingClientRect();
   const clickPoint = { x: e.clientX, y: e.clientY }
   if (strokes[strokes.length - 1].segments.length < 3) {
