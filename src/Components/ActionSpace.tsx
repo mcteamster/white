@@ -346,7 +346,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
     </>
   } else if (mode === 'create-sketch') {
     topRow = (
-      <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 10, display: 'flex', gap: '1em' }}>
+      <div style={{ position: 'fixed', top: 'calc(2em + 12px)', left: '50%', transform: 'translateX(-50%)', zIndex: 10, display: 'flex', gap: '1em' }}>
         <wired-card style={{ ...styles.button, color: 'red' }} onClick={() => { fillWhite(); setEraserActive(false); }} elevation={2}><Icon name='discard' />Clear</wired-card>
         <wired-card style={{ ...styles.button }} onClick={() => { setBrushSize(cycleBrushSize()); }} elevation={2}><Icon name='weight' />{brushSize}</wired-card>
         <wired-card style={{ ...styles.button, color: eraserActive ? 'red' : undefined }} onClick={() => {
