@@ -1,8 +1,11 @@
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import AdjustIcon from '@mui/icons-material/Adjust';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import GrainIcon from '@mui/icons-material/Grain';
+import LensIcon from '@mui/icons-material/Lens';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import BackHandOutlinedIcon from '@mui/icons-material/BackHandOutlined';
 import BookOutlinedIcon from '@mui/icons-material/BookOutlined';
 import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
@@ -93,6 +96,9 @@ type IconName =
   'view_module' |
   'show' |
   'hide' |
+  'size_sm' |
+  'size_md' |
+  'size_lg' |
   'solid' |
   'stipple' |
   'wand' |
@@ -145,6 +151,9 @@ export function Icon(props: { name: IconName }) {
     stop: <StopIcon></StopIcon>,
     show: <VisibilityIcon></VisibilityIcon>,
     hide: <VisibilityOffIcon></VisibilityOffIcon>,
+    size_sm: <RadioButtonUncheckedIcon></RadioButtonUncheckedIcon>,
+    size_md: <AdjustIcon></AdjustIcon>,
+    size_lg: <LensIcon></LensIcon>,
     solid: <FiberManualRecordIcon></FiberManualRecordIcon>,
     stipple: <GrainIcon></GrainIcon>,
     wand: <AutoFixHighIcon></AutoFixHighIcon>,

@@ -130,7 +130,7 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
           Erase
         </wired-card>
         <wired-card elevation={2} style={styles.button} onClick={handleBrushSizeToggle}>
-          <Icon name="weight" />
+          <Icon name={brushSize === 'Small' ? 'size_sm' : brushSize === 'Large' ? 'size_lg' : 'size_md'} />
           {brushSize}
         </wired-card>
         <wired-card

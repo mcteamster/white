@@ -354,7 +354,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
           setEraserActive(newMode === MODE_ERASE);
           if (newMode === MODE_ERASE) { resetStipple(); setStippleDensity(null); }
         }} elevation={2}><Icon name='wand' />Erase</wired-card>
-        <wired-card style={{ ...styles.button }} onClick={() => { setBrushSize(cycleBrushSize()); }} elevation={2}><Icon name='weight' />{brushSize}</wired-card>
+        <wired-card style={{ ...styles.button }} onClick={() => { setBrushSize(cycleBrushSize()); }} elevation={2}><Icon name={brushSize === 'Small' ? 'size_sm' : brushSize === 'Large' ? 'size_lg' : 'size_md'} />{brushSize}</wired-card>
         <wired-card style={{ ...styles.button }} onClick={() => {
           const next = cycleStippleDensity();
           setStippleDensity(next);
