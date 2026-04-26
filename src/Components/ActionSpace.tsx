@@ -7,7 +7,7 @@ import { Card, getCardsByLocation, getCardsByOwner } from '../Cards';
 import { Icon } from './Icons';
 import { useState, useEffect, useContext, useRef, useCallback } from 'react';
 //@ts-expect-error: JS Module
-import { undo, redo, strokes, sketchpad, cycleStippleDensity, resetStipple } from '../Canvas.js';
+import { undo, redo, strokes, sketchpad, cycleStippleDensity, resetStipple, fillWhite, cycleBrushSize, getCurrentBrushSize, getMode, setMode as setCanvasMode, MODE_DRAW, MODE_ERASE } from '../Canvas.js';
 import { Link, useNavigate } from 'react-router';
 import { AuthContext, FocusContext, LoadingContext } from '../lib/contexts.ts';
 import { openDeckEditor } from '../lib/data.ts';
@@ -28,6 +28,8 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
   const { loading, setLoading } = useContext(LoadingContext);
   const [submitStatus, setSubmitStatus] = useState('Submit');
   const [stippleDensity, setStippleDensity] = useState<string | null>(null);
+  const [eraserActive, setEraserActive] = useState(false);
+  const [brushSize, setBrushSize] = useState('Medium');
   const { focus, setFocus } = useContext(FocusContext);
   const focusCard = useCallback(((id: number, focusState: boolean) => {
     if (focus?.id != id && focusState == true) {
@@ -157,9 +159,14 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
   }, [setAuth, navigate])
 
   useEffect(() => {
-    if (mode !== 'create-sketch') {
+    if (mode === 'create-sketch') {
+      setCanvasMode(MODE_DRAW);
+      setEraserActive(false);
+      setBrushSize(getCurrentBrushSize());
+    } else {
       resetStipple();
       setStippleDensity(null);
+      setEraserActive(false);
     }
   }, [mode]);
 
@@ -337,17 +344,28 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
       <wired-card style={styles.button} onClick={() => { setMode('create-sketch') }} elevation={2}><Icon name='create' />Create</wired-card>
     </>
   } else if (mode === 'create-sketch') {
+    const sketchTopRow = (
+      <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 10, display: 'flex', gap: '1em' }}>
+        <wired-card style={{ ...styles.button, color: 'red' }} onClick={() => { fillWhite(); setEraserActive(false); }} elevation={2}><Icon name='discard' />Clear</wired-card>
+        <wired-card style={{ ...styles.button }} onClick={() => { setBrushSize(cycleBrushSize()); }} elevation={2}><Icon name='weight' />{brushSize}</wired-card>
+        <wired-card style={{ ...styles.button, color: eraserActive ? 'red' : undefined }} onClick={() => {
+          const newMode = getMode() === MODE_ERASE ? MODE_DRAW : MODE_ERASE;
+          setCanvasMode(newMode);
+          setEraserActive(newMode === MODE_ERASE);
+          if (newMode === MODE_ERASE) { resetStipple(); setStippleDensity(null); }
+        }} elevation={2}><Icon name='wand' />Erase</wired-card>
+        <wired-card style={{ ...styles.button, backgroundColor: stippleDensity ? '#ddd' : '#eee' }} onClick={() => {
+          const next = cycleStippleDensity();
+          setStippleDensity(next);
+          if (next) setEraserActive(false);
+        }} elevation={2}><Icon name='stipple' />{stippleDensity ? stippleDensity.charAt(0).toUpperCase() + stippleDensity.slice(1) : 'Stipple'}</wired-card>
+      </div>
+    );
     toolset = <>
+      {sketchTopRow}
       <wired-card style={{ ...styles.button }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Close</wired-card>
       <wired-card style={{ ...styles.button }} onClick={() => { undo() }} elevation={2}><Icon name='undo' />Undo</wired-card>
       <wired-card style={{ ...styles.button }} onClick={() => { redo() }} elevation={2}><Icon name='redo' />Redo</wired-card>
-      <wired-card
-        style={{ ...styles.button, backgroundColor: stippleDensity ? '#ccc' : '#eee' }}
-        onClick={() => { const next = cycleStippleDensity(); setStippleDensity(next); }}
-        elevation={2}
-      >
-        <Icon name='wand' />{stippleDensity ? stippleDensity.charAt(0).toUpperCase() + stippleDensity.slice(1) : 'Stipple'}
-      </wired-card>
       <wired-card style={{ ...styles.button }} onClick={() => { setMode('create-finalise') }} elevation={2}><Icon name='send' />Next</wired-card>
     </>
   } else if (mode === 'create-finalise') {
