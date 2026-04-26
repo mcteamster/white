@@ -7,7 +7,7 @@ import { Card, getCardsByLocation, getCardsByOwner } from '../Cards';
 import { Icon } from './Icons';
 import { useState, useEffect, useContext, useRef, useCallback } from 'react';
 //@ts-expect-error: JS Module
-import { undo, redo, strokes, sketchpad } from '../Canvas.js';
+import { undo, redo, strokes, sketchpad, cycleStippleDensity, resetStipple, fillWhite, cycleBrushSize, getCurrentBrushSize, getMode, setMode as setCanvasMode, MODE_DRAW, MODE_ERASE } from '../Canvas.js';
 import { Link, useNavigate } from 'react-router';
 import { AuthContext, FocusContext, LoadingContext } from '../lib/contexts.ts';
 import { openDeckEditor } from '../lib/data.ts';
@@ -27,6 +27,9 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
   const { setAuth } = useContext(AuthContext);
   const { loading, setLoading } = useContext(LoadingContext);
   const [submitStatus, setSubmitStatus] = useState('Submit');
+  const [stippleDensity, setStippleDensity] = useState<string | null>(null);
+  const [eraserActive, setEraserActive] = useState(false);
+  const [brushSize, setBrushSize] = useState('Medium');
   const { focus, setFocus } = useContext(FocusContext);
   const focusCard = useCallback(((id: number, focusState: boolean) => {
     if (focus?.id != id && focusState == true) {
@@ -155,6 +158,18 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
     navigate('/');
   }, [setAuth, navigate])
 
+  useEffect(() => {
+    if (mode === 'create-sketch') {
+      setCanvasMode(MODE_DRAW);
+      setEraserActive(false);
+      setBrushSize(getCurrentBrushSize());
+    } else {
+      resetStipple();
+      setStippleDensity(null);
+      setEraserActive(false);
+    }
+  }, [mode]);
+
   // Track number of moves made by the player to debounce button
   const moveTracker = useRef({ numMoves: 0, timestamp: (new Date()).getTime() });
   useEffect(() => {
@@ -250,6 +265,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
   };
 
   // Initialise Buttons
+  let topRow = null;
   let toolset;
   if (mode === 'play') {
     let mainButtonContent;
@@ -329,6 +345,23 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
       <wired-card style={styles.button} onClick={() => { setMode('create-sketch') }} elevation={2}><Icon name='create' />Create</wired-card>
     </>
   } else if (mode === 'create-sketch') {
+    topRow = (
+      <div style={{ position: 'fixed', top: 'calc(2em + 12px)', left: '50%', transform: 'translateX(-50%)', zIndex: 10, display: 'flex', justifyContent: 'space-around', width: '100%', maxWidth: '40em' }}>
+        <wired-card style={{ ...styles.button, color: 'red' }} onClick={() => { fillWhite(); setEraserActive(false); }} elevation={2}><Icon name='discard' />Clear</wired-card>
+        <wired-card style={{ ...styles.button, color: eraserActive ? 'red' : undefined }} onClick={() => {
+          const newMode = getMode() === MODE_ERASE ? MODE_DRAW : MODE_ERASE;
+          setCanvasMode(newMode);
+          setEraserActive(newMode === MODE_ERASE);
+          if (newMode === MODE_ERASE) { resetStipple(); setStippleDensity(null); }
+        }} elevation={2}><Icon name='wand' />Erase</wired-card>
+        <wired-card style={{ ...styles.button }} onClick={() => { setBrushSize(cycleBrushSize()); }} elevation={2}><Icon name='weight' />{brushSize}</wired-card>
+        <wired-card style={{ ...styles.button }} onClick={() => {
+          const next = cycleStippleDensity();
+          setStippleDensity(next);
+          if (next) setEraserActive(false);
+        }} elevation={2}><Icon name={stippleDensity ? 'stipple' : 'solid'} />{stippleDensity ? 'Dots' : 'Solid'}</wired-card>
+      </div>
+    );
     toolset = <>
       <wired-card style={{ ...styles.button }} onClick={() => { setMode('play') }} elevation={2}><Icon name='exit' />Close</wired-card>
       <wired-card style={{ ...styles.button }} onClick={() => { undo() }} elevation={2}><Icon name='undo' />Undo</wired-card>
@@ -411,9 +444,12 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
   }
 
   return (
-    <div style={styles.toolbar} >
-      {toolset}
-    </div>
+    <>
+      {topRow}
+      <div style={styles.toolbar} >
+        {toolset}
+      </div>
+    </>
   );
 }
 

@@ -1,5 +1,5 @@
 // HTML Canvas: https://github.com/jakubfiala/atrament
-import Atrament, { MODE_DRAW, MODE_ERASE } from 'atrament';
+import Atrament, { MODE_DRAW, MODE_ERASE, MODE_DISABLED } from 'atrament';
 
 // Re-export mode constants
 export { MODE_DRAW, MODE_ERASE };
@@ -27,9 +27,75 @@ export const strokes = [];
 export const redoStack = [];
 let isUndoRedoInProgress = false;
 
+// Stipple mode — plots dots at varying density to simulate shading within the 1-bit constraint.
+// NOTE: segmentdrawn only fires inside Atrament's draw(), which is skipped in MODE_DISABLED.
+// We track pointer events directly and use distance-based dot spacing instead.
+const STIPPLE_PRESETS = {
+  light: { spacing: 12 },
+};
+const STIPPLE_DENSITIES = [null, 'light'];
+let stippleDensity = null;
+
+// Live stipple stroke state
+let stippleActive = false;
+let stippleSegments = [];
+let stippleLastPoint = null;
+let stippleDistSinceDot = 0;
+
+function plotDot(x, y) {
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = 'black';
+  ctx.beginPath();
+  ctx.arc(x, y, sketchpad.weight / 2, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+canvas.addEventListener('pointerdown', (e) => {
+  if (!stippleDensity || !e.isPrimary || e.button !== 0) return;
+  stippleActive = true;
+  stippleSegments = [{ point: { x: e.offsetX, y: e.offsetY }, time: performance.now() }];
+  stippleLastPoint = { x: e.offsetX, y: e.offsetY };
+  stippleDistSinceDot = 0;
+  plotDot(e.offsetX, e.offsetY);
+});
+
+canvas.addEventListener('pointermove', (e) => {
+  if (!stippleDensity || !stippleActive || !e.isPrimary) return;
+  const { offsetX: x, offsetY: y } = e;
+  const dx = x - stippleLastPoint.x;
+  const dy = y - stippleLastPoint.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist < 1) return;
+  stippleSegments.push({ point: { x, y }, time: performance.now() });
+  stippleDistSinceDot += dist;
+  if (stippleDistSinceDot >= STIPPLE_PRESETS[stippleDensity].spacing) {
+    plotDot(x, y);
+    stippleDistSinceDot = 0;
+  }
+  stippleLastPoint = { x, y };
+});
+
+function endStippleStroke() {
+  if (!stippleActive) return;
+  stippleActive = false;
+  if (!sketchpad.recordPaused && stippleSegments.length > 0) {
+    strokes.push({ type: 'stroke', segments: stippleSegments, isStipple: true, stippleDensity, weight: sketchpad.weight });
+    redoStack.length = 0;
+  }
+  stippleSegments = [];
+  stippleLastPoint = null;
+  stippleDistSinceDot = 0;
+}
+
+canvas.addEventListener('pointerup', (e) => { if (e.isPrimary) endStippleStroke(); });
+canvas.addEventListener('pointercancel', (e) => { if (e.isPrimary) endStippleStroke(); });
+
 sketchpad.recordStrokes = true;
-sketchpad.addEventListener('strokerecorded', (obj) => { 
+
+sketchpad.addEventListener('strokerecorded', (obj) => {
   if (!sketchpad.recordPaused) {
+    // Stipple strokes are recorded by our pointerup handler above — skip Atrament's recording
+    if (stippleDensity) return;
     obj.stroke.type = "stroke";
     obj.stroke.segments = obj.stroke.segments.filter((segment) => !Number.isNaN(segment?.time))
     strokes.push(obj.stroke);
@@ -40,37 +106,50 @@ sketchpad.addEventListener('strokerecorded', (obj) => {
 
 // Compensate for Dots
 canvas.addEventListener('click', (e) => {
+  // Stipple clicks are already handled by pointerdown/pointerup — skip
+  if (stippleDensity) return;
+  if (strokes.length === 0) return;
   const bounds = sketchpad.canvas.getBoundingClientRect();
-  const clickPoint = {
-    x: e.clientX,
-    y: e.clientY,
-  }
+  const clickPoint = { x: e.clientX, y: e.clientY }
   if (strokes[strokes.length - 1].segments.length < 3) {
     const strokePoints = [
-      {
-        point: {
-          x: Math.floor(clickPoint.x - bounds.x),
-          y: Math.floor(clickPoint.y - bounds.y),
-        },
-        time: 1,
-      },
-      {
-        point: {
-          x: Math.floor(clickPoint.x - bounds.x),
-          y: Math.floor(clickPoint.y - bounds.y + 1),
-        },
-        time: 2,
-      },
+      { point: { x: Math.floor(clickPoint.x - bounds.x), y: Math.floor(clickPoint.y - bounds.y) }, time: 1 },
+      { point: { x: Math.floor(clickPoint.x - bounds.x), y: Math.floor(clickPoint.y - bounds.y + 1) }, time: 2 },
     ]
     sketchpad.draw(strokePoints[0].point.x, strokePoints[0].point.y, strokePoints[1].point.x, strokePoints[1].point.y);
-    strokes[strokes.length - 1].segments = (strokePoints);
+    strokes[strokes.length - 1].segments = strokePoints;
   }
 })
+
+function replayStippleStroke(stroke) {
+  const ctx = document.getElementById("sketchpad")?.getContext('2d');
+  if (!ctx) return;
+  const radius = (stroke.weight ?? 4) / 2;
+  const { spacing } = STIPPLE_PRESETS[stroke.stippleDensity];
+  ctx.fillStyle = 'black';
+  let lastPoint = null;
+  let distSinceDot = 0;
+  stroke.segments.forEach((seg, i) => {
+    const { x, y } = seg.point;
+    if (i === 0) {
+      ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
+      lastPoint = { x, y };
+      return;
+    }
+    const dx = x - lastPoint.x, dy = y - lastPoint.y;
+    distSinceDot += Math.sqrt(dx * dx + dy * dy);
+    if (distSinceDot >= spacing) {
+      ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
+      distSinceDot = 0;
+    }
+    lastPoint = { x, y };
+  });
+}
 
 export const undo = (baseImage = null) => {
   // Prevent concurrent undo/redo operations
   if (isUndoRedoInProgress) return;
-  
+
   // Don't undo if there are no strokes
   if (strokes.length === 0) return;
 
@@ -94,9 +173,9 @@ export const undo = (baseImage = null) => {
 
   // Draw base image first if provided
   if (baseImage) {
-    const canvas = document.getElementById("sketchpad");
-    const ctx = canvas?.getContext('2d');
-    ctx?.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+    const replayCanvas = document.getElementById("sketchpad");
+    const ctx = replayCanvas?.getContext('2d');
+    ctx?.drawImage(baseImage, 0, 0, replayCanvas.width, replayCanvas.height);
   }
 
   // Replay all remaining strokes
@@ -106,12 +185,18 @@ export const undo = (baseImage = null) => {
 
     // Handle fill operations
     if (stroke.isFill) {
-      const canvas = document.getElementById("sketchpad");
-      const ctx = canvas?.getContext('2d');
-      if (ctx && canvas) {
+      const replayCanvas = document.getElementById("sketchpad");
+      const ctx = replayCanvas?.getContext('2d');
+      if (ctx && replayCanvas) {
         ctx.fillStyle = stroke.color;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, replayCanvas.width, replayCanvas.height);
       }
+      continue;
+    }
+
+    // Handle stipple operations
+    if (stroke.isStipple) {
+      replayStippleStroke(stroke);
       continue;
     }
 
@@ -163,7 +248,7 @@ export const undo = (baseImage = null) => {
 export const redo = (baseImage = null) => {
   // Prevent concurrent undo/redo operations
   if (isUndoRedoInProgress) return;
-  
+
   if (redoStack.length === 0) return;
 
   isUndoRedoInProgress = true;
@@ -183,10 +268,10 @@ export const redo = (baseImage = null) => {
 
   // If base image provided, redraw everything
   if (baseImage) {
-    const canvas = document.getElementById("sketchpad");
-    const ctx = canvas?.getContext('2d');
-    ctx?.clearRect(0, 0, canvas.width, canvas.height);
-    ctx?.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+    const replayCanvas = document.getElementById("sketchpad");
+    const ctx = replayCanvas?.getContext('2d');
+    ctx?.clearRect(0, 0, replayCanvas.width, replayCanvas.height);
+    ctx?.drawImage(baseImage, 0, 0, replayCanvas.width, replayCanvas.height);
 
     // Replay all strokes
     for (let i = 0; i < strokes.length; i++) {
@@ -196,7 +281,13 @@ export const redo = (baseImage = null) => {
       // Handle fill operations
       if (stroke.isFill) {
         ctx.fillStyle = stroke.color;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, replayCanvas.width, replayCanvas.height);
+        continue;
+      }
+
+      // Handle stipple operations
+      if (stroke.isStipple) {
+        replayStippleStroke(stroke);
         continue;
       }
 
@@ -223,33 +314,44 @@ export const redo = (baseImage = null) => {
     // Just replay the restored stroke
     const stroke = restoredStroke;
     if (stroke?.segments?.length) {
-      sketchpad.mode = stroke.mode;
-      sketchpad.weight = stroke.weight;
-      sketchpad.smoothing = stroke.smoothing;
-      sketchpad.color = stroke.color;
-      sketchpad.adaptiveStroke = stroke.adaptiveStroke;
+      if (stroke.isStipple) {
+        replayStippleStroke(stroke);
+      } else if (stroke.isFill) {
+        const replayCanvas = document.getElementById("sketchpad");
+        const ctx = replayCanvas?.getContext('2d');
+        if (ctx) {
+          ctx.fillStyle = stroke.color;
+          ctx.fillRect(0, 0, replayCanvas.width, replayCanvas.height);
+        }
+      } else {
+        sketchpad.mode = stroke.mode;
+        sketchpad.weight = stroke.weight;
+        sketchpad.smoothing = stroke.smoothing;
+        sketchpad.color = stroke.color;
+        sketchpad.adaptiveStroke = stroke.adaptiveStroke;
 
-      const segments = [...stroke.segments];
-      const firstSegment = segments.shift();
-      const firstPoint = firstSegment.point;
-      sketchpad.beginStroke(firstPoint.x, firstPoint.y);
+        const segments = [...stroke.segments];
+        const firstSegment = segments.shift();
+        const firstPoint = firstSegment.point;
+        sketchpad.beginStroke(firstPoint.x, firstPoint.y);
 
-      let prevPoint = firstPoint;
-      while (segments.length > 0) {
-        const segment = segments.shift();
-        const point = segment.point;
-        const pressure = segment.pressure !== undefined ? segment.pressure : 0.5;
-        const { x, y } = sketchpad.draw(
-          point.x,
-          point.y,
-          prevPoint.x,
-          prevPoint.y,
-          pressure
-        );
-        prevPoint = { x, y };
+        let prevPoint = firstPoint;
+        while (segments.length > 0) {
+          const segment = segments.shift();
+          const point = segment.point;
+          const pressure = segment.pressure !== undefined ? segment.pressure : 0.5;
+          const { x, y } = sketchpad.draw(
+            point.x,
+            point.y,
+            prevPoint.x,
+            prevPoint.y,
+            pressure
+          );
+          prevPoint = { x, y };
+        }
+
+        sketchpad.endStroke(prevPoint.x, prevPoint.y);
       }
-
-      sketchpad.endStroke(prevPoint.x, prevPoint.y);
     }
   }
 
@@ -275,20 +377,20 @@ export const getMode = () => {
 }
 
 export const fillWhite = () => {
-  const canvas = document.getElementById("sketchpad");
-  if (!canvas) return;
-  
-  const ctx = canvas.getContext('2d');
+  const fillCanvas = document.getElementById("sketchpad");
+  if (!fillCanvas) return;
+
+  const ctx = fillCanvas.getContext('2d');
   if (!ctx) return;
-  
+
   // Save current settings
   const originalColor = sketchpad.color;
   const originalWeight = sketchpad.weight;
-  
+
   // Fill canvas with white using native canvas API
   ctx.fillStyle = 'white';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
+  ctx.fillRect(0, 0, fillCanvas.width, fillCanvas.height);
+
   // Record as a stroke for undo functionality
   strokes.push({
     segments: [{
@@ -297,14 +399,14 @@ export const fillWhite = () => {
       pressure: 1
     }],
     color: 'white',
-    weight: canvas.width,
+    weight: fillCanvas.width,
     smoothing: sketchpad.smoothing,
     adaptiveStroke: false,
     mode: MODE_DRAW,
     isFill: true // Mark as fill operation
   });
   redoStack.length = 0;
-  
+
   // Stay in draw mode
   sketchpad.mode = MODE_DRAW;
   sketchpad.color = originalColor;
@@ -324,3 +426,21 @@ export const cycleBrushSize = () => {
 export const getCurrentBrushSize = () => {
   return brushSizeLabels[currentSizeIndex];
 }
+
+export const cycleStippleDensity = () => {
+  const idx = STIPPLE_DENSITIES.indexOf(stippleDensity);
+  stippleDensity = STIPPLE_DENSITIES[(idx + 1) % STIPPLE_DENSITIES.length];
+  sketchpad.mode = stippleDensity ? MODE_DISABLED : MODE_DRAW;
+  return stippleDensity;
+};
+
+export const getStippleDensity = () => stippleDensity;
+
+export const resetStipple = () => {
+  if (stippleDensity) sketchpad.mode = MODE_DRAW;
+  stippleDensity = null;
+  stippleActive = false;
+  stippleSegments = [];
+  stippleLastPoint = null;
+  stippleDistSinceDot = 0;
+};
