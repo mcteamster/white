@@ -3,10 +3,6 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import GrainIcon from '@mui/icons-material/Grain';
-import SignalCellular0BarIcon from '@mui/icons-material/SignalCellular0Bar';
-import SignalCellular1BarIcon from '@mui/icons-material/SignalCellular1Bar';
-import SignalCellular2BarIcon from '@mui/icons-material/SignalCellular2Bar';
-import SignalCellular4BarIcon from '@mui/icons-material/SignalCellular4Bar';
 import BackHandOutlinedIcon from '@mui/icons-material/BackHandOutlined';
 import BookOutlinedIcon from '@mui/icons-material/BookOutlined';
 import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
@@ -97,9 +93,6 @@ type IconName =
   'view_module' |
   'show' |
   'hide' |
-  'size_sm' |
-  'size_md' |
-  'size_lg' |
   'solid' |
   'stipple' |
   'wand' |
@@ -152,9 +145,6 @@ export function Icon(props: { name: IconName }) {
     stop: <StopIcon></StopIcon>,
     show: <VisibilityIcon></VisibilityIcon>,
     hide: <VisibilityOffIcon></VisibilityOffIcon>,
-    size_sm: <SignalCellular0BarIcon></SignalCellular0BarIcon>,
-    size_md: <SignalCellular2BarIcon></SignalCellular2BarIcon>,
-    size_lg: <SignalCellular4BarIcon></SignalCellular4BarIcon>,
     solid: <FiberManualRecordIcon></FiberManualRecordIcon>,
     stipple: <GrainIcon></GrainIcon>,
     wand: <AutoFixHighIcon></AutoFixHighIcon>,
