@@ -968,64 +968,66 @@ export function DeckEditor() {
                 </>
               ) : (
                 <>
-                  <h3 style={styles.modalTitle}>Welcome to the Deck Editor</h3>
-                  <p>Load decks from your saved files, edit cards, and Save a new deck</p>
+                  <h3 style={styles.modalTitle}>Deck Editor</h3>
                   <div style={styles.fileModalButtons}>
-                    <div style={styles.fileModalRow}>
-                      <wired-card 
-                        style={styles.saveButton}
-                        onClick={() => {
-                          if (confirm('Any unsaved changes will be lost. Are you sure you want to leave?')) {
-                            navigate('/');
-                          }
-                        }}
-                        elevation={2}
-                      >
-                        <Icon name="copy" /> Home
-                      </wired-card>
-
-                      <wired-card 
-                        style={{
-                          ...styles.saveButton,
-                          color: '#f44336'
-                        }}
-                        onClick={() => {
-                          setModalState('reset');
-                        }}
-                        elevation={2}
-                      >
-                        <Icon name="shuffle" /> Restart
-                      </wired-card>
-                    </div>
-
-                    <div style={styles.fileModalRow}>
-                      <wired-card style={styles.loadButton} onClick={() => fileInputRef.current?.click()} elevation={2}>
-                        <Icon name="display" /> Load
-                      </wired-card>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".html"
-                        onChange={handleFileLoad}
-                        style={styles.hiddenInput}
-                      />
-                      
-                      <wired-card 
-                        style={{ 
-                          ...styles.saveButton,
-                          cursor: deck.cards.length === 0 ? 'not-allowed' : 'pointer',
-                          opacity: deck.cards.length === 0 ? 0.5 : 1,
-                          color: deck.cards.length === 0 ? 'grey' : undefined
-                        }}
-                        onClick={deck.cards.length === 0 ? undefined : () => {
-                          setSaveFileName(deck.name || 'My Deck');
-                          setModalState('save');
-                        }}
-                        elevation={2}
-                      >
-                        <Icon name="take" /> Save
-                      </wired-card>
-                    </div>
+                    {deck.cards.length === 0 ? (
+                      <div style={styles.fileModalRow}>
+                        <wired-card style={styles.loadButton} onClick={() => fileInputRef.current?.click()} elevation={2}>
+                          <Icon name="display" /> Load
+                        </wired-card>
+                        <wired-card style={styles.saveButton} onClick={() => setModalState('closed')} elevation={2}>
+                          <Icon name="create" /> New
+                        </wired-card>
+                      </div>
+                    ) : (
+                      <>
+                        <div style={styles.fileModalRow}>
+                          <wired-card
+                            style={styles.saveButton}
+                            onClick={() => {
+                              if (confirm('Any unsaved changes will be lost. Are you sure you want to leave?')) {
+                                navigate('/');
+                              }
+                            }}
+                            elevation={2}
+                          >
+                            <Icon name="copy" /> Home
+                          </wired-card>
+                          <wired-card
+                            style={{ ...styles.saveButton, color: '#f44336' }}
+                            onClick={() => setModalState('reset')}
+                            elevation={2}
+                          >
+                            <Icon name="shuffle" /> Restart
+                          </wired-card>
+                        </div>
+                        <div style={styles.fileModalRow}>
+                          <wired-card style={styles.loadButton} onClick={() => fileInputRef.current?.click()} elevation={2}>
+                            <Icon name="display" /> Load
+                          </wired-card>
+                          <wired-card
+                            style={styles.saveButton}
+                            onClick={() => {
+                              setSaveFileName(deck.name || 'My Deck');
+                              setModalState('save');
+                            }}
+                            elevation={2}
+                          >
+                            <Icon name="take" /> Save
+                          </wired-card>
+                        </div>
+                        <wired-card style={{ ...styles.saveButton, width: '100%' }} onClick={() => setModalState('closed')} elevation={2}>
+                          <Icon name="exit" /> Close
+                        </wired-card>
+                      </>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".html"
+                      onChange={handleFileLoad}
+                      style={styles.hiddenInput}
+                    />
                   </div>
                 </>
               )}
