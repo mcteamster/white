@@ -83,8 +83,9 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
       transform: 'translateX(-50%)',
       zIndex: 10,
       display: 'flex',
-      gap: '1em',
-      justifyContent: 'center'
+      justifyContent: 'space-around',
+      width: '100%',
+      maxWidth: '40em',
     },
     bottomRow: {
       position: 'fixed' as const,
@@ -93,8 +94,9 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
       transform: 'translateX(-50%)',
       zIndex: 10,
       display: 'flex',
-      gap: '1em',
-      justifyContent: 'center'
+      justifyContent: 'space-around',
+      width: '100%',
+      maxWidth: '40em',
     },
     button: {
       cursor: 'pointer',
