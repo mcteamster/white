@@ -31,9 +31,9 @@ let isUndoRedoInProgress = false;
 // NOTE: segmentdrawn only fires inside Atrament's draw(), which is skipped in MODE_DISABLED.
 // We track pointer events directly and use distance-based dot spacing instead.
 const STIPPLE_PRESETS = {
-  light:  { radius: 1,   spacing: 12 },
-  medium: { radius: 1.5, spacing: 7 },
-  dark:   { radius: 2,   spacing: 4 },
+  light:  { spacing: 12 },
+  medium: { spacing: 7 },
+  dark:   { spacing: 4 },
 };
 const STIPPLE_DENSITIES = [null, 'light', 'medium', 'dark'];
 let stippleDensity = null;
@@ -48,7 +48,7 @@ function plotDot(x, y) {
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = 'black';
   ctx.beginPath();
-  ctx.arc(x, y, STIPPLE_PRESETS[stippleDensity].radius, 0, Math.PI * 2);
+  ctx.arc(x, y, sketchpad.weight / 2, 0, Math.PI * 2);
   ctx.fill();
 }
 
@@ -79,7 +79,7 @@ function endStippleStroke() {
   if (!stippleActive) return;
   stippleActive = false;
   if (!sketchpad.recordPaused && stippleSegments.length > 0) {
-    strokes.push({ type: 'stroke', segments: stippleSegments, isStipple: true, stippleDensity });
+    strokes.push({ type: 'stroke', segments: stippleSegments, isStipple: true, stippleDensity, weight: sketchpad.weight });
     redoStack.length = 0;
   }
   stippleSegments = [];
@@ -123,7 +123,8 @@ canvas.addEventListener('click', (e) => {
 function replayStippleStroke(stroke) {
   const ctx = document.getElementById("sketchpad")?.getContext('2d');
   if (!ctx) return;
-  const { radius, spacing } = STIPPLE_PRESETS[stroke.stippleDensity];
+  const radius = (stroke.weight ?? 4) / 2;
+  const { spacing } = STIPPLE_PRESETS[stroke.stippleDensity];
   ctx.fillStyle = 'black';
   let lastPoint = null;
   let distSinceDot = 0;
