@@ -142,7 +142,7 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
           onClick={handleStippleToggle}
         >
           <Icon name="stipple" />
-          {stippleDensity ? stippleDensity.charAt(0).toUpperCase() + stippleDensity.slice(1) : 'Stipple'}
+          Stipple
         </wired-card>
       </div>
       <div style={styles.bottomRow}>

@@ -31,11 +31,9 @@ let isUndoRedoInProgress = false;
 // NOTE: segmentdrawn only fires inside Atrament's draw(), which is skipped in MODE_DISABLED.
 // We track pointer events directly and use distance-based dot spacing instead.
 const STIPPLE_PRESETS = {
-  light:  { spacing: 12 },
-  medium: { spacing: 7 },
-  dark:   { spacing: 4 },
+  light: { spacing: 12 },
 };
-const STIPPLE_DENSITIES = [null, 'light', 'medium', 'dark'];
+const STIPPLE_DENSITIES = [null, 'light'];
 let stippleDensity = null;
 
 // Live stipple stroke state
