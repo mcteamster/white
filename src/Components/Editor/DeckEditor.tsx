@@ -969,6 +969,7 @@ export function DeckEditor() {
               ) : (
                 <>
                   <h3 style={styles.modalTitle}>{deck.cards.length === 0 ? 'Welcome to the Deck Editor' : 'Deck Editor'}</h3>
+                  {deck.cards.length === 0 && <p>Load decks from your saved files, edit cards, and Save a new deck</p>}
                   <div style={styles.fileModalButtons}>
                     {deck.cards.length === 0 ? (
                       <div style={styles.fileModalRow}>
