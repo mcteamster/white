@@ -1017,10 +1017,7 @@ export function DeckEditor() {
                             <Icon name="take" /> Save
                           </wired-card>
                         </div>
-                        <wired-card style={{ ...styles.saveButton, width: '100%' }} onClick={() => setModalState('closed')} elevation={2}>
-                          <Icon name="exit" /> Close
-                        </wired-card>
-                      </>
+</>
                     )}
                     <input
                       ref={fileInputRef}
