@@ -14,7 +14,7 @@
     "pull:global": "curl https://blankwhite.cards/decks/global.json > ./public/decks/global.json && node ./bin/chunk-global.js",
     "serve": "node --env-file=.env.production --import tsx ./src/server.ts",
     "serve:local": "node --env-file=.env.development --import tsx ./src/server.ts",
-    "mcp": "node --env-file=.env.development --import tsx ./src/mcp-server.ts"
+    "mcp": "node --env-file=.env.development --require tsx/cjs ./src/mcp-server.ts"
   },
   "dependencies": {
     "@discord/embedded-app-sdk": "^2.0.0",
