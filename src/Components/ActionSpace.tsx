@@ -359,7 +359,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
           const next = cycleStippleDensity();
           setStippleDensity(next);
           if (next) setEraserActive(false);
-        }} elevation={2}><Icon name='stipple' />Shade</wired-card>
+        }} elevation={2}><Icon name='stipple' />{stippleDensity ? 'Shade' : 'Solid'}</wired-card>
       </div>
     );
     toolset = <>
