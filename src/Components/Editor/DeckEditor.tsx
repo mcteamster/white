@@ -139,7 +139,7 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
           onClick={handleStippleToggle}
         >
           <Icon name={stippleDensity ? 'stipple' : 'solid'} />
-          {stippleDensity ? 'Shade' : 'Solid'}
+          {stippleDensity ? 'Dotted' : 'Solid'}
         </wired-card>
       </div>
       <div style={styles.bottomRow}>
