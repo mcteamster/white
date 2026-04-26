@@ -1,6 +1,7 @@
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import GrainIcon from '@mui/icons-material/Grain';
 import BackHandOutlinedIcon from '@mui/icons-material/BackHandOutlined';
 import BookOutlinedIcon from '@mui/icons-material/BookOutlined';
 import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
@@ -91,6 +92,7 @@ type IconName =
   'view_module' |
   'show' |
   'hide' |
+  'stipple' |
   'wand' |
   'weight';
 
@@ -141,6 +143,7 @@ export function Icon(props: { name: IconName }) {
     stop: <StopIcon></StopIcon>,
     show: <VisibilityIcon></VisibilityIcon>,
     hide: <VisibilityOffIcon></VisibilityOffIcon>,
+    stipple: <GrainIcon></GrainIcon>,
     wand: <AutoFixHighIcon></AutoFixHighIcon>,
     weight: <LineWeightSharpIcon></LineWeightSharpIcon>,
   }

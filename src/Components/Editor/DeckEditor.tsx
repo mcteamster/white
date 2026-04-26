@@ -124,23 +124,23 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
           elevation={2}
           style={{
             ...styles.button,
-            backgroundColor: stippleDensity ? '#ddd' : 'white'
-          }}
-          onClick={handleStippleToggle}
-        >
-          <Icon name="wand" />
-          {stippleDensity ? stippleDensity.charAt(0).toUpperCase() + stippleDensity.slice(1) : 'Stipple'}
-        </wired-card>
-        <wired-card
-          elevation={2}
-          style={{
-            ...styles.button,
             color: eraserActive ? 'red' : undefined
           }}
           onClick={handleEraserToggle}
         >
           <Icon name="wand" />
           Erase
+        </wired-card>
+        <wired-card
+          elevation={2}
+          style={{
+            ...styles.button,
+            backgroundColor: stippleDensity ? '#ddd' : 'white'
+          }}
+          onClick={handleStippleToggle}
+        >
+          <Icon name="stipple" />
+          {stippleDensity ? stippleDensity.charAt(0).toUpperCase() + stippleDensity.slice(1) : 'Stipple'}
         </wired-card>
       </div>
       <div style={styles.bottomRow}>

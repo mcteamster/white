@@ -27,94 +27,120 @@ export const strokes = [];
 export const redoStack = [];
 let isUndoRedoInProgress = false;
 
-// Stipple mode — plots dots at varying density to simulate shading within the 1-bit constraint
+// Stipple mode — plots dots at varying density to simulate shading within the 1-bit constraint.
+// NOTE: segmentdrawn only fires inside Atrament's draw(), which is skipped in MODE_DISABLED.
+// We track pointer events directly and use distance-based dot spacing instead.
 const STIPPLE_PRESETS = {
-  light:  { radius: 1,   spacing: 8 },
-  medium: { radius: 1.5, spacing: 4 },
-  dark:   { radius: 2,   spacing: 2 },
+  light:  { radius: 1,   spacing: 12 },
+  medium: { radius: 1.5, spacing: 7 },
+  dark:   { radius: 2,   spacing: 4 },
 };
 const STIPPLE_DENSITIES = [null, 'light', 'medium', 'dark'];
 let stippleDensity = null;
-let stippleCounter = 0;
+
+// Live stipple stroke state
+let stippleActive = false;
+let stippleSegments = [];
+let stippleLastPoint = null;
+let stippleDistSinceDot = 0;
+
+function plotDot(x, y) {
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = 'black';
+  ctx.beginPath();
+  ctx.arc(x, y, STIPPLE_PRESETS[stippleDensity].radius, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+canvas.addEventListener('pointerdown', (e) => {
+  if (!stippleDensity || !e.isPrimary || e.button !== 0) return;
+  stippleActive = true;
+  stippleSegments = [{ point: { x: e.offsetX, y: e.offsetY }, time: performance.now() }];
+  stippleLastPoint = { x: e.offsetX, y: e.offsetY };
+  stippleDistSinceDot = 0;
+  plotDot(e.offsetX, e.offsetY);
+});
+
+canvas.addEventListener('pointermove', (e) => {
+  if (!stippleDensity || !stippleActive || !e.isPrimary) return;
+  const { offsetX: x, offsetY: y } = e;
+  stippleSegments.push({ point: { x, y }, time: performance.now() });
+  const dx = x - stippleLastPoint.x;
+  const dy = y - stippleLastPoint.y;
+  stippleDistSinceDot += Math.sqrt(dx * dx + dy * dy);
+  if (stippleDistSinceDot >= STIPPLE_PRESETS[stippleDensity].spacing) {
+    plotDot(x, y);
+    stippleDistSinceDot = 0;
+  }
+  stippleLastPoint = { x, y };
+});
+
+function endStippleStroke() {
+  if (!stippleActive) return;
+  stippleActive = false;
+  if (!sketchpad.recordPaused && stippleSegments.length > 0) {
+    strokes.push({ type: 'stroke', segments: stippleSegments, isStipple: true, stippleDensity });
+    redoStack.length = 0;
+  }
+  stippleSegments = [];
+  stippleLastPoint = null;
+  stippleDistSinceDot = 0;
+}
+
+canvas.addEventListener('pointerup', (e) => { if (e.isPrimary) endStippleStroke(); });
+canvas.addEventListener('pointercancel', (e) => { if (e.isPrimary) endStippleStroke(); });
 
 sketchpad.recordStrokes = true;
 
-sketchpad.addEventListener('segmentdrawn', ({ stroke }) => {
-  if (!stippleDensity) return;
-  const lastSegment = stroke.segments[stroke.segments.length - 1];
-  if (!lastSegment || Number.isNaN(lastSegment.time)) return;
-  const { x, y } = lastSegment.point;
-  const { radius, spacing } = STIPPLE_PRESETS[stippleDensity];
-  if (stippleCounter % spacing === 0) {
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = 'black';
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  stippleCounter++;
-});
-
 sketchpad.addEventListener('strokerecorded', (obj) => {
   if (!sketchpad.recordPaused) {
+    // Stipple strokes are recorded by our pointerup handler above — skip Atrament's recording
+    if (stippleDensity) return;
     obj.stroke.type = "stroke";
     obj.stroke.segments = obj.stroke.segments.filter((segment) => !Number.isNaN(segment?.time))
-    if (stippleDensity) {
-      obj.stroke.isStipple = true;
-      obj.stroke.stippleDensity = stippleDensity;
-    }
     strokes.push(obj.stroke);
     // Clear redo stack when new stroke is added
     redoStack.length = 0;
   }
-  stippleCounter = 0;
 });
 
 // Compensate for Dots
 canvas.addEventListener('click', (e) => {
+  // Stipple clicks are already handled by pointerdown/pointerup — skip
+  if (stippleDensity) return;
   const bounds = sketchpad.canvas.getBoundingClientRect();
-  const clickPoint = {
-    x: e.clientX,
-    y: e.clientY,
-  }
+  const clickPoint = { x: e.clientX, y: e.clientY }
   if (strokes[strokes.length - 1].segments.length < 3) {
     const strokePoints = [
-      {
-        point: {
-          x: Math.floor(clickPoint.x - bounds.x),
-          y: Math.floor(clickPoint.y - bounds.y),
-        },
-        time: 1,
-      },
-      {
-        point: {
-          x: Math.floor(clickPoint.x - bounds.x),
-          y: Math.floor(clickPoint.y - bounds.y + 1),
-        },
-        time: 2,
-      },
+      { point: { x: Math.floor(clickPoint.x - bounds.x), y: Math.floor(clickPoint.y - bounds.y) }, time: 1 },
+      { point: { x: Math.floor(clickPoint.x - bounds.x), y: Math.floor(clickPoint.y - bounds.y + 1) }, time: 2 },
     ]
-    // In stipple mode, Atrament is disabled so sketchpad.draw() would be a no-op;
-    // the dot was already rendered by segmentdrawn. Skip to avoid mode confusion.
-    if (!stippleDensity) {
-      sketchpad.draw(strokePoints[0].point.x, strokePoints[0].point.y, strokePoints[1].point.x, strokePoints[1].point.y);
-    }
-    strokes[strokes.length - 1].segments = (strokePoints);
+    sketchpad.draw(strokePoints[0].point.x, strokePoints[0].point.y, strokePoints[1].point.x, strokePoints[1].point.y);
+    strokes[strokes.length - 1].segments = strokePoints;
   }
 })
 
 function replayStippleStroke(stroke) {
-  const replayCanvas = document.getElementById("sketchpad");
-  const ctx = replayCanvas?.getContext('2d');
+  const ctx = document.getElementById("sketchpad")?.getContext('2d');
   if (!ctx) return;
   const { radius, spacing } = STIPPLE_PRESETS[stroke.stippleDensity];
+  ctx.fillStyle = 'black';
+  let lastPoint = null;
+  let distSinceDot = 0;
   stroke.segments.forEach((seg, i) => {
-    if (i % spacing === 0) {
-      ctx.fillStyle = 'black';
-      ctx.beginPath();
-      ctx.arc(seg.point.x, seg.point.y, radius, 0, Math.PI * 2);
-      ctx.fill();
+    const { x, y } = seg.point;
+    if (i === 0) {
+      ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
+      lastPoint = { x, y };
+      return;
     }
+    const dx = x - lastPoint.x, dy = y - lastPoint.y;
+    distSinceDot += Math.sqrt(dx * dx + dy * dy);
+    if (distSinceDot >= spacing) {
+      ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
+      distSinceDot = 0;
+    }
+    lastPoint = { x, y };
   });
 }
 
@@ -403,16 +429,16 @@ export const cycleStippleDensity = () => {
   const idx = STIPPLE_DENSITIES.indexOf(stippleDensity);
   stippleDensity = STIPPLE_DENSITIES[(idx + 1) % STIPPLE_DENSITIES.length];
   sketchpad.mode = stippleDensity ? MODE_DISABLED : MODE_DRAW;
-  stippleCounter = 0;
   return stippleDensity;
 };
 
 export const getStippleDensity = () => stippleDensity;
 
 export const resetStipple = () => {
-  if (stippleDensity) {
-    sketchpad.mode = MODE_DRAW;
-  }
+  if (stippleDensity) sketchpad.mode = MODE_DRAW;
   stippleDensity = null;
-  stippleCounter = 0;
+  stippleActive = false;
+  stippleSegments = [];
+  stippleLastPoint = null;
+  stippleDistSinceDot = 0;
 };
