@@ -1,8 +1,9 @@
 // HTML Canvas: https://github.com/jakubfiala/atrament
 import Atrament, { MODE_DRAW, MODE_ERASE, MODE_DISABLED } from 'atrament';
 
-// Re-export mode constants
+// Re-export atrament mode constants plus our logical dots mode
 export { MODE_DRAW, MODE_ERASE };
+export const MODE_DOTS = 'dots';
 
 const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
 const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
@@ -27,6 +28,19 @@ export const strokes = [];
 export const redoStack = [];
 let isUndoRedoInProgress = false;
 
+// Drawing mode state machine (managed across Canvas.js + ActionSpace.tsx):
+//
+//   SOLID  + Erase → ERASE   (activate erase)
+//   ERASE  + Erase → SOLID   (deactivate erase)
+//   SOLID  + Dots  → DOTS    (activate stipple)
+//   DOTS   + Dots  → SOLID   (deactivate stipple)
+//   DOTS   + Erase → ERASE   (setMode clears stipple state before activating erase)
+//   ERASE  + Dots  → DOTS    (setMode clears erase before activating stipple)
+//
+// setMode/getMode translate between the logical modes (MODE_DRAW/ERASE/DOTS) and the
+// atrament internal state (MODE_DRAW/ERASE/MODE_DISABLED + stippleDensity).
+// React components mirror the logical mode in a single drawMode state variable.
+
 // Stipple mode — plots dots at varying density to simulate shading within the 1-bit constraint.
 // NOTE: segmentdrawn only fires inside Atrament's draw(), which is skipped in MODE_DISABLED.
 // We track pointer events directly and use distance-based dot spacing instead.
@@ -44,6 +58,7 @@ let stippleDistSinceDot = 0;
 
 function plotDot(x, y) {
   const ctx = canvas.getContext('2d');
+  ctx.globalCompositeOperation = 'source-over';
   ctx.fillStyle = 'black';
   ctx.beginPath();
   ctx.arc(x, y, sketchpad.weight / 2, 0, Math.PI * 2);
@@ -126,6 +141,7 @@ function replayStippleStroke(stroke) {
   if (!ctx) return;
   const radius = (stroke.weight ?? 4) / 2;
   const { spacing } = STIPPLE_PRESETS[stroke.stippleDensity];
+  ctx.globalCompositeOperation = 'source-over';
   ctx.fillStyle = 'black';
   let lastPoint = null;
   let distSinceDot = 0;
@@ -157,7 +173,7 @@ export const undo = (baseImage = null) => {
 
   // Store original brush settings
   const original = {
-    mode: sketchpad.mode,
+    mode: getMode(),
     weight: sketchpad.weight,
     smoothing: sketchpad.smoothing,
     color: sketchpad.color,
@@ -236,7 +252,7 @@ export const undo = (baseImage = null) => {
   // Restore original brush settings
   // timeout because it breaks without?!
   setTimeout(() => {
-    sketchpad.mode = original.mode;
+    setMode(original.mode);
     isUndoRedoInProgress = false;
   }, 100);
   sketchpad.weight = original.weight;
@@ -255,7 +271,7 @@ export const redo = (baseImage = null) => {
 
   // Store original brush settings
   const original = {
-    mode: sketchpad.mode,
+    mode: getMode(),
     weight: sketchpad.weight,
     smoothing: sketchpad.smoothing,
     color: sketchpad.color,
@@ -359,7 +375,7 @@ export const redo = (baseImage = null) => {
 
   // Restore original brush settings
   setTimeout(() => {
-    sketchpad.mode = original.mode;
+    setMode(original.mode);
     isUndoRedoInProgress = false;
   }, 100);
   sketchpad.weight = original.weight;
@@ -369,12 +385,22 @@ export const redo = (baseImage = null) => {
 }
 
 export const setMode = (mode) => {
-  sketchpad.mode = mode;
-}
+  if (mode === MODE_DOTS) {
+    stippleDensity = 'light';
+    sketchpad.mode = MODE_DISABLED;
+  } else {
+    stippleDensity = null;
+    stippleActive = false;
+    stippleSegments = [];
+    stippleLastPoint = null;
+    stippleDistSinceDot = 0;
+    sketchpad.mode = mode;
+  }
+};
 
 export const getMode = () => {
-  return sketchpad.mode;
-}
+  return stippleDensity ? MODE_DOTS : sketchpad.mode;
+};
 
 export const fillWhite = () => {
   const fillCanvas = document.getElementById("sketchpad");
@@ -407,8 +433,10 @@ export const fillWhite = () => {
   });
   redoStack.length = 0;
 
-  // Stay in draw mode
-  sketchpad.mode = MODE_DRAW;
+  // Preserve MODE_DISABLED (stipple) but reset erase mode
+  if (sketchpad.mode !== MODE_DISABLED) {
+    sketchpad.mode = MODE_DRAW;
+  }
   sketchpad.color = originalColor;
   sketchpad.weight = originalWeight;
 }
@@ -427,20 +455,3 @@ export const getCurrentBrushSize = () => {
   return brushSizeLabels[currentSizeIndex];
 }
 
-export const cycleStippleDensity = () => {
-  const idx = STIPPLE_DENSITIES.indexOf(stippleDensity);
-  stippleDensity = STIPPLE_DENSITIES[(idx + 1) % STIPPLE_DENSITIES.length];
-  sketchpad.mode = stippleDensity ? MODE_DISABLED : MODE_DRAW;
-  return stippleDensity;
-};
-
-export const getStippleDensity = () => stippleDensity;
-
-export const resetStipple = () => {
-  if (stippleDensity) sketchpad.mode = MODE_DRAW;
-  stippleDensity = null;
-  stippleActive = false;
-  stippleSegments = [];
-  stippleLastPoint = null;
-  stippleDistSinceDot = 0;
-};

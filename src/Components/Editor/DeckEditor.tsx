@@ -6,7 +6,7 @@ import { CardEditor } from './CardEditor';
 import { FullCardView, CompactCardView, ImageOnlyCardView } from './CardViews';
 import { ViewModeToggle } from './EditorControls';
 //@ts-expect-error: JS Module
-import { fillWhite, cycleBrushSize, getCurrentBrushSize, getMode, setMode, MODE_DRAW, MODE_ERASE, cycleStippleDensity, getStippleDensity, resetStipple } from '../../Canvas.js';
+import { fillWhite, cycleBrushSize, getCurrentBrushSize, getMode, setMode, MODE_DRAW, MODE_ERASE, MODE_DOTS } from '../../Canvas.js';
 
 function DrawingControls({ onBack, onUndo, onRedo, onCancel }: { 
   onBack: () => void,
@@ -14,17 +14,14 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
   onRedo: () => void,
   onCancel: () => void
 }) {
-  const [eraserActive, setEraserActive] = useState(false);
+  const [drawMode, setDrawMode] = useState<string>(MODE_DRAW);
   const [brushSize, setBrushSize] = useState('Medium');
-  const [stippleDensity, setStippleDensity] = useState<string | null>(null);
   const [handlersReady, setHandlersReady] = useState(false);
 
   // Reset to draw mode when component mounts
   useEffect(() => {
     setMode(MODE_DRAW);
-    setEraserActive(false);
-    resetStipple();
-    setStippleDensity(null);
+    setDrawMode(MODE_DRAW);
     setBrushSize(getCurrentBrushSize());
   }, []);
 
@@ -34,23 +31,15 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
   }, [onBack, onCancel]);
 
   const handleEraserToggle = () => {
-    const newMode = getMode() === MODE_ERASE ? MODE_DRAW : MODE_ERASE;
+    const newMode = drawMode === MODE_ERASE ? MODE_DRAW : MODE_ERASE;
     setMode(newMode);
-    setEraserActive(newMode === MODE_ERASE);
-    // Deactivate stipple when switching to eraser
-    if (newMode === MODE_ERASE) {
-      resetStipple();
-      setStippleDensity(null);
-    }
+    setDrawMode(newMode);
   };
 
   const handleStippleToggle = () => {
-    const next = cycleStippleDensity();
-    setStippleDensity(next);
-    // Deactivate eraser when stipple is turned on
-    if (next) {
-      setEraserActive(false);
-    }
+    const newMode = drawMode === MODE_DOTS ? MODE_DRAW : MODE_DOTS;
+    setMode(newMode);
+    setDrawMode(newMode);
   };
 
   const handleUndo = () => {
@@ -72,7 +61,7 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
 
   const handleClear = () => {
     fillWhite();
-    setEraserActive(false);
+    setDrawMode(getMode());
   };
 
   const styles = {
@@ -122,7 +111,7 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
           elevation={2}
           style={{
             ...styles.button,
-            color: eraserActive ? 'red' : undefined
+            color: drawMode === MODE_ERASE ? 'red' : undefined
           }}
           onClick={handleEraserToggle}
         >
@@ -138,8 +127,8 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
           style={styles.button}
           onClick={handleStippleToggle}
         >
-          <Icon name={stippleDensity ? 'stipple' : 'solid'} />
-          {stippleDensity ? 'Dots' : 'Solid'}
+          <Icon name={drawMode === MODE_DOTS ? 'stipple' : 'solid'} />
+          {drawMode === MODE_DOTS ? 'Dots' : 'Solid'}
         </wired-card>
       </div>
       <div style={styles.bottomRow}>

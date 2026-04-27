@@ -7,7 +7,7 @@ import { Card, getCardsByLocation, getCardsByOwner } from '../Cards';
 import { Icon } from './Icons';
 import { useState, useEffect, useContext, useRef, useCallback } from 'react';
 //@ts-expect-error: JS Module
-import { undo, redo, strokes, sketchpad, cycleStippleDensity, resetStipple, fillWhite, cycleBrushSize, getCurrentBrushSize, getMode, setMode as setCanvasMode, MODE_DRAW, MODE_ERASE } from '../Canvas.js';
+import { undo, redo, strokes, sketchpad, fillWhite, cycleBrushSize, getCurrentBrushSize, getMode, setMode as setCanvasMode, MODE_DRAW, MODE_ERASE, MODE_DOTS } from '../Canvas.js';
 import { Link, useNavigate } from 'react-router';
 import { AuthContext, FocusContext, LoadingContext } from '../lib/contexts.ts';
 import { openDeckEditor } from '../lib/data.ts';
@@ -27,8 +27,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
   const { setAuth } = useContext(AuthContext);
   const { loading, setLoading } = useContext(LoadingContext);
   const [submitStatus, setSubmitStatus] = useState('Submit');
-  const [stippleDensity, setStippleDensity] = useState<string | null>(null);
-  const [eraserActive, setEraserActive] = useState(false);
+  const [drawMode, setDrawMode] = useState<string>(MODE_DRAW);
   const [brushSize, setBrushSize] = useState('Medium');
   const { focus, setFocus } = useContext(FocusContext);
   const focusCard = useCallback(((id: number, focusState: boolean) => {
@@ -159,14 +158,10 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
   }, [setAuth, navigate])
 
   useEffect(() => {
+    setCanvasMode(MODE_DRAW);
+    setDrawMode(MODE_DRAW);
     if (mode === 'create-sketch') {
-      setCanvasMode(MODE_DRAW);
-      setEraserActive(false);
       setBrushSize(getCurrentBrushSize());
-    } else {
-      resetStipple();
-      setStippleDensity(null);
-      setEraserActive(false);
     }
   }, [mode]);
 
@@ -347,19 +342,18 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
   } else if (mode === 'create-sketch') {
     topRow = (
       <div style={{ position: 'fixed', top: 'calc(2em + 12px)', left: '50%', transform: 'translateX(-50%)', zIndex: 10, display: 'flex', justifyContent: 'space-around', width: '100%', maxWidth: '40em' }}>
-        <wired-card style={{ ...styles.button, color: 'red' }} onClick={() => { fillWhite(); setEraserActive(false); }} elevation={2}><Icon name='discard' />Clear</wired-card>
-        <wired-card style={{ ...styles.button, color: eraserActive ? 'red' : undefined }} onClick={() => {
-          const newMode = getMode() === MODE_ERASE ? MODE_DRAW : MODE_ERASE;
+        <wired-card style={{ ...styles.button, color: 'red' }} onClick={() => { fillWhite(); setDrawMode(getMode()); }} elevation={2}><Icon name='discard' />Clear</wired-card>
+        <wired-card style={{ ...styles.button, color: drawMode === MODE_ERASE ? 'red' : undefined }} onClick={() => {
+          const newMode = drawMode === MODE_ERASE ? MODE_DRAW : MODE_ERASE;
           setCanvasMode(newMode);
-          setEraserActive(newMode === MODE_ERASE);
-          if (newMode === MODE_ERASE) { resetStipple(); setStippleDensity(null); }
+          setDrawMode(newMode);
         }} elevation={2}><Icon name='wand' />Erase</wired-card>
         <wired-card style={{ ...styles.button }} onClick={() => { setBrushSize(cycleBrushSize()); }} elevation={2}><Icon name='weight' />{brushSize}</wired-card>
         <wired-card style={{ ...styles.button }} onClick={() => {
-          const next = cycleStippleDensity();
-          setStippleDensity(next);
-          if (next) setEraserActive(false);
-        }} elevation={2}><Icon name={stippleDensity ? 'stipple' : 'solid'} />{stippleDensity ? 'Dots' : 'Solid'}</wired-card>
+          const newMode = drawMode === MODE_DOTS ? MODE_DRAW : MODE_DOTS;
+          setCanvasMode(newMode);
+          setDrawMode(newMode);
+        }} elevation={2}><Icon name={drawMode === MODE_DOTS ? 'stipple' : 'solid'} />{drawMode === MODE_DOTS ? 'Dots' : 'Solid'}</wired-card>
       </div>
     );
     toolset = <>
