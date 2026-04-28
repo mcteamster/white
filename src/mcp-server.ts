@@ -504,9 +504,10 @@ mcp.tool(
   async ({ matchID, playerID, title, description, author }) => {
     const { client } = requireSession(matchID, playerID);
     const card: Partial<Card> = {
-      content: { title, description: description ?? '', author },
+      content: { title, description: description ?? '', author, date: String(Date.now()) },
       location: 'pile',
       owner: undefined,
+      timestamp: Date.now(),
     };
     const nextState = waitForMove(client);
     client.moves.submitCard(card);
