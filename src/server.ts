@@ -28,57 +28,6 @@ const server = Server({
   generateCredentials: () => nanoid(),
 });
 
-// Full game state (for MCP and internal tooling)
-server.router.get('/state/:matchID', async (ctx) => {
-  try {
-    const { matchID } = ctx.params;
-    const { state } = await server.db.fetch(matchID, { state: true });
-    if (!state?.G) {
-      ctx.status = 404;
-      ctx.body = { error: 'Match not found' };
-      return;
-    }
-    ctx.set('Content-Type', 'application/json');
-    ctx.body = state.G;
-  } catch (error) {
-    ctx.status = 500;
-    ctx.body = { error: 'Failed to fetch state' };
-  }
-});
-
-// Create a card directly (for MCP use)
-server.router.post('/card/:matchID', async (ctx) => {
-  try {
-    const { matchID } = ctx.params;
-    const raw = await new Promise<string>((resolve, reject) => {
-      let data = '';
-      ctx.req.on('data', (chunk: Buffer) => { data += chunk.toString(); });
-      ctx.req.on('end', () => resolve(data));
-      ctx.req.on('error', reject);
-    });
-    const body: Record<string, unknown> = JSON.parse(raw);
-    const { state } = await server.db.fetch(matchID, { state: true });
-    if (!state?.G) {
-      ctx.status = 404;
-      ctx.body = { error: 'Match not found' };
-      return;
-    }
-    const mutableState = structuredClone(state);
-    const card = {
-      id: mutableState.G.cards.length + 1,
-      content: body.content ?? { title: '', description: '' },
-      location: (body.location as string) || 'deck',
-    };
-    mutableState.G.cards.push(card);
-    await server.db.setState(matchID, { ...mutableState, _stateID: mutableState._stateID + 1 });
-    ctx.status = 201;
-    ctx.body = card;
-  } catch (error) {
-    ctx.status = 500;
-    ctx.body = { error: 'Failed to create card' };
-  }
-});
-
 // Add deck export endpoint
 server.router.get('/export/:matchID', async (ctx) => {
   try {

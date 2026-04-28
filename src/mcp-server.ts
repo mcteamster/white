@@ -1,3 +1,8 @@
+// Protect stdout — MCP uses stdio transport, so any non-JSON-RPC output on
+// stdout (e.g. console.log/debug from game code) kills the connection.
+console.log = console.error;
+console.debug = console.error;
+
 // Use CJS require for boardgame.io — its client entry points to a JSX file that
 // ESM/tsx can't resolve, but the CJS dist works fine.
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -93,6 +98,49 @@ function waitForMove(client: ReturnType<typeof Client>): Promise<unknown> {
   return new Promise(resolve => setTimeout(() => resolve(client.store.getState()), 1000));
 }
 
+// Block until game state differs from the provided snapshot, or until timeout.
+function waitForStateChange(
+  client: ReturnType<typeof Client>,
+  snapshot: { deckSize: number; pileSize: number; discardSize: number; handSize: number },
+  timeoutMs: number,
+): Promise<{ changed: boolean; state: unknown }> {
+  return new Promise(resolve => {
+    let unsub: (() => void) | undefined;
+    let settled = false;
+
+    const done = (result: { changed: boolean; state: unknown }) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      unsub?.();
+    resolve(result);
+    };
+
+    const timer = setTimeout(() => {
+      done({ changed: false, state: client.store.getState() });
+    }, timeoutMs);
+
+    unsub = client.subscribe((state: unknown) => {
+      if (!state || !(state as { G?: { cards?: unknown[] } }).G?.cards) return;
+      const G = (state as { G: { cards: Array<{ location: string; owner?: string }> } }).G;
+      const deckSize = G.cards.filter(c => c.location === 'deck').length;
+      const pileSize = G.cards.filter(c => c.location === 'pile').length;
+      const discardSize = G.cards.filter(c => c.location === 'discard').length;
+      const handSize = G.cards.filter(c => c.location === 'hand').length;
+      if (
+        deckSize !== snapshot.deckSize ||
+        pileSize !== snapshot.pileSize ||
+        discardSize !== snapshot.discardSize ||
+        handSize !== snapshot.handSize
+      ) {
+        done({ changed: true, state });
+      }
+    });
+    // Callback may have fired synchronously and already settled — unsub immediately if so
+    if (settled) unsub?.();
+  });
+}
+
 // ── MCP Server ────────────────────────────────────────────────────────────────
 
 const mcp = new McpServer({ name: 'blank-white-cards', version: '2.0.0' });
@@ -112,14 +160,14 @@ mcp.tool(
   'create_match',
   'Create a new match and join it as player 0 (the host)',
   {
-    num_players: z.number().int().min(1).max(10).optional().describe('Number of player seats (default 4)'),
+    num_players: z.number().int().min(1).max(100).optional().describe('Number of player seats (default 100)'),
     preset_deck: z.string().optional().describe('Preset deck name, e.g. "standard" (default blank)'),
     player_name: z.string().optional().describe('Your display name (default "Player 0")'),
   },
   async ({ num_players, preset_deck, player_name }) => {
     const lobby = new LobbyClient({ server: GAME_SERVER });
     const { matchID } = await lobby.createMatch(GAME_NAME, {
-      numPlayers: num_players ?? 4,
+      numPlayers: num_players ?? 100,
       setupData: preset_deck ? { presetDeck: preset_deck } : undefined,
     });
     const { playerCredentials } = await lobby.joinMatch(GAME_NAME, matchID, {
@@ -297,6 +345,55 @@ mcp.tool(
     client.moves.loadCards(cardObjects);
     const state = await nextState;
     return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown> }, playerID));
+  }
+);
+
+mcp.tool(
+  'wait_for_change',
+  'Block until the game state changes (cards move between deck/pile/discard/hand), then return the new state. Use this instead of polling get_state.',
+  {
+    matchID: z.string().describe('Room code'),
+    playerID: z.string().describe('Your player ID'),
+    current_deck_size: z.number().int().describe('Current deck size to compare against'),
+    current_pile_size: z.number().int().describe('Current pile size to compare against'),
+    current_discard_size: z.number().int().describe('Current discard pile size to compare against'),
+    current_hand_size: z.number().int().describe('Current total cards in all hands to compare against'),
+    timeout_seconds: z.number().int().min(5).max(120).optional().describe('How long to wait before giving up (default 30s)'),
+  },
+  async ({ matchID, playerID, current_deck_size, current_pile_size, current_discard_size, current_hand_size, timeout_seconds }) => {
+    const { client } = requireSession(matchID, playerID);
+    const snapshot = {
+      deckSize: current_deck_size,
+      pileSize: current_pile_size,
+      discardSize: current_discard_size,
+      handSize: current_hand_size,
+    };
+    const { changed, state } = await waitForStateChange(client, snapshot, (timeout_seconds ?? 30) * 1000);
+    if (!changed) return text({ changed: false, message: 'No change within timeout' });
+    return text({ changed: true, ...formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown> }, playerID) });
+  }
+);
+
+mcp.tool(
+  'leave_match',
+  'Leave a match and clean up the local session',
+  {
+    matchID: z.string().describe('Room code'),
+    playerID: z.string().describe('Your player ID'),
+  },
+  async ({ matchID, playerID }) => {
+    const key = sessionKey(matchID, playerID);
+    const session = sessions.get(key);
+    if (!session) return text({ message: `Not in match ${matchID} as player ${playerID}` });
+    const lobby = new LobbyClient({ server: GAME_SERVER });
+    try {
+      await lobby.leaveMatch(GAME_NAME, matchID, { playerID, credentials: session.credentials });
+    } catch {
+      // best-effort — clean up session regardless
+    }
+    session.client.stop?.();
+    sessions.delete(key);
+    return text({ message: `Left match ${matchID}` });
   }
 );
 
