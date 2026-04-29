@@ -116,7 +116,20 @@ function text(value: unknown) {
 
 // Wait for the server to confirm the move, then return current state.
 function waitForMove(client: ReturnType<typeof Client>): Promise<unknown> {
-  return new Promise(resolve => setTimeout(() => resolve(client.store.getState()), 1000));
+  return new Promise((resolve, reject) => {
+    const before = client.store.getState()?._stateID;
+    const timeout = setTimeout(() => {
+      unsub();
+      reject(new Error('Move timed out waiting for server confirmation'));
+    }, 5000);
+    const unsub = client.subscribe((state: unknown) => {
+      if ((state as { _stateID?: number })?._stateID !== before) {
+        clearTimeout(timeout);
+        unsub();
+        resolve(state);
+      }
+    });
+  });
 }
 
 // ── Watch / diff helpers ──────────────────────────────────────────────────────
@@ -493,7 +506,7 @@ mcp.tool(
 
 mcp.tool(
   'submit_card',
-  'Write a new card and add it to the game. The card goes to the pile so everyone can see it.',
+  'Write a new card into your hand. Use move_card to play it to the pile when ready.',
   {
     matchID: z.string().describe('Room code'),
     playerID: z.string().describe('Your player ID'),
@@ -505,8 +518,8 @@ mcp.tool(
     const { client } = requireSession(matchID, playerID);
     const card: Partial<Card> = {
       content: { title, description: description ?? '', author, date: String(Date.now()) },
-      location: 'pile',
-      owner: undefined,
+      location: 'hand',
+      owner: playerID,
       timestamp: Date.now(),
     };
     const nextState = waitForMove(client);
