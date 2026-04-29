@@ -366,7 +366,7 @@ Call \`get_play_hint\` any time you're unsure what to do next. It reads your cur
 `.trim();
 
 const mcp = new McpServer(
-  { name: 'blank-white-cards', version: '2.0.0' },
+  { name: 'blank-white-cards', version: '2.3.0' },
   { instructions: INSTRUCTIONS },
 );
 
