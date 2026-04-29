@@ -17,6 +17,8 @@ import type { Card } from './Cards';
 
 const GAME_SERVER = process.env.GAME_SERVER_URL ?? 'http://localhost:3000';
 const GAME_NAME = 'blank-white-cards';
+const MIN_REACT_SECONDS = Number(process.env.MCP_MIN_REACT_SECONDS ?? 5);
+const MAX_WATCH_SECONDS = Number(process.env.MCP_MAX_WATCH_SECONDS ?? 30);
 
 // ── Session state ─────────────────────────────────────────────────────────────
 
@@ -323,12 +325,54 @@ function generateHint(
 
 // ── MCP Server ────────────────────────────────────────────────────────────────
 
-const mcp = new McpServer({ name: 'blank-white-cards', version: '2.0.0' });
+const INSTRUCTIONS = `
+You are playing Blank White Cards — a creative, freeform card game where players write and play their own rules.
 
-mcp.tool(
+## Core loop
+
+1. Join or create a match, then set your persona and strategy.
+2. Pick up cards from the deck into your hand.
+3. React to what other players play by watching for state changes.
+4. Play cards from your hand to the pile, write new cards, like good ones.
+5. Repeat — the game has no fixed end condition.
+
+## Watching for changes (important)
+
+There are no turns. All players act simultaneously. After every move you make, immediately call \`watch\` with \`pile: true\` and \`hand: true\` so you are notified the moment something changes. When \`watch\` fires, read the events array to see exactly what happened (card submitted, card moved, card claimed) and who did it, then decide your response.
+
+Do not poll \`get_state\` in a loop — use \`watch\` instead. Only one \`watch\` can be active at a time, so always re-issue it after it fires.
+
+## Card locations
+
+- **deck** — undrawn cards. Use \`pickup_card\` to draw into your hand.
+- **hand** — your private cards. Use \`move_card\` to play them to the pile, or pass to another player.
+- **pile** — the shared active area. Cards here are visible to everyone and in play.
+- **table** — cards placed in front of a specific player (persistent effects).
+- **discard** — removed from play.
+
+## Writing cards
+
+Use \`submit_card\` to write a new blank card into your hand, then play it to the pile with \`move_card\`. Cards should have a title and a rule or flavour description. Let your persona shape the writing style.
+
+## Pacing
+
+After \`watch\` fires with an event, wait at least ${MIN_REACT_SECONDS} seconds before making your move — give other players time to react. Add a small random delay on top (1–5 seconds) so multiple agents don't act simultaneously.
+
+If \`watch\` times out after ${MAX_WATCH_SECONDS} seconds with no event, that's your cue to initiate: draw a card, play something from your hand, or write a new card. Add a small random delay before acting here too. Don't wait indefinitely.
+
+## Hints
+
+Call \`get_play_hint\` any time you're unsure what to do next. It reads your current strategy and game state and suggests an action.
+`.trim();
+
+const mcp = new McpServer(
+  { name: 'blank-white-cards', version: '2.0.0' },
+  { instructions: INSTRUCTIONS },
+);
+
+mcp.registerTool(
   'list_matches',
-  'List all active Blank White Cards matches',
-  {},
+  { description: 'List all active Blank White Cards matches' },
   async () => {
     const lobby = new LobbyClient({ server: GAME_SERVER });
     const { matches } = await lobby.listMatches(GAME_NAME);
@@ -336,13 +380,15 @@ mcp.tool(
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'create_match',
-  'Create a new match and join it as player 0 (the host)',
   {
-    num_players: z.number().int().min(1).max(100).optional().describe('Number of player seats (default 100)'),
-    preset_deck: z.string().optional().describe('Preset deck name, e.g. "standard" (default blank)'),
-    player_name: z.string().optional().describe('Your display name (default "Player 0")'),
+    description: 'Create a new match and join it as player 0 (the host)',
+    inputSchema: {
+      num_players: z.number().int().min(1).max(100).optional().describe('Number of player seats (default 100)'),
+      preset_deck: z.string().optional().describe('Preset deck name, e.g. "standard" (default blank)'),
+      player_name: z.string().optional().describe('Your display name (default "Player 0")'),
+    },
   },
   async ({ num_players, preset_deck, player_name }) => {
     const lobby = new LobbyClient({ server: GAME_SERVER });
@@ -359,13 +405,15 @@ mcp.tool(
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'join_match',
-  'Join an existing match as a specific player',
   {
-    matchID: z.string().describe('Room code'),
-    playerID: z.string().describe('Seat number to join, e.g. "0", "1", "2"'),
-    player_name: z.string().optional().describe('Your display name'),
+    description: 'Join an existing match as a specific player',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Seat number to join, e.g. "0", "1", "2"'),
+      player_name: z.string().optional().describe('Your display name'),
+    },
   },
   async ({ matchID, playerID, player_name }) => {
     const lobby = new LobbyClient({ server: GAME_SERVER });
@@ -378,12 +426,14 @@ mcp.tool(
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'get_state',
-  'Get the current game state — your hand, the pile, deck size, all cards on the table',
   {
-    matchID: z.string().describe('Room code'),
-    playerID: z.string().describe('Your player ID'),
+    description: 'Get the current game state — your hand, the pile, deck size, all cards on the table',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+    },
   },
   async ({ matchID, playerID }) => {
     const { client } = requireSession(matchID, playerID);
@@ -393,13 +443,15 @@ mcp.tool(
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'get_card',
-  'Get a single card by ID from the current match state',
   {
-    matchID: z.string().describe('Room code'),
-    playerID: z.string().describe('Your player ID'),
-    cardID: z.number().int().describe('ID of the card to retrieve'),
+    description: 'Get a single card by ID from the current match state',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+      cardID: z.number().int().describe('ID of the card to retrieve'),
+    },
   },
   async ({ matchID, playerID, cardID }) => {
     const { client } = requireSession(matchID, playerID);
@@ -411,14 +463,16 @@ mcp.tool(
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'search_cards',
-  'Full-text search over card titles and descriptions in the current match',
   {
-    matchID: z.string().describe('Room code'),
-    playerID: z.string().describe('Your player ID'),
-    query: z.string().describe('Search term (case-insensitive, matches title or description)'),
-    location: z.enum(['deck', 'pile', 'discard', 'hand', 'table', 'box']).optional().describe('Restrict search to a specific location (default: all)'),
+    description: 'Full-text search over card titles and descriptions in the current match',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+      query: z.string().describe('Search term (case-insensitive, matches title or description)'),
+      location: z.enum(['deck', 'pile', 'discard', 'hand', 'table', 'box']).optional().describe('Restrict search to a specific location (default: all)'),
+    },
   },
   async ({ matchID, playerID, query, location }) => {
     const { client } = requireSession(matchID, playerID);
@@ -437,11 +491,13 @@ mcp.tool(
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'export_deck',
-  'Export all cards in a match as JSON (wraps the server /export/:matchID endpoint)',
   {
-    matchID: z.string().describe('Room code'),
+    description: 'Export all cards in a match as JSON (wraps the server /export/:matchID endpoint)',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+    },
   },
   async ({ matchID }) => {
     const res = await fetch(`${GAME_SERVER}/export/${matchID}`);
@@ -452,12 +508,14 @@ mcp.tool(
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'pickup_card',
-  'Draw a card from the deck into your hand',
   {
-    matchID: z.string().describe('Room code'),
-    playerID: z.string().describe('Your player ID'),
+    description: 'Draw a card from the deck into your hand',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+    },
   },
   async ({ matchID, playerID }) => {
     const { client } = requireSession(matchID, playerID);
@@ -468,15 +526,17 @@ mcp.tool(
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'move_card',
-  'Move a card to a different location. Locations: deck, pile, discard, hand, table. Use "hand" with toOwner to pass a card to another player.',
   {
-    matchID: z.string().describe('Room code'),
-    playerID: z.string().describe('Your player ID'),
-    cardID: z.number().int().describe('ID of the card to move'),
-    target: z.enum(['deck', 'pile', 'discard', 'hand', 'table']).describe('Destination location'),
-    toOwner: z.string().optional().describe('Player ID to give the card to (only for hand/table)'),
+    description: 'Move a card to a different location. Locations: deck, pile, discard, hand, table. Use "hand" with toOwner to pass a card to another player.',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+      cardID: z.number().int().describe('ID of the card to move'),
+      target: z.enum(['deck', 'pile', 'discard', 'hand', 'table']).describe('Destination location'),
+      toOwner: z.string().optional().describe('Player ID to give the card to (only for hand/table)'),
+    },
   },
   async ({ matchID, playerID, cardID, target, toOwner }) => {
     const { client } = requireSession(matchID, playerID);
@@ -487,13 +547,15 @@ mcp.tool(
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'claim_card',
-  'Claim a card from the shared pile into your hand',
   {
-    matchID: z.string().describe('Room code'),
-    playerID: z.string().describe('Your player ID'),
-    cardID: z.number().int().describe('ID of the pile card to claim'),
+    description: 'Claim a card from the shared pile into your hand',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+      cardID: z.number().int().describe('ID of the pile card to claim'),
+    },
   },
   async ({ matchID, playerID, cardID }) => {
     const { client } = requireSession(matchID, playerID);
@@ -504,15 +566,17 @@ mcp.tool(
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'submit_card',
-  'Write a new card into your hand. Use move_card to play it to the pile when ready.',
   {
-    matchID: z.string().describe('Room code'),
-    playerID: z.string().describe('Your player ID'),
-    title: z.string().describe('Card title / rule text'),
-    description: z.string().optional().describe('Additional description or flavour text'),
-    author: z.string().optional().describe('Author name to attribute on the card'),
+    description: 'Write a new card into your hand. Use move_card to play it to the pile when ready.',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+      title: z.string().describe('Card title / rule text'),
+      description: z.string().optional().describe('Additional description or flavour text'),
+      author: z.string().optional().describe('Author name to attribute on the card'),
+    },
   },
   async ({ matchID, playerID, title, description, author }) => {
     const { client } = requireSession(matchID, playerID);
@@ -529,13 +593,15 @@ mcp.tool(
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'like_card',
-  'Like a card to show appreciation',
   {
-    matchID: z.string().describe('Room code'),
-    playerID: z.string().describe('Your player ID'),
-    cardID: z.number().int().describe('ID of the card to like'),
+    description: 'Like a card to show appreciation',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+      cardID: z.number().int().describe('ID of the card to like'),
+    },
   },
   async ({ matchID, playerID, cardID }) => {
     const { client } = requireSession(matchID, playerID);
@@ -546,12 +612,14 @@ mcp.tool(
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'shuffle_cards',
-  'Reset all cards back to the deck and shuffle (host / player 0 only)',
   {
-    matchID: z.string().describe('Room code'),
-    playerID: z.string().describe('Your player ID (must be 0)'),
+    description: 'Reset all cards back to the deck and shuffle (host / player 0 only)',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID (must be 0)'),
+    },
   },
   async ({ matchID, playerID }) => {
     const { client } = requireSession(matchID, playerID);
@@ -562,18 +630,20 @@ mcp.tool(
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'load_cards',
-  'Bulk load a set of cards into the match (host / player 0 only)',
   {
-    matchID: z.string().describe('Room code'),
-    playerID: z.string().describe('Your player ID (must be 0)'),
-    cards: z.array(z.object({
-      title: z.string(),
-      description: z.string().optional(),
-      author: z.string().optional(),
-      location: z.enum(['deck', 'pile', 'discard']).optional(),
-    })).describe('Cards to add'),
+    description: 'Bulk load a set of cards into the match (host / player 0 only)',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID (must be 0)'),
+      cards: z.array(z.object({
+        title: z.string(),
+        description: z.string().optional(),
+        author: z.string().optional(),
+        location: z.enum(['deck', 'pile', 'discard']).optional(),
+      })).describe('Cards to add'),
+    },
   },
   async ({ matchID, playerID, cards }) => {
     const { client } = requireSession(matchID, playerID);
@@ -588,21 +658,23 @@ mcp.tool(
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'watch',
-  'Block until a relevant game event occurs, then return a structured diff of what changed. Use instead of polling get_state. Only one watch can be active at a time per agent session.',
   {
-    matchID: z.string().describe('Room code'),
-    playerID: z.string().describe('Your player ID'),
-    pile: z.boolean().optional().describe('Fire when the pile changes (cards submitted, claimed, or moved to/from pile)'),
-    hand: z.boolean().optional().describe('Fire when your hand changes (card received or removed)'),
-    table: z.boolean().optional().describe('Fire when any table changes occur'),
-    timeout_seconds: z.number().int().min(5).max(120).optional().describe('How long to wait before giving up (default 30s)'),
+    description: 'Block until a relevant game event occurs, then return a structured diff of what changed. Use instead of polling get_state. Only one watch can be active at a time per agent session.',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+      pile: z.boolean().optional().describe('Fire when the pile changes (cards submitted, claimed, or moved to/from pile)'),
+      hand: z.boolean().optional().describe('Fire when your hand changes (card received or removed)'),
+      table: z.boolean().optional().describe('Fire when any table changes occur'),
+      timeout_seconds: z.number().int().min(5).max(300).optional().describe(`How long to wait before giving up (default ${MAX_WATCH_SECONDS}s, set by MCP_MAX_WATCH_SECONDS)`),
+    },
   },
   async ({ matchID, playerID, pile, hand, table, timeout_seconds }) => {
     const { client } = requireSession(matchID, playerID);
     const flags = { pile: pile ?? false, hand: hand ?? false, table: table ?? false };
-    const { changed, events, state } = await watchForChange(client, playerID, flags, (timeout_seconds ?? 30) * 1000);
+    const { changed, events, state } = await watchForChange(client, playerID, flags, (timeout_seconds ?? MAX_WATCH_SECONDS) * 1000);
     if (!changed) return text({ changed: false, message: 'No matching event within timeout' });
     return text({
       changed: true,
@@ -612,15 +684,17 @@ mcp.tool(
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'set_persona',
-  'Configure the writing personality for this session. Persists until changed or the MCP server restarts.',
   {
-    matchID: z.string().describe('Room code'),
-    playerID: z.string().describe('Your player ID'),
-    tone: z.enum(['whimsical', 'serious', 'absurdist', 'competitive', 'collaborative']).optional().describe('Overall writing tone'),
-    themes: z.array(z.string()).optional().describe('Topic interests that shape card writing, e.g. ["sci-fi", "puns", "local history"]'),
-    verbosity: z.enum(['terse', 'normal', 'verbose']).optional().describe('How much to write on each card'),
+    description: 'Configure the writing personality for this session. Persists until changed or the MCP server restarts.',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+      tone: z.enum(['whimsical', 'serious', 'absurdist', 'competitive', 'collaborative']).optional().describe('Overall writing tone'),
+      themes: z.array(z.string()).optional().describe('Topic interests that shape card writing, e.g. ["sci-fi", "puns", "local history"]'),
+      verbosity: z.enum(['terse', 'normal', 'verbose']).optional().describe('How much to write on each card'),
+    },
   },
   async ({ matchID, playerID, tone, themes, verbosity }) => {
     const key = sessionKey(matchID, playerID);
@@ -635,27 +709,31 @@ mcp.tool(
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'get_persona',
-  'Read the current writing persona for this session',
   {
-    matchID: z.string().describe('Room code'),
-    playerID: z.string().describe('Your player ID'),
+    description: 'Read the current writing persona for this session',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+    },
   },
   async ({ matchID, playerID }) => {
     return text(personas.get(sessionKey(matchID, playerID)) ?? DEFAULT_PERSONA);
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'set_strategy',
-  'Configure play behaviour for this session. Persists until changed or the MCP server restarts.',
   {
-    matchID: z.string().describe('Room code'),
-    playerID: z.string().describe('Your player ID'),
-    aggression: z.enum(['passive', 'balanced', 'aggressive']).optional().describe('How readily to claim cards and submit new ones'),
-    generosity: z.enum(['selfish', 'balanced', 'generous']).optional().describe('Tendency to pass cards to others vs hold them'),
-    hand_size_target: z.number().int().min(0).max(20).optional().describe('Preferred number of cards to keep in hand'),
+    description: 'Configure play behaviour for this session. Persists until changed or the MCP server restarts.',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+      aggression: z.enum(['passive', 'balanced', 'aggressive']).optional().describe('How readily to claim cards and submit new ones'),
+      generosity: z.enum(['selfish', 'balanced', 'generous']).optional().describe('Tendency to pass cards to others vs hold them'),
+      hand_size_target: z.number().int().min(0).max(20).optional().describe('Preferred number of cards to keep in hand'),
+    },
   },
   async ({ matchID, playerID, aggression, generosity, hand_size_target }) => {
     const key = sessionKey(matchID, playerID);
@@ -670,24 +748,28 @@ mcp.tool(
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'get_strategy',
-  'Read the current play strategy for this session',
   {
-    matchID: z.string().describe('Room code'),
-    playerID: z.string().describe('Your player ID'),
+    description: 'Read the current play strategy for this session',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+    },
   },
   async ({ matchID, playerID }) => {
     return text(strategies.get(sessionKey(matchID, playerID)) ?? DEFAULT_STRATEGY);
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'get_play_hint',
-  'Get a suggested next action based on the current game state, persona, and strategy. Use this when unsure what to do next.',
   {
-    matchID: z.string().describe('Room code'),
-    playerID: z.string().describe('Your player ID'),
+    description: 'Get a suggested next action based on the current game state, persona, and strategy. Use this when unsure what to do next.',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+    },
   },
   async ({ matchID, playerID }) => {
     const { client } = requireSession(matchID, playerID);
@@ -702,12 +784,14 @@ mcp.tool(
   }
 );
 
-mcp.tool(
+mcp.registerTool(
   'leave_match',
-  'Leave a match and clean up the local session',
   {
-    matchID: z.string().describe('Room code'),
-    playerID: z.string().describe('Your player ID'),
+    description: 'Leave a match and clean up the local session',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+    },
   },
   async ({ matchID, playerID }) => {
     const key = sessionKey(matchID, playerID);
