@@ -12,8 +12,8 @@ const { SocketIO } = require('boardgame.io/dist/cjs/multiplayer.js');
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { BlankWhiteCards } from './Game';
-import type { Card } from './Cards';
+import { BlankWhiteCards } from '../src/Game';
+import type { Card } from '../src/Cards';
 
 const GAME_SERVER = process.env.GAME_SERVER_URL ?? 'http://localhost:3000';
 const GAME_NAME = 'blank-white-cards';

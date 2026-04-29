@@ -1,7 +1,6 @@
 {
   "name": "@mcteamster/blank-white-cards-mcp",
   "version": "2.3.0",
-  "type": "module",
   "main": "index.ts",
   "scripts": {
     "start": "tsx index.ts"
