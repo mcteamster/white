@@ -13,12 +13,14 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import { BlankWhiteCards } from '../src/Game';
+import { compressImageDataUri, compressImageFromFile } from './images';
 import type { Card } from '../src/Cards';
 
 const GAME_SERVER = process.env.GAME_SERVER_URL ?? 'http://localhost:3000';
 const GAME_NAME = 'blank-white-cards';
 const MIN_REACT_SECONDS = Number(process.env.MCP_MIN_REACT_SECONDS ?? 5);
 const MAX_WATCH_SECONDS = Number(process.env.MCP_MAX_WATCH_SECONDS ?? 30);
+const ENABLE_IMAGES = process.env.MCP_ENABLE_IMAGES === 'true';
 
 // ── Session state ─────────────────────────────────────────────────────────────
 
@@ -271,7 +273,11 @@ Use \`watch\` to block until a relevant event occurs (card submitted, claimed, m
 ## Writing cards
 
 \`submit_card\` creates a new card in a player's hand. Use \`move_card\` to play it to the pile or elsewhere.
+${ENABLE_IMAGES ? `
+## Card images
 
+Cards can have images. If you have access to an image generation tool (e.g. ComfyUI, DALL-E, or any tool that produces PNG data URIs), use \`compress_image\` to convert the PNG into the game's 500x500 1-bit format, then pass the result as the \`image\` field in \`submit_card\`.
+` : ''}
 ## Available prompts
 
 This server provides role prompts (autonomous_player, referee, spectator, deck_builder) that describe how to use these tools for specific purposes. List prompts to see available roles.
@@ -488,12 +494,13 @@ mcp.registerTool(
       title: z.string().describe('Card title / rule text'),
       description: z.string().optional().describe('Additional description or flavour text'),
       author: z.string().optional().describe('Author name to attribute on the card'),
+      image: z.string().optional().describe('Compressed image string from compress_image tool'),
     },
   },
-  async ({ matchID, playerID, title, description, author }) => {
+  async ({ matchID, playerID, title, description, author, image }) => {
     const { client } = requireSession(matchID, playerID);
     const card: Partial<Card> = {
-      content: { title, description: description ?? '', author, date: String(Date.now()) },
+      content: { title, description: description ?? '', author, date: String(Date.now()), image },
       location: 'hand',
       owner: playerID,
       timestamp: Date.now(),
@@ -569,6 +576,22 @@ mcp.registerTool(
     return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown> }, playerID));
   }
 );
+
+if (ENABLE_IMAGES) {
+  mcp.registerTool(
+    'compress_image',
+    {
+      description: 'Convert an image file to the 500x500 1-bit compressed format used by card images. Accepts any format ffmpeg supports. Save the image to a temp file first, then pass the absolute path here. Returns the compressed string to pass as the image field in submit_card.',
+      inputSchema: {
+        image_path: z.string().describe('Absolute path to an image file on disk'),
+      },
+    },
+    async ({ image_path }) => {
+      const compressed = compressImageFromFile(image_path);
+      return text({ compressed, length: compressed.length });
+    }
+  );
+}
 
 mcp.registerTool(
   'watch',
@@ -661,6 +684,7 @@ After EVERY action, immediately call \`watch\`. After EVERY \`watch\` response (
 5. When \`watch\` times out — initiate: draw, write, or play something.
 6. GOTO 3. Always.
 
+${ENABLE_IMAGES ? '\n## Card images\n\nIf you have access to an image generation tool, use it to create images for your cards. Get a PNG data URI from the tool, pass it to `compress_image` to convert it to the game format, then include the result as the `image` field in `submit_card`. Cards with images are more engaging.\n' : ''}
 ## Strategy: ${a}
 
 ${a === 'aggressive' ? 'Submit cards frequently. Claim pile cards eagerly. Prioritise getting your cards into play.' : a === 'passive' ? 'Observe more than you act. Like other players\' cards. Only claim or submit when the moment feels right.' : 'Balance between creating and reacting. Claim cards that interest you, submit when the pile is quiet, like cards you genuinely enjoy.'}
@@ -765,7 +789,7 @@ mcp.prompt(
 
 - Each card needs a title (the rule or name) and optionally a description (flavour text or clarification).
 - Vary card types: some should be actions, some persistent effects, some jokes, some challenges.
-- Cards are more fun when they interact with other cards or change the game state.`,
+- Cards are more fun when they interact with other cards or change the game state.${ENABLE_IMAGES ? '\n- If you have access to an image generation tool, create images for your cards: get a PNG data URI, pass it to `compress_image`, then include the result as the `image` field in `submit_card`.' : ''}`,
         },
       }],
     };
