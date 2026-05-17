@@ -28,25 +28,7 @@ interface Session {
 }
 const sessions = new Map<string, Session>();
 
-// ── Persona / strategy state ──────────────────────────────────────────────────
 
-interface Persona {
-  tone: 'whimsical' | 'serious' | 'absurdist' | 'competitive' | 'collaborative';
-  themes: string[];
-  verbosity: 'terse' | 'normal' | 'verbose';
-}
-
-interface Strategy {
-  aggression: 'passive' | 'balanced' | 'aggressive';
-  generosity: 'selfish' | 'balanced' | 'generous';
-  hand_size_target: number;
-}
-
-const personas = new Map<string, Persona>();
-const strategies = new Map<string, Strategy>();
-
-const DEFAULT_PERSONA: Persona = { tone: 'whimsical', themes: [], verbosity: 'normal' };
-const DEFAULT_STRATEGY: Strategy = { aggression: 'balanced', generosity: 'balanced', hand_size_target: 3 };
 
 // ── Session helpers ───────────────────────────────────────────────────────────
 
@@ -256,113 +238,43 @@ function watchForChange(
       const cards = (state as { G: { cards: Card[] } }).G.cards;
       const events = diffCards(snapshot, cards);
       const relevant = events.filter(e => eventMatchesFlags(e, flags, playerID));
-      if (relevant.length > 0) done({ changed: true, events: relevant, state });
+      if (relevant.length > 0) {
+        // Delay before returning so other players have time to digest the move
+        setTimeout(() => done({ changed: true, events: relevant, state }), MIN_REACT_SECONDS * 1000);
+      }
     });
 
     if (settled) unsub?.();
   });
 }
 
-// ── Play hint ─────────────────────────────────────────────────────────────────
 
-type FormattedState = ReturnType<typeof formatState>;
-type StrippedCard = ReturnType<typeof stripImage>;
-
-function generateHint(
-  state: FormattedState,
-  persona: Persona,
-  strategy: Strategy,
-): { action: string; cardID?: number; reason: string; suggested_title?: string } {
-  const { my_hand, pile, deck_size } = state;
-  const { aggression, generosity, hand_size_target } = strategy;
-  const { tone, themes, verbosity } = persona;
-
-  const themeMatch = themes.length > 0
-    ? pile.find((c: StrippedCard) => {
-        const title = (c.content as { title?: string }).title ?? '';
-        const desc = (c.content as { description?: string }).description ?? '';
-        return themes.some(t => title.toLowerCase().includes(t.toLowerCase()) || desc.toLowerCase().includes(t.toLowerCase()));
-      })
-    : null;
-
-  const verbosityHint = verbosity === 'terse' ? ' Keep it brief.' : verbosity === 'verbose' ? ' Be elaborate and descriptive.' : '';
-  const themeClause = themes.length > 0 ? ` about one of these themes: ${themes.join(', ')}` : '';
-  const suggestedTitle = `Write a ${tone} card${themeClause}.${verbosityHint}`;
-
-  if (my_hand.length < hand_size_target) {
-    if (themeMatch) {
-      return { action: 'claim_card', cardID: themeMatch.id, reason: `Pile card ${themeMatch.id} matches your themes — claim it` };
-    }
-    if (pile.length > 0 && aggression !== 'passive') {
-      const mostLiked = (pile as StrippedCard[]).reduce((best, c) => ((c.likes ?? 0) > (best.likes ?? 0) ? c : best), pile[0]);
-      return { action: 'claim_card', cardID: mostLiked.id, reason: 'Hand below target — claiming most-liked pile card' };
-    }
-    if (deck_size > 0) {
-      return { action: 'pickup_card', reason: `Hand (${my_hand.length}) below target (${hand_size_target})` };
-    }
-    return { action: 'wait', reason: 'No cards available to draw' };
-  }
-
-  if (aggression === 'aggressive') {
-    return { action: 'submit_card', suggested_title: suggestedTitle, reason: 'Aggressive play — submit a new card to earn likes' };
-  }
-
-  if (aggression === 'balanced') {
-    if (pile.length > 0) {
-      const toLike = (pile as StrippedCard[]).find(c => !c.likes) ?? pile[0];
-      return { action: 'like_card', cardID: toLike.id, reason: 'Engaging with the pile — like a card that has no likes yet' };
-    }
-    return { action: 'submit_card', suggested_title: suggestedTitle, reason: 'Hand full and pile is empty — contribute a card' };
-  }
-
-  // passive
-  if (generosity === 'generous' && my_hand.length > 1) {
-    return { action: 'move_card', cardID: my_hand[0].id, reason: 'Generous play — pass a card to the pile for others' };
-  }
-
-  return { action: 'wait', reason: 'Passive strategy — watch for changes before acting' };
-}
 
 // ── MCP Server ────────────────────────────────────────────────────────────────
 
 const INSTRUCTIONS = `
-You are playing Blank White Cards — a creative, freeform card game where players write and play their own rules.
-
-## Core loop
-
-1. Join or create a match, then set your persona and strategy.
-2. Pick up cards from the deck into your hand.
-3. React to what other players play by watching for state changes.
-4. Play cards from your hand to the pile, write new cards, like good ones.
-5. Repeat — the game has no fixed end condition.
-
-## Watching for changes (important)
-
-There are no turns. All players act simultaneously. After every move you make, immediately call \`watch\` with \`pile: true\` and \`hand: true\` so you are notified the moment something changes. When \`watch\` fires, read the events array to see exactly what happened (card submitted, card moved, card claimed) and who did it, then decide your response.
-
-Do not poll \`get_state\` in a loop — use \`watch\` instead. Only one \`watch\` can be active at a time, so always re-issue it after it fires.
+This server provides tools for interacting with Blank White Cards — a creative, freeform card game where players write and play their own rules. There are no turns; all players act simultaneously.
 
 ## Card locations
 
-- **deck** — undrawn cards. Use \`pickup_card\` to draw into your hand.
-- **hand** — your private cards. Use \`move_card\` to play them to the pile, or pass to another player.
-- **pile** — the shared active area. Cards here are visible to everyone and in play.
+- **deck** — undrawn cards. \`pickup_card\` draws into a player's hand.
+- **hand** — a player's private cards. \`move_card\` plays them elsewhere.
+- **pile** — the shared active area, visible to everyone.
 - **table** — cards placed in front of a specific player (persistent effects).
 - **discard** — removed from play.
+- **box** — cards set aside outside the game.
+
+## Observing changes
+
+Use \`watch\` to block until a relevant event occurs (card submitted, claimed, moved, liked, or shuffled). This is more efficient than polling \`get_state\`. Only one \`watch\` can be active per session.
 
 ## Writing cards
 
-Use \`submit_card\` to write a new blank card into your hand, then play it to the pile with \`move_card\`. Cards should have a title and a rule or flavour description. Let your persona shape the writing style.
+\`submit_card\` creates a new card in a player's hand. Use \`move_card\` to play it to the pile or elsewhere.
 
-## Pacing
+## Available prompts
 
-After \`watch\` fires with an event, wait at least ${MIN_REACT_SECONDS} seconds before making your move — give other players time to react. Add a small random delay on top (1–5 seconds) so multiple agents don't act simultaneously.
-
-If \`watch\` times out after ${MAX_WATCH_SECONDS} seconds with no event, that's your cue to initiate: draw a card, play something from your hand, or write a new card. Add a small random delay before acting here too. Don't wait indefinitely.
-
-## Hints
-
-Call \`get_play_hint\` any time you're unsure what to do next. It reads your current strategy and game state and suggests an action.
+This server provides role prompts (autonomous_player, referee, spectator, deck_builder) that describe how to use these tools for specific purposes. List prompts to see available roles.
 `.trim();
 
 const mcp = new McpServer(
@@ -675,7 +587,7 @@ mcp.registerTool(
     const { client } = requireSession(matchID, playerID);
     const flags = { pile: pile ?? false, hand: hand ?? false, table: table ?? false };
     const { changed, events, state } = await watchForChange(client, playerID, flags, (timeout_seconds ?? MAX_WATCH_SECONDS) * 1000);
-    if (!changed) return text({ changed: false, message: 'No matching event within timeout' });
+    if (!changed) return text({ changed: false, message: 'No activity — your turn to act. Draw a card, submit something, or play from your hand. Then call watch again.' });
     return text({
       changed: true,
       events,
@@ -684,105 +596,7 @@ mcp.registerTool(
   }
 );
 
-mcp.registerTool(
-  'set_persona',
-  {
-    description: 'Configure the writing personality for this session. Persists until changed or the MCP server restarts.',
-    inputSchema: {
-      matchID: z.string().describe('Room code'),
-      playerID: z.string().describe('Your player ID'),
-      tone: z.enum(['whimsical', 'serious', 'absurdist', 'competitive', 'collaborative']).optional().describe('Overall writing tone'),
-      themes: z.array(z.string()).optional().describe('Topic interests that shape card writing, e.g. ["sci-fi", "puns", "local history"]'),
-      verbosity: z.enum(['terse', 'normal', 'verbose']).optional().describe('How much to write on each card'),
-    },
-  },
-  async ({ matchID, playerID, tone, themes, verbosity }) => {
-    const key = sessionKey(matchID, playerID);
-    const current = personas.get(key) ?? { ...DEFAULT_PERSONA };
-    const updated: Persona = {
-      tone: tone ?? current.tone,
-      themes: themes ?? current.themes,
-      verbosity: verbosity ?? current.verbosity,
-    };
-    personas.set(key, updated);
-    return text(updated);
-  }
-);
 
-mcp.registerTool(
-  'get_persona',
-  {
-    description: 'Read the current writing persona for this session',
-    inputSchema: {
-      matchID: z.string().describe('Room code'),
-      playerID: z.string().describe('Your player ID'),
-    },
-  },
-  async ({ matchID, playerID }) => {
-    return text(personas.get(sessionKey(matchID, playerID)) ?? DEFAULT_PERSONA);
-  }
-);
-
-mcp.registerTool(
-  'set_strategy',
-  {
-    description: 'Configure play behaviour for this session. Persists until changed or the MCP server restarts.',
-    inputSchema: {
-      matchID: z.string().describe('Room code'),
-      playerID: z.string().describe('Your player ID'),
-      aggression: z.enum(['passive', 'balanced', 'aggressive']).optional().describe('How readily to claim cards and submit new ones'),
-      generosity: z.enum(['selfish', 'balanced', 'generous']).optional().describe('Tendency to pass cards to others vs hold them'),
-      hand_size_target: z.number().int().min(0).max(20).optional().describe('Preferred number of cards to keep in hand'),
-    },
-  },
-  async ({ matchID, playerID, aggression, generosity, hand_size_target }) => {
-    const key = sessionKey(matchID, playerID);
-    const current = strategies.get(key) ?? { ...DEFAULT_STRATEGY };
-    const updated: Strategy = {
-      aggression: aggression ?? current.aggression,
-      generosity: generosity ?? current.generosity,
-      hand_size_target: hand_size_target ?? current.hand_size_target,
-    };
-    strategies.set(key, updated);
-    return text(updated);
-  }
-);
-
-mcp.registerTool(
-  'get_strategy',
-  {
-    description: 'Read the current play strategy for this session',
-    inputSchema: {
-      matchID: z.string().describe('Room code'),
-      playerID: z.string().describe('Your player ID'),
-    },
-  },
-  async ({ matchID, playerID }) => {
-    return text(strategies.get(sessionKey(matchID, playerID)) ?? DEFAULT_STRATEGY);
-  }
-);
-
-mcp.registerTool(
-  'get_play_hint',
-  {
-    description: 'Get a suggested next action based on the current game state, persona, and strategy. Use this when unsure what to do next.',
-    inputSchema: {
-      matchID: z.string().describe('Room code'),
-      playerID: z.string().describe('Your player ID'),
-    },
-  },
-  async ({ matchID, playerID }) => {
-    const { client } = requireSession(matchID, playerID);
-    const state = client.store.getState();
-    if (!state?.G) throw new Error('No state available yet');
-    const key = sessionKey(matchID, playerID);
-    const persona = personas.get(key) ?? DEFAULT_PERSONA;
-    const strategy = strategies.get(key) ?? DEFAULT_STRATEGY;
-    const formatted = formatState(state, playerID);
-    const hint = generateHint(formatted, persona, strategy);
-    return text({ persona, strategy, hint });
-  }
-);
 
 mcp.registerTool(
   'leave_match',
@@ -805,9 +619,156 @@ mcp.registerTool(
     }
     session.client.stop?.();
     sessions.delete(key);
-    personas.delete(key);
-    strategies.delete(key);
     return text({ message: `Left match ${matchID}` });
+  }
+);
+
+// ── Prompts ───────────────────────────────────────────────────────────────────
+
+mcp.prompt(
+  'autonomous_player',
+  'Play the game autonomously — draw cards, write creative cards, react to other players',
+  {
+    tone: z.enum(['whimsical', 'serious', 'absurdist', 'competitive', 'collaborative']).optional().describe('Writing tone for cards you create'),
+    themes: z.string().optional().describe('Comma-separated topic interests, e.g. "sci-fi, puns, local history"'),
+    aggression: z.enum(['passive', 'balanced', 'aggressive']).optional().describe('How actively to claim cards and submit new ones'),
+  },
+  ({ tone, themes, aggression }) => {
+    const t = tone ?? 'whimsical';
+    const themeList = themes ? themes.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const a = aggression ?? 'balanced';
+    const themeClause = themeList.length > 0 ? `\nYour thematic interests: ${themeList.join(', ')}. Lean into these when writing cards or choosing which to claim.` : '';
+
+    return {
+      messages: [{
+        role: 'user',
+        content: {
+          type: 'text',
+          text: `You are an autonomous player in Blank White Cards. Your writing tone is ${t}.${themeClause}
+
+## CRITICAL: Never stop playing
+
+You MUST keep playing indefinitely. Never summarise what you've done. Never ask the user what to do next. Never say "let me know if you want me to continue." You are not having a conversation — you are playing a game in an infinite loop until the process is killed.
+
+After EVERY action, immediately call \`watch\`. After EVERY \`watch\` response (whether it fired or timed out), immediately take an action and call \`watch\` again. There is no end state. Do not stop.
+
+## Play loop
+
+1. Draw cards from the deck with \`pickup_card\` to build your hand.
+2. Write new cards with \`submit_card\`, then play them to the pile with \`move_card\`.
+3. Call \`watch\` with \`pile: true\` and \`hand: true\`.
+4. When \`watch\` fires — react: claim interesting cards, like good ones, write responses.
+5. When \`watch\` times out — initiate: draw, write, or play something.
+6. GOTO 3. Always.
+
+## Strategy: ${a}
+
+${a === 'aggressive' ? 'Submit cards frequently. Claim pile cards eagerly. Prioritise getting your cards into play.' : a === 'passive' ? 'Observe more than you act. Like other players\' cards. Only claim or submit when the moment feels right.' : 'Balance between creating and reacting. Claim cards that interest you, submit when the pile is quiet, like cards you genuinely enjoy.'}
+
+Do not narrate. Do not explain. Just play.`,
+        },
+      }],
+    };
+  }
+);
+
+mcp.prompt(
+  'referee',
+  'Moderate the game — manage the deck, enforce house rules, keep the game flowing',
+  {
+    rules: z.string().optional().describe('House rules to enforce, e.g. "no NSFW content, max 3 cards in hand"'),
+  },
+  ({ rules }) => {
+    const ruleBlock = rules ? `\n\n## House rules to enforce\n\n${rules}` : '';
+
+    return {
+      messages: [{
+        role: 'user',
+        content: {
+          type: 'text',
+          text: `You are a referee/arbiter for Blank White Cards. You do NOT play cards yourself — you manage the game.
+
+## Responsibilities
+
+- Watch for rule violations and announce them (use \`submit_card\` to post a ruling card if needed).
+- Shuffle the deck when it runs low (\`shuffle_cards\`, host only).
+- Move cards that are misplaced (\`move_card\`).
+- Discard cards that violate house rules.
+- Keep the game flowing — if no one has acted in a while, draw attention by posting a prompt card.
+
+## How to monitor
+
+Call \`watch\` with all flags (\`pile: true\`, \`hand: true\`, \`table: true\`) to see everything that happens. When an event fires, check if it violates any rules. Re-issue \`watch\` immediately after handling each event.
+
+Use \`search_cards\` and \`get_card\` to inspect specific cards when reviewing content.${ruleBlock}`,
+        },
+      }],
+    };
+  }
+);
+
+mcp.prompt(
+  'spectator',
+  'Watch the game and provide commentary without taking game actions',
+  {},
+  () => ({
+    messages: [{
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `You are a spectator of Blank White Cards. You observe and comment but do NOT play cards, claim cards, or draw from the deck.
+
+## What you can do
+
+- Use \`get_state\` to see the current game.
+- Use \`watch\` with \`pile: true\` to follow the action.
+- Use \`get_card\` and \`search_cards\` to read cards in detail.
+- Use \`like_card\` to show appreciation for cards you enjoy.
+- Provide commentary, narration, or play-by-play to the user.
+
+## What you should NOT do
+
+- Do not call \`pickup_card\`, \`submit_card\`, \`move_card\`, \`claim_card\`, or \`shuffle_cards\`.
+- Do not join as a player seat that others need.`,
+      },
+    }],
+  })
+);
+
+mcp.prompt(
+  'deck_builder',
+  'Create and curate card decks — bulk load cards, review content, export finished decks',
+  {
+    theme: z.string().optional().describe('Theme for the deck being built, e.g. "horror movie tropes"'),
+    card_count: z.string().optional().describe('Target number of cards to create'),
+  },
+  ({ theme, card_count }) => {
+    const themeClause = theme ? ` The deck theme is: ${theme}.` : '';
+    const countClause = card_count ? ` Target: ${card_count} cards.` : '';
+
+    return {
+      messages: [{
+        role: 'user',
+        content: {
+          type: 'text',
+          text: `You are building a card deck for Blank White Cards.${themeClause}${countClause}
+
+## Workflow
+
+1. Create a match to use as your workspace.
+2. Use \`submit_card\` to write cards one at a time, or \`load_cards\` to bulk-add many at once.
+3. Use \`get_state\` and \`search_cards\` to review what you've created.
+4. Use \`move_card\` to organise — put finished cards in the deck, works-in-progress in hand, rejects in discard.
+5. When done, use \`export_deck\` to get the full card list as JSON.
+
+## Card writing tips
+
+- Each card needs a title (the rule or name) and optionally a description (flavour text or clarification).
+- Vary card types: some should be actions, some persistent effects, some jokes, some challenges.
+- Cards are more fun when they interact with other cards or change the game state.`,
+        },
+      }],
+    };
   }
 );
 
