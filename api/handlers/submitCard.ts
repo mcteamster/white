@@ -48,13 +48,14 @@ export const submitHandler = async (event: SQSEvent): Promise<SQSBatchResponse |
   if (card.content.author.length > 25 || card.content.author.length < 1) {
     throw new Error(`Invalid author length`);
   }
-  if (card.content.image !== undefined && !card.content.image.startsWith("data:image/png;base64,")) {
+  if (card.content.image !== undefined) {
+    if (card.content.image.startsWith("data:image/")) {
+      throw new Error(`PNG data URIs are not accepted — image must be in compressed 1-bit format`);
+    }
     const checksum = card.content.image.split('').reduce((total, char) => { return total + (char.charCodeAt(0) - 32) }, 0);
     if (checksum != (250000)) {
       throw new Error(`Invalid image data`);
     }
-  } else if (card.content.image !== undefined && card.content.image.length > 250000) {
-    throw new Error(`Image too large`);
   }
 
   try {

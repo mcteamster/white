@@ -12,15 +12,17 @@ const { SocketIO } = require('boardgame.io/dist/cjs/multiplayer.js');
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
+import { execSync } from 'node:child_process';
+import { readFileSync, unlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { BlankWhiteCards } from '../src/Game';
-import { compressImageDataUri, compressImageFromFile } from './images';
 import type { Card } from '../src/Cards';
 
 const GAME_SERVER = process.env.GAME_SERVER_URL ?? 'http://localhost:3000';
 const GAME_NAME = 'blank-white-cards';
 const MIN_REACT_SECONDS = Number(process.env.MCP_MIN_REACT_SECONDS ?? 5);
 const MAX_WATCH_SECONDS = Number(process.env.MCP_MAX_WATCH_SECONDS ?? 30);
-const ENABLE_IMAGES = process.env.MCP_ENABLE_IMAGES === 'true';
 
 // ── Session state ─────────────────────────────────────────────────────────────
 
@@ -29,8 +31,6 @@ interface Session {
   credentials: string;
 }
 const sessions = new Map<string, Session>();
-
-
 
 // ── Session helpers ───────────────────────────────────────────────────────────
 
@@ -250,8 +250,6 @@ function watchForChange(
   });
 }
 
-
-
 // ── MCP Server ────────────────────────────────────────────────────────────────
 
 const INSTRUCTIONS = `
@@ -273,11 +271,11 @@ Use \`watch\` to block until a relevant event occurs (card submitted, claimed, m
 ## Writing cards
 
 \`submit_card\` creates a new card in a player's hand. Use \`move_card\` to play it to the pile or elsewhere.
-${ENABLE_IMAGES ? `
+
 ## Card images
 
-Cards can have images. If you have access to an image generation tool (e.g. ComfyUI, DALL-E, or any tool that produces PNG data URIs), use \`compress_image\` to convert the PNG into the game's 500x500 1-bit format, then pass the result as the \`image\` field in \`submit_card\`.
-` : ''}
+Cards can optionally have images. If you can draw or generate an image to accompany a card, save it as a square PNG and pass the file path as \`image_path\` in \`submit_card\`. It will be resized to 500x500.
+
 ## Available prompts
 
 This server provides role prompts (autonomous_player, referee, spectator, deck_builder) that describe how to use these tools for specific purposes. List prompts to see available roles.
@@ -494,11 +492,30 @@ mcp.registerTool(
       title: z.string().describe('Card title / rule text'),
       description: z.string().optional().describe('Additional description or flavour text'),
       author: z.string().optional().describe('Author name to attribute on the card'),
-      image: z.string().optional().describe('Compressed image string from compress_image tool'),
+      image_path: z.string().optional().describe('Absolute path to a square PNG image file to attach to the card'),
     },
   },
-  async ({ matchID, playerID, title, description, author, image }) => {
+  async ({ matchID, playerID, title, description, author, image_path }) => {
     const { client } = requireSession(matchID, playerID);
+
+    let image: string | undefined;
+    if (image_path) {
+      const dims = execSync(
+        `ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "${image_path}"`,
+        { encoding: 'utf-8' }
+      ).trim().split(',');
+      const [w, h] = [parseInt(dims[0]), parseInt(dims[1])];
+      if (w !== h) throw new Error(`Image must be square, got ${w}x${h}`);
+      const outPath = join(tmpdir(), `bwc_${Date.now()}.png`);
+      try {
+        execSync(`ffmpeg -y -i "${image_path}" -vf "scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'" "${outPath}"`, { stdio: 'pipe' });
+        const buf = readFileSync(outPath);
+        image = `data:image/png;base64,${buf.toString('base64')}`;
+      } finally {
+        try { unlinkSync(outPath); } catch {}
+      }
+    }
+
     const card: Partial<Card> = {
       content: { title, description: description ?? '', author, date: String(Date.now()), image },
       location: 'hand',
@@ -577,22 +594,6 @@ mcp.registerTool(
   }
 );
 
-if (ENABLE_IMAGES) {
-  mcp.registerTool(
-    'compress_image',
-    {
-      description: 'Convert an image file to the 500x500 1-bit compressed format used by card images. Accepts any format ffmpeg supports. Save the image to a temp file first, then pass the absolute path here. Returns the compressed string to pass as the image field in submit_card.',
-      inputSchema: {
-        image_path: z.string().describe('Absolute path to an image file on disk'),
-      },
-    },
-    async ({ image_path }) => {
-      const compressed = compressImageFromFile(image_path);
-      return text({ compressed, length: compressed.length });
-    }
-  );
-}
-
 mcp.registerTool(
   'watch',
   {
@@ -618,8 +619,6 @@ mcp.registerTool(
     });
   }
 );
-
-
 
 mcp.registerTool(
   'leave_match',
@@ -684,7 +683,10 @@ After EVERY action, immediately call \`watch\`. After EVERY \`watch\` response (
 5. When \`watch\` times out — initiate: draw, write, or play something.
 6. GOTO 3. Always.
 
-${ENABLE_IMAGES ? '\n## Card images\n\nIf you have access to an image generation tool, use it to create images for your cards. Get a PNG data URI from the tool, pass it to `compress_image` to convert it to the game format, then include the result as the `image` field in `submit_card`. Cards with images are more engaging.\n' : ''}
+## Card images
+
+You may choose to draw or generate an image to go with a card. Save it as a square PNG and pass the file path as \`image_path\` in \`submit_card\`. Cards with images are more engaging.
+
 ## Strategy: ${a}
 
 ${a === 'aggressive' ? 'Submit cards frequently. Claim pile cards eagerly. Prioritise getting your cards into play.' : a === 'passive' ? 'Observe more than you act. Like other players\' cards. Only claim or submit when the moment feels right.' : 'Balance between creating and reacting. Claim cards that interest you, submit when the pile is quiet, like cards you genuinely enjoy.'}
@@ -789,7 +791,8 @@ mcp.prompt(
 
 - Each card needs a title (the rule or name) and optionally a description (flavour text or clarification).
 - Vary card types: some should be actions, some persistent effects, some jokes, some challenges.
-- Cards are more fun when they interact with other cards or change the game state.${ENABLE_IMAGES ? '\n- If you have access to an image generation tool, create images for your cards: get a PNG data URI, pass it to `compress_image`, then include the result as the `image` field in `submit_card`.' : ''}`,
+- Cards are more fun when they interact with other cards or change the game state.
+- If you can draw or generate images, save as a square PNG and pass the file path as \`image_path\` in \`submit_card\`.`,
         },
       }],
     };
