@@ -8,6 +8,7 @@ console.debug = console.error;
 /* eslint-disable @typescript-eslint/no-require-imports */
 const { Client, LobbyClient } = require('boardgame.io/dist/cjs/client.js');
 const { SocketIO } = require('boardgame.io/dist/cjs/multiplayer.js');
+const { Virgo2AWS } = require('@mcteamster/virgo');
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -19,10 +20,45 @@ import { join } from 'node:path';
 import { BlankWhiteCards } from '../src/Game';
 import type { Card } from '../src/Cards';
 
-const GAME_SERVER = process.env.GAME_SERVER_URL ?? 'http://localhost:3000';
+const GAME_SERVER_OVERRIDE = process.env.GAME_SERVER_URL;
 const GAME_NAME = 'blank-white-cards';
 const MIN_REACT_SECONDS = Number(process.env.MCP_MIN_REACT_SECONDS ?? 5);
 const MAX_WATCH_SECONDS = Number(process.env.MCP_MAX_WATCH_SECONDS ?? 30);
+
+// ── Server resolution ─────────────────────────────────────────────────────────
+
+const SERVERS: Record<string, string> = {
+  AP: 'https://ap.blankwhite.cards',
+  EU: 'https://eu.blankwhite.cards',
+  NA: 'https://na.blankwhite.cards',
+};
+
+function getRegionFromMatchID(matchID: string): string | undefined {
+  if (matchID.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
+    if (matchID.match(/[BCDFG]$/)) return 'AP';
+    if (matchID.match(/[HJKLM]$/)) return 'EU';
+    if (matchID.match(/[NPQRS]$/)) return 'NA';
+  }
+  return undefined;
+}
+
+function getServerForMatch(matchID: string): string {
+  if (GAME_SERVER_OVERRIDE) return GAME_SERVER_OVERRIDE;
+  const region = getRegionFromMatchID(matchID);
+  if (region && SERVERS[region]) return SERVERS[region];
+  return 'http://localhost:3000';
+}
+
+function getServerForCreate(region?: string): string {
+  if (GAME_SERVER_OVERRIDE) return GAME_SERVER_OVERRIDE;
+  if (region && SERVERS[region.toUpperCase()]) return SERVERS[region.toUpperCase()];
+  // Auto-detect from timezone
+  const { closestRegion } = Virgo2AWS.getClosestRegion({ regions: ['us-east-1', 'eu-central-1', 'ap-southeast-1'] });
+  const awsToRegion: Record<string, string> = { 'us-east-1': 'NA', 'eu-central-1': 'EU', 'ap-southeast-1': 'AP' };
+  const detected = awsToRegion[closestRegion];
+  if (detected && SERVERS[detected]) return SERVERS[detected];
+  return SERVERS.NA;
+}
 
 // ── Session state ─────────────────────────────────────────────────────────────
 
@@ -38,14 +74,14 @@ function sessionKey(matchID: string, playerID: string) {
   return `${matchID}:${playerID}`;
 }
 
-async function connectSession(matchID: string, playerID: string, credentials: string): Promise<Session> {
+async function connectSession(matchID: string, playerID: string, credentials: string, server: string): Promise<Session> {
   const key = sessionKey(matchID, playerID);
   const existing = sessions.get(key);
   if (existing) existing.client.stop?.();
 
   const client = Client({
     game: BlankWhiteCards,
-    multiplayer: SocketIO({ server: GAME_SERVER }),
+    multiplayer: SocketIO({ server }),
     matchID,
     playerID,
     credentials,
@@ -276,6 +312,8 @@ Use \`watch\` to block until a relevant event occurs (card submitted, claimed, m
 
 Cards can optionally have images. If you can draw or generate an image to accompany a card, save it as a square PNG and pass the file path as \`image_path\` in \`submit_card\`. It will be resized to 500x500.
 
+**Image style:** Cards are displayed on a white background. For best results, generate images with a white/blank background using a prompt style like "black ink on white paper, simple bold line art". This ensures the card art blends with the game's visual style and converts cleanly to the 1-bit format used in-game.
+
 ## Available prompts
 
 This server provides role prompts (autonomous_player, referee, spectator, deck_builder) that describe how to use these tools for specific purposes. List prompts to see available roles.
@@ -288,11 +326,28 @@ const mcp = new McpServer(
 
 mcp.registerTool(
   'list_matches',
-  { description: 'List all active Blank White Cards matches' },
-  async () => {
-    const lobby = new LobbyClient({ server: GAME_SERVER });
-    const { matches } = await lobby.listMatches(GAME_NAME);
-    return text(matches);
+  {
+    description: 'List all active Blank White Cards matches',
+    inputSchema: {
+      region: z.enum(['AP', 'EU', 'NA']).optional().describe('Server region to list (default: all regions)'),
+    },
+  },
+  async ({ region }) => {
+    if (GAME_SERVER_OVERRIDE) {
+      const lobby = new LobbyClient({ server: GAME_SERVER_OVERRIDE });
+      const { matches } = await lobby.listMatches(GAME_NAME);
+      return text(matches);
+    }
+    const regions = region ? [region] : Object.keys(SERVERS);
+    const allMatches = [];
+    for (const r of regions) {
+      try {
+        const lobby = new LobbyClient({ server: SERVERS[r] });
+        const { matches } = await lobby.listMatches(GAME_NAME);
+        allMatches.push(...matches.map((m: unknown) => ({ ...(m as object), region: r })));
+      } catch {}
+    }
+    return text(allMatches);
   }
 );
 
@@ -304,10 +359,12 @@ mcp.registerTool(
       num_players: z.number().int().min(1).max(100).optional().describe('Number of player seats (default 100)'),
       preset_deck: z.string().optional().describe('Preset deck name, e.g. "standard" (default blank)'),
       player_name: z.string().optional().describe('Your display name (default "Player 0")'),
+      region: z.enum(['AP', 'EU', 'NA']).optional().describe('Server region (default: auto-detect from timezone)'),
     },
   },
-  async ({ num_players, preset_deck, player_name }) => {
-    const lobby = new LobbyClient({ server: GAME_SERVER });
+  async ({ num_players, preset_deck, player_name, region }) => {
+    const server = getServerForCreate(region);
+    const lobby = new LobbyClient({ server });
     const { matchID } = await lobby.createMatch(GAME_NAME, {
       numPlayers: num_players ?? 100,
       setupData: preset_deck ? { presetDeck: preset_deck } : undefined,
@@ -316,8 +373,8 @@ mcp.registerTool(
       playerID: '0',
       playerName: player_name ?? 'Player 0',
     });
-    await connectSession(matchID, '0', playerCredentials);
-    return text({ matchID, playerID: '0', credentials: playerCredentials, message: `Joined ${matchID} as player 0` });
+    await connectSession(matchID, '0', playerCredentials, server);
+    return text({ matchID, playerID: '0', credentials: playerCredentials, server, message: `Joined ${matchID} as player 0` });
   }
 );
 
@@ -332,13 +389,14 @@ mcp.registerTool(
     },
   },
   async ({ matchID, playerID, player_name }) => {
-    const lobby = new LobbyClient({ server: GAME_SERVER });
+    const server = getServerForMatch(matchID);
+    const lobby = new LobbyClient({ server });
     const { playerCredentials } = await lobby.joinMatch(GAME_NAME, matchID, {
       playerID,
       playerName: player_name ?? `Player ${playerID}`,
     });
-    await connectSession(matchID, playerID, playerCredentials);
-    return text({ matchID, playerID, message: `Joined ${matchID} as player ${playerID}` });
+    await connectSession(matchID, playerID, playerCredentials, server);
+    return text({ matchID, playerID, server, message: `Joined ${matchID} as player ${playerID}` });
   }
 );
 
@@ -416,7 +474,8 @@ mcp.registerTool(
     },
   },
   async ({ matchID }) => {
-    const res = await fetch(`${GAME_SERVER}/export/${matchID}`);
+    const server = getServerForMatch(matchID);
+    const res = await fetch(`${server}/export/${matchID}`);
     if (!res.ok) throw new Error(`Export failed: ${res.status} ${res.statusText}`);
     const encoded = await res.text();
     const cards = JSON.parse(decodeURI(atob(encoded)));
@@ -492,7 +551,7 @@ mcp.registerTool(
       title: z.string().describe('Card title / rule text'),
       description: z.string().optional().describe('Additional description or flavour text'),
       author: z.string().optional().describe('Author name to attribute on the card'),
-      image_path: z.string().optional().describe('Absolute path to a square PNG image file to attach to the card'),
+      image_path: z.string().optional().describe('Absolute path to a square PNG image file to attach to the card. For best results, use images with a white background and bold black line art (the image will be converted to 1-bit black and white at 500x500).'),
     },
   },
   async ({ matchID, playerID, title, description, author, image_path }) => {
@@ -633,7 +692,7 @@ mcp.registerTool(
     const key = sessionKey(matchID, playerID);
     const session = sessions.get(key);
     if (!session) return text({ message: `Not in match ${matchID} as player ${playerID}` });
-    const lobby = new LobbyClient({ server: GAME_SERVER });
+    const lobby = new LobbyClient({ server: getServerForMatch(matchID) });
     try {
       await lobby.leaveMatch(GAME_NAME, matchID, { playerID, credentials: session.credentials });
     } catch {
@@ -685,7 +744,7 @@ After EVERY action, immediately call \`watch\`. After EVERY \`watch\` response (
 
 ## Card images
 
-You may choose to draw or generate an image to go with a card. Save it as a square PNG and pass the file path as \`image_path\` in \`submit_card\`. Cards with images are more engaging.
+You may choose to draw or generate an image to go with a card. Save it as a square PNG and pass the file path as \`image_path\` in \`submit_card\`. Cards with images are more engaging. Use a white background with bold black line art (e.g. prompt with "black ink on white paper, simple bold line art") so the image blends with the game's white card style.
 
 ## Strategy: ${a}
 
@@ -792,7 +851,7 @@ mcp.prompt(
 - Each card needs a title (the rule or name) and optionally a description (flavour text or clarification).
 - Vary card types: some should be actions, some persistent effects, some jokes, some challenges.
 - Cards are more fun when they interact with other cards or change the game state.
-- If you can draw or generate images, save as a square PNG and pass the file path as \`image_path\` in \`submit_card\`.`,
+- If you can draw or generate images, save as a square PNG and pass the file path as \`image_path\` in \`submit_card\`. Use a white background with bold black line art for best results.`,
         },
       }],
     };

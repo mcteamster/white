@@ -20,9 +20,16 @@ Environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `GAME_SERVER_URL` | `http://localhost:3000` | URL of the boardgame.io game server |
+| `GAME_SERVER_URL` | *(auto-detect)* | Override server URL for all connections. If unset, the server is resolved from the room code or timezone. |
 | `MCP_MIN_REACT_SECONDS` | `5` | Seconds to wait before returning watch events (pacing) |
 | `MCP_MAX_WATCH_SECONDS` | `30` | Seconds before watch times out with no event |
+
+### Server resolution
+
+When `GAME_SERVER_URL` is not set:
+- **Joining a match** — the server is derived from the room code's last character (AP/EU/NA regions)
+- **Creating a match** — auto-detects the closest region from your timezone, or accepts a `region` parameter
+- **Unrecognised room codes** — falls back to `http://localhost:3000` (local development)
 
 ## MCP Client Config
 
