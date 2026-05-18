@@ -191,7 +191,9 @@ export const undo = (baseImage = null) => {
   if (baseImage) {
     const replayCanvas = document.getElementById("sketchpad");
     const ctx = replayCanvas?.getContext('2d');
-    ctx?.drawImage(baseImage, 0, 0, replayCanvas.width, replayCanvas.height);
+    const logicalWidth = replayCanvas.width / (window.devicePixelRatio || 1);
+    const logicalHeight = replayCanvas.height / (window.devicePixelRatio || 1);
+    ctx?.drawImage(baseImage, 0, 0, logicalWidth, logicalHeight);
   }
 
   // Replay all remaining strokes
@@ -286,8 +288,10 @@ export const redo = (baseImage = null) => {
   if (baseImage) {
     const replayCanvas = document.getElementById("sketchpad");
     const ctx = replayCanvas?.getContext('2d');
-    ctx?.clearRect(0, 0, replayCanvas.width, replayCanvas.height);
-    ctx?.drawImage(baseImage, 0, 0, replayCanvas.width, replayCanvas.height);
+    const logicalWidth = replayCanvas.width / (window.devicePixelRatio || 1);
+    const logicalHeight = replayCanvas.height / (window.devicePixelRatio || 1);
+    ctx?.clearRect(0, 0, logicalWidth, logicalHeight);
+    ctx?.drawImage(baseImage, 0, 0, logicalWidth, logicalHeight);
 
     // Replay all strokes
     for (let i = 0; i < strokes.length; i++) {

@@ -81,8 +81,11 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
         const ctx = canvas.getContext('2d');
         const img = new Image();
         img.onload = () => {
-          ctx?.clearRect(0, 0, canvas.width, canvas.height);
-          ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+          // Use logical (CSS) size, not canvas.width which includes devicePixelRatio scaling
+          const logicalWidth = canvas.width / (window.devicePixelRatio || 1);
+          const logicalHeight = canvas.height / (window.devicePixelRatio || 1);
+          ctx?.clearRect(0, 0, logicalWidth, logicalHeight);
+          ctx?.drawImage(img, 0, 0, logicalWidth, logicalHeight);
           // Cache the loaded image for undo
           baseImageRef.current = img;
         };
