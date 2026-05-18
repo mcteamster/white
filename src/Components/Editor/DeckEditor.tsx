@@ -2,6 +2,7 @@ import { useState, useRef, useMemo, useEffect } from 'react';
 import { Properties } from 'csstype';
 import { useNavigate } from 'react-router';
 import { Icon } from '../Icons';
+import { useWindowDimensions } from '../../lib/hooks';
 import { CardEditor } from './CardEditor';
 import { FullCardView, CompactCardView, ImageOnlyCardView } from './CardViews';
 import { ViewModeToggle } from './EditorControls';
@@ -158,6 +159,8 @@ import { Card } from '../../Cards';
 
 export function DeckEditor() {
   const navigate = useNavigate();
+  const { width } = useWindowDimensions();
+  const compact = width < 500;
   const {
     deck,
     isLoaded,
@@ -170,7 +173,7 @@ export function DeckEditor() {
   const [error, setError] = useState<string | null>(null);
   const [showCardCreator, setShowCardCreator] = useState(false);
   const [editingCard, setEditingCard] = useState<Card | undefined>(undefined);
-  const [modalState, setModalState] = useState<'closed' | 'file' | 'reset' | 'save' | 'loadConfirm'>('closed');
+  const [modalState, setModalState] = useState<'closed' | 'file' | 'reset' | 'save' | 'loadConfirm' | 'deleteConfirm'>('closed');
   const [showDrawingControls, setShowDrawingControls] = useState(false);
   const [drawingHandlers, setDrawingHandlers] = useState<{ onBack: () => void, onUndo: () => void, onRedo: () => void, onCancel: () => void }>({
     onBack: () => {},
@@ -222,6 +225,7 @@ export function DeckEditor() {
       selectedCards.has(card.id) ? { ...card, location: 'box' } : card
     );
     updateDeck({ ...deck, cards: updatedCards });
+    clearSelection();
   };
 
   const handleShowCards = () => {
@@ -229,6 +233,7 @@ export function DeckEditor() {
       selectedCards.has(card.id) ? { ...card, location: 'deck' } : card
     );
     updateDeck({ ...deck, cards: updatedCards });
+    clearSelection();
   };
 
   const handleDeleteCards = () => {
@@ -454,8 +459,8 @@ export function DeckEditor() {
       justifyContent: 'center'
     },
     selectionButton: {
-      height: '3em',
-      width: '4em',
+      height: compact ? '2em' : '3em',
+      width: compact ? '2em' : '4em',
       margin: '0.25em',
       fontWeight: 'bold',
       textAlign: 'center',
@@ -467,8 +472,8 @@ export function DeckEditor() {
       cursor: 'pointer'
     },
     clearButtonInline: {
-      height: '3em',
-      width: '4em',
+      height: compact ? '2em' : '3em',
+      width: compact ? '2em' : '4em',
       margin: '0.25em',
       fontWeight: 'bold',
       textAlign: 'center',
@@ -738,100 +743,49 @@ export function DeckEditor() {
 
       <div style={styles.bottomControls}>
         <div style={styles.actionButtons}>
-          {selectedCards.size === 1 ? (
-            Array.from(selectedCards).every(id => 
-              deck.cards.find((card: Card) => card.id === id)?.location === 'box'
-            ) ? (
-              <wired-card 
-                style={{...styles.selectionButton, color: 'red'}} 
-                onClick={handleDeleteCards} 
-                elevation={2}
-              >
-                <Icon name="discard" /> Delete
-              </wired-card>
-            ) : (
-              <wired-card style={styles.selectionButton} onClick={handleEditCard} elevation={2}>
-                <Icon name="create" /> Edit
-              </wired-card>
-            )
-          ) : selectedCards.size > 0 ? (
-            Array.from(selectedCards).every(id => 
-              deck.cards.find((card: Card) => card.id === id)?.location === 'box'
-            ) ? (
-              <wired-card 
-                style={{...styles.selectionButton, color: 'red'}} 
-                onClick={handleDeleteCards} 
-                elevation={2}
-              >
-                <Icon name="discard" /> Delete
-              </wired-card>
-            ) : Array.from(selectedCards).some(id => 
-              deck.cards.find((card: Card) => card.id === id)?.location === 'box'
-            ) ? (
-              <wired-card 
-                style={{
-                  ...styles.selectionButton,
-                  opacity: 0.5,
-                  cursor: 'not-allowed',
-                  color: 'red'
-                }}
-                elevation={2}
-              >
-                <Icon name="discard" /> Delete
-              </wired-card>
-            ) : (
-              <wired-card 
-                style={{
-                  ...styles.selectionButton,
-                  opacity: 0.5,
-                  cursor: 'not-allowed'
-                }}
-                elevation={2}
-              >
-                <Icon name="create" /> Edit
-              </wired-card>
-            )
-          ) : (
-            <wired-card 
-              style={styles.createButton}
-              onClick={() => {
-                setEditingCard(undefined);
-                setShowCardCreator(true);
-              }}
-              elevation={2}
-            >
-              <Icon name="create" /> Create
-            </wired-card>
-          )}
-
+          {/* Create - always enabled */}
           <wired-card 
-            style={{
-              ...styles.selectionButton,
-              opacity: selectedCards.size > 0 ? 1 : 0.5,
-              cursor: selectedCards.size > 0 ? 'pointer' : 'not-allowed'
-            }}
-            onClick={selectedCards.size > 0 ? (Array.from(selectedCards).every(id => 
-              deck.cards.find((card: Card) => card.id === id)?.location === 'box'
-            ) ? handleShowCards : handleHideCards) : undefined} 
+            style={{...styles.selectionButton, cursor: 'pointer'}}
+            onClick={() => { setEditingCard(undefined); setShowCardCreator(true); }}
             elevation={2}
           >
-            <Icon name={selectedCards.size > 0 && Array.from(selectedCards).every(id => 
-              deck.cards.find((card: Card) => card.id === id)?.location === 'box'
-            ) ? "show" : "hide"} /> {selectedCards.size > 0 && Array.from(selectedCards).every(id => 
-              deck.cards.find((card: Card) => card.id === id)?.location === 'box'
-            ) ? 'Show' : 'Hide'}
+            <Icon name="create" /> {!compact && 'Create'}
+          </wired-card>
+
+          {/* Edit - enabled when exactly 1 card selected */}
+          <wired-card 
+            style={{...styles.selectionButton, color: selectedCards.size === 1 ? undefined : '#aaa', cursor: selectedCards.size === 1 ? 'pointer' : 'not-allowed'}}
+            onClick={selectedCards.size === 1 ? handleEditCard : undefined}
+            elevation={2}
+          >
+            <Icon name="wand" /> {!compact && 'Edit'}
+          </wired-card>
+
+          {/* Delete - enabled when any cards are selected */}
+          <wired-card 
+            style={{...styles.selectionButton, color: selectedCards.size > 0 ? 'red' : '#aaa', cursor: selectedCards.size > 0 ? 'pointer' : 'not-allowed'}}
+            onClick={selectedCards.size > 0 ? () => setModalState('deleteConfirm') : undefined}
+            elevation={2}
+          >
+            <Icon name="discard" /> {!compact && 'Delete'}
+          </wired-card>
+
+          {/* Hide/Show - enabled when cards are selected */}
+          <wired-card 
+            style={{...styles.selectionButton, color: selectedCards.size > 0 ? undefined : '#aaa', cursor: selectedCards.size > 0 ? 'pointer' : 'not-allowed'}}
+            onClick={selectedCards.size > 0 ? (Array.from(selectedCards).every(id => deck.cards.find((card: Card) => card.id === id)?.location === 'box') ? handleShowCards : handleHideCards) : undefined} 
+            elevation={2}
+          >
+            <Icon name={selectedCards.size > 0 && Array.from(selectedCards).every(id => deck.cards.find((card: Card) => card.id === id)?.location === 'box') ? "show" : "hide"} /> {!compact && (selectedCards.size > 0 && Array.from(selectedCards).every(id => deck.cards.find((card: Card) => card.id === id)?.location === 'box') ? 'Show' : 'Hide')}
           </wired-card>
           
+          {/* Clear/Select All - toggles based on selection state */}
           <wired-card 
-            style={{
-              ...styles.clearButtonInline,
-              opacity: selectedCards.size > 0 ? 1 : 0.5,
-              cursor: selectedCards.size > 0 ? 'pointer' : 'not-allowed'
-            }}
-            onClick={selectedCards.size > 0 ? clearSelection : undefined} 
+            style={{...styles.clearButtonInline, color: filteredCards.length > 0 ? undefined : '#aaa', cursor: filteredCards.length > 0 ? 'pointer' : 'not-allowed'}}
+            onClick={filteredCards.length > 0 ? (selectedCards.size > 0 ? clearSelection : () => setSelectedCards(new Set(filteredCards.map(c => c.id)))) : undefined} 
             elevation={2}
           >
-            <Icon name="exit" /> Clear {selectedCards.size > 0 ? `(${selectedCards.size})` : ''}
+            <Icon name={selectedCards.size > 0 ? "exit" : "checklist"} /> {!compact && (selectedCards.size > 0 ? `Clear (${selectedCards.size})` : 'All')}
           </wired-card>
         </div>
 
@@ -868,7 +822,34 @@ export function DeckEditor() {
         {modalState !== 'closed' && (
           <div style={styles.fileModalOverlay} onClick={(e) => e.target === e.currentTarget && setModalState('closed')}>
             <wired-card style={styles.fileModal} elevation={3}>
-              {modalState === 'reset' ? (
+              {modalState === 'deleteConfirm' ? (
+                <>
+                  <h3 style={styles.modalTitle}>Delete Cards</h3>
+                  <p>Delete {selectedCards.size} card{selectedCards.size > 1 ? 's' : ''}? This cannot be undone.</p>
+                  <div style={styles.fileModalRow}>
+                    <wired-card
+                      style={{
+                        ...styles.saveButton,
+                        color: '#f44336'
+                      }}
+                      onClick={() => {
+                        handleDeleteCards();
+                        setModalState('closed');
+                      }}
+                      elevation={2}
+                    >
+                      <Icon name="discard" /> Delete
+                    </wired-card>
+                    <wired-card
+                      style={styles.saveButton}
+                      onClick={() => setModalState('closed')}
+                      elevation={2}
+                    >
+                      <Icon name="exit" /> Cancel
+                    </wired-card>
+                  </div>
+                </>
+              ) : modalState === 'reset' ? (
                 <>
                   <h3 style={styles.modalTitle}>Restart</h3>
                   <p>Are you sure you want to restart? This will clear all cards from the editor and cannot be undone.</p>
