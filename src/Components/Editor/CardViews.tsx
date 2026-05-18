@@ -81,10 +81,10 @@ export function FullCardView({ card, isSelected, onCardSelect }: {
       cursor: 'pointer'
     },
     cardSelected: {
-      color: 'red'
+      boxShadow: '0 6px 24px rgba(0, 0, 0, 0.8)'
     },
     cardHidden: {
-      opacity: 0.5
+      color: '#bbb'
     },
     cardContent: {
       display: 'flex',
@@ -108,7 +108,6 @@ export function FullCardView({ card, isSelected, onCardSelect }: {
     },
     title: {
       fontSize: '1.5em',
-      color: 'black',
       wordBreak: 'break-word',
       overflowWrap: 'break-word'
     },
@@ -119,14 +118,12 @@ export function FullCardView({ card, isSelected, onCardSelect }: {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      color: 'black',
       wordBreak: 'break-word',
       overflowWrap: 'break-word'
     },
     credit: {
       fontSize: '0.75em',
       textAlign: 'center',
-      color: 'black'
     }
   };
 
@@ -142,7 +139,7 @@ export function FullCardView({ card, isSelected, onCardSelect }: {
       onClick={() => onCardSelect(card.id)}
     >
       <div style={styles.cardContent}>
-        <div style={styles.imageContainer}>
+        <div style={{...styles.imageContainer, opacity: card.location === 'box' ? 0.33 : 1}}>
           <CardImage card={card} />
         </div>
         <div style={styles.title}>{card.content.title}</div>
@@ -200,7 +197,6 @@ export function CompactCardView({ card, isSelected, onCardSelect }: {
     title: {
       margin: '0 0 0.25em 0',
       fontSize: '1em',
-      color: 'black',
       wordBreak: 'break-word',
       overflowWrap: 'break-word'
     },
@@ -223,13 +219,14 @@ export function CompactCardView({ card, isSelected, onCardSelect }: {
       style={{
         ...styles.card,
         backgroundColor: 'white',
-        color: isSelected ? 'red' : 'black',
-        opacity: card.location === 'box' ? 0.5 : 1
+        color: card.location === 'box' ? '#bbb' : 'black',
+        boxShadow: isSelected ? '0 6px 24px rgba(0, 0, 0, 0.8)' : undefined,
       }}
+      elevation={1}
       onClick={() => onCardSelect(card.id)}
     >
       <div style={styles.container}>
-        <div style={styles.thumbnail}>
+        <div style={{...styles.thumbnail, opacity: card.location === 'box' ? 0.33 : 1}}>
           {card.content.image ? (
             <CardImage card={card} />
           ) : (
@@ -285,12 +282,13 @@ export function ImageOnlyCardView({ card, isSelected, onCardSelect }: {
       style={{
         ...styles.card,
         backgroundColor: 'white',
-        color: isSelected ? 'red' : 'black',
-        opacity: card.location === 'box' ? 0.5 : 1
+        color: card.location === 'box' ? '#bbb' : 'black',
+        boxShadow: isSelected ? '0 6px 24px rgba(0, 0, 0, 0.8)' : undefined,
       }}
+      elevation={1}
       onClick={() => onCardSelect(card.id)}
     >
-      <div style={styles.imageContainer}>
+      <div style={{...styles.imageContainer, opacity: card.location === 'box' ? 0.33 : 1}}>
         {card.content.image ? (
           <CardImage card={card} />
         ) : (
