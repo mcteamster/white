@@ -186,7 +186,8 @@ export function Gallery() {
     }
 
     const changeViewed = (direction: 'old' | 'new') => {
-      const adjacentCard = getAdjacentCard(displayedCards, viewedCard.id, direction, null);
+      const navigableCards = displayedCards.filter(c => c.location !== 'box');
+      const adjacentCard = getAdjacentCard(navigableCards, viewedCard.id, direction, null);
       if (adjacentCard) {
         navigate(`/card/${Number(adjacentCard.id)}`)
       }
@@ -253,11 +254,13 @@ export function Gallery() {
               cardLocalDate = new Date(Number(card.content.date)).toLocaleDateString();
             }
 
-            return <wired-card style={styles.card} id={`gallery-${i + 1}`} key={`gallery-${card.id}`} onClick={(e) => { navigate(`/card/${card.id}`); e.stopPropagation() }}>
+            return <wired-card style={{ ...styles.card, ...(card.location === 'box' ? { opacity: 0.5 } : {}) }} id={`gallery-${i + 1}`} key={`gallery-${card.id}`} onClick={(e) => { navigate(`/card/${card.id}`); e.stopPropagation() }}>
+              {card.location === 'box' ? <Icon name='hide' /> : <>
               {card.id != 0 && <img style={styles.cardImage} src={imageCache[card.id] || BLANK_IMAGE}></img>}
               <div style={styles.cardTitle}>{card.content.title}</div>
               <div style={styles.cardCredit}>{card.content.author && `${card.content.author}`}</div>
               <div style={styles.cardDate}>{card.content.date && `${cardLocalDate}`}</div>
+              </>}
             </wired-card>
           }) :
           <div style={styles.spinner} className='spin'>
