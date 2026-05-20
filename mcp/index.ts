@@ -319,6 +319,7 @@ Cards can optionally have images. If you can draw or generate an image to accomp
 This server provides role prompts (autonomous_player, referee, spectator, deck_builder) that describe how to use these tools for specific purposes. List prompts to see available roles.
 `.trim();
 
+function createMcpServer() {
 const mcp = new McpServer(
   { name: 'blank-white-cards', version: '2.3.0' },
   { instructions: INSTRUCTIONS },
@@ -367,6 +368,7 @@ mcp.registerTool(
     const lobby = new LobbyClient({ server });
     const { matchID } = await lobby.createMatch(GAME_NAME, {
       numPlayers: num_players ?? 100,
+      unlisted: true,
       setupData: preset_deck ? { presetDeck: preset_deck } : undefined,
     });
     const { playerCredentials } = await lobby.joinMatch(GAME_NAME, matchID, {
@@ -637,15 +639,35 @@ mcp.registerTool(
         description: z.string().optional(),
         author: z.string().optional(),
         location: z.enum(['deck', 'pile', 'discard']).optional(),
+        image_path: z.string().optional().describe('Absolute path to a square PNG image file to attach to the card'),
       })).describe('Cards to add'),
     },
   },
   async ({ matchID, playerID, cards }) => {
     const { client } = requireSession(matchID, playerID);
-    const cardObjects: Partial<Card>[] = cards.map(c => ({
-      content: { title: c.title, description: c.description ?? '', author: c.author },
-      location: c.location ?? 'deck',
-    }));
+    const cardObjects: Partial<Card>[] = cards.map(c => {
+      let image: string | undefined;
+      if (c.image_path) {
+        const dims = execSync(
+          `ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "${c.image_path}"`,
+          { encoding: 'utf-8' }
+        ).trim().split(',');
+        const [w, h] = [parseInt(dims[0]), parseInt(dims[1])];
+        if (w !== h) throw new Error(`Image must be square, got ${w}x${h}`);
+        const outPath = join(tmpdir(), `bwc_${Date.now()}_${Math.random().toString(36).slice(2)}.png`);
+        try {
+          execSync(`ffmpeg -y -i "${c.image_path}" -vf "scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'" "${outPath}"`, { stdio: 'pipe' });
+          const buf = readFileSync(outPath);
+          image = `data:image/png;base64,${buf.toString('base64')}`;
+        } finally {
+          try { unlinkSync(outPath); } catch {}
+        }
+      }
+      return {
+        content: { title: c.title, description: c.description ?? '', author: c.author, image },
+        location: c.location ?? 'deck',
+      };
+    });
     const nextState = waitForMove(client);
     client.moves.loadCards(cardObjects);
     const state = await nextState;
@@ -858,5 +880,54 @@ mcp.prompt(
   }
 );
 
-const transport = new StdioServerTransport();
-mcp.connect(transport).catch(console.error);
+return mcp;
+}
+
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { createServer } from 'http';
+import { randomUUID } from 'crypto';
+
+const PORT = parseInt(process.env.MCP_HTTP_PORT || '0');
+
+if (PORT) {
+  const transports = new Map<string, StreamableHTTPServerTransport>();
+
+  const server = createServer(async (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', '*');
+    res.setHeader('Access-Control-Expose-Headers', 'mcp-session-id');
+    if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
+    const sessionId = req.headers['mcp-session-id'] as string | undefined;
+
+    if (sessionId && transports.has(sessionId)) {
+      const transport = transports.get(sessionId)!;
+      if (req.method === 'DELETE') {
+        await transport.close();
+        transports.delete(sessionId);
+        res.writeHead(200); res.end(); return;
+      }
+      await transport.handleRequest(req, res);
+      return;
+    }
+
+    // New session
+    const id = randomUUID();
+    const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: () => id });
+    transports.set(id, transport);
+    transport.onclose = () => transports.delete(id);
+
+    const mcp = createMcpServer();
+    await mcp.connect(transport);
+    await transport.handleRequest(req, res);
+  });
+
+  server.listen(PORT, () => {
+    console.error(`MCP Streamable HTTP listening on port ${PORT}`);
+  });
+} else {
+  const mcp = createMcpServer();
+  const transport = new StdioServerTransport();
+  mcp.connect(transport).catch(console.error);
+}
