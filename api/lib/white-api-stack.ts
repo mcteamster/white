@@ -80,6 +80,7 @@ export class WhiteApiStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(60),
       environment: {
         WHITE_BUCKET: bucket.bucketName,
+        DISTRIBUTION_ID: distributionId,
       },
     });
     bucket.grantReadWrite(submitHandler);

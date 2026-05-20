@@ -5,6 +5,7 @@ import { CloudFrontClient, CreateInvalidationCommand } from "@aws-sdk/client-clo
 const s3Client = new S3Client({ region: 'us-east-1' });
 const cfClient = new CloudFrontClient();
 const bucketName = process.env.WHITE_BUCKET;
+const distributionId = process.env.DISTRIBUTION_ID;
 
 interface CardContent {
   title: string;
@@ -101,7 +102,7 @@ export const submitHandler = async (event: SQSEvent): Promise<SQSBatchResponse |
       }));
 
       await cfClient.send(new CreateInvalidationCommand({
-        DistributionId: "EZ5S4QE3SZ0Y7",
+        DistributionId: distributionId,
         InvalidationBatch: {
           Paths: {
             Quantity: 3,
