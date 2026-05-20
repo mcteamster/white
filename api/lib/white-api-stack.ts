@@ -102,6 +102,23 @@ export class WhiteApiStack extends cdk.Stack {
     });
     bucket.grantReadWrite(likeHandler);
 
+    // Moderate Handler Lambda (manually invoked)
+    const moderateHandler = new lambda.Function(this, 'ModerateHandler', {
+      runtime: lambda.Runtime.NODEJS_24_X,
+      memorySize: 512,
+      handler: 'handlers/moderateCard.hideCard',
+      code: lambda.Code.fromAsset('dist'),
+      timeout: cdk.Duration.seconds(60),
+      environment: {
+        WHITE_BUCKET: bucket.bucketName,
+      },
+    });
+    bucket.grantReadWrite(moderateHandler);
+    moderateHandler.addToRolePolicy(new cdk.aws_iam.PolicyStatement({
+      actions: ['cloudfront:CreateInvalidation'],
+      resources: [`arn:aws:cloudfront::${this.account}:distribution/${distributionId}`],
+    }));
+
     // Hosted Zone
     const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
       domainName: 'blankwhite.cards',
