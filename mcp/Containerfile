@@ -2,7 +2,7 @@ FROM node:26-alpine
 WORKDIR /app
 ENV NODE_ENV=production \
     MCP_HTTP_PORT=8000
-COPY mcp/dist/index.js .
+COPY dist/index.js .
 EXPOSE 8000
 HEALTHCHECK --interval=10s --timeout=3s CMD wget -qO- http://localhost:8000/health || exit 1
 CMD ["node", "index.js"]
