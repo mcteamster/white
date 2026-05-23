@@ -317,7 +317,7 @@ function requireSession(matchID: string, playerID: string): Session {
 }
 
 const mcp = new McpServer(
-  { name: 'blank-white-cards', version: '2.3.1' },
+  { name: 'blank-white-cards', version: '2.3.2' },
   { instructions: INSTRUCTIONS },
 );
 

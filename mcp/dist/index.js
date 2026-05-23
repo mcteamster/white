@@ -67100,7 +67100,7 @@ function createMcpServer() {
     return session;
   }
   const mcp = new McpServer(
-    { name: "blank-white-cards", version: "2.3.1" },
+    { name: "blank-white-cards", version: "2.3.2" },
     { instructions: INSTRUCTIONS }
   );
   mcp.registerTool(
