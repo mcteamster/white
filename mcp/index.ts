@@ -62,47 +62,7 @@ interface Session {
   credentials: string;
 }
 
-// ── Session helpers ───────────────────────────────────────────────────────────
-
-function sessionKey(matchID: string, playerID: string) {
-  return `${matchID}:${playerID}`;
-}
-
-async function connectSession(matchID: string, playerID: string, credentials: string, server: string): Promise<Session> {
-  const key = sessionKey(matchID, playerID);
-  const existing = sessions.get(key);
-  if (existing) existing.client.stop?.();
-
-  const client = Client({
-    game: BlankWhiteCards,
-    multiplayer: SocketIO({ server }),
-    matchID,
-    playerID,
-    credentials,
-  });
-
-  await new Promise<void>((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('Timed out connecting to match')), 10000);
-    const unsub = client.subscribe((state: unknown) => {
-      if (state && (state as { G?: unknown }).G) {
-        clearTimeout(timeout);
-        unsub();
-        resolve();
-      }
-    });
-    client.start();
-  });
-
-  const session: Session = { client, credentials };
-  sessions.set(key, session);
-  return session;
-}
-
-function requireSession(matchID: string, playerID: string): Session {
-  const session = sessions.get(sessionKey(matchID, playerID));
-  if (!session) throw new Error(`Not in match ${matchID} as player ${playerID} — call join_match first`);
-  return session;
-}
+// ── Session helpers (inside createMcpServer) ──────────────────────────────────
 
 // ── Card helpers ──────────────────────────────────────────────────────────────
 
@@ -315,6 +275,47 @@ This server provides role prompts (autonomous_player, referee, spectator, deck_b
 
 export function createMcpServer() {
 const sessions = new Map<string, Session>();
+
+function sessionKey(matchID: string, playerID: string) {
+  return `${matchID}:${playerID}`;
+}
+
+async function connectSession(matchID: string, playerID: string, credentials: string, server: string): Promise<Session> {
+  const key = sessionKey(matchID, playerID);
+  const existing = sessions.get(key);
+  if (existing) existing.client.stop?.();
+
+  const client = Client({
+    game: BlankWhiteCards,
+    multiplayer: SocketIO({ server }),
+    matchID,
+    playerID,
+    credentials,
+  });
+
+  await new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('Timed out connecting to match')), 10000);
+    const unsub = client.subscribe((state: unknown) => {
+      if (state && (state as { G?: unknown }).G) {
+        clearTimeout(timeout);
+        unsub();
+        resolve();
+      }
+    });
+    client.start();
+  });
+
+  const session: Session = { client, credentials };
+  sessions.set(key, session);
+  return session;
+}
+
+function requireSession(matchID: string, playerID: string): Session {
+  const session = sessions.get(sessionKey(matchID, playerID));
+  if (!session) throw new Error(`Not in match ${matchID} as player ${playerID} — call join_match first`);
+  return session;
+}
+
 const mcp = new McpServer(
   { name: 'blank-white-cards', version: '2.3.1' },
   { instructions: INSTRUCTIONS },
