@@ -1,4 +1,4 @@
-FROM node:22-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /build
 COPY mcp/package.json .
 COPY src/Game.ts src/Cards.ts src/
@@ -6,7 +6,7 @@ COPY src/lib/constants.ts src/lib/
 COPY mcp/index.ts .
 RUN npm install && npx esbuild index.ts --bundle --platform=node --format=cjs --outfile=dist/index.js --banner:js='#!/usr/bin/env node'
 
-FROM node:22-alpine
+FROM node:26-alpine
 WORKDIR /app
 ENV NODE_ENV=production \
     MCP_HTTP_PORT=8000
