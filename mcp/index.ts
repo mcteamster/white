@@ -1,8 +1,3 @@
-// Protect stdout — MCP uses stdio transport, so any non-JSON-RPC output on
-// stdout (e.g. console.log/debug from game code) kills the connection.
-console.log = console.error;
-console.debug = console.error;
-
 // Use CJS require for boardgame.io — its client entry points to a JSX file that
 // ESM/tsx can't resolve, but the CJS dist works fine.
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -66,7 +61,6 @@ interface Session {
   client: ReturnType<typeof Client>;
   credentials: string;
 }
-const sessions = new Map<string, Session>();
 
 // ── Session helpers ───────────────────────────────────────────────────────────
 
@@ -319,9 +313,10 @@ Cards can optionally have images. If you can draw or generate an image to accomp
 This server provides role prompts (autonomous_player, referee, spectator, deck_builder) that describe how to use these tools for specific purposes. List prompts to see available roles.
 `.trim();
 
-function createMcpServer() {
+export function createMcpServer() {
+const sessions = new Map<string, Session>();
 const mcp = new McpServer(
-  { name: 'blank-white-cards', version: '2.3.0' },
+  { name: 'blank-white-cards', version: '2.3.1' },
   { instructions: INSTRUCTIONS },
 );
 
@@ -887,47 +882,85 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { createServer } from 'http';
 import { randomUUID } from 'crypto';
 
-const PORT = parseInt(process.env.MCP_HTTP_PORT || '0');
+// Run as entrypoint (stdio or HTTP), skip when imported as library
+const isCLI = typeof require !== 'undefined'
+  ? require.main === module  // CJS bundle
+  : process.argv[1] && import.meta.url === `file://${process.argv[1]}`;
 
-if (PORT) {
-  const transports = new Map<string, StreamableHTTPServerTransport>();
+if (isCLI) {
+  const PORT = parseInt(process.env.MCP_HTTP_PORT || '0');
 
-  const server = createServer(async (req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', '*');
-    res.setHeader('Access-Control-Expose-Headers', 'mcp-session-id');
-    if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+  if (PORT) {
+    const SESSION_TIMEOUT_MS = parseInt(process.env.MCP_SESSION_TIMEOUT || '300000'); // 5 min default
+    const transports = new Map<string, { transport: StreamableHTTPServerTransport; timer: ReturnType<typeof setTimeout> }>();
 
-    const sessionId = req.headers['mcp-session-id'] as string | undefined;
-
-    if (sessionId && transports.has(sessionId)) {
-      const transport = transports.get(sessionId)!;
-      if (req.method === 'DELETE') {
-        await transport.close();
-        transports.delete(sessionId);
-        res.writeHead(200); res.end(); return;
-      }
-      await transport.handleRequest(req, res);
-      return;
+    function touchSession(id: string) {
+      const entry = transports.get(id);
+      if (!entry) return;
+      clearTimeout(entry.timer);
+      entry.timer = setTimeout(() => {
+        entry.transport.close();
+        transports.delete(id);
+      }, SESSION_TIMEOUT_MS);
     }
 
-    // New session
-    const id = randomUUID();
-    const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: () => id });
-    transports.set(id, transport);
-    transport.onclose = () => transports.delete(id);
+    const server = createServer(async (req, res) => {
+      // Health check
+      if (req.method === 'GET' && req.url === '/health') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'ok', sessions: transports.size }));
+        return;
+      }
 
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', '*');
+      res.setHeader('Access-Control-Expose-Headers', 'mcp-session-id');
+      if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
+      const sessionId = req.headers['mcp-session-id'] as string | undefined;
+
+      if (sessionId && transports.has(sessionId)) {
+        const entry = transports.get(sessionId)!;
+        if (req.method === 'DELETE') {
+          clearTimeout(entry.timer);
+          await entry.transport.close();
+          transports.delete(sessionId);
+          res.writeHead(200); res.end(); return;
+        }
+        touchSession(sessionId);
+        await entry.transport.handleRequest(req, res);
+        return;
+      }
+
+      // New session
+      const id = randomUUID();
+      const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: () => id });
+      const timer = setTimeout(() => {
+        transport.close();
+        transports.delete(id);
+      }, SESSION_TIMEOUT_MS);
+      transports.set(id, { transport, timer });
+      transport.onclose = () => {
+        const entry = transports.get(id);
+        if (entry) clearTimeout(entry.timer);
+        transports.delete(id);
+      };
+
+      const mcp = createMcpServer();
+      await mcp.connect(transport);
+      await transport.handleRequest(req, res);
+    });
+
+    server.listen(PORT, () => {
+      console.error(`MCP Streamable HTTP listening on port ${PORT}`);
+    });
+  } else {
+    // Protect stdout — MCP stdio transport breaks if non-JSON-RPC output hits stdout
+    console.log = console.error;
+    console.debug = console.error;
     const mcp = createMcpServer();
-    await mcp.connect(transport);
-    await transport.handleRequest(req, res);
-  });
-
-  server.listen(PORT, () => {
-    console.error(`MCP Streamable HTTP listening on port ${PORT}`);
-  });
-} else {
-  const mcp = createMcpServer();
-  const transport = new StdioServerTransport();
-  mcp.connect(transport).catch(console.error);
+    const transport = new StdioServerTransport();
+    mcp.connect(transport).catch(console.error);
+  }
 }
