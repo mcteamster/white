@@ -65346,10 +65346,10 @@ var import_node_fs = require("node:fs");
 var import_node_os = require("node:os");
 var import_node_path = require("node:path");
 
-// ../src/Game.ts
+// ../core/src/Game.ts
 var import_core11 = __toESM(require_core5());
 
-// ../src/Cards.ts
+// ../core/src/Cards.ts
 var getCardById = (cards, id) => {
   return cards.find((card) => card.id === id);
 };
@@ -65357,7 +65357,7 @@ var getCardsByLocation = (cards, position) => {
   return cards.filter((card) => card.location === position);
 };
 
-// ../src/lib/constants.ts
+// ../core/src/lib/constants.ts
 var ORIGIN = typeof process === "object" ? "https://blankwhite.cards" : "";
 var presetDecks = {
   global: { cards: [] },
@@ -65383,7 +65383,7 @@ if (typeof process === "object") {
   setTimeout(refreshDeck, 1e3 * 10, "standard");
 }
 
-// ../src/Game.ts
+// ../core/src/Game.ts
 var pickupCard = ({ G, random, playerID }) => {
   const deck = getCardsByLocation(G.cards, "deck");
   if (deck.length === 0) {

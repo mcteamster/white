@@ -155,7 +155,7 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
 }
 import { useDeckEditor } from '../../lib/editor';
 import { sanitiseCard, downloadDeck } from '../../lib/data';
-import { Card } from '../../Cards';
+import { Card } from '@mcteamster/white-core';
 
 export function DeckEditor() {
   const navigate = useNavigate();

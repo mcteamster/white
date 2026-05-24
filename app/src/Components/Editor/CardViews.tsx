@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Properties } from 'csstype';
-import { Card } from '../../Cards';
+import { Card } from '@mcteamster/white-core';
 import { Icon } from '../Icons';
 import { BLANK_IMAGE, decompressImage } from '../../lib/images';
 

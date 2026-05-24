@@ -1,6 +1,6 @@
 import { Properties } from 'csstype';
 import { Icon } from '../Icons';
-import { Card } from '../../Cards';
+import { Card } from '@mcteamster/white-core';
 
 // Selection Action Buttons Component
 export function SelectionActions({ 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Card } from '../../Cards';
+import { Card } from '@mcteamster/white-core';
 import { Icon } from '../Icons';
 //@ts-expect-error: JS Module
 import { sketchpad, strokes } from '../../Canvas.js';
