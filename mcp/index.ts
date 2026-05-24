@@ -273,7 +273,8 @@ Cards can optionally have images. If you can draw or generate an image to accomp
 This server provides role prompts (autonomous_player, referee, spectator, deck_builder) that describe how to use these tools for specific purposes. List prompts to see available roles.
 `.trim();
 
-export function createMcpServer() {
+
+// Game session state — persists across MCP transport sessions
 const sessions = new Map<string, Session>();
 
 function sessionKey(matchID: string, playerID: string) {
@@ -316,6 +317,7 @@ function requireSession(matchID: string, playerID: string): Session {
   return session;
 }
 
+export function createMcpServer() {
 const mcp = new McpServer(
   { name: 'blank-white-cards', version: '2.3.2' },
   { instructions: INSTRUCTIONS },
@@ -892,9 +894,23 @@ if (isCLI) {
   const PORT = parseInt(process.env.MCP_HTTP_PORT || '0');
 
   if (PORT) {
+    const SESSION_TIMEOUT_MS = parseInt(process.env.MCP_SESSION_TIMEOUT || '300000');
+    const transports = new Map<string, { transport: StreamableHTTPServerTransport; mcp: any; timer: ReturnType<typeof setTimeout> }>();
+
+    function touchSession(id: string) {
+      const entry = transports.get(id);
+      if (!entry) return;
+      clearTimeout(entry.timer);
+      entry.timer = setTimeout(() => {
+        entry.transport.close();
+        transports.delete(id);
+        console.error(`[mcp] session ${id} expired`);
+      }, SESSION_TIMEOUT_MS);
+    }
+
     const server = createServer(async (req, res) => {
       // Health check
-      if (req.method === 'GET' && req.url === '/health') {
+      if (req.method === 'GET' && req.url === '/') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ status: 'ok', sessions: transports.size }));
         return;
@@ -907,44 +923,62 @@ if (isCLI) {
       if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
       if (req.method === 'HEAD') { res.writeHead(200); res.end(); return; }
 
-      // Debug: log incoming requests and responses
-      console.error(`[mcp] ${req.method} ${req.url} session=${req.headers['mcp-session-id'] || 'none'} accept=${req.headers['accept'] || 'none'}`);
-      const origEnd = res.end.bind(res);
-      const origWrite = res.write.bind(res);
-      res.write = (...args: any[]) => {
-        if (res.statusCode >= 400) {
-          console.error(`[mcp] -> ${res.statusCode} WRITE: ${String(args[0]).substring(0, 500)}`);
-        }
-        return origWrite(...args);
-      };
-      res.end = (...args: any[]) => {
-        if (res.statusCode >= 400) {
-          console.error(`[mcp] -> ${res.statusCode} END ${req.method} ${req.url}: ${String(args[0] || '').substring(0, 500)}`);
-        }
-        return origEnd(...args);
-      };
+      // Log requests
+      console.error(`[mcp] ${req.method} ${req.url} session=${req.headers['mcp-session-id'] || 'none'}`);
 
-      // Ensure Accept header satisfies MCP SDK validation (AgentCore Gateway omits text/event-stream)
+      // Fix Accept header for gateway compatibility
       if (!req.headers['accept']?.includes('text/event-stream')) {
         const fixed = 'application/json, text/event-stream';
         req.headers['accept'] = fixed;
-        // Also fix rawHeaders which @hono/node-server may read
         const idx = req.rawHeaders.findIndex(h => h.toLowerCase() === 'accept');
-        if (idx >= 0) {
-          req.rawHeaders[idx + 1] = fixed;
-        } else {
-          req.rawHeaders.push('Accept', fixed);
-        }
+        if (idx >= 0) req.rawHeaders[idx + 1] = fixed;
+        else req.rawHeaders.push('Accept', fixed);
       }
 
-      // Stateless mode: fresh transport per request.
-      // AgentCore Gateway sends duplicate initialize requests on the same session,
-      // which the SDK rejects with "Server already initialized". Stateless mode
-      // avoids this by treating each request independently.
-      const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+      const sessionId = req.headers['mcp-session-id'] as string | undefined;
+
+      // Existing session
+      if (sessionId && transports.has(sessionId)) {
+        const entry = transports.get(sessionId)!;
+        if (req.method === 'DELETE') {
+          clearTimeout(entry.timer);
+          await entry.transport.close();
+          transports.delete(sessionId);
+          res.writeHead(200); res.end(); return;
+        }
+        touchSession(sessionId);
+        await entry.transport.handleRequest(req, res);
+
+        // If we got 400 "already initialized", the gateway is re-initializing.
+        // Destroy this session — the gateway will retry and get a fresh one.
+        if (res.statusCode === 400) {
+          console.error(`[mcp] session ${sessionId} got 400, destroying for re-init`);
+          clearTimeout(entry.timer);
+          await entry.transport.close();
+          transports.delete(sessionId);
+        }
+        return;
+      }
+
+      // New session
+      const id = randomUUID();
+      const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: () => id });
       const mcp = createMcpServer();
+      const timer = setTimeout(() => {
+        transport.close();
+        transports.delete(id);
+        console.error(`[mcp] session ${id} expired`);
+      }, SESSION_TIMEOUT_MS);
+      transports.set(id, { transport, mcp, timer });
+      transport.onclose = () => {
+        const entry = transports.get(id);
+        if (entry) clearTimeout(entry.timer);
+        transports.delete(id);
+      };
+
       await mcp.connect(transport);
       await transport.handleRequest(req, res);
+      console.error(`[mcp] new session ${id} created (total: ${transports.size})`);
     });
 
     server.listen(PORT, () => {
