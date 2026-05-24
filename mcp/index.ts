@@ -892,19 +892,6 @@ if (isCLI) {
   const PORT = parseInt(process.env.MCP_HTTP_PORT || '0');
 
   if (PORT) {
-    const SESSION_TIMEOUT_MS = parseInt(process.env.MCP_SESSION_TIMEOUT || '300000'); // 5 min default
-    const transports = new Map<string, { transport: StreamableHTTPServerTransport; timer: ReturnType<typeof setTimeout> }>();
-
-    function touchSession(id: string) {
-      const entry = transports.get(id);
-      if (!entry) return;
-      clearTimeout(entry.timer);
-      entry.timer = setTimeout(() => {
-        entry.transport.close();
-        transports.delete(id);
-      }, SESSION_TIMEOUT_MS);
-    }
-
     const server = createServer(async (req, res) => {
       // Health check
       if (req.method === 'GET' && req.url === '/health') {
@@ -918,36 +905,43 @@ if (isCLI) {
       res.setHeader('Access-Control-Allow-Headers', '*');
       res.setHeader('Access-Control-Expose-Headers', 'mcp-session-id');
       if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+      if (req.method === 'HEAD') { res.writeHead(200); res.end(); return; }
 
-      const sessionId = req.headers['mcp-session-id'] as string | undefined;
-
-      if (sessionId && transports.has(sessionId)) {
-        const entry = transports.get(sessionId)!;
-        if (req.method === 'DELETE') {
-          clearTimeout(entry.timer);
-          await entry.transport.close();
-          transports.delete(sessionId);
-          res.writeHead(200); res.end(); return;
+      // Debug: log incoming requests and responses
+      console.error(`[mcp] ${req.method} ${req.url} session=${req.headers['mcp-session-id'] || 'none'} accept=${req.headers['accept'] || 'none'}`);
+      const origEnd = res.end.bind(res);
+      const origWrite = res.write.bind(res);
+      res.write = (...args: any[]) => {
+        if (res.statusCode >= 400) {
+          console.error(`[mcp] -> ${res.statusCode} WRITE: ${String(args[0]).substring(0, 500)}`);
         }
-        touchSession(sessionId);
-        await entry.transport.handleRequest(req, res);
-        return;
-      }
-
-      // New session
-      const id = randomUUID();
-      const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: () => id });
-      const timer = setTimeout(() => {
-        transport.close();
-        transports.delete(id);
-      }, SESSION_TIMEOUT_MS);
-      transports.set(id, { transport, timer });
-      transport.onclose = () => {
-        const entry = transports.get(id);
-        if (entry) clearTimeout(entry.timer);
-        transports.delete(id);
+        return origWrite(...args);
+      };
+      res.end = (...args: any[]) => {
+        if (res.statusCode >= 400) {
+          console.error(`[mcp] -> ${res.statusCode} END ${req.method} ${req.url}: ${String(args[0] || '').substring(0, 500)}`);
+        }
+        return origEnd(...args);
       };
 
+      // Ensure Accept header satisfies MCP SDK validation (AgentCore Gateway omits text/event-stream)
+      if (!req.headers['accept']?.includes('text/event-stream')) {
+        const fixed = 'application/json, text/event-stream';
+        req.headers['accept'] = fixed;
+        // Also fix rawHeaders which @hono/node-server may read
+        const idx = req.rawHeaders.findIndex(h => h.toLowerCase() === 'accept');
+        if (idx >= 0) {
+          req.rawHeaders[idx + 1] = fixed;
+        } else {
+          req.rawHeaders.push('Accept', fixed);
+        }
+      }
+
+      // Stateless mode: fresh transport per request.
+      // AgentCore Gateway sends duplicate initialize requests on the same session,
+      // which the SDK rejects with "Server already initialized". Stateless mode
+      // avoids this by treating each request independently.
+      const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
       const mcp = createMcpServer();
       await mcp.connect(transport);
       await transport.handleRequest(req, res);
