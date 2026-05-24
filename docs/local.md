@@ -83,9 +83,20 @@ npm run serve
 ### 5. [OPTIONAL] MCP Server
 The MCP server lets AI agents play Blank White Cards via the [Model Context Protocol](https://modelcontextprotocol.io/).
 
-**Stdio mode** (for local clients like Claude Desktop, Kiro):
-```
-npm run mcp
+**Stdio mode** add to your `mcp.json`:
+```json
+{
+  "mcpServers": {
+    "blank-white-cards": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@mcteamster/white-mcp"
+      ],
+      "env": {}
+    }
+  }
+}
 ```
 
 **HTTP mode** (for remote clients):
@@ -99,9 +110,8 @@ Add to your MCP client config:
 {
   "mcpServers": {
     "blank-white-cards": {
-      "command": "npx",
-      "args": ["tsx", "./mcp/index.ts"],
-      "cwd": "/path/to/white"
+      "url": "http://{YOUR_SERVER_URL}:8000/mcp",
+      "headers": {}
     }
   }
 }

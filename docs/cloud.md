@@ -1,10 +1,10 @@
 # Cloud Hosting Architecture
-The game is hosted on multiple cloud providers using the following services:
+The game is hosted using the following services:
 - AWS CloudFront for the Web App
 - AWS API Gateway, SQS, and Lambda for the Global Card Creation and 'Like' API
-- Virtual Machines for the `boardgame.io` Game Servers in multiple regions
+- Virtual Machines for the `boardgame.io` Game Servers and MCP Servers in multiple regions
   - Asia Pacific: AWS EC2
-  - Europe: Azure VM
+  - Europe: AWS EC2
   - North America: GCP CE
 
 ![Cloud Hosting Architecture](./img/cloud.svg)
@@ -16,7 +16,7 @@ This keeps interaction latencies around 0.5-1 second on average for major popula
 | Geo | Cloud Region |
 | --- | --- |
 | North America | GCP us-central1 (Iowa) |
-| Europe | Azure UK South (London) |
+| Europe | AWS eu-central-1 (Frankfurt) |
 | Asia Pacific | AWS ap-southeast-1 (Singapore) |
 
-[![Global Regions](./img/global.png)](https://www.timeanddate.com/time/map/#!cities=236,136,76)
+[![Global Regions](./img/global.png)](https://www.timeanddate.com/time/map/#!cities=236,83,76)
