@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "dev": "npm run dev -w app",
-    "build": "npm run build -w app",
+    "build": "npm run build -w app && npm run build -w mcp",
     "lint": "npm run lint -w app",
     "pull:global": "npm run pull:global -w app",
     "serve": "npm run start -w server",
