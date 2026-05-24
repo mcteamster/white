@@ -15,6 +15,7 @@
     "lint": "npm run lint -w app",
     "pull:global": "curl https://blankwhite.cards/decks/global.json > ./app/public/decks/global.json && node ./bin/chunk-global.js",
     "serve": "npm run start -w server",
+    "serve:local": "npm run dev -w server",
     "serve:mcp": "npm run serve -w mcp",
     "mcp": "tsx ./mcp/index.ts"
   },
