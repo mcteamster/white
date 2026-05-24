@@ -2,11 +2,11 @@ FROM node:24-alpine
 WORKDIR /app
 ENV NODE_ENV=production \
     PORT=80 \
-    VITE_ORIGIN=https://blankwhite.cards
+    ORIGIN=https://blankwhite.cards
 
 COPY server/package.json ./
 COPY core/ ./node_modules/@mcteamster/white-core/
-RUN npm install --omit=dev
+RUN npm install --omit=dev && npm install tsx
 
 COPY server/index.ts ./
 
