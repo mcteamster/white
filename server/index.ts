@@ -1,5 +1,5 @@
 import { Server, Origins } from 'boardgame.io/server';
-import { BlankWhiteCards } from '@mcteamster/white-core';
+import { BlankWhiteCards, startDeckPolling } from '@mcteamster/white-core';
 import { customAlphabet, nanoid } from 'nanoid';
 
 // Custom alphabet for room codes
@@ -61,6 +61,7 @@ server.router.get('/export/:matchID', async (ctx) => {
 });
 
 server.run(Number(process.env.PORT));
+startDeckPolling();
 
 // Cleanup rooms older than 12 hours
 setInterval(async () => {

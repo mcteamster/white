@@ -26,7 +26,7 @@ const refreshDeck = (deck: string) => {
   }
 }
 
-if (typeof process === 'object') {
+export const startDeckPolling = () => {
   setTimeout(refreshDeck, 1000 * 5, 'global'); // 5 second delay
   setTimeout(refreshDeck, 1000 * 10, 'standard'); // 10 second delay
 }

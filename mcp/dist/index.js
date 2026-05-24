@@ -65358,30 +65358,10 @@ var getCardsByLocation = (cards, position) => {
 };
 
 // ../core/src/lib/constants.ts
-var ORIGIN = typeof process === "object" ? "https://blankwhite.cards" : "";
 var presetDecks = {
   global: { cards: [] },
   standard: { cards: [] }
 };
-var refreshDeck = (deck) => {
-  try {
-    console.debug(`${/* @__PURE__ */ new Date()} Refreshing Deck: ${deck}`);
-    fetch(`${ORIGIN}/decks/${deck}.json`).then(async (res) => {
-      presetDecks[deck] = await res.json();
-    });
-    if (deck == "global") {
-      setTimeout(refreshDeck, 1e3 * 60 * 10, "global");
-    } else if (deck == "standard") {
-      setTimeout(refreshDeck, 1e3 * 60 * 60 * 24, "standard");
-    }
-  } catch (e) {
-    console.error(e);
-  }
-};
-if (typeof process === "object") {
-  setTimeout(refreshDeck, 1e3 * 5, "global");
-  setTimeout(refreshDeck, 1e3 * 10, "standard");
-}
 
 // ../core/src/Game.ts
 var pickupCard = ({ G, random, playerID }) => {
