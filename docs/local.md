@@ -80,7 +80,34 @@ Run the game server:
 npm run serve
 ```
 
-### 5. Project Structure
+### 5. [OPTIONAL] MCP Server
+The MCP server lets AI agents play Blank White Cards via the [Model Context Protocol](https://modelcontextprotocol.io/).
+
+**Stdio mode** (for local clients like Claude Desktop, Kiro):
+```
+npm run mcp
+```
+
+**HTTP mode** (for remote clients):
+```
+npm run serve:mcp
+```
+This starts a Streamable HTTP server on port 8000.
+
+Add to your MCP client config:
+```json
+{
+  "mcpServers": {
+    "blank-white-cards": {
+      "command": "npx",
+      "args": ["tsx", "./mcp/index.ts"],
+      "cwd": "/path/to/white"
+    }
+  }
+}
+```
+
+### 6. Project Structure
 ```
 white/
 ├── core/       ← Shared game logic (Game.ts, Cards.ts)
