@@ -83,6 +83,8 @@ npm run serve
 ### 5. [OPTIONAL] MCP Server
 The MCP server lets AI agents play Blank White Cards via the [Model Context Protocol](https://modelcontextprotocol.io/).
 
+By default, the MCP server connects to the public game servers (ap/eu/na.blankwhite.cards) based on the room code. To point it at your own server instead, set the `GAME_SERVER_URL` environment variable:
+
 **Stdio mode** add to your `mcp.json`:
 ```json
 {
@@ -93,7 +95,9 @@ The MCP server lets AI agents play Blank White Cards via the [Model Context Prot
       "args": [
         "@mcteamster/white-mcp"
       ],
-      "env": {}
+      "env": {
+        "GAME_SERVER_URL": "<YOUR_GAME_SERVER>"
+      }
     }
   }
 }
@@ -101,7 +105,7 @@ The MCP server lets AI agents play Blank White Cards via the [Model Context Prot
 
 **HTTP mode** (for remote clients):
 ```
-npm run serve:mcp
+GAME_SERVER_URL=<YOUR_GAME_SERVER> npm run serve:mcp
 ```
 This starts a Streamable HTTP server on port 8000.
 
