@@ -3,8 +3,8 @@
   "private": true,
   "version": "2.3.2",
   "scripts": {
-    "start": "node --import tsx ./index.ts",
-    "dev": "node --env-file=../.env.development --import tsx ./index.ts"
+    "start": "node --env-file=.env.production --import tsx ./index.ts",
+    "dev": "node --env-file=.env.development --import tsx ./index.ts"
   },
   "dependencies": {
     "@mcteamster/white-core": "*",

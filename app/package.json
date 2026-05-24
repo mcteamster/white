@@ -7,7 +7,8 @@
     "build": "tsc -b && vite build",
     "host": "tsc -b && vite build --mode development; vite preview --host",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "pull:global": "curl https://blankwhite.cards/decks/global.json > ./public/decks/global.json && node ./bin/chunk-global.js"
   },
   "dependencies": {
     "@discord/embedded-app-sdk": "^2.0.0",
