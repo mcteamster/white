@@ -19,55 +19,111 @@ npm run serve:local
 ```
 This will run a `boardgame.io` server at http://localhost:3000
 
-[Optional] If you'd like to host across your local network, modify the LAN IP Address and/or PORT in `.env.development`:
+[Optional] If you'd like to host across your local network, modify the LAN IP Address and/or PORT in `server/.env.development`:
 ```
-# Game Info
-VITE_ORIGIN='http://<YOUR_LAN_IP_ADDRESS>:5173'
-VITE_COMPRESS_IMAGES='true' # Compressing image improves network performance at the cost of decompression lag
-VITE_MULTI_REGION='false' # Distribute traffic to multiple servers in different regions to lower latency
-
-# Client Side Environment
-VITE_DEFAULT_SERVER='http://<YOUR_LAN_IP_ADDRESS>:<PORT>'
-
-# Server Side Environment
 NODE_ENV=development
 PORT=<PORT>
+ORIGIN=http://<YOUR_LAN_IP_ADDRESS>:<PORT>
+```
+
+And update `app/.env.development`:
+```
+VITE_ORIGIN='http://<YOUR_LAN_IP_ADDRESS>:5173'
+VITE_COMPRESS_IMAGES='true'
+VITE_MULTI_REGION='false'
+VITE_DEFAULT_SERVER='http://<YOUR_LAN_IP_ADDRESS>:<PORT>'
 ```
 
 ### 3. Start hosting the Client
 Open a new terminal and run:
 ```
-npm run host
+npm run dev
 ```
-This will run a hosted `vite` preview site at http://localhost:4173 and [http://<YOUR_LAN_IP_ADDRESS>:4173](http://127.0.0.1:4173)
+This will run a `vite` dev server at http://localhost:5173
+
+Or for a production-like preview:
+```
+npm run build
+npm run preview -w app
+```
 
 Congratulations! You can now start playing or extending `Blank White Cards` to your heart's content!
 
 ### 4. [OPTIONAL] Production Builds
 This section assumes you have web servers set up and properly configured for production network traffic [see sample architecture](./cloud.md)
 
-Update `.env.production` with the details of your hosting setup:
+Update `app/.env.production` with the details of your hosting setup:
 ```
-# Game Info
-VITE_ORIGIN='<WEBSITE>' # Website where this game is served from
-VITE_COMPRESS_IMAGES='false' # Compressing image improves network performance at the cost of decompression lag
-VITE_MULTI_REGION='false' # Distribute traffic to multiple servers in different regions to lower latency
+VITE_ORIGIN='<WEBSITE>'
+VITE_COMPRESS_IMAGES='true'
+VITE_MULTI_REGION='false'
+VITE_API_SERVER='<COMMON_API>'
+VITE_CARD_API='<CARD_API_ENDPOINT>'
+VITE_DEFAULT_SERVER='<GAME_SERVER>'
+```
 
-# Client Side Environment
-VITE_API_SERVER='<COMMON_API>' # Common API for notices/announcements (e.g., https://api.mcteamster.com)
-VITE_CARD_API='<CARD_API_ENDPOINT>' # Global Card submission/like API (e.g., https://rest.blankwhite.cards)
-VITE_DEFAULT_SERVER='<GAME_SERVER>' # Boardgame.io Lobby & Game Server
-
-# Server Side Environment
+Update `server/.env.production`:
+```
 NODE_ENV=production
 PORT=80
+ORIGIN=<WEBSITE>
 ```
+
+Build the client:
 ```
 npm run build
 ```
-Build and copy the contents of the `dist` folder to your web server. Set the default document to `index.html`
+Copy the contents of `app/dist` to your web server. Set the default document to `index.html`.
 
-Copy the game files onto your Lobby and Game Server(s) and run:
+Run the game server:
 ```
 npm run serve
+```
+
+### 5. [OPTIONAL] MCP Server
+The MCP server lets AI agents play Blank White Cards via the [Model Context Protocol](https://modelcontextprotocol.io/).
+
+**Stdio mode** add to your `mcp.json`:
+```json
+{
+  "mcpServers": {
+    "blank-white-cards": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@mcteamster/white-mcp"
+      ],
+      "env": {}
+    }
+  }
+}
+```
+
+**HTTP mode** (for remote clients):
+```
+npm run serve:mcp
+```
+This starts a Streamable HTTP server on port 8000.
+
+Add to your MCP client config:
+```json
+{
+  "mcpServers": {
+    "blank-white-cards": {
+      "url": "http://{YOUR_SERVER_URL}:8000/mcp",
+      "headers": {}
+    }
+  }
+}
+```
+
+### 6. Project Structure
+```
+white/
+├── core/       ← Shared game logic (Game.ts, Cards.ts)
+├── app/        ← React frontend (Vite)
+├── server/     ← boardgame.io game server
+├── api/        ← AWS CDK / Lambda backend
+├── mcp/        ← MCP server (AI agent tools)
+└── docs/       ← Documentation
 ```

@@ -1,0 +1,14 @@
+{
+  "name": "@mcteamster/white-server",
+  "private": true,
+  "version": "2.3.2",
+  "scripts": {
+    "start": "node --env-file=.env.production --import tsx ./index.ts",
+    "dev": "node --env-file=.env.development --import tsx ./index.ts"
+  },
+  "dependencies": {
+    "@mcteamster/white-core": "*",
+    "boardgame.io": "^0.50.2",
+    "nanoid": "^5.1.0"
+  }
+}

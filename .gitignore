@@ -8,8 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
-!mcp/dist
+app/dist
 dist-ssr
 *.local
 
@@ -25,11 +24,9 @@ dist-ssr
 *.sw?
 
 # Card Files
-public/card
-public/decks/global*
+app/public/card
+app/public/decks/global*
 
 # CDK
-cdk/cdk.out
-cdk/node_modules
-lambda/node_modules
-lambda/dist
+api/cdk.out
+api/dist
