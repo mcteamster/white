@@ -1,4 +1,4 @@
-import { Card } from "../Cards";
+import { Card } from "@mcteamster/white-core";
 import { externalLink } from './hooks';
 
 // Sanitise Cards

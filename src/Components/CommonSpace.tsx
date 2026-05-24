@@ -1,9 +1,9 @@
 import type { BoardProps } from 'boardgame.io/react';
 import QRCode from "react-qr-code";
-import type { GameState } from '../Game.ts'
+import type { GameState } from '@mcteamster/white-core'
 import type { Properties } from 'csstype';
 import { CardFace } from './CardFace.tsx';
-import { getCardsByLocation, getCardsByOwner } from '../Cards';
+import { getCardsByLocation, getCardsByOwner } from '@mcteamster/white-core';
 import { Icon } from './Icons';
 import { useCallback, useContext, useState } from 'react';
 import { useWindowDimensions } from '../lib/hooks.ts';

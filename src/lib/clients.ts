@@ -2,9 +2,9 @@
 import { LobbyClient } from 'boardgame.io/client';
 import { Client } from 'boardgame.io/react';
 import { SocketIO } from 'boardgame.io/multiplayer';
-import { BlankWhiteCards, GameState } from '../Game';
+import { BlankWhiteCards, GameState } from '@mcteamster/white-core';
 import { BlankWhiteCardsBoard } from '../Board';
-import { Card } from '../Cards';
+import { Card } from '@mcteamster/white-core';
 
 // Global Deck Singleplayer
 export const startingDeck: GameState = { cards: [] };

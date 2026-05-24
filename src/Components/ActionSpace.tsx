@@ -1,9 +1,9 @@
 import type { BoardProps } from 'boardgame.io/react';
-import type { GameState } from '../Game.ts'
+import type { GameState } from '@mcteamster/white-core'
 import { Finalise } from './Finalise.tsx';
 import { Focus } from './Focus.tsx';
 import type { Properties } from 'csstype';
-import { Card, getCardsByLocation, getCardsByOwner } from '../Cards';
+import { Card, getCardsByLocation, getCardsByOwner } from '@mcteamster/white-core';
 import { Icon } from './Icons';
 import { useState, useEffect, useContext, useRef, useCallback } from 'react';
 //@ts-expect-error: JS Module

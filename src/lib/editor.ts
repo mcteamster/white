@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router';
-import { Card } from '../Cards';
+import { Card } from '@mcteamster/white-core';
 import { sanitiseCard } from './data';
 import { dbManager } from './indexedDB';
 import { getRegion, SERVERS } from './clients';

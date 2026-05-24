@@ -3,6 +3,7 @@
   "private": true,
   "version": "2.3.2",
   "workspaces": [
+    "core",
     "api",
     "mcp"
   ],

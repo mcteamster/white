@@ -1,5 +1,5 @@
 import { Server, Origins } from 'boardgame.io/server';
-import { BlankWhiteCards } from './Game';
+import { BlankWhiteCards } from '@mcteamster/white-core';
 import { customAlphabet, nanoid } from 'nanoid';
 
 // Custom alphabet for room codes

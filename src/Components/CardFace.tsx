@@ -1,5 +1,5 @@
 import type { Properties } from 'csstype';
-import type { Card } from '../Cards.ts';
+import type { Card } from '@mcteamster/white-core';
 import { Icon } from './Icons.tsx';
 import { ReactElement, useCallback, useContext, useEffect, useState } from 'react';
 import { BLANK_IMAGE, decompressImage } from '../lib/images.ts';

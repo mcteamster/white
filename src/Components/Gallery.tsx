@@ -3,7 +3,7 @@ import type { Properties } from 'csstype';
 import { Browse, Icon } from './Icons';
 import { startingDeck, onDeckUpdate } from '../lib/clients';
 import { useCallback, useContext, useEffect, useState } from "react";
-import { Card, getAdjacentCard } from "../Cards";
+import { Card, getAdjacentCard } from "@mcteamster/white-core";
 import { HotkeysContext, ImageCacheType } from "../lib/contexts";
 import { useWindowDimensions } from "../lib/hooks";
 import { BLANK_IMAGE, decompressImage } from "../lib/images";

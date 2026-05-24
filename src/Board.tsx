@@ -1,5 +1,5 @@
 import type { BoardProps } from 'boardgame.io/react';
-import type { GameState } from './Game.ts'
+import type { GameState } from '@mcteamster/white-core'
 import type { Properties } from 'csstype';
 import { ActionSpace } from './Components/ActionSpace.tsx';
 import { CommonSpace } from './Components/CommonSpace.tsx';

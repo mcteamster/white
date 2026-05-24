@@ -12,8 +12,8 @@ import { execSync } from 'node:child_process';
 import { readFileSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { BlankWhiteCards } from '../src/Game';
-import type { Card } from '../src/Cards';
+import { BlankWhiteCards } from '@mcteamster/white-core';
+import type { Card } from '@mcteamster/white-core';
 
 const GAME_SERVER_OVERRIDE = process.env.GAME_SERVER_URL;
 const GAME_NAME = 'blank-white-cards';

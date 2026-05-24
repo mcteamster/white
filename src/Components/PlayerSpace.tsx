@@ -1,7 +1,7 @@
 import type { BoardProps } from 'boardgame.io/react';
-import type { GameState } from '../Game.ts'
+import type { GameState } from '@mcteamster/white-core'
 import type { Properties } from 'csstype';
-import { getCardsByLocation, getCardsByOwner } from '../Cards';
+import { getCardsByLocation, getCardsByOwner } from '@mcteamster/white-core';
 import { CardFace } from './CardFace.tsx';
 import { useCallback, useContext } from 'react';
 import { FocusContext } from '../lib/contexts.ts';
