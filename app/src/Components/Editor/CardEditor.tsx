@@ -265,7 +265,7 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
           <wired-input 
             placeholder="Title" 
             value={title}
-            onInput={(e: any) => setTitle(e.target.value)}
+            onInput={(e: React.FormEvent<HTMLElement>) => setTitle((e.target as HTMLInputElement).value)}
             style={modalStyles.title} 
             maxlength={50}
           />
@@ -283,7 +283,7 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
           <wired-input 
             placeholder="Author" 
             value={author}
-            onInput={(e: any) => setAuthor(e.target.value)}
+            onInput={(e: React.FormEvent<HTMLElement>) => setAuthor((e.target as HTMLInputElement).value)}
             style={modalStyles.author} 
             maxlength={25}
           />

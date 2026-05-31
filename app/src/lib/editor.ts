@@ -30,7 +30,7 @@ export const useDeckEditor = () => {
     const loadDeck = async () => {
       // Try IndexedDB first
       try {
-        const savedDeck = await dbManager.get(storageKey);
+        const savedDeck = await dbManager.get(storageKey) as DeckEditorState | null;
         if (savedDeck) {
           // If it's a multiplayer deck (has deckId) and the cache is empty, re-fetch from server
           if (deckId && savedDeck.cards.length === 0) {
@@ -54,7 +54,7 @@ export const useDeckEditor = () => {
           if (response.ok) {
             const rawData = await response.text();
             const cardsData = JSON.parse(decodeURI(atob(rawData)));
-            const cards = cardsData.map((card: any, index: number) => {
+            const cards = cardsData.map((card: unknown, index: number) => {
               const sanitized = sanitiseCard(card);
               sanitized.id = index + 1;
               return sanitized;
@@ -120,10 +120,10 @@ export const useDeckEditor = () => {
           const cardsData = JSON.parse(decodeURI(atob(rawData)));
           
           // Sanitize and process cards
-          const cards = cardsData.map((card: any, index: number) => {
+          const cards = cardsData.map((card: unknown, index: number) => {
             const sanitized = sanitiseCard(card);
             sanitized.id = index + 1;
-            sanitized.location = card.location || 'deck';
+            sanitized.location = (card as Record<string, unknown>)?.location as string || 'deck';
             return sanitized;
           });
 

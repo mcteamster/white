@@ -532,10 +532,10 @@ export function DeckEditor() {
           const rawData = match[1];
           const cardsData = JSON.parse(decodeURI(atob(rawData)));
           
-          const cards = cardsData.map((card: any, index: number) => {
+          const cards = cardsData.map((card: unknown, index: number) => {
             const sanitized = sanitiseCard(card);
             sanitized.id = index + 1;
-            sanitized.location = card.location || 'deck';
+            sanitized.location = (card as Record<string, unknown>)?.location as string || 'deck';
             return sanitized;
           });
 
@@ -795,12 +795,12 @@ export function DeckEditor() {
             id="deckEditorSearch"
             placeholder={`Search from ${deck.cards.length} cards...`}
             value={searchTerm}
-            onInput={(e: any) => setSearchTerm(e.target.value)}
+            onInput={(e: React.FormEvent<HTMLElement>) => setSearchTerm((e.target as HTMLInputElement).value)}
             style={styles.searchInput}
           />
           <div onClick={() => {
             setSearchTerm('');
-            const input = document.getElementById('deckEditorSearch') as any;
+            const input = document.getElementById('deckEditorSearch') as HTMLInputElement | null;
             if (input) input.value = '';
           }} style={styles.clearSearch}>
             <Icon name="exit" />
@@ -881,7 +881,7 @@ export function DeckEditor() {
                   <p>Enter a name for your deck:</p>
                   <wired-input
                     value={saveFileName}
-                    onInput={(e: any) => setSaveFileName(e.target.value)}
+                    onInput={(e: React.FormEvent<HTMLElement>) => setSaveFileName((e.target as HTMLInputElement).value)}
                     style={{ width: '80%', marginBottom: '1em' }}
                   />
                   <div style={styles.fileModalButtons}>

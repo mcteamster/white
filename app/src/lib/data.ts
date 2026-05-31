@@ -2,34 +2,36 @@ import { Card } from "@mcteamster/white-core";
 import { externalLink } from './hooks';
 
 // Sanitise Cards
-export const sanitiseCard = (inputCard: any) => {
+export const sanitiseCard = (inputCard: unknown) => {
+  const card = inputCard as Record<string, unknown>;
   const outputCard: Card = {
     id: 0,
     content: {
       title: '',
       description: '',
     },
-    location: (inputCard?.location === 'box') ? 'box' : 'deck',
+    location: (card?.location === 'box') ? 'box' : 'deck',
   };
 
   // Support for v2 and v1 card schemas
+  const content = card?.content as Record<string, unknown> | undefined;
   outputCard.content = {
-    title: inputCard?.content?.title || inputCard.title,
-    description: inputCard?.content?.description || inputCard.description,
-    author: inputCard?.content?.author || inputCard.author,
-    image: inputCard?.content?.image || inputCard.picture,
+    title: (content?.title || card?.title) as string || '',
+    description: (content?.description || card?.description) as string || '',
+    author: (content?.author || card?.author) as string | undefined,
+    image: (content?.image || card?.picture) as string | undefined,
     // @ts-expect-error crazy legacy date parsing
-    date: inputCard?.content?.date || Date.parse(new Date(Number(inputCard.date.split('.')[2]), Number(inputCard.date.split('.')[1]) - 1, Number(inputCard.date.split('.')[0]), 12)),
+    date: content?.date || Date.parse(new Date(Number((card?.date as string)?.split('.')[2]), Number((card?.date as string)?.split('.')[1]) - 1, Number((card?.date as string)?.split('.')[0]), 12)),
   };
 
   // These cards are to be hidden
-  if (inputCard.reports == 1) {
+  if (card?.reports == 1) {
     outputCard.location = 'box'
   }
 
   // Preserve Likes
-  if (inputCard?.likes && inputCard.likes > 0 && inputCard.likes < 1_000_000_000) {
-    outputCard.likes = inputCard.likes
+  if ((card?.likes as number) > 0 && (card?.likes as number) < 1_000_000_000) {
+    outputCard.likes = card.likes as number;
   }
 
   return outputCard;
@@ -68,7 +70,7 @@ export const downloadDeck = (cards: Card[], customFilename?: string) => {
 }
 
 // Generate Deck HTML (shared between client and server)
-export const generateDeckHTML = (cards: any[]) => {
+export const generateDeckHTML = (cards: Card[]) => {
   const rawData = btoa(encodeURI(JSON.stringify(cards)));
   return `<!DOCTYPE html><html><head><script>const rawData =
       '${rawData}';

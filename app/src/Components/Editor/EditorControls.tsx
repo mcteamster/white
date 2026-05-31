@@ -1,6 +1,7 @@
 import { Properties } from 'csstype';
 import { Icon } from '../Icons';
 import { Card } from '@mcteamster/white-core';
+import { DeckEditorState } from '../../lib/editor';
 
 // Selection Action Buttons Component
 export function SelectionActions({ 
@@ -12,7 +13,7 @@ export function SelectionActions({
   onDelete
 }: {
   selectedCards: Set<number>;
-  deck: any;
+  deck: DeckEditorState;
   onEdit: () => void;
   onHide: () => void;
   onShow: () => void;
@@ -98,11 +99,11 @@ export function ViewModeToggle({
 
   return (
     <div style={styles.viewModeToggle}>
-      {[
-        { mode: 'full' as const, icon: 'stop' },
-        { mode: 'compact' as const, icon: 'view_list' },
-        { mode: 'image' as const, icon: 'view_module' }
-      ].map(({ mode, icon }) => (
+      {([
+        { mode: 'full' as const, icon: 'stop' as const },
+        { mode: 'compact' as const, icon: 'view_list' as const },
+        { mode: 'image' as const, icon: 'view_module' as const }
+      ]).map(({ mode, icon }) => (
         <wired-card 
           key={mode}
           style={{ 
@@ -111,7 +112,7 @@ export function ViewModeToggle({
           }}
           onClick={() => onViewModeChange(mode)}
         >
-          <Icon name={icon as any} />
+          <Icon name={icon} />
         </wired-card>
       ))}
     </div>

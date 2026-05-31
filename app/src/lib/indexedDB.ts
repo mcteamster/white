@@ -24,7 +24,7 @@ class IndexedDBManager {
     });
   }
 
-  async set(key: string, value: any): Promise<void> {
+  async set(key: string, value: unknown): Promise<void> {
     if (!this.db) await this.init();
     
     return new Promise((resolve, reject) => {
@@ -37,7 +37,7 @@ class IndexedDBManager {
     });
   }
 
-  async get(key: string): Promise<any> {
+  async get(key: string): Promise<unknown> {
     if (!this.db) await this.init();
 
     return new Promise((resolve, reject) => {
