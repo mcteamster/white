@@ -154,7 +154,7 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
   );
 }
 import { useDeckEditor } from '../../lib/editor';
-import { sanitiseCard, downloadDeck } from '../../lib/data';
+import { sanitiseCard, downloadDeck, downloadDeckJSON } from '../../lib/data';
 import { Card } from '@mcteamster/white-core';
 
 export function DeckEditor() {
@@ -182,6 +182,7 @@ export function DeckEditor() {
     onCancel: () => {}
   });
   const [saveFileName, setSaveFileName] = useState('');
+  const [saveFormat, setSaveFormat] = useState<'html' | 'json'>('html');
   const [merging, setMerging] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -316,6 +317,17 @@ export function DeckEditor() {
       backgroundColor: '#eee',
       borderRadius: '1em'
     },
+    formatButton: {
+      height: '1.5em',
+      width: '3.5em',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderRadius: '0.5em',
+      cursor: 'pointer',
+    },
     cardsContainer: {
       flex: 1, 
       padding: '1em',
@@ -448,9 +460,11 @@ export function DeckEditor() {
     },
     fileModalButtons: {
       display: 'flex',
-      flexDirection: 'column',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: '1em',
       alignItems: 'center',
+      justifyContent: 'center',
       marginTop: '1em'
     },
     fileModalRow: {
@@ -878,12 +892,19 @@ export function DeckEditor() {
               ) : modalState === 'save' ? (
                 <>
                   <h3 style={styles.modalTitle}>Save Deck</h3>
-                  <p>Enter a name for your deck:</p>
-                  <wired-input
-                    value={saveFileName}
-                    onInput={(e: React.FormEvent<HTMLElement>) => setSaveFileName((e.target as HTMLInputElement).value)}
-                    style={{ width: '80%', marginBottom: '1em' }}
-                  />
+                  <div style={{ display: 'flex', flexDirection: 'row', gap: '0.5em', alignItems: 'center', justifyContent: 'center', marginTop: '1em', marginBottom: '0.5em' }}>
+                    <span style={{ fontSize: '0.9em' }}>Name:</span>
+                    <wired-input
+                      value={saveFileName}
+                      onInput={(e: React.FormEvent<HTMLElement>) => setSaveFileName((e.target as HTMLInputElement).value)}
+                      style={{ width: '10em' }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'row', gap: '0.5em', marginBottom: '1em', justifyContent: 'center', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.9em' }}>Format:</span>
+                    <wired-card style={{ ...styles.formatButton, backgroundColor: saveFormat === 'html' ? '#eee' : undefined }} onClick={() => setSaveFormat('html')} elevation={saveFormat === 'html' ? 2 : 0}>Visual</wired-card>
+                    <wired-card style={{ ...styles.formatButton, backgroundColor: saveFormat === 'json' ? '#eee' : undefined }} onClick={() => setSaveFormat('json')} elevation={saveFormat === 'json' ? 2 : 0}>Raw</wired-card>
+                  </div>
                   <div style={styles.fileModalButtons}>
                     <wired-card 
                       style={styles.saveButton} 
@@ -896,7 +917,7 @@ export function DeckEditor() {
                       style={styles.saveButton}
                       onClick={() => {
                         updateDeck({ ...deck, name: saveFileName, modified: false });
-                        downloadDeck(deck.cards, saveFileName);
+                        if (saveFormat === 'json') { downloadDeckJSON(deck.cards, saveFileName); } else { downloadDeck(deck.cards, saveFileName); }
                         setModalState('closed');
                       }}
                       elevation={2}
