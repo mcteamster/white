@@ -23,7 +23,7 @@ const roomCodeGen = () => {
 // Initialise Server
 const server = Server({
   games: [BlankWhiteCards],
-  origins: [process.env.VITE_ORIGIN || '', Origins.LOCALHOST],
+  origins: [process.env.ORIGIN || '', Origins.LOCALHOST],
   uuid: roomCodeGen,
   generateCredentials: () => nanoid(),
 });
