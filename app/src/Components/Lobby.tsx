@@ -57,11 +57,9 @@ const styles: { [key: string]: Properties<string | number> } = {
     fontSize: "1.25em",
   },
   flavourbox: {
-    maxWidth: '15em',
+    flexBasis: '100%',
     margin: '0.25em 0',
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
+    textAlign: 'center',
     fontSize: "1.25em",
   },
   name: {
@@ -92,6 +90,7 @@ const styles: { [key: string]: Properties<string | number> } = {
   presets: {
     display: 'flex',
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
     alignItems: 'center',
     textAlign: 'center',
@@ -347,7 +346,7 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
             <wired-card style={{ ...styles.action, backgroundColor: (preset == 'blank') ? '#eee' : undefined }} onClick={() => { setPreset('blank'); }}><Icon name="copy" />Blank</wired-card>
             <wired-card style={{ ...styles.action, backgroundColor: (preset == 'global') ? '#eee' : undefined }} onClick={() => { setPreset('global'); }}><Icon name="global" />Global</wired-card>
             <wired-card style={{ ...styles.action, backgroundColor: (preset == 'standard') ? '#eee' : undefined }} onClick={() => { setPreset('standard'); }}><Icon name="die" />Standard</wired-card>
-            
+            <wired-card style={{ ...styles.action, backgroundColor: (preset == 'party-2026') ? '#eee' : undefined }} onClick={() => { setPreset('party-2026'); }}><Icon name="party" />Party</wired-card>
             <div style={styles.flavourbox}>
               {preset == 'blank' && (
                 <div>
@@ -361,6 +360,7 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
               )}
               {preset == 'global' && `A copy of the ${globalSize} card global deck. (Cards made here are not submitted)`}
               {preset == 'standard' && 'The standard 52 card deck for more traditional games.'}
+              {preset == 'party-2026' && 'A curated 100 card party deck — dares, chaos mechanics, and social fun.'}
             </div>
             <div style={{ ...styles.presets }}>
               <wired-card style={styles.action} onClick={() => { roomCodeError(); setStage('landing') }}><Icon name="back" />Back</wired-card>

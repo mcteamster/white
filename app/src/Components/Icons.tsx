@@ -5,6 +5,7 @@ import GrainIcon from '@mui/icons-material/Grain';
 import BackHandOutlinedIcon from '@mui/icons-material/BackHandOutlined';
 import BookOutlinedIcon from '@mui/icons-material/BookOutlined';
 import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
+import CelebrationOutlinedIcon from '@mui/icons-material/CelebrationOutlined';
 import CasinoOutlinedIcon from '@mui/icons-material/CasinoOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import CollectionsOutlinedIcon from '@mui/icons-material/CollectionsOutlined';
@@ -77,6 +78,7 @@ type IconName =
   'multi' |
   'next' |
   'play' |
+  'party' |
   'pile' |
   'prev' |
   'redo' |
@@ -129,6 +131,7 @@ export function Icon(props: { name: IconName }) {
     multi: <PeopleIcon></PeopleIcon>,
     next: <ArrowForwardIosIcon></ArrowForwardIosIcon>,
     play: <PlayArrowOutlinedIcon></PlayArrowOutlinedIcon>,
+    party: <CelebrationOutlinedIcon></CelebrationOutlinedIcon>,
     pile: <CollectionsOutlinedIcon></CollectionsOutlinedIcon>,
     prev: <ArrowBackIosNewIcon></ArrowBackIosNewIcon>,
     search: <SearchOutlinedIcon></SearchOutlinedIcon>,
