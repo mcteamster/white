@@ -69,6 +69,26 @@ export const downloadDeck = (cards: Card[], customFilename?: string) => {
   document.body.removeChild(dltemp);
 }
 
+export const downloadDeckJSON = (cards: Card[], customFilename?: string) => {
+  const strippedCards = cards.map((card) => ({
+    id: card.id,
+    content: card.content,
+    location: (card.location === 'box') ? 'box' : 'deck',
+    likes: (card?.likes && card.likes > 0 && card.likes < 1_000_000_000) ? card.likes : undefined,
+  }));
+
+  const today = new Date();
+  const datetime = today.getFullYear() + '-' + (today.getMonth() + 1).toString().padStart(2, "0") + '-' + today.getDate().toString().padStart(2, "0") + "_" + today.getHours().toString().padStart(2, "0") + today.getMinutes().toString().padStart(2, "0") + today.getSeconds().toString().padStart(2, "0");
+
+  const dltemp = document.createElement('a');
+  dltemp.setAttribute("href", 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify({ cards: strippedCards })));
+  dltemp.setAttribute("download", (customFilename || `BlankWhiteCards_${datetime}`) + '.json');
+  dltemp.style.display = "none";
+  document.body.append(dltemp);
+  dltemp.click();
+  document.body.removeChild(dltemp);
+}
+
 // Generate Deck HTML (shared between client and server)
 export const generateDeckHTML = (cards: Card[]) => {
   const rawData = btoa(encodeURI(JSON.stringify(cards)));

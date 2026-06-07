@@ -45,24 +45,33 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
       }, 500)
     }
 
+    let deckFile: File | undefined;
     const reader = new FileReader();
     reader.onload = async (event) => {
       try {
         if (event.target && event.target.result) {
           const result = event.target.result as string;
-          const dataLine = result.split("\n")[1]; // Read 2nd Line
           let cards;
-          try {
-            // v2 Deck Data Format
-            const trimmedData = dataLine.trim() // Remove excess whitespace
-            const base64Data = trimmedData.substring(1, trimmedData.length - 2); // Remove excess whitespace, trailing semicolon, and quotes
-            const decodedData = atob(base64Data); // Base 64 decode
-            const jsonData = decodeURI(decodedData); // URI decode
-            cards = JSON.parse(jsonData); // JSON parse
-          } catch (err) {
-            console.error(err);
-            // v1 Deck Data Format
-            cards = JSON.parse(dataLine.substring(0, dataLine.length - 1)); // Remove Trailing Semicolon and parse
+          if (deckFile?.name?.endsWith('.json')) {
+            // JSON Deck Format
+            cards = JSON.parse(result);
+            if (cards && typeof cards === 'object' && !Array.isArray(cards) && cards.cards) {
+              cards = cards.cards; // Support {cards: [...]} wrapper
+            }
+          } else {
+            const dataLine = result.split("\n")[1]; // Read 2nd Line
+            try {
+              // v2 Deck Data Format
+              const trimmedData = dataLine.trim() // Remove excess whitespace
+              const base64Data = trimmedData.substring(1, trimmedData.length - 2); // Remove excess whitespace, trailing semicolon, and quotes
+              const decodedData = atob(base64Data); // Base 64 decode
+              const jsonData = decodeURI(decodedData); // URI decode
+              cards = JSON.parse(jsonData); // JSON parse
+            } catch (err) {
+              console.error(err);
+              // v1 Deck Data Format
+              cards = JSON.parse(dataLine.substring(0, dataLine.length - 1)); // Remove Trailing Semicolon and parse
+            }
           }
           // @ts-expect-error Legacy Card Input Compatibiity
           const deck = cards.map((card) => {
@@ -105,7 +114,6 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
     }
 
     try {
-      let deckFile;
       if (e.target.files) {
         deckFile = e.target.files[0];
         reader.readAsText(deckFile);
@@ -335,7 +343,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
               </div>
           } 
           </div>
-          <input disabled={progress[0] != -1} style={styles.uploader} type="file" id="fileselector" accept=".html,.htm" onChange={uploadDeck} />
+          <input disabled={progress[0] != -1} style={styles.uploader} type="file" id="fileselector" accept=".html,.htm,.json" onChange={uploadDeck} />
           <div style={styles.confirmation}>
             <wired-card style={styles.button} onClick={() => { setMode('play') }}>
               <Icon name='exit' />Close
