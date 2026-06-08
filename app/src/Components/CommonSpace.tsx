@@ -91,7 +91,6 @@ export function Players(props: BoardProps<GameState>) {
   } 
   const [openPlayers, setOpenPlayers] = useState<number[]>(initialOpenPlayers); // List of players with open table trays
   const [editingScore, setEditingScore] = useState<number | null>(null); // playerID being score-edited
-  const [editingScoreValue, setEditingScoreValue] = useState<number>(0);
   const styles: { [key: string]: Properties<string | number> } = {
     players: {
       maxWidth: '100vw',
@@ -151,6 +150,11 @@ export function Players(props: BoardProps<GameState>) {
       justifyContent: 'center',
       alignItems: 'center',
     },
+    score: {
+      fontSize: '1em',
+      lineHeight: 1,
+      fontWeight: 'bold',
+    },
   }
 
   const toggleOpenPlayers = (id: number) => {
@@ -175,10 +179,10 @@ export function Players(props: BoardProps<GameState>) {
               {(playerTable.length > 0) && ((!openPlayers.includes(player.id)) ? <Icon name='prev' /> : <Icon name='next' />)}
             </div>
             {(player.name).slice(0, 6)}{(player.name.length > 6) && '.'}
-            <div style={{ fontSize: '1em', lineHeight: 1, fontWeight: 'bold' }}>
+            <div style={styles.score}>
               <span
                 style={{ cursor: 'pointer', textDecoration: 'underline dotted' }}
-                onClick={(e) => { e.stopPropagation(); setEditingScore(player.id); setEditingScoreValue(score); }}
+                onClick={(e) => { e.stopPropagation(); setEditingScore(player.id); }}
               >{score}</span>
             </div>
           </wired-card>
@@ -203,7 +207,7 @@ export function Players(props: BoardProps<GameState>) {
     <div style={styles.players}>
       {editingScore !== null && (
         <Calculator
-          initialValue={editingScoreValue}
+          initialValue={editingScore !== null ? getPlayerScore(props.plugins, String(editingScore)) : 0}
           label={props.matchData?.find(p => p.id === editingScore)?.name}
           onConfirm={(val) => { props.moves.setScore(String(editingScore), val); setEditingScore(null); }}
           onCancel={() => setEditingScore(null)}

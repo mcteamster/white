@@ -25,20 +25,21 @@ const evalExpr = (expr: string): number | null => {
   }
 };
 
+const OPS = new Set(['+', '-', '*', '/', '×', '÷', '−', '^']);
+
 export function Calculator({ initialValue, onConfirm, onCancel, label }: CalculatorProps) {
   const [expr, setExpr] = useState(String(initialValue));
 
-  const ops = new Set(['+', '-', '*', '/', '×', '÷', '−', '^']);
   const append = (s: string) => setExpr(prev => {
     // Replace trailing operator with new one
-    if (ops.has(s) && prev.length > 0 && ops.has(prev.slice(-1))) {
+    if (OPS.has(s) && prev.length > 0 && OPS.has(prev.slice(-1))) {
       if (s === '−' && prev.slice(-1) !== '−') return prev + s; // allow negation only after non-minus op
       return prev.slice(0, -1) + s;  // replace operator (also handles −→− by replacing)
     }
     // Block double-minus when not following another operator
     if (s === '−' && prev.slice(-1) === '−') return prev;
     // Replace lone '0' with digit
-    if (!ops.has(s) && prev === '0') {
+    if (!OPS.has(s) && prev === '0') {
       return s;
     }
     return prev + s;
@@ -63,9 +64,7 @@ export function Calculator({ initialValue, onConfirm, onCancel, label }: Calcula
     display: 'flex', justifyContent: 'center', alignItems: 'center',
     cursor: 'pointer', borderRadius: '0.3em', userSelect: 'none',
   };
-  const numBtn: CSSProperties = { ...base, backgroundColor: '#e8e8e8' };
-  const opBtn: CSSProperties = { ...base, backgroundColor: '#e8e8e8' };
-  const funcBtn: CSSProperties = { ...base, backgroundColor: '#e8e8e8' };
+  const btn: CSSProperties = { ...base, backgroundColor: '#e8e8e8' };
   const confirmBtn: CSSProperties = { ...base, backgroundColor: '#ccc' };
   const cancelBtn: CSSProperties = { ...base, backgroundColor: '#ccc', color: '#c00' };
 
@@ -83,31 +82,31 @@ export function Calculator({ initialValue, onConfirm, onCancel, label }: Calcula
         </wired-card>
         {/* Row 1: ⌫ | C | ^ | ÷ */}
         <div style={{ display: 'flex' }}>
-          <wired-card style={funcBtn} onClick={() => backspace()}>⌫</wired-card>
-          <wired-card style={funcBtn} onClick={() => clear()}>C</wired-card>
-          <wired-card style={opBtn} onClick={() => append('^')}>^</wired-card>
-          <wired-card style={opBtn} onClick={() => append('÷')}>÷</wired-card>
+          <wired-card style={btn} onClick={() => backspace()}>⌫</wired-card>
+          <wired-card style={btn} onClick={() => clear()}>C</wired-card>
+          <wired-card style={btn} onClick={() => append('^')}>^</wired-card>
+          <wired-card style={btn} onClick={() => append('÷')}>÷</wired-card>
         </div>
         {/* Row 2: 7 8 9 × */}
         <div style={{ display: 'flex' }}>
-          {['7','8','9'].map(k => <wired-card key={k} style={numBtn} onClick={() => append(k)}>{k}</wired-card>)}
-          <wired-card style={opBtn} onClick={() => append('×')}>×</wired-card>
+          {['7','8','9'].map(k => <wired-card key={k} style={btn} onClick={() => append(k)}>{k}</wired-card>)}
+          <wired-card style={btn} onClick={() => append('×')}>×</wired-card>
         </div>
         {/* Row 3: 4 5 6 − */}
         <div style={{ display: 'flex' }}>
-          {['4','5','6'].map(k => <wired-card key={k} style={numBtn} onClick={() => append(k)}>{k}</wired-card>)}
-          <wired-card style={opBtn} onClick={() => append('−')}>−</wired-card>
+          {['4','5','6'].map(k => <wired-card key={k} style={btn} onClick={() => append(k)}>{k}</wired-card>)}
+          <wired-card style={btn} onClick={() => append('−')}>−</wired-card>
         </div>
         {/* Row 4: 1 2 3 + */}
         <div style={{ display: 'flex' }}>
-          {['1','2','3'].map(k => <wired-card key={k} style={numBtn} onClick={() => append(k)}>{k}</wired-card>)}
-          <wired-card style={opBtn} onClick={() => append('+')}>+</wired-card>
+          {['1','2','3'].map(k => <wired-card key={k} style={btn} onClick={() => append(k)}>{k}</wired-card>)}
+          <wired-card style={btn} onClick={() => append('+')}>+</wired-card>
         </div>
         {/* Row 5: . | 0 | = (wide) */}
         <div style={{ display: 'flex', width: '100%' }}>
-          <wired-card style={numBtn} onClick={() => append('.')}>.</wired-card>
-          <wired-card style={numBtn} onClick={() => append('0')}>0</wired-card>
-          <wired-card style={{ ...opBtn, flex: 1 }} onClick={() => evaluate()}>=</wired-card>
+          <wired-card style={btn} onClick={() => append('.')}>.</wired-card>
+          <wired-card style={btn} onClick={() => append('0')}>0</wired-card>
+          <wired-card style={{ ...btn, flex: 1 }} onClick={() => evaluate()}>=</wired-card>
         </div>
         {/* Row 6: Cancel (half) | Done (half) */}
         <div style={{ display: 'flex', width: '100%', gap: 0 }}>
