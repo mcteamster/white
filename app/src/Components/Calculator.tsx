@@ -30,7 +30,11 @@ const OPS = new Set(['+', '-', '*', '/', '×', '÷', '−', '^']);
 export const formatScore = (n: number): string => {
   const abs = Math.abs(n);
   const sign = n < 0 ? '-' : '';
-  if (abs < 1e5) return String(n);
+  if (abs < 1e5) {
+    // Cap to 4 sig figs for small values
+    const s = parseFloat(n.toPrecision(4));
+    return String(s);
+  }
   const fmt = (val: number, suffix: string) => {
     const floored = Math.floor(val * 100) / 100;
     return `${sign}${floored.toFixed(2).replace(/\.?0+$/, '')}${suffix}`;
