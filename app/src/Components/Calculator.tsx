@@ -9,7 +9,9 @@ interface CalculatorProps {
   label?: string;
 }
 
-// Safely evaluate a math expression string
+// Safely evaluate a math expression string.
+// new Function is intentional here — scores are set by players for themselves,
+// so the eval surface is limited to the expression the player typed in their own session.
 const evalExpr = (expr: string): number | null => {
   try {
     // Replace display chars with JS operators, and strip leading zeros that cause octal

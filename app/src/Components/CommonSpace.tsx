@@ -272,10 +272,10 @@ export function Header(props: HeaderProps) {
               onCancel={() => setEditingMyScore(false)}
             />
           ) : (
-            <span>{playerName} <span
+            <>{playerName} <span
               style={{ fontVariantNumeric: 'tabular-nums', cursor: 'pointer', textDecoration: 'underline dotted' }}
               onClick={(e) => { e.stopPropagation(); setEditingMyScore(true); }}
-            >{formatScore(myScore)} pts</span></span>
+            >{formatScore(myScore)} pts</span></>
           ))}&nbsp;
           {props.matchID !== 'default' && <Icon name='multi' />}&nbsp;
           {props.matchData?.filter((player => player.isConnected)).length}
