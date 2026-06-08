@@ -9,6 +9,7 @@ import { useCallback, useContext, useState } from 'react';
 import { useWindowDimensions } from '../lib/hooks.ts';
 import { FocusContext } from '../lib/contexts.ts';
 import { discordSdk } from '../lib/discord.ts';
+import { Likes } from './Focus.tsx';
 import { Calculator } from './Calculator.tsx';
 
 // Helper to read a player's score from the PluginPlayer data
