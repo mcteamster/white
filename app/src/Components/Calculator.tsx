@@ -9,19 +9,73 @@ interface CalculatorProps {
   label?: string;
 }
 
-// Safely evaluate a math expression string.
-// new Function is intentional here — scores are set by players for themselves,
-// so the eval surface is limited to the expression the player typed in their own session.
+// Safe recursive descent parser for math expressions.
+// Supports: + - * / ** (^) with correct precedence, unary minus, parentheses, decimals.
+// No eval — only numeric literals and the operators above are accepted.
 const evalExpr = (expr: string): number | null => {
+  const js = expr.replace(/×/g, '*').replace(/÷/g, '/').replace(/\u2212/g, '-').replace(/\^/g, '**');
+  let pos = 0;
+
+  const peek = () => js[pos];
+  const consume = () => js[pos++];
+  const skipWs = () => { while (js[pos] === ' ') pos++; };
+
+  const parseNum = (): number | null => {
+    skipWs();
+    let s = '';
+    if (peek() === '-') { s += consume(); }
+    while (/[0-9.]/.test(peek() ?? '')) s += consume();
+    if (s === '' || s === '-') return null;
+    const n = parseFloat(s);
+    return isNaN(n) ? null : n;
+  };
+
+  const parseAtom = (): number | null => {
+    skipWs();
+    if (peek() === '(') {
+      consume();
+      const v = parseExpr(0);
+      skipWs();
+      if (peek() === ')') consume();
+      return v;
+    }
+    if (peek() === '-') { consume(); const v = parseAtom(); return v !== null ? -v : null; }
+    return parseNum();
+  };
+
+  type Op = { prec: number; right: boolean; fn: (a: number, b: number) => number };
+  const OPS_MAP: Record<string, Op> = {
+    '+': { prec: 1, right: false, fn: (a, b) => a + b },
+    '-': { prec: 1, right: false, fn: (a, b) => a - b },
+    '*': { prec: 2, right: false, fn: (a, b) => a * b },
+    '/': { prec: 2, right: false, fn: (a, b) => a / b },
+    '**': { prec: 3, right: true, fn: (a, b) => Math.pow(a, b) },
+  };
+
+  const parseExpr = (minPrec: number): number | null => {
+    let left = parseAtom();
+    if (left === null) return null;
+    while (true) {
+      skipWs();
+      let op = '';
+      if (js.startsWith('**', pos)) { op = '**'; }
+      else if ('+-*/'.includes(peek() ?? '')) { op = peek()!; }
+      if (!op || !OPS_MAP[op]) break;
+      const { prec, right, fn } = OPS_MAP[op];
+      if (prec < minPrec) break;
+      pos += op.length;
+      const right_val = parseExpr(right ? prec : prec + 1);
+      if (right_val === null) return null;
+      left = fn(left, right_val);
+    }
+    return left;
+  };
+
   try {
-    // Replace display chars with JS operators, and strip leading zeros that cause octal
-    const js = expr
-      .replace(/×/g, '*').replace(/÷/g, '/').replace(/\u2212/g, '-')
-      .replace(/\^/g, '**') // exponentiation
-      .replace(/(?<![.\d])0+(?=[1-9])/g, ''); // strip leading zeros on integers only
-    // eslint-disable-next-line no-new-func
-    const result = new Function(`return (${js})`)();
-    return typeof result === 'number' && isFinite(result) ? result : null;
+    const result = parseExpr(0);
+    skipWs();
+    if (pos !== js.length || result === null || !isFinite(result)) return null;
+    return result;
   } catch {
     return null;
   }
