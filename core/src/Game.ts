@@ -1,5 +1,6 @@
 import type { Game, Move } from "boardgame.io";
 import { INVALID_MOVE, Stage } from 'boardgame.io/core';
+import { PluginPlayer } from 'boardgame.io/plugins';
 import { Card, getCardById, getCardsByLocation } from './Cards';
 import { presetDecks } from "./lib/constants";
 
@@ -122,6 +123,15 @@ const shuffleCards: Move<GameState> = ({ G, playerID }) => {
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const setScore: Move<GameState> = ({ player }: any, targetPlayerID: string, value: number) => {
+  if (player?.state && targetPlayerID in player.state) {
+    player.state[targetPlayerID] = { score: value };
+  } else {
+    return INVALID_MOVE;
+  }
+}
+
 // Game
 export const BlankWhiteCards: Game<GameState> = {
   name: 'blank-white-cards',
@@ -177,7 +187,16 @@ export const BlankWhiteCards: Game<GameState> = {
       client: false,
       ignoreStaleStateID: true,
     },
+    setScore: {
+      move: setScore,
+      client: false,
+      ignoreStaleStateID: true,
+    },
   },
+
+  plugins: [
+    PluginPlayer({ setup: () => ({ score: 0 as number }) }),
+  ],
 
   turn: {
     activePlayers: { all: Stage.NULL },
