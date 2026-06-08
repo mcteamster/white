@@ -16,7 +16,7 @@ const evalExpr = (expr: string): number | null => {
     const js = expr
       .replace(/×/g, '*').replace(/÷/g, '/').replace(/\u2212/g, '-')
       .replace(/\^/g, '**') // exponentiation
-      .replace(/\b0+(?=[1-9])/g, ''); // strip leading zeros (not before decimal point)
+      .replace(/(?<![.\d])0+(?=[1-9])/g, ''); // strip leading zeros on integers only
     // eslint-disable-next-line no-new-func
     const result = new Function(`return (${js})`)();
     return typeof result === 'number' && isFinite(result) ? result : null;
