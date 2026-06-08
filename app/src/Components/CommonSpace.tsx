@@ -18,7 +18,7 @@ const getPlayerScore = (plugins: any, playerID: string): number => {
 };
 
 // Format a score for display — raw up to 99,999, then SI prefixes (truncated), then Peta
-const formatScore = (n: number): string => {
+export const formatScore = (n: number): string => {
   const abs = Math.abs(n);
   const sign = n < 0 ? '-' : '';
   if (abs < 1e5) return String(n);

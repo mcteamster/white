@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Icon } from './Icons';
+import { formatScore } from './CommonSpace';
 
 interface CalculatorProps {
   initialValue: number;
@@ -48,7 +49,10 @@ export function Calculator({ initialValue, onConfirm, onCancel, label }: Calcula
 
   const evaluate = () => {
     const result = evalExpr(expr);
-    if (result !== null) setExpr(String(result));
+    if (result !== null) {
+      const s = String(result);
+      setExpr(s.length > 9 ? formatScore(result) : s);
+    }
   };
 
   const backspace = () => setExpr(prev => prev.length > 1 ? prev.slice(0, -1) : '0');
