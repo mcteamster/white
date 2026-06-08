@@ -73,12 +73,12 @@ export function Calculator({ initialValue, onConfirm, onCancel, label }: Calcula
     <wired-dialog open onClick={sp}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, padding: '0.5em 0.75em 0.75em' }}>
         {/* Display */}
-        <wired-card style={{ width: '100%', marginBottom: '0.1em', cursor: 'default' } as CSSProperties}
+        <wired-card style={{ width: '17em', margin: '0.5em 0', cursor: 'default' } as CSSProperties}
           onClick={(e) => e.stopPropagation()}
         >
-          <div style={{ display: 'flex', alignItems: 'center', fontFamily: 'monospace', gap: '0.4em', minHeight: '1em', padding: '0.1em 0.2em' }}>
-            {label && <span style={{ color: '#888', flexShrink: 0, fontSize: '0.8em' }}>{label}</span>}
-            <span style={{ flex: 1, textAlign: 'right', overflowX: 'auto', whiteSpace: 'nowrap' }}>{expr}</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: 'monospace', fontSize: '1.5em', minHeight: '2.25em', padding: '0 0.25em' }}>
+            {label && <span style={{ color: '#888', fontSize: '0.8em' }}>{label}</span>}
+            <span style={{ textAlign: 'right', maxWidth: '9.5em', overflowX: 'hidden' }}>{expr}</span>
           </div>
         </wired-card>
         {/* Row 1: ⌫ | C | ^ | ÷ */}
