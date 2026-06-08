@@ -127,7 +127,6 @@ export function Players(props: BoardProps<GameState>) {
       flexDirection: 'column',
       justifyContent: 'center',
       alignItems: 'center',
-      position: 'relative',
     },
     tableBox: {
       maxHeight: '60vh',

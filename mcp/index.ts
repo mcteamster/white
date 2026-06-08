@@ -1004,7 +1004,6 @@ import { createServer } from 'http';
 import { randomUUID } from 'crypto';
 
 // Run as entrypoint (stdio or HTTP), skip when imported as library
-// Run as entrypoint (stdio or HTTP), skip when imported as library
 const isCLI = typeof require !== 'undefined'
   ? require.main === module  // CJS bundle
   : process.argv[1] && import.meta.url === `file://${process.argv[1]}`;
