@@ -10,7 +10,7 @@ import { useWindowDimensions } from '../lib/hooks.ts';
 import { FocusContext } from '../lib/contexts.ts';
 import { discordSdk } from '../lib/discord.ts';
 import { Likes } from './Focus.tsx';
-import { Calculator } from './Calculator.tsx';
+import { Calculator, formatScore } from './Calculator.tsx';
 
 // Helper to read a player's score from the PluginPlayer data
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -183,7 +183,7 @@ export function Players(props: BoardProps<GameState>) {
               <span
                 style={{ cursor: 'pointer', textDecoration: 'underline dotted' }}
                 onClick={(e) => { e.stopPropagation(); setEditingScore(player.id); }}
-              >{score}</span>
+              >{formatScore(score)}</span>
             </div>
           </wired-card>
           {
@@ -275,7 +275,7 @@ export function Header(props: HeaderProps) {
             <span>{playerName} <span
               style={{ fontVariantNumeric: 'tabular-nums', cursor: 'pointer', textDecoration: 'underline dotted' }}
               onClick={(e) => { e.stopPropagation(); setEditingMyScore(true); }}
-            >{myScore} pts</span></span>
+            >{formatScore(myScore)} pts</span></span>
           ))}&nbsp;
           {props.matchID !== 'default' && <Icon name='multi' />}&nbsp;
           {props.matchData?.filter((player => player.isConnected)).length}
