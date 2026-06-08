@@ -30,7 +30,7 @@ export const formatScore = (n: number): string => {
   if (abs < 1e9) return fmt(abs / 1e6, 'M');
   if (abs < 1e12) return fmt(abs / 1e9, 'G');
   if (abs < 1e15) return fmt(abs / 1e12, 'T');
-  return `${sign}${abs.toExponential(2).replace('e+', ' e').replace('e-', ' e-').replace('e', ' e')}`;
+  return `${sign}${abs.toExponential(3).replace('e+', ' e').replace('e-', ' e-').replace('e', ' e')}`;
 };
 
 export function Pile(props: BoardProps<GameState>) {
