@@ -35,7 +35,7 @@ export const formatScore = (n: number): string => {
     const floored = Math.floor(val * 100) / 100;
     return `${sign}${floored.toFixed(2).replace(/\.?0+$/, '')}${suffix}`;
   };
-  if (abs < 1e6) return `${sign}${Math.floor(abs / 1e3)}k`;
+  if (abs < 1e6) return fmt(abs / 1e3, 'k');
   if (abs < 1e9) return fmt(abs / 1e6, 'M');
   if (abs < 1e12) return fmt(abs / 1e9, 'G');
   if (abs < 1e15) return fmt(abs / 1e12, 'T');
