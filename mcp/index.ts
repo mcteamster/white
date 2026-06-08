@@ -60,6 +60,7 @@ function getServerForCreate(region?: string): string {
 interface Session {
   client: ReturnType<typeof Client>;
   credentials: string;
+  watchCount: number;
 }
 
 // ── Session helpers (inside createMcpServer) ──────────────────────────────────
@@ -255,7 +256,7 @@ This server provides tools for interacting with Blank White Cards — a creative
 
 ## Card locations
 
-- **deck** — undrawn cards. \`pickup_card\` draws into a player's hand.
+- **deck** — cards not yet picked up. \`pickup_card\` takes one into your hand.
 - **hand** — a player's private cards. \`move_card\` plays them elsewhere.
 - **pile** — the shared active area, visible to everyone.
 - **table** — cards placed in front of a specific player (persistent effects).
@@ -276,9 +277,18 @@ Cards can optionally have images. If you can draw or generate an image to accomp
 
 **Image style:** Cards are displayed on a white background. For best results, generate images with a white/blank background using a prompt style like "black ink on white paper, simple bold line art". This ensures the card art blends with the game's visual style and converts cleanly to the 1-bit format used in-game.
 
+## Scoring
+
+Players have scores tracked per-match. Scores are set manually — they are not computed automatically from likes.
+
+- \`get_scores\` — see current scores for all players
+- \`get_leaderboard\` — scores sorted by rank
+- \`set_score\` — set any player's score to a new value
+- \`get_play_hint\` — get a suggested action based on your score position relative to others
+
 ## Available prompts
 
-This server provides role prompts (autonomous_player, referee, spectator, deck_builder) that describe how to use these tools for specific purposes. List prompts to see available roles.
+This server provides role prompts (player, referee, spectator) that describe how to use these tools for specific purposes. List prompts to see available roles.
 `.trim();
 
 
@@ -314,7 +324,7 @@ async function connectSession(matchID: string, playerID: string, credentials: st
     client.start();
   });
 
-  const session: Session = { client, credentials };
+  const session: Session = { client, credentials, watchCount: 0 };
   sessions.set(key, session);
   return session;
 }
@@ -411,7 +421,7 @@ mcp.registerTool(
 mcp.registerTool(
   'get_state',
   {
-    description: 'Get the current game state — your hand, the pile, deck size, all cards on the table',
+    description: 'Get the current game state — your hand, the pile, deck size, and all cards in play',
     inputSchema: {
       matchID: z.string().describe('Room code'),
       playerID: z.string().describe('Your player ID'),
@@ -494,7 +504,7 @@ mcp.registerTool(
 mcp.registerTool(
   'pickup_card',
   {
-    description: 'Draw a card from the deck into your hand',
+    description: 'Pick up a card from the deck into your hand',
     inputSchema: {
       matchID: z.string().describe('Room code'),
       playerID: z.string().describe('Your player ID'),
@@ -659,7 +669,7 @@ mcp.registerTool(
 mcp.registerTool(
   'get_play_hint',
   {
-    description: 'Get a suggested action based on current game state and score position',
+    description: 'Get a suggested next action based on the current game state — what\'s in your hand, what\'s on the pile, and where you stand relative to other players',
     inputSchema: {
       matchID: z.string().describe('Room code'),
       playerID: z.string().describe('Your player ID'),
@@ -686,7 +696,7 @@ mcp.registerTool(
 
     if (hand.length === 0) {
       action = 'pickup_card';
-      reason = 'Your hand is empty — draw a card to have options.';
+      reason = 'Your hand is empty — pick up a card to have options.';
     } else if (isBehind && pile.length > 0) {
       action = 'claim_card or submit_card';
       reason = `You're behind (${myScore} vs ${maxOtherScore}). Claim an interesting pile card or submit a new one to earn likes.`;
@@ -698,7 +708,7 @@ mcp.registerTool(
       reason = `You're ahead (${myScore} vs ${maxOtherScore}). Play defensively — discard or pass cards rather than building your hand.`;
     } else {
       action = 'submit_card or pickup_card';
-      reason = `Scores are level — keep playing. Submit something creative or draw more cards.`;
+      reason = `Scores are level — keep playing. Submit something creative or pick up more cards.`;
     }
 
     return text({ action, reason, my_score: myScore, max_other_score: maxOtherScore });
@@ -794,7 +804,7 @@ mcp.registerTool(
 mcp.registerTool(
   'watch',
   {
-    description: 'Block until a relevant game event occurs, then return a structured diff of what changed. Use instead of polling get_state. Only one watch can be active at a time per agent session.',
+    description: 'Block until a relevant game event occurs, then return a structured diff of what changed. Use instead of polling get_state. Only one watch can be active at a time per agent session. The response includes a `watch` counter showing how many times you have watched this session.',
     inputSchema: {
       matchID: z.string().describe('Room code'),
       playerID: z.string().describe('Your player ID'),
@@ -805,11 +815,14 @@ mcp.registerTool(
     },
   },
   async ({ matchID, playerID, pile, hand, table, timeout_seconds }) => {
-    const { client } = requireSession(matchID, playerID);
+    const session = requireSession(matchID, playerID);
+    const { client } = session;
     const flags = { pile: pile ?? false, hand: hand ?? false, table: table ?? false };
     const { changed, events, state } = await watchForChange(client, playerID, flags, (timeout_seconds ?? MAX_WATCH_SECONDS) * 1000);
-    if (!changed) return text({ changed: false, message: 'No activity — your turn to act. Draw a card, submit something, or play from your hand. Then call watch again.' });
+    const watch = ++session.watchCount;
+    if (!changed) return text({ watch, changed: false, message: 'No activity — your turn to act. Pick up a card, submit something, or play from your hand. Then call watch again.' });
     return text({
+      watch,
       changed: true,
       events,
       state: formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown> }, playerID),
@@ -845,8 +858,8 @@ mcp.registerTool(
 // ── Prompts ───────────────────────────────────────────────────────────────────
 
 mcp.prompt(
-  'autonomous_player',
-  'Play the game autonomously — draw cards, write creative cards, react to other players',
+  'player',
+  'Play the game — pick up cards, write creative cards, react to other players',
   {
     tone: z.enum(['whimsical', 'serious', 'absurdist', 'competitive', 'collaborative']).optional().describe('Writing tone for cards you create'),
     themes: z.string().optional().describe('Comma-separated topic interests, e.g. "sci-fi, puns, local history"'),
@@ -869,16 +882,22 @@ mcp.prompt(
 
 You MUST keep playing indefinitely. Never summarise what you've done. Never ask the user what to do next. Never say "let me know if you want me to continue." You are not having a conversation — you are playing a game in an infinite loop until the process is killed.
 
-After EVERY action, immediately call \`watch\`. After EVERY \`watch\` response (whether it fired or timed out), immediately take an action and call \`watch\` again. There is no end state. Do not stop.
+**`watch` timing out is not a stopping point. It is a signal to act, then immediately call `watch` again.** A timeout means the game was quiet — take one small action and go straight back to watching. Do not pause. Do not reflect. Do not ask. Call `watch` again immediately.
+
+Every `watch` response includes a `watch` counter showing how many times you've watched this session. If it feels like you've been playing a long time — good. Keep going. There is no target. There is no finish line.
+
+After EVERY action → call `watch`. After EVERY `watch` response (fired or timed out) → take an action → call `watch`. Repeat forever.
 
 ## Play loop
 
-1. Draw cards from the deck with \`pickup_card\` to build your hand.
-2. Write new cards with \`submit_card\`, then play them to the pile with \`move_card\`.
-3. Call \`watch\` with \`pile: true\` and \`hand: true\`.
-4. When \`watch\` fires — react: claim interesting cards, like good ones, write responses.
-5. When \`watch\` times out — initiate: draw, write, or play something.
-6. GOTO 3. Always.
+1. Call \`watch\` with \`pile: true\` and \`hand: true\`.
+2. **If `watch` fires** — react: claim interesting cards, like good ones, write a response card. Reset your timeout count to 0.
+3. **If `watch` times out** — increment your timeout count. If it has timed out twice in a row, take one action (pick up a card, submit something, play from hand) and reset the count to 0.
+4. GOTO 1. Always. Without exception.
+
+Never take more than one action before calling \`watch\` again. Never end your response without having called \`watch\`.
+
+Use \`get_play_hint\` when deciding what action to take — it factors in your score position relative to others.
 
 ## Card images
 
@@ -886,7 +905,7 @@ You may choose to draw or generate an image to go with a card. Save it as a squa
 
 ## Strategy: ${a}
 
-${a === 'aggressive' ? 'Submit cards frequently. Claim pile cards eagerly. Prioritise getting your cards into play.' : a === 'passive' ? 'Observe more than you act. Like other players\' cards. Only claim or submit when the moment feels right.' : 'Balance between creating and reacting. Claim cards that interest you, submit when the pile is quiet, like cards you genuinely enjoy.'}
+${a === 'aggressive' ? 'Submit cards frequently and respond to everything on the pile. Be the one driving the game. Check `get_scores` regularly and let your position drive decisions.' : a === 'passive' ? 'Observe more than you act. Like cards you enjoy. Only submit when you have something worth playing.' : 'Submit when the pile is quiet, react when things get interesting, like cards you genuinely enjoy.'}
 
 Do not narrate. Do not explain. Just play.`,
         },
@@ -918,10 +937,14 @@ mcp.prompt(
 - Move cards that are misplaced (\`move_card\`).
 - Discard cards that violate house rules.
 - Keep the game flowing — if no one has acted in a while, draw attention by posting a prompt card.
+- Award points for good card play using \`set_score\`. Use your judgment — creative cards, well-executed rules, and crowd-pleasing moments are worth rewarding.
+- Post a leaderboard update periodically by calling \`get_leaderboard\` and submitting a card with the current standings.
 
 ## How to monitor
 
-Call \`watch\` with all flags (\`pile: true\`, \`hand: true\`, \`table: true\`) to see everything that happens. When an event fires, check if it violates any rules. Re-issue \`watch\` immediately after handling each event.
+Call \`watch\` with all flags (\`pile: true\`, \`hand: true\`, \`table: true\`) to see everything that happens. When an event fires, handle it and re-issue \`watch\` immediately.
+
+Keep a count of consecutive timeouts. If \`watch\` times out 10 times in a row with no events, the game has likely ended or gone quiet — call \`get_leaderboard\`, post a final standings card, and stop watching.
 
 Use \`search_cards\` and \`get_card\` to inspect specific cards when reviewing content.${ruleBlock}`,
         },
@@ -939,15 +962,18 @@ mcp.prompt(
       role: 'user',
       content: {
         type: 'text',
-        text: `You are a spectator of Blank White Cards. You observe and comment but do NOT play cards, claim cards, or draw from the deck.
+        text: `You are a spectator of Blank White Cards. You observe and comment but do NOT play cards, claim cards, or pick up from the deck.
 
 ## What you can do
 
 - Use \`get_state\` to see the current game.
-- Use \`watch\` with \`pile: true\` to follow the action.
+- Use \`watch\` with \`pile: true\` to follow the action — call it continuously, re-issuing immediately after every response.
 - Use \`get_card\` and \`search_cards\` to read cards in detail.
 - Use \`like_card\` to show appreciation for cards you enjoy.
+- Use \`get_scores\` and \`get_leaderboard\` to track standings and include them in your commentary.
 - Provide commentary, narration, or play-by-play to the user.
+
+Only stop watching if the user explicitly tells you to.
 
 ## What you should NOT do
 
@@ -956,44 +982,6 @@ mcp.prompt(
       },
     }],
   })
-);
-
-mcp.prompt(
-  'deck_builder',
-  'Create and curate card decks — bulk load cards, review content, export finished decks',
-  {
-    theme: z.string().optional().describe('Theme for the deck being built, e.g. "horror movie tropes"'),
-    card_count: z.string().optional().describe('Target number of cards to create'),
-  },
-  ({ theme, card_count }) => {
-    const themeClause = theme ? ` The deck theme is: ${theme}.` : '';
-    const countClause = card_count ? ` Target: ${card_count} cards.` : '';
-
-    return {
-      messages: [{
-        role: 'user',
-        content: {
-          type: 'text',
-          text: `You are building a card deck for Blank White Cards.${themeClause}${countClause}
-
-## Workflow
-
-1. Create a match to use as your workspace.
-2. Use \`submit_card\` to write cards one at a time, or \`load_cards\` to bulk-add many at once.
-3. Use \`get_state\` and \`search_cards\` to review what you've created.
-4. Use \`move_card\` to organise — put finished cards in the deck, works-in-progress in hand, rejects in discard.
-5. When done, use \`export_deck\` to get the full card list as JSON.
-
-## Card writing tips
-
-- Each card needs a title (the rule or name) and optionally a description (flavour text or clarification).
-- Vary card types: some should be actions, some persistent effects, some jokes, some challenges.
-- Cards are more fun when they interact with other cards or change the game state.
-- If you can draw or generate images, save as a square PNG and pass the file path as \`image_path\` in \`submit_card\`. Use a white background with bold black line art for best results.`,
-        },
-      }],
-    };
-  }
 );
 
 return mcp;
