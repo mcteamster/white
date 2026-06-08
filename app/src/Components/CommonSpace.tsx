@@ -112,7 +112,7 @@ export function Players(props: BoardProps<GameState>) {
       display: 'flex',
       flexDirection: 'row-reverse',
       justifyContent: 'flex-start',
-      alignItems: 'flex-start',
+      alignItems: 'center',
     },
     avatar: {
       height: '3em',
@@ -127,6 +127,7 @@ export function Players(props: BoardProps<GameState>) {
       flexDirection: 'column',
       justifyContent: 'center',
       alignItems: 'center',
+      position: 'relative',
     },
     tableBox: {
       maxHeight: '60vh',
@@ -136,7 +137,7 @@ export function Players(props: BoardProps<GameState>) {
       borderRadius: '0.5em',
       zIndex: '5',
       position: (dimensions.upright) ? 'fixed' : 'relative',
-      right: (dimensions.upright) ? '4.5em' : undefined,
+      right: (dimensions.upright) ? '5em' : undefined,
       backgroundColor: (dimensions.upright) ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.5)',
       display: 'flex',
       flexDirection: 'row',
@@ -145,10 +146,7 @@ export function Players(props: BoardProps<GameState>) {
       flexWrap: 'wrap',
     },
     stats: {
-      display: 'flex',
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
+      fontSize: '0.8em',
     },
     score: {
       fontSize: '1em',
@@ -175,9 +173,6 @@ export function Players(props: BoardProps<GameState>) {
       return (
         <div key={`player-avatar-${i}`} style={styles.avatarBox}>
           <wired-card style={styles.avatar} onClick={() => { if (playerTable.length > 0) { toggleOpenPlayers(player.id) }}}>
-            <div style={styles.stats}>
-              {(playerTable.length > 0) && ((!openPlayers.includes(player.id)) ? <Icon name='prev' /> : <Icon name='next' />)}
-            </div>
             {(player.name).slice(0, 6)}{(player.name.length > 6) && '.'}
             <div style={styles.score}>
               <span
@@ -186,6 +181,7 @@ export function Players(props: BoardProps<GameState>) {
               >{formatScore(score)}</span>
             </div>
           </wired-card>
+          {(playerTable.length > 0) && <span style={styles.stats}>{(!openPlayers.includes(player.id)) ? '<' : '>'}</span>}
           {
             openPlayers.includes(player.id) &&
             <div style={styles.tableBox}>

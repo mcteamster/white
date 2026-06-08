@@ -71,9 +71,16 @@ function stripImage(card: Card) {
   return { id: card.id, content, location: card.location, owner: card.owner, likes: card.likes };
 }
 
+function getScores(state: Record<string, unknown>, playOrder: string[]): Record<string, number> {
+  const players = (state as any)?.plugins?.player?.data?.players as Record<string, { score: number }> | undefined;
+  return Object.fromEntries(playOrder.map(id => [id, players?.[id]?.score ?? 0]));
+}
+
 function formatState(state: { G: { cards: Card[] }; ctx: Record<string, unknown> }, playerID: string) {
   const { G, ctx } = state;
   const cards = G.cards;
+  const playOrder = ctx.playOrder as string[];
+  const scores = getScores(state as Record<string, unknown>, playOrder);
   return {
     my_hand: cards.filter(c => c.location === 'hand' && c.owner === playerID).map(stripImage),
     my_table: cards.filter(c => c.location === 'table' && c.owner === playerID).map(stripImage),
@@ -82,7 +89,8 @@ function formatState(state: { G: { cards: Card[] }; ctx: Record<string, unknown>
     discard_size: cards.filter(c => c.location === 'discard').length,
     box: cards.filter(c => c.location === 'box').map(stripImage),
     num_players: ctx.numPlayers,
-    play_order: ctx.playOrder,
+    play_order: playOrder,
+    scores,
   };
 }
 
@@ -608,6 +616,116 @@ mcp.registerTool(
 );
 
 mcp.registerTool(
+  'get_scores',
+  {
+    description: 'Get the current score for each player in the match',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+    },
+  },
+  async ({ matchID, playerID }) => {
+    const { client } = requireSession(matchID, playerID);
+    const state = client.store.getState();
+    if (!state?.G) throw new Error('No state available yet');
+    const playOrder = (state.ctx.playOrder as string[]);
+    return text(getScores(state, playOrder));
+  }
+);
+
+mcp.registerTool(
+  'get_leaderboard',
+  {
+    description: 'Get players ranked by score, highest first',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+    },
+  },
+  async ({ matchID, playerID }) => {
+    const { client } = requireSession(matchID, playerID);
+    const state = client.store.getState();
+    if (!state?.G) throw new Error('No state available yet');
+    const playOrder = state.ctx.playOrder as string[];
+    const scores = getScores(state, playOrder);
+    const sorted = playOrder
+      .map((id: string) => ({ playerID: id, score: scores[id] ?? 0 }))
+      .sort((a, b) => b.score - a.score)
+      .map((entry, i) => ({ rank: i + 1, ...entry }));
+    return text(sorted);
+  }
+);
+
+mcp.registerTool(
+  'get_play_hint',
+  {
+    description: 'Get a suggested action based on current game state and score position',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+    },
+  },
+  async ({ matchID, playerID }) => {
+    const { client } = requireSession(matchID, playerID);
+    const state = client.store.getState();
+    if (!state?.G) throw new Error('No state available yet');
+    const cards = state.G.cards as Card[];
+    const playOrder = state.ctx.playOrder as string[];
+    const scores = getScores(state, playOrder);
+    const myScore = scores[playerID] ?? 0;
+    const otherScores = playOrder.filter((id: string) => id !== playerID).map((id: string) => scores[id] ?? 0);
+    const maxOtherScore = otherScores.length > 0 ? Math.max(...otherScores) : 0;
+    const isAhead = myScore > maxOtherScore;
+    const isBehind = myScore < maxOtherScore;
+
+    const hand = cards.filter(c => c.location === 'hand' && c.owner === playerID);
+    const pile = cards.filter(c => c.location === 'pile');
+
+    let action: string;
+    let reason: string;
+
+    if (hand.length === 0) {
+      action = 'pickup_card';
+      reason = 'Your hand is empty — draw a card to have options.';
+    } else if (isBehind && pile.length > 0) {
+      action = 'claim_card or submit_card';
+      reason = `You're behind (${myScore} vs ${maxOtherScore}). Claim an interesting pile card or submit a new one to earn likes.`;
+    } else if (isBehind) {
+      action = 'submit_card';
+      reason = `You're behind (${myScore} vs ${maxOtherScore}) and the pile is quiet — submit a card to get things moving.`;
+    } else if (isAhead && hand.length > 2) {
+      action = 'move_card to discard or pass to another player';
+      reason = `You're ahead (${myScore} vs ${maxOtherScore}). Play defensively — discard or pass cards rather than building your hand.`;
+    } else {
+      action = 'submit_card or pickup_card';
+      reason = `Scores are level — keep playing. Submit something creative or draw more cards.`;
+    }
+
+    return text({ action, reason, my_score: myScore, max_other_score: maxOtherScore });
+  }
+);
+
+mcp.registerTool(
+  'set_score',
+  {
+    description: 'Set the score for a player',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+      targetPlayerID: z.string().describe('Player ID to set the score for'),
+      score: z.number().describe('New score value'),
+    },
+  },
+  async ({ matchID, playerID, targetPlayerID, score }) => {
+    const { client } = requireSession(matchID, playerID);
+    const nextState = waitForMove(client);
+    client.moves.setScore(targetPlayerID, score);
+    const state = await nextState;
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown> }, playerID));
+  }
+);
+
+mcp.registerTool(
   'shuffle_cards',
   {
     description: 'Reset all cards back to the deck and shuffle (host / player 0 only)',
@@ -885,6 +1003,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { createServer } from 'http';
 import { randomUUID } from 'crypto';
 
+// Run as entrypoint (stdio or HTTP), skip when imported as library
 // Run as entrypoint (stdio or HTTP), skip when imported as library
 const isCLI = typeof require !== 'undefined'
   ? require.main === module  // CJS bundle
