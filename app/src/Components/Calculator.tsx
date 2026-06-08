@@ -188,7 +188,7 @@ export function Calculator({ initialValue, onConfirm, onCancel, label }: Calcula
           <wired-card style={{ ...cancelBtn, flex: 1 }} onClick={() => onCancel()}>
             <Icon name='exit' />
           </wired-card>
-          <wired-card style={{ ...confirmBtn, flex: 1 }} onClick={() => { if (valid && parsed !== null) onConfirm(parsed); }}>
+          <wired-card style={{ ...confirmBtn, flex: 1 }} onClick={() => { if (valid) onConfirm(parsed!); }}>
             <Icon name='done' />
           </wired-card>
         </div>

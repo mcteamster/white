@@ -207,7 +207,7 @@ export function Players(props: BoardProps<GameState>) {
     <div style={styles.players}>
       {editingScore !== null && (
         <Calculator
-          initialValue={editingScore !== null ? getPlayerScore(props.plugins, String(editingScore)) : 0}
+          initialValue={getPlayerScore(props.plugins, String(editingScore))}
           label={props.matchData?.find(p => p.id === editingScore)?.name}
           onConfirm={(val) => { props.moves.setScore(String(editingScore), val); setEditingScore(null); }}
           onCancel={() => setEditingScore(null)}
