@@ -17,7 +17,6 @@ const getPlayerScore = (plugins: any, playerID: string): number => {
   return plugins?.player?.data?.players?.[playerID]?.score ?? 0;
 };
 
-import { formatScore } from './Calculator.tsx';
 
 export function Pile(props: BoardProps<GameState>) {
   const { focus, setFocus } = useContext(FocusContext);
@@ -179,7 +178,7 @@ export function Players(props: BoardProps<GameState>) {
               <span
                 style={{ cursor: 'pointer', textDecoration: 'underline dotted' }}
                 onClick={(e) => { e.stopPropagation(); setEditingScore(player.id); setEditingScoreValue(score); }}
-              >{formatScore(score)}</span>
+              >{score}</span>
             </div>
           </wired-card>
           {
@@ -271,7 +270,7 @@ export function Header(props: HeaderProps) {
             <span
               style={{ fontVariantNumeric: 'tabular-nums', cursor: 'pointer', textDecoration: 'underline dotted' }}
               onClick={(e) => { e.stopPropagation(); setEditingMyScore(true); }}
-            >[{formatScore(myScore)}]</span>
+            >[{myScore}]</span>
           )}</>}&nbsp;
           {props.matchID !== 'default' && <Icon name='multi' />}&nbsp;
           {props.matchData?.filter((player => player.isConnected)).length}
