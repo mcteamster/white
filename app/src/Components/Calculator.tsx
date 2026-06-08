@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Icon } from './Icons';
 
@@ -49,8 +49,6 @@ export function Calculator({ initialValue, onConfirm, onCancel, label }: Calcula
   };
 
   const backspace = () => setExpr(prev => prev.length > 1 ? prev.slice(0, -1) : '0');
-  const dispRef = useRef<HTMLElement>(null);
-  useEffect(() => { dispRef.current?.focus(); }, []);
   const parsed = evalExpr(expr);
   const valid = parsed !== null;
 
@@ -72,23 +70,8 @@ export function Calculator({ initialValue, onConfirm, onCancel, label }: Calcula
     <wired-dialog open onClick={sp}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, padding: '0.5em 0.75em 0.75em' }}>
         {/* Display */}
-        <wired-card style={{ width: '100%', marginBottom: '0.1em', cursor: 'default', outline: 'none', tabIndex: 0, fontSize: '1.5em' } as CSSProperties}
-          tabIndex={0}
-          ref={dispRef as React.Ref<HTMLElement>}
+        <wired-card style={{ width: '100%', marginBottom: '0.1em', cursor: 'default' } as CSSProperties}
           onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e: React.KeyboardEvent) => {
-            if (/^[0-9]$/.test(e.key)) { append(e.key); return; }
-            if (e.key === '+') { append('+'); return; }
-            if (e.key === '-') { append('−'); return; }
-            if (e.key === '*') { append('×'); return; }
-            if (e.key === '/') { e.preventDefault(); append('÷'); return; }
-            if (e.key === '.') { append('.'); return; }
-            if (e.key === '(' || e.key === ')') { append(e.key); return; }
-            if (e.key === 'Backspace') { backspace(); return; }
-            if (e.key === 'Escape') { onCancel(); return; }
-            if (e.key === 'Enter') { evaluate(); return; }
-            if (e.key === 'Delete') { clear(); return; }
-          }}
         >
           <div style={{ display: 'flex', alignItems: 'center', fontFamily: 'monospace', gap: '0.4em', minHeight: '1em', padding: '0.1em 0.2em' }}>
             {label && <span style={{ color: '#888', flexShrink: 0, fontSize: '0.8em' }}>{label}</span>}
