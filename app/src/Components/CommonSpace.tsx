@@ -268,7 +268,7 @@ export function Header(props: HeaderProps) {
               onCancel={() => setEditingMyScore(false)}
             />
           ) : (
-            <span>{playerName}: <span
+            <span>{playerName} <span
               style={{ fontVariantNumeric: 'tabular-nums', cursor: 'pointer', textDecoration: 'underline dotted' }}
               onClick={(e) => { e.stopPropagation(); setEditingMyScore(true); }}
             >{myScore} pts</span></span>
