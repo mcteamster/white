@@ -49,7 +49,7 @@ export function Calculator({ initialValue, onConfirm, onCancel, label }: Calcula
   };
 
   const backspace = () => setExpr(prev => prev.length > 1 ? prev.slice(0, -1) : '0');
-  const dispRef = useRef<HTMLDivElement>(null);
+  const dispRef = useRef<HTMLElement>(null);
   useEffect(() => { dispRef.current?.focus(); }, []);
   const parsed = evalExpr(expr);
   const valid = parsed !== null;
@@ -57,26 +57,24 @@ export function Calculator({ initialValue, onConfirm, onCancel, label }: Calcula
   const sp = (e: { stopPropagation: () => void }) => e.stopPropagation();
 
   const base: CSSProperties = {
-    height: '3em', width: '3em', margin: '0.15em',
-    fontWeight: 'bold', fontSize: '1em', textAlign: 'center',
+    height: '2em', width: '2em', margin: '0.1em',
+    fontWeight: 'bold', fontSize: '1.5em', textAlign: 'center',
     display: 'flex', justifyContent: 'center', alignItems: 'center',
     cursor: 'pointer', borderRadius: '0.3em', userSelect: 'none',
   };
-  const numBtn: CSSProperties = { ...base, backgroundColor: '#eee' };  // digits + .
-  const opBtn: CSSProperties = { ...base, backgroundColor: '#ddd' };   // + - × ÷ ^ =
-  const funcBtn: CSSProperties = { ...base, backgroundColor: '#ccc' }; // ⌫ C
+  const numBtn: CSSProperties = { ...base, backgroundColor: '#e8e8e8' };
+  const opBtn: CSSProperties = { ...base, backgroundColor: '#e8e8e8' };
+  const funcBtn: CSSProperties = { ...base, backgroundColor: '#e8e8e8' };
   const confirmBtn: CSSProperties = { ...base, backgroundColor: '#ccc' };
   const cancelBtn: CSSProperties = { ...base, backgroundColor: '#ccc', color: '#c00' };
 
   return (
     <wired-dialog open onClick={sp}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, padding: '0.5em 0.75em 0.75em' }}>
-        {label && <div style={{ fontWeight: 'bold', fontSize: '0.85em', marginBottom: '0.3em' }}>{label}</div>}
-        {/* Expression display */}
-        <wired-card
+        {/* Display */}
+        <wired-card style={{ width: '100%', marginBottom: '0.1em', cursor: 'default', outline: 'none', tabIndex: 0, fontSize: '1.5em' } as CSSProperties}
           tabIndex={0}
           ref={dispRef as React.Ref<HTMLElement>}
-          style={{ width: '100%', fontSize: '1.3em', textAlign: 'right', padding: '0.5em 0.6em', marginBottom: '0.3em', fontFamily: 'monospace', minHeight: '2.8em', outline: 'none', cursor: 'default', userSelect: 'text', display: 'block', boxSizing: 'border-box' } as CSSProperties}
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e: React.KeyboardEvent) => {
             if (/^[0-9]$/.test(e.key)) { append(e.key); return; }
@@ -92,7 +90,10 @@ export function Calculator({ initialValue, onConfirm, onCancel, label }: Calcula
             if (e.key === 'Delete') { clear(); return; }
           }}
         >
-          {expr}
+          <div style={{ display: 'flex', alignItems: 'center', fontFamily: 'monospace', gap: '0.4em', minHeight: '1em', padding: '0.1em 0.2em' }}>
+            {label && <span style={{ color: '#888', flexShrink: 0, fontSize: '0.8em' }}>{label}</span>}
+            <span style={{ flex: 1, textAlign: 'right', overflowX: 'auto', whiteSpace: 'nowrap' }}>{expr}</span>
+          </div>
         </wired-card>
         {/* Row 1: ⌫ | C | ^ | ÷ */}
         <div style={{ display: 'flex' }}>
@@ -124,11 +125,11 @@ export function Calculator({ initialValue, onConfirm, onCancel, label }: Calcula
         </div>
         {/* Row 6: Cancel (half) | Done (half) */}
         <div style={{ display: 'flex', width: '100%', gap: 0 }}>
-          <wired-card style={{ ...cancelBtn, flex: 1, height: '3.5em' }} onClick={() => onCancel()}>
-            <Icon name='exit' />&nbsp;Cancel
+          <wired-card style={{ ...cancelBtn, flex: 1 }} onClick={() => onCancel()}>
+            <Icon name='exit' />
           </wired-card>
-          <wired-card style={{ ...confirmBtn, flex: 1, height: '3.5em' }} onClick={() => { if (valid && parsed !== null) onConfirm(parsed); }}>
-            <Icon name='done' />&nbsp;Set
+          <wired-card style={{ ...confirmBtn, flex: 1 }} onClick={() => { if (valid && parsed !== null) onConfirm(parsed); }}>
+            <Icon name='done' />
           </wired-card>
         </div>
       </div>

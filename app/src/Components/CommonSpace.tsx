@@ -277,7 +277,7 @@ export function Header(props: HeaderProps) {
           {playerName}{playerName && <>&nbsp;{editingMyScore ? (
             <Calculator
               initialValue={myScore}
-              label="My Score"
+              label={playerName || undefined}
               onConfirm={(val) => { props.moves.setScore(props.playerID || '0', val); setEditingMyScore(false); }}
               onCancel={() => setEditingMyScore(false)}
             />
