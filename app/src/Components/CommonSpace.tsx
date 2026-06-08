@@ -10,6 +10,14 @@ import { useWindowDimensions } from '../lib/hooks.ts';
 import { FocusContext } from '../lib/contexts.ts';
 import { discordSdk } from '../lib/discord.ts';
 import { Likes } from './Focus.tsx';
+import { Calculator, formatScore } from './Calculator.tsx';
+
+// Helper to read a player's score from the PluginPlayer data
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getPlayerScore = (plugins: any, playerID: string): number => {
+  return plugins?.player?.data?.players?.[playerID]?.score ?? 0;
+};
+
 
 export function Pile(props: BoardProps<GameState>) {
   const { focus, setFocus } = useContext(FocusContext);
@@ -82,6 +90,7 @@ export function Players(props: BoardProps<GameState>) {
     }
   } 
   const [openPlayers, setOpenPlayers] = useState<number[]>(initialOpenPlayers); // List of players with open table trays
+  const [editingScore, setEditingScore] = useState<number | null>(null); // playerID being score-edited
   const styles: { [key: string]: Properties<string | number> } = {
     players: {
       maxWidth: '100vw',
@@ -115,7 +124,7 @@ export function Players(props: BoardProps<GameState>) {
       borderRadius: '0.5em',
       textAlign: 'center',
       display: 'flex',
-      flexDirection: 'row',
+      flexDirection: 'column',
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -141,6 +150,11 @@ export function Players(props: BoardProps<GameState>) {
       justifyContent: 'center',
       alignItems: 'center',
     },
+    score: {
+      fontSize: '1em',
+      lineHeight: 1,
+      fontWeight: 'bold',
+    },
   }
 
   const toggleOpenPlayers = (id: number) => {
@@ -156,15 +170,21 @@ export function Players(props: BoardProps<GameState>) {
   const playerAvatars = props.matchData ? props.matchData.map((player, i) => {
     if (player.isConnected && player.name && player.id != Number(props.playerID)) { 
       const playerTable = getCardsByLocation(getCardsByOwner(props.G.cards, String(player.id)), 'table').sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)); // Oldest to Newest
+      const score = getPlayerScore(props.plugins, String(player.id));
       
       return (
         <div key={`player-avatar-${i}`} style={styles.avatarBox}>
           <wired-card style={styles.avatar} onClick={() => { if (playerTable.length > 0) { toggleOpenPlayers(player.id) }}}>
             <div style={styles.stats}>
               {(playerTable.length > 0) && ((!openPlayers.includes(player.id)) ? <Icon name='prev' /> : <Icon name='next' />)}
-              <Icon name='single' />
             </div>
             {(player.name).slice(0, 6)}{(player.name.length > 6) && '.'}
+            <div style={styles.score}>
+              <span
+                style={{ cursor: 'pointer', textDecoration: 'underline dotted' }}
+                onClick={(e) => { e.stopPropagation(); setEditingScore(player.id); }}
+              >{formatScore(score)}</span>
+            </div>
           </wired-card>
           {
             openPlayers.includes(player.id) &&
@@ -185,6 +205,14 @@ export function Players(props: BoardProps<GameState>) {
 
   return (
     <div style={styles.players}>
+      {editingScore !== null && (
+        <Calculator
+          initialValue={getPlayerScore(props.plugins, String(editingScore))}
+          label={props.matchData?.find(p => p.id === editingScore)?.name}
+          onConfirm={(val) => { props.moves.setScore(String(editingScore), val); setEditingScore(null); }}
+          onCancel={() => setEditingScore(null)}
+        />
+      )}
       {playerAvatars}
     </div>
   )
@@ -197,9 +225,11 @@ interface HeaderProps extends BoardProps<GameState> {
 
 export function Header(props: HeaderProps) {
   const [showShare, setShowShare] = useState(false);
+  const [editingMyScore, setEditingMyScore] = useState(false);
   const dimensions = useWindowDimensions();
 
   const playerName = props.isMultiplayer && props.matchData?.find((player) => player.id == Number(props.playerID))?.name?.toUpperCase() || ""
+  const myScore = getPlayerScore(props.plugins, props.playerID || '0');
 
   const styles: { [key: string]: Properties<string | number> } = {
     header: {
@@ -234,7 +264,19 @@ export function Header(props: HeaderProps) {
       <div style={styles.header}>
         <div style={{ ...styles.item, ...styles.match }} onClick={ () => setShowShare(true) }><Icon name='copy' />&nbsp;{props.matchID !== 'default' ? `${props.matchID}` : "Blank White Cards"}</div>
         <div style={{ ...styles.item, ...styles.displayname }} onClick={() => { props.setShowPlayers(!props.showPlayers) }}>
-          {playerName}&nbsp;
+          {playerName && (editingMyScore ? (
+            <Calculator
+              initialValue={myScore}
+              label={playerName || undefined}
+              onConfirm={(val) => { props.moves.setScore(props.playerID || '0', val); setEditingMyScore(false); }}
+              onCancel={() => setEditingMyScore(false)}
+            />
+          ) : (
+            <>{playerName}&nbsp;<span
+              style={{ fontVariantNumeric: 'tabular-nums', cursor: 'pointer', textDecoration: 'underline dotted' }}
+              onClick={(e) => { e.stopPropagation(); setEditingMyScore(true); }}
+            >{formatScore(myScore)} pts</span></>
+          ))}&nbsp;
           {props.matchID !== 'default' && <Icon name='multi' />}&nbsp;
           {props.matchData?.filter((player => player.isConnected)).length}
           {props.matchID !== 'default' && (props.matchData?.filter((player => player.isConnected)).length != 1) ? ((props.showPlayers) ? <Icon name='less' /> : <Icon name='more' />) : <>&nbsp;</> }
