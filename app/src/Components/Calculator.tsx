@@ -64,10 +64,7 @@ export function Calculator({ initialValue, onConfirm, onCancel, label }: Calcula
 
   const evaluate = () => {
     const result = evalExpr(expr);
-    if (result !== null) {
-      const s = String(result);
-      setExpr(s.length > 9 ? formatScore(result) : s);
-    }
+    if (result !== null) setExpr(String(result));
   };
 
   const backspace = () => setExpr(prev => prev.length > 1 ? prev.slice(0, -1) : '0');
