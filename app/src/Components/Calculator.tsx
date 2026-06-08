@@ -31,7 +31,7 @@ export const formatScore = (n: number): string => {
   const abs = Math.abs(n);
   const sign = n < 0 ? '-' : '';
   if (abs < 1e5) {
-    if (abs > 0 && abs < 0.01) return `${sign}<0.01`;
+    if (abs > 0 && abs < 0.01) return n < 0 ? '>-0.01' : '<0.01';
     const s = parseFloat(n.toPrecision(4));
     return String(s);
   }
