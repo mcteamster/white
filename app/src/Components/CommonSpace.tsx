@@ -17,21 +17,7 @@ const getPlayerScore = (plugins: any, playerID: string): number => {
   return plugins?.player?.data?.players?.[playerID]?.score ?? 0;
 };
 
-// Format a score for display — raw up to 99,999, then SI prefixes (truncated), then Peta
-export const formatScore = (n: number): string => {
-  const abs = Math.abs(n);
-  const sign = n < 0 ? '-' : '';
-  if (abs < 1e5) return String(n);
-  const fmt = (val: number, suffix: string) => {
-    const floored = Math.floor(val * 100) / 100;
-    return `${sign}${floored.toFixed(2).replace(/\.?0+$/, '')}${suffix}`;
-  };
-  if (abs < 1e6) return `${sign}${Math.floor(abs / 1e3)}k`;
-  if (abs < 1e9) return fmt(abs / 1e6, 'M');
-  if (abs < 1e12) return fmt(abs / 1e9, 'G');
-  if (abs < 1e15) return fmt(abs / 1e12, 'T');
-  return `${sign}${abs.toExponential(3).replace('e+', ' e').replace('e-', ' e-').replace('e', ' e')}`;
-};
+import { formatScore } from './Calculator.tsx';
 
 export function Pile(props: BoardProps<GameState>) {
   const { focus, setFocus } = useContext(FocusContext);
