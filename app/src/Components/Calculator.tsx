@@ -30,12 +30,12 @@ export function Calculator({ initialValue, onConfirm, onCancel, label }: Calcula
 
   const ops = new Set(['+', '-', '*', '/', '×', '÷', '−', '^']);
   const append = (s: string) => setExpr(prev => {
-    // Replace trailing operator with new one (unless new op is − for negation)
+    // Replace trailing operator with new one
     if (ops.has(s) && prev.length > 0 && ops.has(prev.slice(-1))) {
-      if (s === '−') return prev + s; // allow negation after operator
-      return prev.slice(0, -1) + s;  // replace same/different operator
+      if (s === '−' && prev.slice(-1) !== '−') return prev + s; // allow negation only after non-minus op
+      return prev.slice(0, -1) + s;  // replace operator (also handles −→− by replacing)
     }
-    // Block double-minus
+    // Block double-minus when not following another operator
     if (s === '−' && prev.slice(-1) === '−') return prev;
     // Replace lone '0' with digit
     if (!ops.has(s) && prev === '0') {
