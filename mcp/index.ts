@@ -256,20 +256,16 @@ This server provides tools for interacting with Blank White Cards — a creative
 
 ## Card locations
 
-- **deck** — cards not yet picked up. 'pickup_card' takes one into your hand.
+- **deck** — cards not yet picked up. 'pickup_card' takes one into your hand. If the deck is empty, 'pickup_card' reshuffles the pile and discard back into the deck automatically.
 - **hand** — a player's private cards. 'move_card' plays them elsewhere.
 - **pile** — the shared active area, visible to everyone.
-- **table** — cards placed in front of a specific player (persistent effects).
-- **discard** — removed from play.
-- **box** — cards set aside outside the game.
+- **table** — cards placed in front of a specific player and stay there as a persistent effect until explicitly moved.
+- **discard** — removed from play but can be reshuffled back into the deck.
+- **box** — cards permanently outside the game, set at load time. Cards cannot be moved to or from the box during play.
 
-## Observing changes
+## Writing vs playing cards
 
-Use 'watch' to block until a relevant event occurs (card submitted, claimed, moved, liked, or shuffled). This is more efficient than polling 'get_state'. Only one 'watch' can be active per session.
-
-## Writing cards
-
-'submit_card' creates a new card in a player's hand. Use 'move_card' to play it to the pile or elsewhere.
+'submit_card' creates a **new** card and puts it in your hand. 'move_card' moves an **existing** card from your hand to the pile (or elsewhere). To play a card you wrote: call 'submit_card' first, then 'move_card' with the returned card ID.
 
 ## Card images
 
@@ -288,7 +284,7 @@ Players have scores tracked per-match. Scores are set manually — they are not 
 
 ## Available prompts
 
-This server provides role prompts (player, referee, spectator) that describe how to use these tools for specific purposes. List prompts to see available roles.
+This server provides role prompts (autoplay, referee, spectate) that describe how to use these tools for specific purposes. List prompts to see available roles.
 `.trim();
 
 
@@ -402,19 +398,20 @@ mcp.registerTool(
     description: 'Join an existing match as a specific player',
     inputSchema: {
       matchID: z.string().describe('Room code'),
-      playerID: z.string().describe('Seat number to join, e.g. "0", "1", "2"'),
+      playerID: z.string().optional().describe('Seat number to join, e.g. "0", "1", "2" (default: first open seat)'),
       player_name: z.string().optional().describe('Your display name'),
     },
   },
   async ({ matchID, playerID, player_name }) => {
     const server = getServerForMatch(matchID);
     const lobby = new LobbyClient({ server });
-    const { playerCredentials } = await lobby.joinMatch(GAME_NAME, matchID, {
+    const { playerID: assignedID, playerCredentials } = await lobby.joinMatch(GAME_NAME, matchID, {
       playerID,
-      playerName: player_name ?? `Player ${playerID}`,
+      playerName: player_name ?? `Player ${playerID ?? '?'}`,
     });
-    await connectSession(matchID, playerID, playerCredentials, server);
-    return text({ matchID, playerID, server, message: `Joined ${matchID} as player ${playerID}` });
+    const id = assignedID ?? playerID!;
+    await connectSession(matchID, id, playerCredentials, server);
+    return text({ matchID, playerID: id, server, message: `Joined ${matchID} as player ${id}` });
   }
 );
 
@@ -504,7 +501,7 @@ mcp.registerTool(
 mcp.registerTool(
   'pickup_card',
   {
-    description: 'Pick up a card from the deck into your hand',
+    description: 'Pick up a card from the deck into your hand. If the deck is empty, calling this will automatically reshuffle the pile and discard back into the deck first — so call it even when the deck is empty.',
     inputSchema: {
       matchID: z.string().describe('Room code'),
       playerID: z.string().describe('Your player ID'),
@@ -858,8 +855,8 @@ mcp.registerTool(
 // ── Prompts ───────────────────────────────────────────────────────────────────
 
 mcp.prompt(
-  'player',
-  'Play the game — pick up cards, write creative cards, react to other players',
+  'autoplay',
+  'Autonomously play Blank White Cards — pick up cards, write and play creative cards, react to other players, loop forever',
   {
     tone: z.enum(['whimsical', 'serious', 'absurdist', 'competitive', 'collaborative']).optional().describe('Writing tone for cards you create'),
     themes: z.string().optional().describe('Comma-separated topic interests, e.g. "sci-fi, puns, local history"'),
@@ -907,6 +904,8 @@ You may choose to draw or generate an image to go with a card. Save it as a squa
 
 ${a === 'aggressive' ? 'Submit cards frequently and respond to everything on the pile. Be the one driving the game. Check get_scores regularly and let your position drive decisions.' : a === 'passive' ? 'Observe more than you act. Like cards you enjoy. Only submit when you have something worth playing.' : 'Submit when the pile is quiet, react when things get interesting, like cards you genuinely enjoy.'}
 
+Keep 1–3 cards in hand at any time. Don't hoard and don't play everything immediately.
+
 Do not narrate. Do not explain. Just play.`,
         },
       }],
@@ -930,6 +929,12 @@ mcp.prompt(
           type: 'text',
           text: `You are a referee/arbiter for Blank White Cards. You do NOT play cards yourself — you manage the game.
 
+## CRITICAL: Never stop refereeing
+
+You MUST keep watching and moderating indefinitely. Never summarise what you've done. Never ask the user what to do next. Never say "let me know if you want me to continue." You are not having a conversation — you are running a game in an infinite loop until the process is killed.
+
+After EVERY event or timeout → handle it → call 'watch' again immediately. There is no finish line.
+
 ## Responsibilities
 
 - Watch for rule violations and announce them (use 'submit_card' to post a ruling card if needed).
@@ -937,14 +942,14 @@ mcp.prompt(
 - Move cards that are misplaced ('move_card').
 - Discard cards that violate house rules.
 - Keep the game flowing — if no one has acted in a while, draw attention by posting a prompt card.
-- Award points for good card play using 'set_score'. Use your judgment — creative cards, well-executed rules, and crowd-pleasing moments are worth rewarding.
+- Award points for good card play using 'set_score'. Suggested scale: 1 point for a solid play, 2 for something clever or well-timed, 3 for a genuinely outstanding card. Identify yourself as "Referee" in any cards you submit using the 'author' field.
 - Post a leaderboard update periodically by calling 'get_leaderboard' and submitting a card with the current standings.
 
 ## How to monitor
 
 Call 'watch' with all flags ('pile: true', 'hand: true', 'table: true') to see everything that happens. When an event fires, handle it and re-issue 'watch' immediately.
 
-Keep a count of consecutive timeouts. If 'watch' times out 10 times in a row with no events, the game has likely ended or gone quiet — call 'get_leaderboard', post a final standings card, and stop watching.
+Keep a count of consecutive timeouts. If 'watch' times out 10 times in a row with no events, the game has truly gone stale — call 'get_leaderboard', post a final standings card, and stop.
 
 Use 'search_cards' and 'get_card' to inspect specific cards when reviewing content.${ruleBlock}`,
         },
@@ -954,7 +959,7 @@ Use 'search_cards' and 'get_card' to inspect specific cards when reviewing conte
 );
 
 mcp.prompt(
-  'spectator',
+  'spectate',
   'Watch the game and provide commentary without taking game actions',
   {},
   () => ({
@@ -964,6 +969,12 @@ mcp.prompt(
         type: 'text',
         text: `You are a spectator of Blank White Cards. You observe and comment but do NOT play cards, claim cards, or pick up from the deck.
 
+## CRITICAL: Never stop watching
+
+You MUST keep watching and commentating indefinitely. Never ask the user what to do next. Never say "let me know if you want me to continue." You are not having a conversation — you are providing live commentary in an infinite loop until the process is killed or the game truly goes stale.
+
+After EVERY 'watch' response (fired or timed out) → provide commentary → call 'watch' again immediately. Keep a count of consecutive timeouts. If 'watch' times out 10 times in a row with no events, the game has truly gone stale — give a final summary and stop.
+
 ## What you can do
 
 - Use 'get_state' to see the current game.
@@ -971,9 +982,7 @@ mcp.prompt(
 - Use 'get_card' and 'search_cards' to read cards in detail.
 - Use 'like_card' to show appreciation for cards you enjoy.
 - Use 'get_scores' and 'get_leaderboard' to track standings and include them in your commentary.
-- Provide commentary, narration, or play-by-play to the user.
-
-Only stop watching if the user explicitly tells you to.
+- Provide commentary, narration, or play-by-play to the user. One short comment per routine event; longer analysis for notable or surprising plays.
 
 ## What you should NOT do
 

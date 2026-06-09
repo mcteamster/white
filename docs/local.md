@@ -15,7 +15,7 @@ npm run pull:global
 
 ### 2. Start the local Lobby & Game server
 ```
-npm run serve:local
+npm run local
 ```
 This will run a `boardgame.io` server at http://localhost:3000
 
@@ -105,9 +105,18 @@ By default, the MCP server connects to the public game servers (ap/eu/na.blankwh
 
 **HTTP mode** (for remote clients):
 ```
-GAME_SERVER_URL=<YOUR_GAME_SERVER> npm run serve:mcp
+npm run serve:mcp
 ```
-This starts a Streamable HTTP server on port 8000.
+This starts a Streamable HTTP server on port 8000 (overridable via `MCP_HTTP_PORT`), connecting to the public game servers.
+
+To run against your local game server instead:
+```
+npm run local:mcp
+```
+This defaults `GAME_SERVER_URL` to `http://localhost:3000`. You can override it:
+```
+GAME_SERVER_URL=http://192.168.1.10:3000 npm run local:mcp
+```
 
 Add to your MCP client config:
 ```json
