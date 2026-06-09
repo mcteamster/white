@@ -9,11 +9,14 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import { execSync } from 'node:child_process';
-import { readFileSync, unlinkSync } from 'node:fs';
+import { readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BlankWhiteCards } from '@mcteamster/white-core';
 import type { Card } from '@mcteamster/white-core';
+
+// Temporary store for out-of-band image uploads: uploadId -> processed data URI
+const imageUploadStore = new Map<string, string>();
 
 const GAME_SERVER_OVERRIDE = process.env.GAME_SERVER_URL;
 const GAME_NAME = 'blank-white-cards';
@@ -68,8 +71,8 @@ interface Session {
 // ── Card helpers ──────────────────────────────────────────────────────────────
 
 function stripImage(card: Card) {
-  const { image: _image, ...content } = card.content as Record<string, unknown>;
-  return { id: card.id, content, location: card.location, owner: card.owner, likes: card.likes };
+  const { image, ...content } = card.content as Record<string, unknown>;
+  return { id: card.id, content: { ...content, has_image: !!image }, location: card.location, owner: card.owner, likes: card.likes };
 }
 
 function getScores(state: Record<string, unknown>, playOrder: string[]): Record<string, number> {
@@ -269,7 +272,7 @@ This server provides tools for interacting with Blank White Cards — a creative
 
 ## Card images
 
-Cards can optionally have images. If you can draw or generate an image to accompany a card, save it as a square PNG and pass the file path as 'image_path' in 'submit_card'. It will be resized to 500x500.
+Cards can optionally have images. If you can draw or generate an image to accompany a card, save it as a square PNG, call 'upload_image' with the file path, and pass the returned 'image_uuid' to 'submit_card'. The 'upload_image' tool handles transport differences automatically.
 
 **Image style:** Cards are displayed on a white background. For best results, generate images with a white/blank background using a prompt style like "black ink on white paper, simple bold line art". This ensures the card art blends with the game's visual style and converts cleanly to the 1-bit format used in-game.
 
@@ -530,6 +533,29 @@ mcp.registerTool(
 );
 
 mcp.registerTool(
+  'upload_image',
+  {
+    description: 'Upload a PNG image file for use with submit_card. Pass the absolute local file path. Returns { image_uuid } — pass this to submit_card. Note: for remote HTTP MCP servers, POST the PNG file directly to {server}/upload-image instead (Content-Type: image/png) and use the returned image_uuid.',
+    inputSchema: {
+      file_path: z.string().describe('Absolute path to a square PNG image file on disk'),
+    },
+  },
+  async ({ file_path }) => {
+    const outPath = join(tmpdir(), `bwc_${Date.now()}.png`);
+    try {
+      execSync(`ffmpeg -y -i "${file_path}" -vf "scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'" "${outPath}"`, { stdio: 'pipe' });
+      const buf = readFileSync(outPath);
+      const image_uuid = randomUUID();
+      imageUploadStore.set(image_uuid, `data:image/png;base64,${buf.toString('base64')}`);
+      setTimeout(() => imageUploadStore.delete(image_uuid), 5 * 60 * 1000);
+      return { content: [{ type: 'text', text: JSON.stringify({ image_uuid }) }] };
+    } finally {
+      try { unlinkSync(outPath); } catch {}
+    }
+  }
+);
+
+mcp.registerTool(
   'submit_card',
   {
     description: 'Write a new card into your hand. Use move_card to play it to the pile when ready.',
@@ -539,28 +565,18 @@ mcp.registerTool(
       title: z.string().describe('Card title / rule text'),
       description: z.string().optional().describe('Additional description or flavour text'),
       author: z.string().optional().describe('Author name to attribute on the card'),
-      image_path: z.string().optional().describe('Absolute path to a square PNG image file to attach to the card. For best results, use images with a white background and bold black line art (the image will be converted to 1-bit black and white at 500x500).'),
+      image_uuid: z.string().optional().describe('Image UUID from upload_image tool or POST /upload-image. Resolves the processed card image.'),
     },
   },
-  async ({ matchID, playerID, title, description, author, image_path }) => {
+  async ({ matchID, playerID, title, description, author, image_uuid }) => {
     const { client } = requireSession(matchID, playerID);
 
     let image: string | undefined;
-    if (image_path) {
-      const dims = execSync(
-        `ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "${image_path}"`,
-        { encoding: 'utf-8' }
-      ).trim().split(',');
-      const [w, h] = [parseInt(dims[0]), parseInt(dims[1])];
-      if (w !== h) throw new Error(`Image must be square, got ${w}x${h}`);
-      const outPath = join(tmpdir(), `bwc_${Date.now()}.png`);
-      try {
-        execSync(`ffmpeg -y -i "${image_path}" -vf "scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'" "${outPath}"`, { stdio: 'pipe' });
-        const buf = readFileSync(outPath);
-        image = `data:image/png;base64,${buf.toString('base64')}`;
-      } finally {
-        try { unlinkSync(outPath); } catch {}
-      }
+    if (image_uuid) {
+      const stored = imageUploadStore.get(image_uuid);
+      if (!stored) throw new Error(`No image found for uuid '${image_uuid}'. Call upload_image first.`);
+      image = stored;
+      imageUploadStore.delete(image_uuid);
     }
 
     const card: Partial<Card> = {
@@ -871,7 +887,7 @@ Use 'get_play_hint' when deciding what action to take — it factors in your sco
 
 ## Card images
 
-You may choose to draw or generate an image to go with a card. Save it as a square PNG and pass the file path as 'image_path' in 'submit_card'. Cards with images are more engaging. Use a white background with bold black line art (e.g. prompt with "black ink on white paper, simple bold line art") so the image blends with the game's white card style.
+You may choose to draw or generate an image to go with a card. Save it as a square PNG, call 'upload_image' with the file path to get an 'image_uuid', then pass that to 'submit_card'. Cards with images are more engaging. Use a white background with bold black line art (e.g. prompt with "black ink on white paper, simple bold line art") so the image blends with the game's white card style.
 
 ## Strategy: ${a}
 
@@ -1013,6 +1029,35 @@ if (isCLI) {
 
       // Log requests
       console.error(`[mcp] ${req.method} ${req.url} session=${req.headers['mcp-session-id'] || 'none'}`);
+
+      // Out-of-band image upload: POST /upload-image with image/png body
+      if (req.method === 'POST' && req.url === '/upload-image') {
+        const chunks: Buffer[] = [];
+        req.on('data', (chunk: Buffer) => chunks.push(chunk));
+        req.on('end', () => {
+          const buf = Buffer.concat(chunks);
+          const inPath = join(tmpdir(), `bwc_upload_in_${Date.now()}.png`);
+          const outPath = join(tmpdir(), `bwc_upload_out_${Date.now()}.png`);
+          try {
+            writeFileSync(inPath, buf);
+            execSync(`ffmpeg -y -i "${inPath}" -vf "scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'" "${outPath}"`, { stdio: 'pipe' });
+            const processed = readFileSync(outPath);
+            const uploadId = randomUUID();
+            imageUploadStore.set(uploadId, `data:image/png;base64,${processed.toString('base64')}`);
+            // Auto-expire after 5 minutes
+            setTimeout(() => imageUploadStore.delete(uploadId), 5 * 60 * 1000);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ image_uuid: uploadId }));
+          } catch (e: unknown) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: String(e) }));
+          } finally {
+            try { unlinkSync(inPath); } catch {}
+            try { unlinkSync(outPath); } catch {}
+          }
+        });
+        return;
+      }
 
       // Fix Accept header for gateway compatibility
       if (!req.headers['accept']?.includes('text/event-stream')) {
