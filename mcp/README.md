@@ -49,7 +49,6 @@ When `GAME_SERVER_URL` is not set:
 ## Tools
 
 ### Match management
-- `list_matches` — List active matches
 - `create_match` — Create a new match and join as player 0
 - `join_match` — Join an existing match
 - `leave_match` — Leave a match

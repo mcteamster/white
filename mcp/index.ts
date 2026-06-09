@@ -338,33 +338,6 @@ const mcp = new McpServer(
 );
 
 mcp.registerTool(
-  'list_matches',
-  {
-    description: 'List all active Blank White Cards matches',
-    inputSchema: {
-      region: z.enum(['AP', 'EU', 'NA']).optional().describe('Server region to list (default: all regions)'),
-    },
-  },
-  async ({ region }) => {
-    if (GAME_SERVER_OVERRIDE) {
-      const lobby = new LobbyClient({ server: GAME_SERVER_OVERRIDE });
-      const { matches } = await lobby.listMatches(GAME_NAME);
-      return text(matches);
-    }
-    const regions = region ? [region] : Object.keys(SERVERS);
-    const allMatches = [];
-    for (const r of regions) {
-      try {
-        const lobby = new LobbyClient({ server: SERVERS[r] });
-        const { matches } = await lobby.listMatches(GAME_NAME);
-        allMatches.push(...matches.map((m: unknown) => ({ ...(m as object), region: r })));
-      } catch {}
-    }
-    return text(allMatches);
-  }
-);
-
-mcp.registerTool(
   'create_match',
   {
     description: 'Create a new match and join it as player 0 (the host)',
