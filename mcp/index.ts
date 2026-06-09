@@ -256,8 +256,8 @@ This server provides tools for interacting with Blank White Cards — a creative
 
 ## Card locations
 
-- **deck** — cards not yet picked up. \`pickup_card\` takes one into your hand.
-- **hand** — a player's private cards. \`move_card\` plays them elsewhere.
+- **deck** — cards not yet picked up. 'pickup_card' takes one into your hand.
+- **hand** — a player's private cards. 'move_card' plays them elsewhere.
 - **pile** — the shared active area, visible to everyone.
 - **table** — cards placed in front of a specific player (persistent effects).
 - **discard** — removed from play.
@@ -265,15 +265,15 @@ This server provides tools for interacting with Blank White Cards — a creative
 
 ## Observing changes
 
-Use \`watch\` to block until a relevant event occurs (card submitted, claimed, moved, liked, or shuffled). This is more efficient than polling \`get_state\`. Only one \`watch\` can be active per session.
+Use 'watch' to block until a relevant event occurs (card submitted, claimed, moved, liked, or shuffled). This is more efficient than polling 'get_state'. Only one 'watch' can be active per session.
 
 ## Writing cards
 
-\`submit_card\` creates a new card in a player's hand. Use \`move_card\` to play it to the pile or elsewhere.
+'submit_card' creates a new card in a player's hand. Use 'move_card' to play it to the pile or elsewhere.
 
 ## Card images
 
-Cards can optionally have images. If you can draw or generate an image to accompany a card, save it as a square PNG and pass the file path as \`image_path\` in \`submit_card\`. It will be resized to 500x500.
+Cards can optionally have images. If you can draw or generate an image to accompany a card, save it as a square PNG and pass the file path as 'image_path' in 'submit_card'. It will be resized to 500x500.
 
 **Image style:** Cards are displayed on a white background. For best results, generate images with a white/blank background using a prompt style like "black ink on white paper, simple bold line art". This ensures the card art blends with the game's visual style and converts cleanly to the 1-bit format used in-game.
 
@@ -281,10 +281,10 @@ Cards can optionally have images. If you can draw or generate an image to accomp
 
 Players have scores tracked per-match. Scores are set manually — they are not computed automatically from likes.
 
-- \`get_scores\` — see current scores for all players
-- \`get_leaderboard\` — scores sorted by rank
-- \`set_score\` — set any player's score to a new value
-- \`get_play_hint\` — get a suggested action based on your score position relative to others
+- 'get_scores' — see current scores for all players
+- 'get_leaderboard' — scores sorted by rank
+- 'set_score' — set any player's score to a new value
+- 'get_play_hint' — get a suggested action based on your score position relative to others
 
 ## Available prompts
 
@@ -882,30 +882,30 @@ mcp.prompt(
 
 You MUST keep playing indefinitely. Never summarise what you've done. Never ask the user what to do next. Never say "let me know if you want me to continue." You are not having a conversation — you are playing a game in an infinite loop until the process is killed.
 
-**`watch` timing out is not a stopping point. It is a signal to act, then immediately call `watch` again.** A timeout means the game was quiet — take one small action and go straight back to watching. Do not pause. Do not reflect. Do not ask. Call `watch` again immediately.
+**'watch' timing out is not a stopping point. It is a signal to act, then immediately call 'watch' again.** A timeout means the game was quiet — take one small action and go straight back to watching. Do not pause. Do not reflect. Do not ask. Call 'watch' again immediately.
 
-Every `watch` response includes a `watch` counter showing how many times you've watched this session. If it feels like you've been playing a long time — good. Keep going. There is no target. There is no finish line.
+Every 'watch' response includes a 'watch' counter showing how many times you've watched this session. If it feels like you've been playing a long time — good. Keep going. There is no target. There is no finish line.
 
-After EVERY action → call `watch`. After EVERY `watch` response (fired or timed out) → take an action → call `watch`. Repeat forever.
+After EVERY action → call 'watch'. After EVERY 'watch' response (fired or timed out) → take an action → call 'watch'. Repeat forever.
 
 ## Play loop
 
-1. Call \`watch\` with \`pile: true\` and \`hand: true\`.
-2. **If `watch` fires** — react: claim interesting cards, like good ones, write a response card. Reset your timeout count to 0.
-3. **If `watch` times out** — increment your timeout count. If it has timed out twice in a row, take one action (pick up a card, submit something, play from hand) and reset the count to 0.
+1. Call 'watch' with 'pile: true' and 'hand: true'.
+2. **If 'watch' fires** — react: claim interesting cards, like good ones, write a response card. Reset your timeout count to 0.
+3. **If 'watch' times out** — increment your timeout count. If it has timed out twice in a row, take one action (pick up a card, submit something, play from hand) and reset the count to 0.
 4. GOTO 1. Always. Without exception.
 
-Never take more than one action before calling \`watch\` again. Never end your response without having called \`watch\`.
+Never take more than one action before calling 'watch' again. Never end your response without having called 'watch'.
 
-Use \`get_play_hint\` when deciding what action to take — it factors in your score position relative to others.
+Use 'get_play_hint' when deciding what action to take — it factors in your score position relative to others.
 
 ## Card images
 
-You may choose to draw or generate an image to go with a card. Save it as a square PNG and pass the file path as \`image_path\` in \`submit_card\`. Cards with images are more engaging. Use a white background with bold black line art (e.g. prompt with "black ink on white paper, simple bold line art") so the image blends with the game's white card style.
+You may choose to draw or generate an image to go with a card. Save it as a square PNG and pass the file path as 'image_path' in 'submit_card'. Cards with images are more engaging. Use a white background with bold black line art (e.g. prompt with "black ink on white paper, simple bold line art") so the image blends with the game's white card style.
 
 ## Strategy: ${a}
 
-${a === 'aggressive' ? 'Submit cards frequently and respond to everything on the pile. Be the one driving the game. Check `get_scores` regularly and let your position drive decisions.' : a === 'passive' ? 'Observe more than you act. Like cards you enjoy. Only submit when you have something worth playing.' : 'Submit when the pile is quiet, react when things get interesting, like cards you genuinely enjoy.'}
+${a === 'aggressive' ? 'Submit cards frequently and respond to everything on the pile. Be the one driving the game. Check get_scores regularly and let your position drive decisions.' : a === 'passive' ? 'Observe more than you act. Like cards you enjoy. Only submit when you have something worth playing.' : 'Submit when the pile is quiet, react when things get interesting, like cards you genuinely enjoy.'}
 
 Do not narrate. Do not explain. Just play.`,
         },
@@ -932,21 +932,21 @@ mcp.prompt(
 
 ## Responsibilities
 
-- Watch for rule violations and announce them (use \`submit_card\` to post a ruling card if needed).
-- Shuffle the deck when it runs low (\`shuffle_cards\`, host only).
-- Move cards that are misplaced (\`move_card\`).
+- Watch for rule violations and announce them (use 'submit_card' to post a ruling card if needed).
+- Shuffle the deck when it runs low ('shuffle_cards', host only).
+- Move cards that are misplaced ('move_card').
 - Discard cards that violate house rules.
 - Keep the game flowing — if no one has acted in a while, draw attention by posting a prompt card.
-- Award points for good card play using \`set_score\`. Use your judgment — creative cards, well-executed rules, and crowd-pleasing moments are worth rewarding.
-- Post a leaderboard update periodically by calling \`get_leaderboard\` and submitting a card with the current standings.
+- Award points for good card play using 'set_score'. Use your judgment — creative cards, well-executed rules, and crowd-pleasing moments are worth rewarding.
+- Post a leaderboard update periodically by calling 'get_leaderboard' and submitting a card with the current standings.
 
 ## How to monitor
 
-Call \`watch\` with all flags (\`pile: true\`, \`hand: true\`, \`table: true\`) to see everything that happens. When an event fires, handle it and re-issue \`watch\` immediately.
+Call 'watch' with all flags ('pile: true', 'hand: true', 'table: true') to see everything that happens. When an event fires, handle it and re-issue 'watch' immediately.
 
-Keep a count of consecutive timeouts. If \`watch\` times out 10 times in a row with no events, the game has likely ended or gone quiet — call \`get_leaderboard\`, post a final standings card, and stop watching.
+Keep a count of consecutive timeouts. If 'watch' times out 10 times in a row with no events, the game has likely ended or gone quiet — call 'get_leaderboard', post a final standings card, and stop watching.
 
-Use \`search_cards\` and \`get_card\` to inspect specific cards when reviewing content.${ruleBlock}`,
+Use 'search_cards' and 'get_card' to inspect specific cards when reviewing content.${ruleBlock}`,
         },
       }],
     };
@@ -966,18 +966,18 @@ mcp.prompt(
 
 ## What you can do
 
-- Use \`get_state\` to see the current game.
-- Use \`watch\` with \`pile: true\` to follow the action — call it continuously, re-issuing immediately after every response.
-- Use \`get_card\` and \`search_cards\` to read cards in detail.
-- Use \`like_card\` to show appreciation for cards you enjoy.
-- Use \`get_scores\` and \`get_leaderboard\` to track standings and include them in your commentary.
+- Use 'get_state' to see the current game.
+- Use 'watch' with 'pile: true' to follow the action — call it continuously, re-issuing immediately after every response.
+- Use 'get_card' and 'search_cards' to read cards in detail.
+- Use 'like_card' to show appreciation for cards you enjoy.
+- Use 'get_scores' and 'get_leaderboard' to track standings and include them in your commentary.
 - Provide commentary, narration, or play-by-play to the user.
 
 Only stop watching if the user explicitly tells you to.
 
 ## What you should NOT do
 
-- Do not call \`pickup_card\`, \`submit_card\`, \`move_card\`, \`claim_card\`, or \`shuffle_cards\`.
+- Do not call 'pickup_card', 'submit_card', 'move_card', 'claim_card', or 'shuffle_cards'.
 - Do not join as a player seat that others need.`,
       },
     }],
