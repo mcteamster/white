@@ -887,7 +887,7 @@ Use 'get_play_hint' when deciding what action to take — it factors in your sco
 
 ## Card images
 
-You may choose to draw or generate an image to go with a card. Save it as a square PNG and pass the file path as 'image_path' in 'submit_card'. Cards with images are more engaging. Use a white background with bold black line art (e.g. prompt with "black ink on white paper, simple bold line art") so the image blends with the game's white card style.
+You may choose to draw or generate an image to go with a card. Save it as a square PNG, call 'upload_image' with the file path to get an 'image_uuid', then pass that to 'submit_card'. Cards with images are more engaging. Use a white background with bold black line art (e.g. prompt with "black ink on white paper, simple bold line art") so the image blends with the game's white card style.
 
 ## Strategy: ${a}
 
