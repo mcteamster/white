@@ -13,6 +13,7 @@ import { readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BlankWhiteCards } from '@mcteamster/white-core';
+import { version } from './package.json';
 import type { Card } from '@mcteamster/white-core';
 
 // Temporary store for out-of-band image uploads: uploadId -> processed data URI
@@ -272,9 +273,15 @@ This server provides tools for interacting with Blank White Cards — a creative
 
 ## Card images
 
-Cards can optionally have images. If you can draw or generate an image to accompany a card, save it as a square PNG, call 'upload_image' with the file path, and pass the returned 'image_uuid' to 'submit_card'. The 'upload_image' tool handles transport differences automatically.
+Cards can optionally have images. See resource 'bwc://docs/image-generation' for full guidance.
 
-**Image style:** Cards are displayed on a white background. For best results, generate images with a white/blank background using a prompt style like "black ink on white paper, simple bold line art". This ensures the card art blends with the game's visual style and converts cleanly to the 1-bit format used in-game.
+**Image specs:** 500x500 px square PNG. Images are converted to 1-bit (black and white) by the server.
+
+**Image style:** Cards are displayed on a white background. For best results use a prompt style like "black ink on white paper, simple bold line art".
+
+**Uploading — local MCP server:** Call the 'upload_image' tool with the absolute file path. Returns { image_uuid } — pass to 'submit_card'.
+
+**Uploading — remote HTTP MCP server:** POST the PNG directly (do NOT use the 'upload_image' tool — it will fail). Example: curl -X POST https://ap.blankwhite.cards/mcp/upload-image -H "Content-Type: image/png" --data-binary @/tmp/image.png. Returns { image_uuid } — pass to 'submit_card'. Known MCP server URLs: AP = https://ap.blankwhite.cards/mcp, EU = https://eu.blankwhite.cards/mcp, NA = https://na.blankwhite.cards/mcp.
 
 ## Scoring
 
@@ -336,8 +343,53 @@ function requireSession(matchID: string, playerID: string): Session {
 
 export function createMcpServer() {
 const mcp = new McpServer(
-  { name: 'blank-white-cards', version: '2.3.4' },
+  { name: 'blank-white-cards', version },
   { instructions: INSTRUCTIONS },
+);
+
+mcp.registerResource(
+  'bwc://docs/image-generation',
+  'bwc://docs/image-generation',
+  { description: 'Guidance for generating and uploading card images' },
+  async () => ({
+    contents: [{
+      uri: 'bwc://docs/image-generation',
+      mimeType: 'text/markdown',
+      text: `# Card Image Generation
+
+## Image Specs
+- **Size**: 500×500 px (square)
+- **Color**: 1-bit (black and white only) — the server converts uploaded images to 1-bit automatically
+- Generate at higher resolution if needed; the server handles downscaling
+
+## Local MCP server
+Use the \`upload_image\` tool with an absolute file path:
+\`\`\`
+upload_image({ file_path: '/tmp/card.png' })
+\`\`\`
+
+## Remote HTTP MCP server
+POST the PNG directly to \`{mcp-server-base-url}/upload-image\`:
+\`\`\`bash
+curl -X POST https://ap.blankwhite.cards/mcp/upload-image \\
+  -H "Content-Type: image/png" \\
+  --data-binary @/tmp/card.png
+# Returns: {"image_uuid": "..."}
+\`\`\`
+
+Known MCP server URLs:
+- AP: https://ap.blankwhite.cards/mcp
+- EU: https://eu.blankwhite.cards/mcp
+- NA: https://na.blankwhite.cards/mcp
+
+## Using the image UUID
+Pass the returned \`image_uuid\` to \`submit_card\`:
+\`\`\`
+submit_card({ ..., image_uuid: 'edef0e0e-...' })
+\`\`\`
+`,
+    }],
+  }),
 );
 
 mcp.registerTool(
@@ -535,7 +587,7 @@ mcp.registerTool(
 mcp.registerTool(
   'upload_image',
   {
-    description: 'Upload a PNG image file for use with submit_card. Pass the absolute local file path. Returns { image_uuid } — pass this to submit_card. Note: for remote HTTP MCP servers, POST the PNG file directly to {server}/upload-image instead (Content-Type: image/png) and use the returned image_uuid.',
+    description: 'Upload a PNG image file for use with submit_card. Pass the absolute local file path. Returns { image_uuid } — pass this to submit_card. Note: for remote HTTP MCP servers, POST the PNG file directly to {server}/upload-image instead (Content-Type: image/png) and use the returned image_uuid. Example: curl -X POST https://ap.blankwhite.cards/mcp/upload-image -H "Content-Type: image/png" --data-binary @/tmp/image.png. See resource bwc://docs/image-generation for full guidance including image specs.',
     inputSchema: {
       file_path: z.string().describe('Absolute path to a square PNG image file on disk'),
     },

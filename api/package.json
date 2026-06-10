@@ -1,6 +1,6 @@
 {
   "name": "@mcteamster/white-api",
-  "version": "2.3.5",
+  "version": "2.3.6",
   "scripts": {
     "build": "tsc",
     "cdk": "cdk"
