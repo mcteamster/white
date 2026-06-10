@@ -1,7 +1,7 @@
 {
   "name": "blankwhitecards",
   "private": true,
-  "version": "2.3.5",
+  "version": "2.3.6",
   "workspaces": [
     "core",
     "app",
@@ -17,7 +17,8 @@
     "serve": "npm run start -w server",
     "local": "npm run dev -w server",
     "serve:mcp": "npm run serve -w mcp",
-    "local:mcp": "npm run dev -w mcp"
+    "local:mcp": "npm run dev -w mcp",
+    "version:bump": "npm version patch --workspaces --include-workspace-root"
   },
   "devDependencies": {
     "tsx": "^4.22.3",
