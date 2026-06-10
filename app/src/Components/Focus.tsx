@@ -65,7 +65,7 @@ export function Focus(props: BoardProps<GameState>) {
         fontSize: '1.5em',
       },
       image: {
-        width: 'min(65vw, 45vh)',
+        width: 'min(50vw, 30vh)',
         objectFit: 'cover',
       },
       description: {
@@ -288,7 +288,7 @@ export function Focus(props: BoardProps<GameState>) {
         {carousel && (
           <div style={{
             position: 'fixed',
-            top: '0.5em',
+            top: 0,
             left: 0,
             width: '100vw',
             zIndex: 1001,
