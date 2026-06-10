@@ -3,6 +3,7 @@ import type { GameState } from '@mcteamster/white-core'
 import type { Properties } from 'csstype';
 import { Card, getAdjacentCard, getCardById } from '@mcteamster/white-core';
 import { Icon, Browse } from './Icons';
+import { CardFace } from './CardFace.tsx';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { FocusContext, HotkeysContext, ImageCacheContext, LoadingContext } from '../lib/contexts.ts';
 import { BLANK_IMAGE } from '../lib/images.ts';
@@ -178,6 +179,56 @@ export function Focus(props: BoardProps<GameState>) {
         </div>
       }
 
+      // Build carousel: all cards in the pile around the focused card
+      const carouselCards: { card: Card; isFocused: boolean }[] = [];
+      let cur = card;
+      const prevCards: Card[] = [];
+      for (;;) {
+        const adj = getAdjacentCard(props.G.cards, cur.id, 'prev', props.playerID);
+        if (!adj) break;
+        prevCards.unshift(adj);
+        cur = adj;
+      }
+      cur = card;
+      const nextCards: Card[] = [];
+      for (;;) {
+        const adj = getAdjacentCard(props.G.cards, cur.id, 'next', props.playerID);
+        if (!adj) break;
+        nextCards.push(adj);
+        cur = adj;
+      }
+      for (const c of prevCards) carouselCards.push({ card: c, isFocused: false });
+      carouselCards.push({ card, isFocused: true });
+      for (const c of nextCards) carouselCards.push({ card: c, isFocused: false });
+
+      const carousel = carouselCards.length > 1 ? (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'row',
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+          gap: '0.25em',
+          padding: '0.25em 50vw',
+          width: '100%',
+          boxSizing: 'border-box',
+          scrollSnapType: 'x mandatory',
+        }}>
+          {carouselCards.map(({ card: c, isFocused }) => (
+            <div key={c.id}
+              onClick={(e) => { if (!isFocused) { focusCard(c.id, true); } e.stopPropagation(); }}
+              style={{
+                flexShrink: 0,
+                cursor: isFocused ? 'default' : 'pointer',
+                filter: isFocused ? 'none' : 'grayscale(100%) brightness(0.75)',
+                scrollSnapAlign: isFocused ? 'center' : 'none',
+              }}
+            >
+              <CardFace {...{ ...c, location: 'table' }} />
+            </div>
+          ))}
+        </div>
+      ) : null;
+
       const browse = <>
         {
           getAdjacentCard(props.G.cards, card.id, 'prev', props.playerID) &&
@@ -233,7 +284,20 @@ export function Focus(props: BoardProps<GameState>) {
         </div>
       </wired-dialog>
 
-      setDisplayedCard(<wired-dialog open onClick={() => { unfocusCards() }}>
+      setDisplayedCard(<>
+        {carousel && (
+          <div style={{
+            position: 'fixed',
+            top: '0.5em',
+            left: 0,
+            width: '100vw',
+            zIndex: 1001,
+            pointerEvents: 'auto',
+          }} onClick={e => e.stopPropagation()}>
+            {carousel}
+          </div>
+        )}
+        <wired-dialog open onClick={() => { unfocusCards() }}>
         <div style={styles.focus} onClick={e => owned && e.stopPropagation()}>
           <Likes card={card} likeCard={props.moves.likeCard} matchId={props.matchID} />
           { !props.isMultiplayer && <Share id={card.id} /> }
@@ -246,9 +310,10 @@ export function Focus(props: BoardProps<GameState>) {
           {browse}
           {sendMenu}
         </div>
-      </wired-dialog>)
+      </wired-dialog>
+      </>)
     }
-  }, [props, imageCache, focus, sendCardMode, loading, setLoading, unfocusCards, changeFocus, moveCardTo])
+  }, [props, imageCache, focus, sendCardMode, loading, setLoading, unfocusCards, changeFocus, moveCardTo, focusCard])
 
   // Hotkeys
   useEffect(() => {
