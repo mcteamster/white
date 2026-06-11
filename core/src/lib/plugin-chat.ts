@@ -22,7 +22,7 @@ const MAX_MESSAGES = 200;
 export const PluginChat = (): Plugin<ChatAPI, ChatData> => ({
   name: 'chat',
   setup: () => ({
-    messages: [{ id: 0, type: 'event' as const, text: 'Welcome to Blank White Cards', timestamp: Date.now() }],
+    messages: [{ id: -1, type: 'event' as const, text: 'Welcome to Blank White Cards', timestamp: Date.now() }],
     lastLogId: 0,
   }),
   api: ({ data }) => ({

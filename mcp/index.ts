@@ -65,6 +65,7 @@ interface Session {
   client: ReturnType<typeof Client>;
   credentials: string;
   watchCount: number;
+  playerName?: string;
 }
 
 // ── Session helpers (inside createMcpServer) ──────────────────────────────────
@@ -326,7 +327,7 @@ function sessionKey(matchID: string, playerID: string) {
   return `${matchID}:${playerID}`;
 }
 
-async function connectSession(matchID: string, playerID: string, credentials: string, server: string): Promise<Session> {
+async function connectSession(matchID: string, playerID: string, credentials: string, server: string, playerName?: string): Promise<Session> {
   const key = sessionKey(matchID, playerID);
   const existing = sessions.get(key);
   if (existing) existing.client.stop?.();
@@ -351,7 +352,7 @@ async function connectSession(matchID: string, playerID: string, credentials: st
     client.start();
   });
 
-  const session: Session = { client, credentials, watchCount: 0 };
+  const session: Session = { client, credentials, watchCount: 0, playerName };
   sessions.set(key, session);
   return session;
 }
@@ -436,7 +437,7 @@ mcp.registerTool(
       playerID: '0',
       playerName: player_name ?? 'Player 0',
     });
-    await connectSession(matchID, '0', playerCredentials, server);
+    await connectSession(matchID, '0', playerCredentials, server, player_name ?? 'Player 0');
     return text({ matchID, playerID: '0', credentials: playerCredentials, server, message: `Joined ${matchID} as player 0` });
   }
 );
@@ -459,7 +460,7 @@ mcp.registerTool(
       playerName: player_name ?? `Player ${playerID ?? '?'}`,
     });
     const id = assignedID ?? playerID!;
-    await connectSession(matchID, id, playerCredentials, server);
+    await connectSession(matchID, id, playerCredentials, server, player_name ?? `Player ${id}`);
     return text({ matchID, playerID: id, server, message: `Joined ${matchID} as player ${id}` });
   }
 );
@@ -805,9 +806,10 @@ mcp.registerTool(
     },
   },
   async ({ matchID, playerID, text: messageText }) => {
-    const { client } = requireSession(matchID, playerID);
+    const session = requireSession(matchID, playerID);
+    const { client } = session;
     const nextState = waitForMove(client);
-    client.moves.postMessage(messageText, playerID);
+    client.moves.postMessage(messageText, session.playerName);
     const state = await nextState;
     return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
   }

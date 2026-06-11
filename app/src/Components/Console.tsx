@@ -21,6 +21,7 @@ export function Console({ moves, playerID, playerName, plugins, matchData, open:
   const open = openProp ?? localOpen;
   const setOpen = setOpenProp ?? setLocalOpen;
   const [unread, setUnread] = useState(0);
+  const [showEvents, setShowEvents] = useState(true);
   const listRef = useRef<HTMLDivElement>(null);
   const prevLenRef = useRef(messages.length);
 
@@ -118,7 +119,7 @@ export function Console({ moves, playerID, playerName, plugins, matchData, open:
       zIndex: 40,
       width: 'calc(100vw - 1.25em)',
       maxWidth: '480px',
-      maxHeight: '70vh',
+      height: '70vh',
       display: 'flex',
       flexDirection: 'column',
       border: '2px solid #333',
@@ -132,6 +133,9 @@ export function Console({ moves, playerID, playerName, plugins, matchData, open:
       flex: 1,
       padding: '0.5em 0.5em 0.5em 0.75em',
       fontSize: '0.8em',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'flex-end',
     },
     inputRow: {
       display: 'flex',
@@ -182,9 +186,17 @@ export function Console({ moves, playerID, playerName, plugins, matchData, open:
       {/* Panel */}
       {open && (
         <div style={styles.panel}>
+          <div style={{ position: 'absolute', top: '0.25em', right: '0.5em', zIndex: 1, fontSize: '0.75em' }}>
+            <span
+              onClick={() => setShowEvents(v => !v)}
+              style={{ cursor: 'pointer', color: showEvents ? '#888' : '#bbb', userSelect: 'none' }}
+            >
+              events <Icon name={showEvents ? 'show' : 'hide'} />
+            </span>
+          </div>
           <div ref={listRef} style={styles.list}>
-            {messages.map(msg => (
-              <div key={msg.id} style={msg.type === 'chat' ? styles.chatMsg : styles.eventMsg}>
+            {messages.filter(msg => showEvents || msg.type === 'chat').map((msg, i) => (
+              <div key={`${msg.id}-${i}`} style={msg.type === 'chat' ? styles.chatMsg : styles.eventMsg}>
                 {msg.type === 'chat' ? (
                   <><strong>{msg.playerName || resolveName(msg.playerID)}:</strong> {msg.text}</>
                 ) : (
