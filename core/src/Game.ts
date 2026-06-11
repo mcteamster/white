@@ -4,6 +4,7 @@ import { PluginPlayer } from 'boardgame.io/plugins';
 import { Card, getCardById, getCardsByLocation } from './Cards';
 import { presetDecks } from "./lib/constants";
 import { PluginChat } from "./lib/plugin-chat";
+import { PluginGameLog } from "./lib/plugin-gamelog";
 
 // Game State
 export interface GameState {
@@ -11,7 +12,7 @@ export interface GameState {
 }
 
 // Moves
-const pickupCard: Move<GameState> = ({ G, ctx, random, playerID, chat }: any) => {
+const pickupCard: Move<GameState> = ({ G, ctx, random, playerID, gamelog, chat }: any) => {
   const deck = getCardsByLocation(G.cards, "deck");
   if (deck.length === 0) {
     // Reshuffle Pile and Discard into Deck
@@ -41,15 +42,17 @@ const pickupCard: Move<GameState> = ({ G, ctx, random, playerID, chat }: any) =>
     card.owner = playerID;
     card.timestamp = Number(Date.now());
     card.location = "hand";
-    if (ctx.numPlayers > 1) chat.send({ type: 'event', playerID, text: `picked up a card` });
+    if (ctx.numPlayers > 1) {
+      gamelog.record({ move: 'pickupCard', playerID });
+      chat.syncFromLog(gamelog.entries());
+    }
   }
 }
 
-const moveCard: Move<GameState> = ({ G, ctx, playerID, chat }: any, id, target, owner) => {
+const moveCard: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, id, target, owner) => {
   const selectedCard = getCardById(G.cards, id);
   if (selectedCard) {
     const sourceLocation = selectedCard.location;
-    const sourceOwner = selectedCard.owner;
     if (['pile', 'discard', 'deck'].includes(target)) {
       selectedCard.location = target;
       selectedCard.owner = undefined;
@@ -67,32 +70,18 @@ const moveCard: Move<GameState> = ({ G, ctx, playerID, chat }: any, id, target, 
     }
     if (ctx.numPlayers > 1) {
       const publicLocations = ['pile', 'table'];
-      const sourcePublic = publicLocations.includes(sourceLocation);
-      const destPublic = publicLocations.includes(target);
-      const showTitle = sourcePublic || destPublic;
-      const title = showTitle ? `"${selectedCard.content.title.slice(0, 30)}"` : '';
+      const showTitle = publicLocations.includes(sourceLocation) || publicLocations.includes(target);
+      const cardTitle = showTitle ? selectedCard.content.title.slice(0, 30) : undefined;
       const recipientID = owner && owner !== playerID ? owner : undefined;
-
-      let text: string;
-      if (recipientID && target === 'hand') {
-        text = title ? `sent to {recipient}: ${title}` : `sent a card to {recipient}`;
-      } else if (recipientID) {
-        text = title ? `→ {recipient}'s ${target}: ${title}` : `→ {recipient}'s ${target}`;
-      } else if (target === 'pile') {
-        // playing to pile — omit destination
-        text = title ? `→ ${title}` : `→ pile`;
-      } else {
-        text = title ? `→ ${target}: ${title}` : `→ ${target}`;
-      }
-
-      chat.send({ type: 'event', playerID, targetPlayerID: recipientID, text });
+      gamelog.record({ move: 'moveCard', playerID, cardID: selectedCard.id, cardTitle, target, targetPlayerID: recipientID });
+      chat.syncFromLog(gamelog.entries());
     }
   } else {
     return INVALID_MOVE;
   }
 }
 
-const claimCard: Move<GameState> = ({ G, ctx, playerID, chat }: any, id) => {
+const claimCard: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, id) => {
   const selectedCard = getCardById(G.cards, id);
   if (selectedCard) {
     if (selectedCard.location == 'pile') {
@@ -100,7 +89,10 @@ const claimCard: Move<GameState> = ({ G, ctx, playerID, chat }: any, id) => {
       selectedCard.owner = playerID;
       selectedCard.timestamp = Number(Date.now());
       selectedCard.location = 'hand';
-      if (ctx.numPlayers > 1) chat.send({ type: 'event', playerID, text: `← "${selectedCard.content.title.slice(0, 30)}"` });
+      if (ctx.numPlayers > 1) {
+        gamelog.record({ move: 'claimCard', playerID, cardID: selectedCard.id, cardTitle: selectedCard.content.title.slice(0, 30) });
+        chat.syncFromLog(gamelog.entries());
+      }
     } else {
       return INVALID_MOVE;
     }
@@ -120,13 +112,16 @@ const likeCard: Move<GameState> = ({ G }, id) => {
   }
 }
 
-const submitCard: Move<GameState> = ({ G, ctx, chat }: any, card: Card, playerName?: string) => {
+const submitCard: Move<GameState> = ({ G, ctx, gamelog, chat }: any, card: Card, playerName?: string) => {
   card.id = G.cards.length + 1; // Commit ID sequentially to GameState
   G.cards.push(card);
-  if (ctx.numPlayers > 1) chat.send({ type: 'event', text: `${playerName || 'Someone'} made a card` });
+  if (ctx.numPlayers > 1) {
+    gamelog.record({ move: 'submitCard', playerID: card.owner || '', playerName, cardID: card.id, cardTitle: card.content.title.slice(0, 30) });
+    chat.syncFromLog(gamelog.entries());
+  }
 }
 
-const loadCards: Move<GameState> = ({ G, ctx, playerID, chat }: any, cards: Card[]) => {
+const loadCards: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, cards: Card[]) => {
   if(playerID !== '0') return INVALID_MOVE; // Only the host can bulk load cards
 
   // Bulk load batches of cards
@@ -139,11 +134,12 @@ const loadCards: Move<GameState> = ({ G, ctx, playerID, chat }: any, cards: Card
   G.cards.push(...loadBuffer);
   if (ctx.numPlayers > 1) {
     const deckSize = G.cards.filter((c: Card) => c.location === 'deck').length;
-    chat.send({ type: 'event', text: `${cards.length} ${cards.length === 1 ? 'card' : 'cards'} loaded — ${deckSize} in deck` });
+    gamelog.record({ move: 'loadCards', playerID, count: cards.length, delta: deckSize });
+    chat.syncFromLog(gamelog.entries());
   }
 }
 
-const shuffleCards: Move<GameState> = ({ G, ctx, playerID, chat }: any) => {
+const shuffleCards: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any) => {
   if(playerID !== '0') return INVALID_MOVE; // Only the host can reset the game
 
   // Return all cards to the deck, except those in the box
@@ -155,28 +151,28 @@ const shuffleCards: Move<GameState> = ({ G, ctx, playerID, chat }: any) => {
   });
   if (ctx.numPlayers > 1) {
     const deckSize = G.cards.filter((c: Card) => c.location !== 'box').length;
-    chat.send({ type: 'event', playerID, text: `shuffled — ${deckSize} in deck` });
+    gamelog.record({ move: 'shuffleCards', playerID, count: deckSize });
+    chat.syncFromLog(gamelog.entries());
   }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const postMessage: Move<GameState> = ({ ctx, playerID, chat }: any, text: string, playerName?: string) => {
+const postMessage: Move<GameState> = ({ ctx, playerID, gamelog, chat }: any, text: string, playerName?: string) => {
   if (ctx.numPlayers <= 1) return INVALID_MOVE;
   if (!text || text.length > 500) return INVALID_MOVE;
-  chat.send({ type: 'chat', playerID, playerName, text: text.trim() });
+  gamelog.record({ move: 'postMessage', playerID, playerName, text: text.trim() });
+  chat.syncFromLog(gamelog.entries());
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const setScore: Move<GameState> = ({ ctx, player, chat }: any, targetPlayerID: string, value: number, setterName?: string, targetName?: string) => {
+const setScore: Move<GameState> = ({ ctx, player, gamelog, chat }: any, targetPlayerID: string, value: number, setterName?: string, targetName?: string) => {
   if (player?.state && targetPlayerID in player.state) {
     const prev = player.state[targetPlayerID]?.score ?? 0;
     player.state[targetPlayerID] = { score: value };
     if (ctx.numPlayers > 1) {
       const delta = value - prev;
-      const deltaStr = delta >= 0 ? `+${delta}` : `${delta}`;
-      const who = targetName || `Player ${targetPlayerID}`;
-      const by = setterName && setterName !== targetName ? ` (by ${setterName})` : '';
-      chat.send({ type: 'event', text: `${deltaStr} pts for ${who}${by}` });
+      gamelog.record({ move: 'setScore', playerID: targetPlayerID, targetPlayerID, targetPlayerName: targetName, setterName, delta });
+      chat.syncFromLog(gamelog.entries());
     }
   } else {
     return INVALID_MOVE;
@@ -252,6 +248,7 @@ export const BlankWhiteCards: Game<GameState> = {
 
   plugins: [
     PluginPlayer({ setup: () => ({ score: 0 as number }) }),
+    PluginGameLog(),
     PluginChat(),
   ],
 

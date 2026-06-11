@@ -1,12 +1,15 @@
 import type { Plugin } from 'boardgame.io';
 import type { Message } from '../Cards';
+import type { GameLogEntry } from './plugin-gamelog';
+import { logEntryToMessage } from './plugin-gamelog';
 
 interface ChatData {
   messages: Message[];
+  lastLogId: number; // tracks which log entries have been converted
 }
 
 export interface ChatAPI {
-  send(msg: Omit<Message, 'id' | 'timestamp'>): void;
+  syncFromLog(entries: GameLogEntry[]): void;
   getMessages(): Message[];
 }
 
@@ -18,13 +21,20 @@ const MAX_MESSAGES = 200;
 
 export const PluginChat = (): Plugin<ChatAPI, ChatData> => ({
   name: 'chat',
-  setup: () => ({ messages: [] }),
+  setup: () => ({ messages: [], lastLogId: 0 }),
   api: ({ data }) => ({
-    send: (msg) => {
-      data.messages.push({ ...msg, id: data.messages.length + 1, timestamp: Date.now() });
-      if (data.messages.length > MAX_MESSAGES) data.messages.shift();
+    syncFromLog: (entries: GameLogEntry[]) => {
+      const newEntries = entries.filter(e => e.id > data.lastLogId);
+      for (const entry of newEntries) {
+        const msg = logEntryToMessage(entry);
+        if (msg) {
+          data.messages.push(msg);
+          if (data.messages.length > MAX_MESSAGES) data.messages.shift();
+        }
+        data.lastLogId = entry.id;
+      }
     },
     getMessages: () => data.messages,
   }),
-  flush: ({ api }) => ({ messages: api.getMessages() }),
+  flush: ({ api, data }) => ({ messages: api.getMessages(), lastLogId: data.lastLogId }),
 });
