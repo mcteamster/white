@@ -13,7 +13,7 @@ export function Finalise({ multiplayer }: FinaliseProps) {
       position: 'fixed',
       top: '0',
       left: '0',
-      zIndex: '7',
+      zIndex: '30',
       textAlign: 'center',
       display: 'none',
       flexDirection: 'column',

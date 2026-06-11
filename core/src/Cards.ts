@@ -1,4 +1,14 @@
 // Types
+export interface Message {
+  id: number;
+  type: 'chat' | 'event';
+  playerID?: string;
+  playerName?: string;
+  targetPlayerID?: string;
+  text: string;
+  timestamp: number;
+}
+
 export interface Card {
   id: number,
   content: {

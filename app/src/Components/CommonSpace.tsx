@@ -51,7 +51,7 @@ export function Pile(props: BoardProps<GameState>) {
         }
       }} style={{ position: 'relative' }}>
         {pile.length > 0 && (
-          <div style={{ position: 'absolute', bottom: '1.25em', right: '1.75em', zIndex: 1 }}>
+          <div style={{ position: 'absolute', bottom: '1.25em', right: '1.75em', zIndex: 10 }}>
             <Likes card={pile[0]} likeCard={props.moves.likeCard} matchId={props.matchID} />
           </div>
         )}
@@ -98,9 +98,9 @@ export function Players(props: BoardProps<GameState>) {
       overflowY: 'scroll',
       scrollbarWidth: 'none',
       position: 'fixed',
-      top: (discordSdk && dimensions.upright) ? '4.75em' : '2em',
+      top: (discordSdk && dimensions.upright) ? '4.75em' : '4em',
       right: '0',
-      zIndex: '4',
+      zIndex: '20',
       borderRadius: '0 0 0 1em',
       display: 'flex',
       flexDirection: 'column',
@@ -134,7 +134,7 @@ export function Players(props: BoardProps<GameState>) {
       scrollbarWidth: 'none',
       margin: '0.25em',
       borderRadius: '0.5em',
-      zIndex: '5',
+      zIndex: '20',
       position: (dimensions.upright) ? 'fixed' : 'relative',
       right: (dimensions.upright) ? '5em' : undefined,
       backgroundColor: (dimensions.upright) ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.5)',
@@ -204,7 +204,7 @@ export function Players(props: BoardProps<GameState>) {
         <Calculator
           initialValue={getPlayerScore(props.plugins, String(editingScore))}
           label={props.matchData?.find(p => p.id === editingScore)?.name}
-          onConfirm={(val) => { props.moves.setScore(String(editingScore), val); setEditingScore(null); }}
+          onConfirm={(val) => { props.moves.setScore(String(editingScore), val, props.matchData?.find(p => p.id === Number(props.playerID))?.name, props.matchData?.find(p => p.id === editingScore)?.name); setEditingScore(null); }}
           onCancel={() => setEditingScore(null)}
         />
       )}
@@ -233,7 +233,7 @@ export function Header(props: HeaderProps) {
       position: 'fixed',
       top: '0',
       left: '0',
-      zIndex: '10',
+      zIndex: '50',
       backgroundColor: 'white',
       borderBottom: '0.5pt solid black',
       display: 'flex',
@@ -246,9 +246,6 @@ export function Header(props: HeaderProps) {
       flexDirection: 'row',
       padding: '0 0.25em',
     },
-    displayname: {
-      fontSize: '1em',
-    },
     match: {
       fontSize: '1.25em',
     },
@@ -258,25 +255,52 @@ export function Header(props: HeaderProps) {
     <>
       <div style={styles.header}>
         <div style={{ ...styles.item, ...styles.match }} onClick={ () => setShowShare(true) }><Icon name='copy' />&nbsp;{props.matchID !== 'default' ? `${props.matchID}` : "Blank White Cards"}</div>
-        <div style={{ ...styles.item, ...styles.displayname }} onClick={() => { props.setShowPlayers(!props.showPlayers) }}>
-          {playerName && (editingMyScore ? (
-            <Calculator
-              initialValue={myScore}
-              label={playerName || undefined}
-              onConfirm={(val) => { props.moves.setScore(props.playerID || '0', val); setEditingMyScore(false); }}
-              onCancel={() => setEditingMyScore(false)}
-            />
-          ) : (
-            <>{playerName}&nbsp;<span
-              style={{ fontVariantNumeric: 'tabular-nums', cursor: 'pointer', textDecoration: 'underline dotted' }}
-              onClick={(e) => { e.stopPropagation(); setEditingMyScore(true); }}
-            >{formatScore(myScore)} pts</span></>
-          ))}&nbsp;
-          {props.matchID !== 'default' && <Icon name='multi' />}&nbsp;
-          {props.matchData?.filter((player => player.isConnected)).length}
-          {props.matchID !== 'default' && (props.matchData?.filter((player => player.isConnected)).length != 1) ? ((props.showPlayers) ? <Icon name='less' /> : <Icon name='more' />) : <>&nbsp;</> }
-        </div>
+        {props.isMultiplayer && props.matchID !== 'default' && (
+          <div style={{ ...styles.item, fontSize: '1em', paddingRight: '0.5em' }}>
+            {playerName && (editingMyScore ? (
+              <Calculator
+                initialValue={myScore}
+                label={playerName || undefined}
+                onConfirm={(val) => { props.moves.setScore(props.playerID || '0', val, playerName, playerName); setEditingMyScore(false); }}
+                onCancel={() => setEditingMyScore(false)}
+              />
+            ) : (
+              <>{playerName}&nbsp;<span
+                style={{ fontVariantNumeric: 'tabular-nums', cursor: 'pointer', textDecoration: 'underline dotted' }}
+                onClick={(e) => { e.stopPropagation(); setEditingMyScore(true); }}
+              >{formatScore(myScore)} pts</span></>
+            ))}
+          </div>
+        )}
       </div>
+      {/* Player tray notch — people icon + count + toggle, top-right */}
+      {props.isMultiplayer && props.matchID !== 'default' && (props.matchData?.filter(p => p.isConnected).length ?? 0) > 1 && (
+        <div style={{
+          position: 'fixed',
+          top: (discordSdk && dimensions.upright) ? '4.75em' : '2em',
+          right: '0',
+          zIndex: 40,
+          cursor: 'pointer',
+        }} onClick={() => { props.setShowPlayers(!props.showPlayers) }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '0.25em 0.5em',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: '0.25em',
+            borderRadius: '0 0 0 1em',
+            border: '1px solid #ccc',
+            borderTop: 'none',
+            borderRight: 'none',
+            userSelect: 'none' as const,
+            fontSize: '0.9em',
+          }}>
+            {props.matchData?.filter(p => p.isConnected).length}
+            <Icon name='multi' />
+          </div>
+        </div>
+      )}
       {showShare && <ShareRoom matchID={props.matchID} setShowShare={setShowShare} />}
     </>
   )
@@ -310,7 +334,7 @@ export function ShareRoom(props: { matchID: string, setShowShare: React.Dispatch
       position: 'fixed',
       top: '0',
       left: '0',
-      zIndex: '9',
+      zIndex: '40',
       backgroundColor: 'white',
       borderBottom: '0.5pt solid black',
       display: 'flex',
@@ -346,9 +370,16 @@ export function ShareRoom(props: { matchID: string, setShowShare: React.Dispatch
   )
 }
 
-export function CommonSpace(props: BoardProps<GameState>) {
+interface CommonSpaceProps extends BoardProps<GameState> {
+  showPlayers?: boolean;
+  setShowPlayers?: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export function CommonSpace(props: CommonSpaceProps) {
   const dimensions = useWindowDimensions();
-  const [showPlayers, setShowPlayers] = useState(!(dimensions.upright));
+  const [localShowPlayers, setLocalShowPlayers] = useState(!(dimensions.upright));
+  const showPlayers = props.showPlayers ?? localShowPlayers;
+  const setShowPlayers = props.setShowPlayers ?? setLocalShowPlayers;
 
   return (
     <>
