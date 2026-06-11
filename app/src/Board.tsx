@@ -10,7 +10,7 @@ import { discordSdk } from './lib/discord.ts';
 
 // Web Components from https://wiredjs.com/
 import 'wired-elements';
-import { useReducer } from 'react';
+import { useReducer, useState } from 'react';
 import { ImageCacheContext, ImageCacheType } from './lib/contexts.ts';
 declare global {
   namespace React.JSX {
@@ -44,14 +44,32 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
     return cache
   }, {})
 
+  // Mutual exclusion on mobile: chat and players tray can't both be open
+  const [showPlayers, setShowPlayers] = useState(!dimensions.upright);
+  const [chatOpen, setChatOpen] = useState(false);
+
+  const isMobile = dimensions.width < 600;
+
+  const handleSetShowPlayers: React.Dispatch<React.SetStateAction<boolean>> = (value) => {
+    const next = typeof value === 'function' ? value(showPlayers) : value;
+    if (next && isMobile) setChatOpen(false);
+    setShowPlayers(next);
+  };
+
+  const handleSetChatOpen: React.Dispatch<React.SetStateAction<boolean>> = (value) => {
+    const next = typeof value === 'function' ? value(chatOpen) : value;
+    if (next && isMobile) setShowPlayers(false);
+    setChatOpen(next);
+  };
+
   return (
     <ImageCacheContext.Provider value={{ imageCache, dispatchImage }}>
       <div style={boardStyle}>
         <ActionSpace {...props} />
-        <CommonSpace {...props} />
+        <CommonSpace {...props} showPlayers={showPlayers} setShowPlayers={handleSetShowPlayers} />
         <PlayerSpace {...props} />
       </div>
-      {props.isMultiplayer && <Console {...props} playerName={props.matchData?.find(p => p.id === Number(props.playerID))?.name} />}
+      {props.isMultiplayer && <Console {...props} playerName={props.matchData?.find(p => p.id === Number(props.playerID))?.name} open={chatOpen} setOpen={handleSetChatOpen} />}
     </ImageCacheContext.Provider>
   );
 }

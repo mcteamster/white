@@ -21,9 +21,13 @@ const MAX_MESSAGES = 200;
 
 export const PluginChat = (): Plugin<ChatAPI, ChatData> => ({
   name: 'chat',
-  setup: () => ({ messages: [], lastLogId: 0 }),
+  setup: () => ({
+    messages: [{ id: 0, type: 'event' as const, text: 'Welcome to Blank White Cards', timestamp: Date.now() }],
+    lastLogId: 0,
+  }),
   api: ({ data }) => ({
     syncFromLog: (entries: GameLogEntry[]) => {
+      if (!data?.messages) return;
       const newEntries = entries.filter(e => e.id > data.lastLogId);
       for (const entry of newEntries) {
         const msg = logEntryToMessage(entry);

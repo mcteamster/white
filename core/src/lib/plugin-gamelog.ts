@@ -102,10 +102,11 @@ export const PluginGameLog = (): Plugin<GameLogAPI, GameLogData> => ({
   setup: () => ({ entries: [] }),
   api: ({ data }) => ({
     record: (entry) => {
+      if (!data?.entries) return;
       data.entries.push({ ...entry, id: data.entries.length + 1, timestamp: Date.now() });
       if (data.entries.length > MAX_ENTRIES) data.entries.shift();
     },
-    entries: () => data.entries,
+    entries: () => data?.entries ?? [],
   }),
   flush: ({ api }) => ({ entries: api.entries() }),
   // Server-side only — hide from clients

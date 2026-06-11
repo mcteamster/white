@@ -112,11 +112,11 @@ const likeCard: Move<GameState> = ({ G }, id) => {
   }
 }
 
-const submitCard: Move<GameState> = ({ G, ctx, gamelog, chat }: any, card: Card, playerName?: string) => {
+const submitCard: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, card: Card, playerName?: string) => {
   card.id = G.cards.length + 1; // Commit ID sequentially to GameState
   G.cards.push(card);
   if (ctx.numPlayers > 1) {
-    gamelog.record({ move: 'submitCard', playerID: card.owner || '', playerName, cardID: card.id, cardTitle: card.content.title.slice(0, 30) });
+    gamelog.record({ move: 'submitCard', playerID, playerName, cardID: card.id, cardTitle: card.content.title.slice(0, 30) });
     chat.syncFromLog(gamelog.entries());
   }
 }

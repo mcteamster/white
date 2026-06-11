@@ -370,9 +370,16 @@ export function ShareRoom(props: { matchID: string, setShowShare: React.Dispatch
   )
 }
 
-export function CommonSpace(props: BoardProps<GameState>) {
+interface CommonSpaceProps extends BoardProps<GameState> {
+  showPlayers?: boolean;
+  setShowPlayers?: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export function CommonSpace(props: CommonSpaceProps) {
   const dimensions = useWindowDimensions();
-  const [showPlayers, setShowPlayers] = useState(!(dimensions.upright));
+  const [localShowPlayers, setLocalShowPlayers] = useState(!(dimensions.upright));
+  const showPlayers = props.showPlayers ?? localShowPlayers;
+  const setShowPlayers = props.setShowPlayers ?? setLocalShowPlayers;
 
   return (
     <>

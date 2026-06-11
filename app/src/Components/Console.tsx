@@ -8,13 +8,18 @@ import { useWindowDimensions } from '../lib/hooks';
 
 interface ConsoleProps extends BoardProps<GameState> {
   playerName?: string;
+  open?: boolean;
+  setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export function Console({ moves, playerID, playerName, plugins, matchData }: ConsoleProps) {
+export function Console({ moves, playerID, playerName, plugins, matchData, open: openProp, setOpen: setOpenProp }: ConsoleProps) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const messages: Message[] = (plugins as any)?.chat?.data?.messages ?? [];
   const dimensions = useWindowDimensions();
   const headerHeight = (discordSdk && dimensions.upright) ? '4.75em' : '2em';
-  const [open, setOpen] = useState(false);
+  const [localOpen, setLocalOpen] = useState(false);
+  const open = openProp ?? localOpen;
+  const setOpen = setOpenProp ?? setLocalOpen;
   const [unread, setUnread] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
   const prevLenRef = useRef(messages.length);
@@ -55,7 +60,6 @@ export function Console({ moves, playerID, playerName, plugins, matchData }: Con
       return () => inp.removeEventListener('keydown', handler);
     }, 50);
     return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const handleOpen = () => {
@@ -170,7 +174,7 @@ export function Console({ moves, playerID, playerName, plugins, matchData }: Con
                     : messages[messages.length - 1].text
                 }
               </span>
-            : 'Chat'
+            : null
           }
         </div>
       </div>
@@ -179,9 +183,6 @@ export function Console({ moves, playerID, playerName, plugins, matchData }: Con
       {open && (
         <div style={styles.panel}>
           <div ref={listRef} style={styles.list}>
-            {messages.length === 0 && (
-              <div style={{ color: '#aaa', fontStyle: 'italic' }}>No messages yet</div>
-            )}
             {messages.map(msg => (
               <div key={msg.id} style={msg.type === 'chat' ? styles.chatMsg : styles.eventMsg}>
                 {msg.type === 'chat' ? (
