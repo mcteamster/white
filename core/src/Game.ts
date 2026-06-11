@@ -3,6 +3,7 @@ import { INVALID_MOVE, Stage } from 'boardgame.io/core';
 import { PluginPlayer } from 'boardgame.io/plugins';
 import { Card, getCardById, getCardsByLocation } from './Cards';
 import { presetDecks } from "./lib/constants";
+import { PluginChat } from "./lib/plugin-chat";
 
 // Game State
 export interface GameState {
@@ -82,7 +83,7 @@ const claimCard: Move<GameState> = ({ G, playerID }, id) => {
   }
 }
 
-const likeCard: Move<GameState> = ({ G }, id) => {
+const likeCard: Move<GameState> = ({ G, chat }: any, id) => {
   const selectedCard = getCardById(G.cards, id);
   if (selectedCard?.likes) {
     selectedCard.likes++;
@@ -91,14 +92,16 @@ const likeCard: Move<GameState> = ({ G }, id) => {
   } else {
     return INVALID_MOVE
   }
+  chat.send({ type: 'event', text: `Card #${id} was liked` });
 }
 
-const submitCard: Move<GameState> = ({ G }, card: Card) => {
+const submitCard: Move<GameState> = ({ G, chat }: any, card: Card) => {
   card.id = G.cards.length + 1; // Commit ID sequentially to GameState
   G.cards.push(card);
+  chat.send({ type: 'event', text: 'A new card was submitted' });
 }
 
-const loadCards: Move<GameState> = ({ G, playerID }, cards: Card[]) => {
+const loadCards: Move<GameState> = ({ G, playerID, chat }: any, cards: Card[]) => {
   if(playerID !== '0') return INVALID_MOVE; // Only the host can bulk load cards
 
   // Bulk load batches of cards
@@ -109,18 +112,26 @@ const loadCards: Move<GameState> = ({ G, playerID }, cards: Card[]) => {
     loadBuffer.push(card);
   })
   G.cards.push(...loadBuffer);
+  chat.send({ type: 'event', text: `${cards.length} card(s) loaded into the deck` });
 }
 
-const shuffleCards: Move<GameState> = ({ G, playerID }) => {
+const shuffleCards: Move<GameState> = ({ G, playerID, chat }: any) => {
   if(playerID !== '0') return INVALID_MOVE; // Only the host can reset the game
 
   // Return all cards to the deck, except those in the box
-  G.cards.forEach(card => { 
+  G.cards.forEach((card: Card) => { 
     if (card.location !== 'box') {
       card.location = 'deck'; 
       card.timestamp = undefined;
     }
   });
+  chat.send({ type: 'event', text: `Player ${playerID} shuffled the deck` });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const postMessage: Move<GameState> = ({ playerID, chat }: any, text: string, playerName?: string) => {
+  if (!text || text.length > 500) return INVALID_MOVE;
+  chat.send({ type: 'chat', playerID, playerName, text: text.trim() });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -192,10 +203,16 @@ export const BlankWhiteCards: Game<GameState> = {
       client: false,
       ignoreStaleStateID: true,
     },
+    postMessage: {
+      move: postMessage,
+      client: false,
+      ignoreStaleStateID: true,
+    },
   },
 
   plugins: [
     PluginPlayer({ setup: () => ({ score: 0 as number }) }),
+    PluginChat(),
   ],
 
   turn: {

@@ -4,6 +4,7 @@ import type { Properties } from 'csstype';
 import { ActionSpace } from './Components/ActionSpace.tsx';
 import { CommonSpace } from './Components/CommonSpace.tsx';
 import { PlayerSpace } from './Components/PlayerSpace.tsx';
+import { Console } from './Components/Console.tsx';
 import { useWindowDimensions } from './lib/hooks.ts';
 import { discordSdk } from './lib/discord.ts';
 
@@ -50,6 +51,7 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
         <CommonSpace {...props} />
         <PlayerSpace {...props} />
       </div>
+      <Console {...props} playerName={props.matchData?.find(p => p.id === Number(props.playerID))?.name} />
     </ImageCacheContext.Provider>
   );
 }
