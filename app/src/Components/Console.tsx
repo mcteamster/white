@@ -91,20 +91,19 @@ export function Console({ moves, playerID, playerName, plugins }: ConsoleProps) 
       userSelect: 'none' as const,
       fontSize: '0.9em',
     },
-    badge: {
+    unreadCount: {
       position: 'absolute',
-      top: '-0.5em',
-      right: '-0.5em',
-      background: '#e74c3c',
-      color: 'white',
-      borderRadius: '50%',
-      width: '1.2em',
-      height: '1.2em',
-      fontSize: '0.7em',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
+      top: '40%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      fontSize: '0.75em',
       fontWeight: 'bold',
+    },
+    previewText: {
+      maxWidth: '180px',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
     },
     panel: {
       position: 'fixed',
@@ -155,13 +154,13 @@ export function Console({ moves, playerID, playerName, plugins }: ConsoleProps) 
           <span style={{ position: 'relative', display: 'inline-flex' }}>
             <Icon name='chat' />
             {!open && unread > 0 && (
-              <span style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '0.75em', fontWeight: 'bold' }}>{unread > 9 ? '9+' : unread}</span>
+              <span style={styles.unreadCount}>{unread > 9 ? '9+' : unread}</span>
             )}
           </span>
           {open
             ? 'Close Chat'
             : !open && messages.length > 0
-            ? <span style={{ maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            ? <span style={styles.previewText}>
                 {messages[messages.length - 1].type === 'chat'
                   ? <><strong>{messages[messages.length - 1].playerName || `Player ${messages[messages.length - 1].playerID}`}:</strong> {messages[messages.length - 1].text}</>
                   : messages[messages.length - 1].text
@@ -193,8 +192,8 @@ export function Console({ moves, playerID, playerName, plugins }: ConsoleProps) 
             <wired-input
               id="consoleInput"
               placeholder="Say something..."
-              maxlength={100}
-              style={{ flex: 1, fontSize: '0.8em', padding: '0.6em' }}
+              maxlength={500}
+              style={{ flex: 1, fontSize: '0.8em' }}
             ></wired-input>
             <wired-button
               onClick={sendMessage}
