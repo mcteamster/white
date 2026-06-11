@@ -14,7 +14,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BlankWhiteCards } from '@mcteamster/white-core';
 import { version } from './package.json';
-import type { Card } from '@mcteamster/white-core';
+import type { Card, Message } from '@mcteamster/white-core';
 
 // Temporary store for out-of-band image uploads: uploadId -> processed data URI
 const imageUploadStore = new Map<string, string>();
@@ -81,11 +81,12 @@ function getScores(state: Record<string, unknown>, playOrder: string[]): Record<
   return Object.fromEntries(playOrder.map(id => [id, players?.[id]?.score ?? 0]));
 }
 
-function formatState(state: { G: { cards: Card[] }; ctx: Record<string, unknown> }, playerID: string) {
+function formatState(state: { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID: string) {
   const { G, ctx } = state;
   const cards = G.cards;
   const playOrder = ctx.playOrder as string[];
   const scores = getScores(state as Record<string, unknown>, playOrder);
+  const allMessages = (state as any)?.plugins?.chat?.data?.messages as Message[] | undefined;
   return {
     my_hand: cards.filter(c => c.location === 'hand' && c.owner === playerID).map(stripImage),
     my_table: cards.filter(c => c.location === 'table' && c.owner === playerID).map(stripImage),
@@ -96,6 +97,7 @@ function formatState(state: { G: { cards: Card[] }; ctx: Record<string, unknown>
     num_players: ctx.numPlayers,
     play_order: playOrder,
     scores,
+    recent_messages: allMessages ? allMessages.slice(-10) : [],
   };
 }
 
@@ -129,10 +131,11 @@ interface CardSnapshot {
   owner?: string;
   previousOwner?: string;
   likes?: number;
+  messageCount?: number;
 }
 
 interface CardEvent {
-  type: 'card_submitted' | 'card_claimed' | 'card_moved' | 'card_liked' | 'shuffled';
+  type: 'card_submitted' | 'card_claimed' | 'card_moved' | 'card_liked' | 'shuffled' | 'message';
   card?: ReturnType<typeof stripImage>;
   cardID?: number;
   from?: string;
@@ -140,6 +143,7 @@ interface CardEvent {
   toOwner?: string;
   byPlayer?: string;
   likes?: number;
+  message?: Message;
 }
 
 function snapshotCards(cards: Card[]): CardSnapshot[] {
@@ -188,10 +192,12 @@ function diffCards(prev: CardSnapshot[], next: Card[]): CardEvent[] {
 
 function eventMatchesFlags(
   event: CardEvent,
-  flags: { pile?: boolean; hand?: boolean; table?: boolean },
+  flags: { pile?: boolean; hand?: boolean; table?: boolean; messages?: boolean },
   playerID: string,
 ): boolean {
-  if (!flags.pile && !flags.hand && !flags.table) return true;
+  if (!flags.pile && !flags.hand && !flags.table && !flags.messages) return true;
+
+  if (flags.messages && event.type === 'message') return true;
 
   if (flags.pile) {
     if (event.type === 'card_submitted') return true;
@@ -214,7 +220,7 @@ function eventMatchesFlags(
 function watchForChange(
   client: ReturnType<typeof Client>,
   playerID: string,
-  flags: { pile?: boolean; hand?: boolean; table?: boolean },
+  flags: { pile?: boolean; hand?: boolean; table?: boolean; messages?: boolean },
   timeoutMs: number,
 ): Promise<{ changed: boolean; events: CardEvent[]; state?: unknown }> {
   return new Promise(resolve => {
@@ -225,6 +231,7 @@ function watchForChange(
     }
 
     const snapshot = snapshotCards(currentState.G.cards);
+    const snapshotMessageCount = ((currentState as any)?.plugins?.chat?.data?.messages as Message[] | undefined)?.length ?? 0;
     let settled = false;
     let unsub: (() => void) | undefined;
 
@@ -241,8 +248,14 @@ function watchForChange(
     unsub = client.subscribe((state: unknown) => {
       if (!state || !(state as { G?: { cards?: Card[] } }).G?.cards) return;
       const cards = (state as { G: { cards: Card[] } }).G.cards;
-      const events = diffCards(snapshot, cards);
-      const relevant = events.filter(e => eventMatchesFlags(e, flags, playerID));
+      const cardEvents = diffCards(snapshot, cards);
+
+      const allMessages = ((state as any)?.plugins?.chat?.data?.messages as Message[] | undefined) ?? [];
+      const newMessages = allMessages.slice(snapshotMessageCount);
+      const messageEvents: CardEvent[] = newMessages.map(m => ({ type: 'message' as const, message: m }));
+
+      const allEvents = [...cardEvents, ...messageEvents];
+      const relevant = allEvents.filter(e => eventMatchesFlags(e, flags, playerID));
       if (relevant.length > 0) {
         // Delay before returning so other players have time to digest the move
         setTimeout(() => done({ changed: true, events: relevant, state }), MIN_REACT_SECONDS * 1000);
@@ -291,6 +304,14 @@ Players have scores tracked per-match. Scores are set manually — they are not 
 - 'get_leaderboard' — scores sorted by rank
 - 'set_score' — set any player's score to a new value
 - 'get_play_hint' — get a suggested action based on your score position relative to others
+
+## Chat
+
+A shared message feed is visible to all players. It contains both player chat messages and system events (cards submitted, shuffles, score changes, etc.).
+
+- 'send_message' — post a chat message as the current player (multiplayer only)
+- 'get_messages' — retrieve the full feed, or pass 'since' (timestamp ms) to fetch only new messages
+- 'watch' with 'messages: true' — fire when any new message arrives
 
 ## Available prompts
 
@@ -540,7 +561,7 @@ mcp.registerTool(
     const nextState = waitForMove(client);
     client.moves.pickupCard();
     const state = await nextState;
-    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown> }, playerID));
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
   }
 );
 
@@ -561,7 +582,7 @@ mcp.registerTool(
     const nextState = waitForMove(client);
     client.moves.moveCard(cardID, target, toOwner);
     const state = await nextState;
-    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown> }, playerID));
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
   }
 );
 
@@ -580,7 +601,7 @@ mcp.registerTool(
     const nextState = waitForMove(client);
     client.moves.claimCard(cardID);
     const state = await nextState;
-    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown> }, playerID));
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
   }
 );
 
@@ -640,7 +661,7 @@ mcp.registerTool(
     const nextState = waitForMove(client);
     client.moves.submitCard(card);
     const state = await nextState;
-    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown> }, playerID));
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
   }
 );
 
@@ -659,7 +680,7 @@ mcp.registerTool(
     const nextState = waitForMove(client);
     client.moves.likeCard(cardID);
     const state = await nextState;
-    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown> }, playerID));
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
   }
 );
 
@@ -754,6 +775,45 @@ mcp.registerTool(
 );
 
 mcp.registerTool(
+  'get_messages',
+  {
+    description: 'Retrieve the message feed (chat + system events), optionally filtered to only messages newer than a given timestamp',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+      since: z.number().optional().describe('Unix timestamp ms — return only messages newer than this'),
+    },
+  },
+  async ({ matchID, playerID, since }) => {
+    const { client } = requireSession(matchID, playerID);
+    const state = client.store.getState();
+    if (!state?.G) throw new Error('No state available yet');
+    const messages = ((state as any)?.plugins?.chat?.data?.messages as Message[] | undefined) ?? [];
+    const filtered = since != null ? messages.filter(m => m.timestamp > since) : messages;
+    return text({ count: filtered.length, messages: filtered });
+  }
+);
+
+mcp.registerTool(
+  'send_message',
+  {
+    description: 'Post a chat message to the game console as the current player',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+      text: z.string().describe('Message to send'),
+    },
+  },
+  async ({ matchID, playerID, text: messageText }) => {
+    const { client } = requireSession(matchID, playerID);
+    const nextState = waitForMove(client);
+    client.moves.postMessage(messageText, playerID);
+    const state = await nextState;
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
+  }
+);
+
+mcp.registerTool(
   'set_score',
   {
     description: 'Set the score for a player',
@@ -769,7 +829,7 @@ mcp.registerTool(
     const nextState = waitForMove(client);
     client.moves.setScore(targetPlayerID, score);
     const state = await nextState;
-    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown> }, playerID));
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
   }
 );
 
@@ -787,7 +847,7 @@ mcp.registerTool(
     const nextState = waitForMove(client);
     client.moves.shuffleCards();
     const state = await nextState;
-    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown> }, playerID));
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
   }
 );
 
@@ -835,7 +895,7 @@ mcp.registerTool(
     const nextState = waitForMove(client);
     client.moves.loadCards(cardObjects);
     const state = await nextState;
-    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown> }, playerID));
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
   }
 );
 
@@ -849,13 +909,14 @@ mcp.registerTool(
       pile: z.boolean().optional().describe('Fire when the pile changes (cards submitted, claimed, or moved to/from pile)'),
       hand: z.boolean().optional().describe('Fire when your hand changes (card received or removed)'),
       table: z.boolean().optional().describe('Fire when any table changes occur'),
+      messages: z.boolean().optional().describe('Fire when a new chat or system event message appears'),
       timeout_seconds: z.number().int().min(5).max(300).optional().describe(`How long to wait before giving up (default ${MAX_WATCH_SECONDS}s, set by MCP_MAX_WATCH_SECONDS)`),
     },
   },
-  async ({ matchID, playerID, pile, hand, table, timeout_seconds }) => {
+  async ({ matchID, playerID, pile, hand, table, messages, timeout_seconds }) => {
     const session = requireSession(matchID, playerID);
     const { client } = session;
-    const flags = { pile: pile ?? false, hand: hand ?? false, table: table ?? false };
+    const flags = { pile: pile ?? false, hand: hand ?? false, table: table ?? false, messages: messages ?? false };
     const { changed, events, state } = await watchForChange(client, playerID, flags, (timeout_seconds ?? MAX_WATCH_SECONDS) * 1000);
     const watch = ++session.watchCount;
     if (!changed) return text({ watch, changed: false, message: 'No activity — your turn to act. Pick up a card, submit something, or play from your hand. Then call watch again.' });
@@ -863,7 +924,7 @@ mcp.registerTool(
       watch,
       changed: true,
       events,
-      state: formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown> }, playerID),
+      state: formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID),
     });
   }
 );
@@ -928,8 +989,8 @@ After EVERY action → call 'watch'. After EVERY 'watch' response (fired or time
 
 ## Play loop
 
-1. Call 'watch' with 'pile: true' and 'hand: true'.
-2. **If 'watch' fires** — react: claim interesting cards, like good ones, write a response card. Reset your timeout count to 0.
+1. Call 'watch' with 'pile: true', 'hand: true', and 'messages: true'.
+2. **If 'watch' fires** — react: claim interesting cards, like good ones, write a response card, or reply to chat messages with 'send_message'. Reset your timeout count to 0.
 3. **If 'watch' times out** — increment your timeout count. If it has timed out twice in a row, take one action (pick up a card, submit something, play from hand) and reset the count to 0.
 4. GOTO 1. Always. Without exception.
 
