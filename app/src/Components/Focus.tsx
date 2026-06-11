@@ -291,7 +291,7 @@ export function Focus(props: BoardProps<GameState>) {
             top: 0,
             left: 0,
             width: '100vw',
-            zIndex: 1001,
+            zIndex: 110,
             pointerEvents: 'auto',
           }} onClick={e => e.stopPropagation()}>
             {carousel}
@@ -391,7 +391,7 @@ export function Likes({ card, likeCard, matchId }: LikesProps) {
       width: '1.75em',
       height: '1.75em',
       position: 'absolute',
-      zIndex: '1',
+      zIndex: '10',
       top: '-1.75em',
       right: '-2.5em',
       padding: '1em',
@@ -487,7 +487,7 @@ export function Share({ id }: { id: number }) {
       width: '1.75em',
       height: '1.75em',
       position: 'absolute',
-      zIndex: '1',
+      zIndex: '10',
       top: '2.75em',
       right: '-2.5em',
       padding: '1em',

@@ -148,7 +148,7 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 1000
+      zIndex: 60
     },
     finalise: {
       width: '100%',
@@ -156,7 +156,7 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
       position: 'fixed' as const,
       top: '0',
       left: '0',
-      zIndex: '7',
+      zIndex: '20',
       textAlign: 'center' as const,
       display: 'flex',
       flexDirection: 'column' as const,

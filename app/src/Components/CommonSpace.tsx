@@ -51,7 +51,7 @@ export function Pile(props: BoardProps<GameState>) {
         }
       }} style={{ position: 'relative' }}>
         {pile.length > 0 && (
-          <div style={{ position: 'absolute', bottom: '1.25em', right: '1.75em', zIndex: 1 }}>
+          <div style={{ position: 'absolute', bottom: '1.25em', right: '1.75em', zIndex: 10 }}>
             <Likes card={pile[0]} likeCard={props.moves.likeCard} matchId={props.matchID} />
           </div>
         )}
@@ -100,7 +100,7 @@ export function Players(props: BoardProps<GameState>) {
       position: 'fixed',
       top: (discordSdk && dimensions.upright) ? '4.75em' : '2em',
       right: '0',
-      zIndex: '4',
+      zIndex: '20',
       borderRadius: '0 0 0 1em',
       display: 'flex',
       flexDirection: 'column',
@@ -134,7 +134,7 @@ export function Players(props: BoardProps<GameState>) {
       scrollbarWidth: 'none',
       margin: '0.25em',
       borderRadius: '0.5em',
-      zIndex: '5',
+      zIndex: '20',
       position: (dimensions.upright) ? 'fixed' : 'relative',
       right: (dimensions.upright) ? '5em' : undefined,
       backgroundColor: (dimensions.upright) ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.5)',
@@ -233,7 +233,7 @@ export function Header(props: HeaderProps) {
       position: 'fixed',
       top: '0',
       left: '0',
-      zIndex: '10',
+      zIndex: '50',
       backgroundColor: 'white',
       borderBottom: '0.5pt solid black',
       display: 'flex',
@@ -310,7 +310,7 @@ export function ShareRoom(props: { matchID: string, setShowShare: React.Dispatch
       position: 'fixed',
       top: '0',
       left: '0',
-      zIndex: '9',
+      zIndex: '40',
       backgroundColor: 'white',
       borderBottom: '0.5pt solid black',
       display: 'flex',

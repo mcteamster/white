@@ -2,6 +2,9 @@ import type { BoardProps } from 'boardgame.io/react';
 import type { GameState, Message } from '@mcteamster/white-core';
 import type { Properties } from 'csstype';
 import { useEffect, useRef, useState } from 'react';
+import { Icon } from './Icons';
+import { discordSdk } from '../lib/discord';
+import { useWindowDimensions } from '../lib/hooks';
 
 interface ConsoleProps extends BoardProps<GameState> {
   playerName?: string;
@@ -9,6 +12,8 @@ interface ConsoleProps extends BoardProps<GameState> {
 
 export function Console({ moves, playerID, playerName, plugins }: ConsoleProps) {
   const messages: Message[] = (plugins as any)?.chat?.data?.messages ?? [];
+  const dimensions = useWindowDimensions();
+  const headerHeight = (discordSdk && dimensions.upright) ? '4.75em' : '2em';
   const [open, setOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
@@ -29,6 +34,28 @@ export function Console({ moves, playerID, playerName, plugins }: ConsoleProps) 
     prevLenRef.current = messages.length;
   }, [messages.length, open]);
 
+  const sendMessage = () => {
+    const el = document.getElementById('consoleInput') as HTMLInputElement & { value: string };
+    const text = el?.value?.trim();
+    if (!text || !playerID) return;
+    moves.postMessage(text, playerName);
+    el.value = '';
+  };
+
+  // Attach Enter key listener to the wired-input's shadow DOM input
+  useEffect(() => {
+    if (!open) return;
+    const timer = setTimeout(() => {
+      const inp = document.getElementById('consoleInput')?.shadowRoot?.querySelector('input');
+      if (!inp) return;
+      const handler = (e: Event) => { if ((e as KeyboardEvent).key === 'Enter') sendMessage(); };
+      inp.addEventListener('keydown', handler);
+      return () => inp.removeEventListener('keydown', handler);
+    }, 50);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   const handleOpen = () => {
     setOpen(true);
     setUnread(0);
@@ -41,12 +68,25 @@ export function Console({ moves, playerID, playerName, plugins }: ConsoleProps) 
   const styles: { [key: string]: Properties<string | number> } = {
     toggle: {
       position: 'fixed',
-      bottom: '1em',
-      right: '1em',
-      zIndex: 100,
+      top: headerHeight,
+      left: '0',
+      zIndex: 40,
+      display: 'flex',
+      flexDirection: 'row',
+      justifyContent: 'flex-start',
+      alignItems: 'center',
+    },
+    toggleIcon: {
+      backgroundColor: 'white',
+      padding: '0.25em 0.5em',
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: '0.25em',
+      borderRadius: '0 0 1em 1em',
       cursor: 'pointer',
-      fontSize: '1.25em',
-      userSelect: 'none',
+      userSelect: 'none' as const,
+      fontSize: '0.9em',
     },
     badge: {
       position: 'absolute',
@@ -65,9 +105,9 @@ export function Console({ moves, playerID, playerName, plugins }: ConsoleProps) 
     },
     panel: {
       position: 'fixed',
-      bottom: '3.5em',
-      right: '1em',
-      zIndex: 100,
+      top: `calc(${headerHeight} + 2.5em)`,
+      left: '0',
+      zIndex: 40,
       width: '320px',
       maxHeight: '40vh',
       display: 'flex',
@@ -103,12 +143,13 @@ export function Console({ moves, playerID, playerName, plugins }: ConsoleProps) 
     <>
       {/* Toggle button */}
       <div style={styles.toggle} onClick={open ? () => setOpen(false) : handleOpen}>
-        <span style={{ position: 'relative', display: 'inline-block' }}>
-          💬
+        <div style={styles.toggleIcon}>
+          <Icon name='chat' />
+          Chat
           {!open && unread > 0 && (
             <span style={styles.badge}>{unread > 9 ? '9+' : unread}</span>
           )}
-        </span>
+        </div>
       </div>
 
       {/* Panel */}
@@ -136,13 +177,7 @@ export function Console({ moves, playerID, playerName, plugins }: ConsoleProps) 
               style={{ flex: 1, fontSize: '0.8em' }}
             ></wired-input>
             <wired-button
-              onClick={() => {
-                const el = document.getElementById('consoleInput') as HTMLInputElement & { value: string };
-                const text = el?.value?.trim();
-                if (!text || !playerID) return;
-                moves.postMessage(text, playerName);
-                el.value = '';
-              }}
+              onClick={sendMessage}
               style={{ fontSize: '0.8em' }}
             >Send</wired-button>
           </div>

@@ -1,5 +1,6 @@
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import GrainIcon from '@mui/icons-material/Grain';
 import BackHandOutlinedIcon from '@mui/icons-material/BackHandOutlined';
@@ -53,6 +54,7 @@ type IconName =
   'about' |
   'back' |
   'book' |
+  'chat' |
   'checklist' |
   'coffee' |
   'copy' |
@@ -106,6 +108,7 @@ export function Icon(props: { name: IconName }) {
     about: <QuestionMarkOutlinedIcon></QuestionMarkOutlinedIcon>,
     back: <KeyboardBackspaceOutlinedIcon></KeyboardBackspaceOutlinedIcon>,
     book: <BookOutlinedIcon></BookOutlinedIcon>,
+    chat: <ChatBubbleOutlineIcon></ChatBubbleOutlineIcon>,
     checklist: <LibraryAddCheckOutlinedIcon></LibraryAddCheckOutlinedIcon>,
     coffee: <LocalCafeOutlinedIcon></LocalCafeOutlinedIcon>,
     copy: <ContentCopyOutlinedIcon></ContentCopyOutlinedIcon>,

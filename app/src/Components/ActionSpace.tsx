@@ -231,7 +231,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
       bottom: '0',
       left: '50%',
       transform: 'translate(-50%, 0%)',
-      zIndex: '8',
+      zIndex: '30',
       display: 'flex',
       flexDirection: 'row',
       justifyContent: 'space-around',
@@ -341,7 +341,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
     </>
   } else if (mode === 'create-sketch') {
     topRow = (
-      <div style={{ position: 'fixed', top: 'calc(2em + 12px)', left: '50%', transform: 'translateX(-50%)', zIndex: 10, display: 'flex', justifyContent: 'space-around', width: '100%', maxWidth: '40em' }}>
+      <div style={{ position: 'fixed', top: 'calc(2em + 12px)', left: '50%', transform: 'translateX(-50%)', zIndex: 50, display: 'flex', justifyContent: 'space-around', width: '100%', maxWidth: '40em' }}>
         <wired-card style={{ ...styles.button, color: 'red' }} onClick={() => { fillWhite(); setDrawMode(getMode()); }} elevation={2}><Icon name='discard' />Clear</wired-card>
         <wired-card style={{ ...styles.button, color: drawMode === MODE_ERASE ? 'red' : undefined }} onClick={() => {
           const newMode = drawMode === MODE_ERASE ? MODE_DRAW : MODE_ERASE;

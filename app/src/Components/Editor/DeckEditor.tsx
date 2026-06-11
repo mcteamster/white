@@ -71,7 +71,7 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
       top: '20px',
       left: '50%',
       transform: 'translateX(-50%)',
-      zIndex: 10,
+      zIndex: 50,
       display: 'flex',
       justifyContent: 'space-around',
       width: '100%',
@@ -82,7 +82,7 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
       bottom: '20px',
       left: '50%',
       transform: 'translateX(-50%)',
-      zIndex: 10,
+      zIndex: 50,
       display: 'flex',
       justifyContent: 'space-around',
       width: '100%',
@@ -361,7 +361,7 @@ export function DeckEditor() {
       flexDirection: 'column',
       alignItems: 'center',
       gap: '1em',
-      zIndex: 5
+      zIndex: 20
     },
     actionButtons: {
       display: 'flex', 
@@ -412,7 +412,7 @@ export function DeckEditor() {
       display: 'flex', 
       justifyContent: 'center', 
       alignItems: 'center',
-      zIndex: 1000
+      zIndex: 60
     },
     dialogCard: {
       backgroundColor: 'white', 
@@ -445,7 +445,7 @@ export function DeckEditor() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 1000
+      zIndex: 60
     },
     fileModal: {
       backgroundColor: 'white',
@@ -1013,7 +1013,7 @@ export function DeckEditor() {
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept=".html"
+                      accept=".html,.json"
                       onChange={handleFileLoad}
                       style={styles.hiddenInput}
                     />

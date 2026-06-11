@@ -95,7 +95,7 @@ export function Gallery() {
       position: 'fixed',
       bottom: '0',
       left: '0',
-      zIndex: '10',
+      zIndex: '50',
       backgroundColor: 'white',
       borderTop: '0.5pt solid black',
       display: 'flex',
