@@ -10,7 +10,7 @@ interface ConsoleProps extends BoardProps<GameState> {
   playerName?: string;
 }
 
-export function Console({ moves, playerID, playerName, plugins }: ConsoleProps) {
+export function Console({ moves, playerID, playerName, plugins, matchData }: ConsoleProps) {
   const messages: Message[] = (plugins as any)?.chat?.data?.messages ?? [];
   const dimensions = useWindowDimensions();
   const headerHeight = (discordSdk && dimensions.upright) ? '4.75em' : '2em';
@@ -33,6 +33,8 @@ export function Console({ moves, playerID, playerName, plugins }: ConsoleProps) 
     }
     prevLenRef.current = messages.length;
   }, [messages.length, open]);
+
+  const resolveName = (id?: string) => matchData?.find(p => p.id === Number(id))?.name || `Player ${id}`;
 
   const sendMessage = () => {
     const el = document.getElementById('consoleInput') as HTMLInputElement & { value: string };
@@ -100,7 +102,7 @@ export function Console({ moves, playerID, playerName, plugins }: ConsoleProps) 
       fontWeight: 'bold',
     },
     previewText: {
-      maxWidth: '180px',
+      maxWidth: '240px',
       overflow: 'hidden',
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap',
@@ -160,10 +162,12 @@ export function Console({ moves, playerID, playerName, plugins }: ConsoleProps) 
           {open
             ? 'Close Chat'
             : !open && messages.length > 0
-            ? <span style={styles.previewText}>
+            ? <span style={{ ...styles.previewText, ...(messages[messages.length - 1].type === 'event' ? { fontStyle: 'italic', color: '#888' } : {}) }}>
                 {messages[messages.length - 1].type === 'chat'
-                  ? <><strong>{messages[messages.length - 1].playerName || `Player ${messages[messages.length - 1].playerID}`}:</strong> {messages[messages.length - 1].text}</>
-                  : messages[messages.length - 1].text
+                  ? <><strong>{messages[messages.length - 1].playerName || resolveName(messages[messages.length - 1].playerID)}:</strong> {messages[messages.length - 1].text}</>
+                  : messages[messages.length - 1].playerID
+                    ? <><strong>{resolveName(messages[messages.length - 1].playerID)}</strong> {messages[messages.length - 1].targetPlayerID ? messages[messages.length - 1].text.replace('{recipient}', resolveName(messages[messages.length - 1].targetPlayerID)) : messages[messages.length - 1].text}</>
+                    : messages[messages.length - 1].text
                 }
               </span>
             : 'Chat'
@@ -181,9 +185,9 @@ export function Console({ moves, playerID, playerName, plugins }: ConsoleProps) 
             {messages.map(msg => (
               <div key={msg.id} style={msg.type === 'chat' ? styles.chatMsg : styles.eventMsg}>
                 {msg.type === 'chat' ? (
-                  <><strong>{msg.playerName || `Player ${msg.playerID}`}:</strong> {msg.text}</>
+                  <><strong>{msg.playerName || resolveName(msg.playerID)}:</strong> {msg.text}</>
                 ) : (
-                  <>{msg.text}</>
+                  <>{msg.playerID ? <><strong>{resolveName(msg.playerID)}</strong> {msg.targetPlayerID ? msg.text.replace('{recipient}', resolveName(msg.targetPlayerID)) : msg.text}</> : msg.text}</>
                 )}
               </div>
             ))}

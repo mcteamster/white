@@ -4,6 +4,7 @@ export interface Message {
   type: 'chat' | 'event';
   playerID?: string;
   playerName?: string;
+  targetPlayerID?: string;
   text: string;
   timestamp: number;
 }

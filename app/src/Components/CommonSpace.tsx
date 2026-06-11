@@ -204,7 +204,7 @@ export function Players(props: BoardProps<GameState>) {
         <Calculator
           initialValue={getPlayerScore(props.plugins, String(editingScore))}
           label={props.matchData?.find(p => p.id === editingScore)?.name}
-          onConfirm={(val) => { props.moves.setScore(String(editingScore), val); setEditingScore(null); }}
+          onConfirm={(val) => { props.moves.setScore(String(editingScore), val, props.matchData?.find(p => p.id === Number(props.playerID))?.name, props.matchData?.find(p => p.id === editingScore)?.name); setEditingScore(null); }}
           onCancel={() => setEditingScore(null)}
         />
       )}
@@ -261,7 +261,7 @@ export function Header(props: HeaderProps) {
               <Calculator
                 initialValue={myScore}
                 label={playerName || undefined}
-                onConfirm={(val) => { props.moves.setScore(props.playerID || '0', val); setEditingMyScore(false); }}
+                onConfirm={(val) => { props.moves.setScore(props.playerID || '0', val, playerName, playerName); setEditingMyScore(false); }}
                 onCancel={() => setEditingMyScore(false)}
               />
             ) : (

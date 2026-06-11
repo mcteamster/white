@@ -124,7 +124,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
         }
 
         // Update Gamestate
-        moves.submitCard(createdCard);
+        moves.submitCard(createdCard, matchData?.find(p => p.id == Number(playerID))?.name);
         setMode('play');
 
         // Cleanup creation elements in background
