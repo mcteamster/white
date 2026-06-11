@@ -132,7 +132,6 @@ export function Console({ moves, playerID, playerName, plugins, matchData, open:
       scrollbarWidth: 'none',
       flex: 1,
       padding: '0.5em 0.5em 0.5em 0.75em',
-      fontSize: '0.8em',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'flex-end',
@@ -146,13 +145,13 @@ export function Console({ moves, playerID, playerName, plugins, matchData, open:
     },
     chatMsg: {
       marginBottom: '0.3em',
-      wordBreak: 'break-all',
+      overflowWrap: 'break-word',
     },
     eventMsg: {
       marginBottom: '0.3em',
       fontStyle: 'italic',
       color: '#888',
-      wordBreak: 'break-all',
+      overflowWrap: 'break-word',
     },
   };
 
@@ -208,14 +207,17 @@ export function Console({ moves, playerID, playerName, plugins, matchData, open:
           <div style={styles.inputRow}>
             <wired-input
               id="consoleInput"
-              placeholder="Say something..."
+              placeholder="All chat - visible to everyone"
               maxlength={500}
-              style={{ flex: 1, fontSize: '0.8em' }}
+              style={{ flex: 1 }}
             ></wired-input>
             <wired-button
               onClick={sendMessage}
               style={{ backgroundColor: '#eee' }}
             ><Icon name='send' /></wired-button>
+          </div>
+          <div style={{ padding: '0 0 0.25em 0', fontSize: '0.8em', color: '#aaa', textAlign: 'center' }}>
+            Do not share personal information.
           </div>
         </div>
       )}
