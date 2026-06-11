@@ -83,7 +83,10 @@ export function Console({ moves, playerID, playerName, plugins }: ConsoleProps) 
       flexDirection: 'row',
       alignItems: 'center',
       gap: '0.25em',
-      borderRadius: '0 0 1em 1em',
+      borderRadius: '0 0 1em 0',
+      border: '1px solid #ccc',
+      borderTop: 'none',
+      borderLeft: 'none',
       cursor: 'pointer',
       userSelect: 'none' as const,
       fontSize: '0.9em',
@@ -106,10 +109,11 @@ export function Console({ moves, playerID, playerName, plugins }: ConsoleProps) 
     panel: {
       position: 'fixed',
       top: `calc(${headerHeight} + 2.5em)`,
-      left: '0',
+      left: '0.5em',
       zIndex: 40,
-      width: '320px',
-      maxHeight: '40vh',
+      width: 'calc(100vw - 1.25em)',
+      maxWidth: '480px',
+      maxHeight: '70vh',
       display: 'flex',
       flexDirection: 'column',
       border: '2px solid #333',
@@ -118,24 +122,28 @@ export function Console({ moves, playerID, playerName, plugins }: ConsoleProps) 
       boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
     },
     list: {
-      overflowY: 'auto',
+      overflowY: 'scroll',
+      scrollbarWidth: 'none',
       flex: 1,
-      padding: '0.5em',
+      padding: '0.5em 0.5em 0.5em 0.75em',
       fontSize: '0.8em',
     },
     inputRow: {
       display: 'flex',
+      alignItems: 'center',
       borderTop: '1px solid #ccc',
-      padding: '0.25em',
+      padding: '0.25em 0.5em',
       gap: '0.25em',
     },
     chatMsg: {
       marginBottom: '0.3em',
+      wordBreak: 'break-all',
     },
     eventMsg: {
       marginBottom: '0.3em',
       fontStyle: 'italic',
       color: '#888',
+      wordBreak: 'break-all',
     },
   };
 
@@ -144,11 +152,23 @@ export function Console({ moves, playerID, playerName, plugins }: ConsoleProps) 
       {/* Toggle button */}
       <div style={styles.toggle} onClick={open ? () => setOpen(false) : handleOpen}>
         <div style={styles.toggleIcon}>
-          <Icon name='chat' />
-          Chat
-          {!open && unread > 0 && (
-            <span style={styles.badge}>{unread > 9 ? '9+' : unread}</span>
-          )}
+          <span style={{ position: 'relative', display: 'inline-flex' }}>
+            <Icon name='chat' />
+            {!open && unread > 0 && (
+              <span style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '0.75em', fontWeight: 'bold' }}>{unread > 9 ? '9+' : unread}</span>
+            )}
+          </span>
+          {open
+            ? 'Close Chat'
+            : !open && messages.length > 0
+            ? <span style={{ maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {messages[messages.length - 1].type === 'chat'
+                  ? <><strong>{messages[messages.length - 1].playerName || `Player ${messages[messages.length - 1].playerID}`}:</strong> {messages[messages.length - 1].text}</>
+                  : messages[messages.length - 1].text
+                }
+              </span>
+            : 'Chat'
+          }
         </div>
       </div>
 
@@ -173,13 +193,13 @@ export function Console({ moves, playerID, playerName, plugins }: ConsoleProps) 
             <wired-input
               id="consoleInput"
               placeholder="Say something..."
-              maxlength={500}
-              style={{ flex: 1, fontSize: '0.8em' }}
+              maxlength={100}
+              style={{ flex: 1, fontSize: '0.8em', padding: '0.6em' }}
             ></wired-input>
             <wired-button
               onClick={sendMessage}
-              style={{ fontSize: '0.8em' }}
-            >Send</wired-button>
+              style={{ backgroundColor: '#eee' }}
+            ><Icon name='send' /></wired-button>
           </div>
         </div>
       )}
