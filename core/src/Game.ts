@@ -83,7 +83,7 @@ const claimCard: Move<GameState> = ({ G, playerID }, id) => {
   }
 }
 
-const likeCard: Move<GameState> = ({ G, chat }: any, id) => {
+const likeCard: Move<GameState> = ({ G, ctx, chat }: any, id) => {
   const selectedCard = getCardById(G.cards, id);
   if (selectedCard?.likes) {
     selectedCard.likes++;
@@ -92,16 +92,16 @@ const likeCard: Move<GameState> = ({ G, chat }: any, id) => {
   } else {
     return INVALID_MOVE
   }
-  chat.send({ type: 'event', text: `Card #${id} was liked` });
+  if (ctx.numPlayers > 1) chat.send({ type: 'event', text: `Card #${id} was liked` });
 }
 
-const submitCard: Move<GameState> = ({ G, chat }: any, card: Card) => {
+const submitCard: Move<GameState> = ({ G, ctx, chat }: any, card: Card) => {
   card.id = G.cards.length + 1; // Commit ID sequentially to GameState
   G.cards.push(card);
-  chat.send({ type: 'event', text: 'A new card was submitted' });
+  if (ctx.numPlayers > 1) chat.send({ type: 'event', text: 'A new card was submitted' });
 }
 
-const loadCards: Move<GameState> = ({ G, playerID, chat }: any, cards: Card[]) => {
+const loadCards: Move<GameState> = ({ G, ctx, playerID, chat }: any, cards: Card[]) => {
   if(playerID !== '0') return INVALID_MOVE; // Only the host can bulk load cards
 
   // Bulk load batches of cards
@@ -112,10 +112,10 @@ const loadCards: Move<GameState> = ({ G, playerID, chat }: any, cards: Card[]) =
     loadBuffer.push(card);
   })
   G.cards.push(...loadBuffer);
-  chat.send({ type: 'event', text: `${cards.length} card(s) loaded into the deck` });
+  if (ctx.numPlayers > 1) chat.send({ type: 'event', text: `${cards.length} card(s) loaded into the deck` });
 }
 
-const shuffleCards: Move<GameState> = ({ G, playerID, chat }: any) => {
+const shuffleCards: Move<GameState> = ({ G, ctx, playerID, chat }: any) => {
   if(playerID !== '0') return INVALID_MOVE; // Only the host can reset the game
 
   // Return all cards to the deck, except those in the box
@@ -125,11 +125,12 @@ const shuffleCards: Move<GameState> = ({ G, playerID, chat }: any) => {
       card.timestamp = undefined;
     }
   });
-  chat.send({ type: 'event', text: `Player ${playerID} shuffled the deck` });
+  if (ctx.numPlayers > 1) chat.send({ type: 'event', text: `Player ${playerID} shuffled the deck` });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const postMessage: Move<GameState> = ({ playerID, chat }: any, text: string, playerName?: string) => {
+const postMessage: Move<GameState> = ({ ctx, playerID, chat }: any, text: string, playerName?: string) => {
+  if (ctx.numPlayers <= 1) return INVALID_MOVE;
   if (!text || text.length > 500) return INVALID_MOVE;
   chat.send({ type: 'chat', playerID, playerName, text: text.trim() });
 }

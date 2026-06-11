@@ -51,7 +51,7 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
         <CommonSpace {...props} />
         <PlayerSpace {...props} />
       </div>
-      <Console {...props} playerName={props.matchData?.find(p => p.id === Number(props.playerID))?.name} />
+      {props.isMultiplayer && <Console {...props} playerName={props.matchData?.find(p => p.id === Number(props.playerID))?.name} />}
     </ImageCacheContext.Provider>
   );
 }
