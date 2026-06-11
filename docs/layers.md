@@ -10,13 +10,13 @@ wired-dialog renders at `z-index: 100` (via `--wired-dialog-z-index`). Anything 
 | 20 | Share button/card | CommonSpace |
 | 20 | DeckEditor toolbar item | DeckEditor |
 | 30 | Finalise panel (card create overlay) | Finalise |
-| 30 | Toolbar (bottom fixed action bar) | ActionSpace |
 | 40 | Console toggle + panel | Console |
 | 40 | Score editing overlay | CommonSpace |
 | 45 | `#create` canvas overlay | index.css |
 | 50 | Header (top fixed bar) | CommonSpace |
 | 50 | Gallery bottom bar | Gallery |
 | 50 | DeckEditor toolbars | DeckEditor |
+| 55 | Toolbar (bottom fixed action bar) | ActionSpace |
 | 55 | Sketch mode draw tools row | ActionSpace |
 | 55 | CardEditor toolbar | CardEditor |
 | 60 | DeckEditor modals / image picker | DeckEditor |
