@@ -156,7 +156,7 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
       position: 'fixed' as const,
       top: '0',
       left: '0',
-      zIndex: '20',
+      zIndex: '55',
       textAlign: 'center' as const,
       display: 'flex',
       flexDirection: 'column' as const,
