@@ -98,7 +98,7 @@ export function Players(props: BoardProps<GameState>) {
       overflowY: 'scroll',
       scrollbarWidth: 'none',
       position: 'fixed',
-      top: (discordSdk && dimensions.upright) ? '4.75em' : '2em',
+      top: (discordSdk && dimensions.upright) ? '4.75em' : '4.5em',
       right: '0',
       zIndex: '20',
       borderRadius: '0 0 0 1em',
@@ -246,9 +246,6 @@ export function Header(props: HeaderProps) {
       flexDirection: 'row',
       padding: '0 0.25em',
     },
-    displayname: {
-      fontSize: '1em',
-    },
     match: {
       fontSize: '1.25em',
     },
@@ -258,25 +255,53 @@ export function Header(props: HeaderProps) {
     <>
       <div style={styles.header}>
         <div style={{ ...styles.item, ...styles.match }} onClick={ () => setShowShare(true) }><Icon name='copy' />&nbsp;{props.matchID !== 'default' ? `${props.matchID}` : "Blank White Cards"}</div>
-        <div style={{ ...styles.item, ...styles.displayname }} onClick={() => { props.setShowPlayers(!props.showPlayers) }}>
-          {playerName && (editingMyScore ? (
-            <Calculator
-              initialValue={myScore}
-              label={playerName || undefined}
-              onConfirm={(val) => { props.moves.setScore(props.playerID || '0', val); setEditingMyScore(false); }}
-              onCancel={() => setEditingMyScore(false)}
-            />
-          ) : (
-            <>{playerName}&nbsp;<span
-              style={{ fontVariantNumeric: 'tabular-nums', cursor: 'pointer', textDecoration: 'underline dotted' }}
-              onClick={(e) => { e.stopPropagation(); setEditingMyScore(true); }}
-            >{formatScore(myScore)} pts</span></>
-          ))}&nbsp;
-          {props.matchID !== 'default' && <Icon name='multi' />}&nbsp;
-          {props.matchData?.filter((player => player.isConnected)).length}
-          {props.matchID !== 'default' && (props.matchData?.filter((player => player.isConnected)).length != 1) ? ((props.showPlayers) ? <Icon name='less' /> : <Icon name='more' />) : <>&nbsp;</> }
-        </div>
+        {props.isMultiplayer && props.matchID !== 'default' && (
+          <div style={{ ...styles.item, fontSize: '1em' }}>
+            {playerName && (editingMyScore ? (
+              <Calculator
+                initialValue={myScore}
+                label={playerName || undefined}
+                onConfirm={(val) => { props.moves.setScore(props.playerID || '0', val); setEditingMyScore(false); }}
+                onCancel={() => setEditingMyScore(false)}
+              />
+            ) : (
+              <>{playerName}&nbsp;<span
+                style={{ fontVariantNumeric: 'tabular-nums', cursor: 'pointer', textDecoration: 'underline dotted' }}
+                onClick={(e) => { e.stopPropagation(); setEditingMyScore(true); }}
+              >{formatScore(myScore)} pts</span></>
+            ))}
+          </div>
+        )}
       </div>
+      {/* Player tray notch — people icon + count + toggle, top-right */}
+      {props.isMultiplayer && props.matchID !== 'default' && (props.matchData?.filter(p => p.isConnected).length ?? 0) > 1 && (
+        <div style={{
+          position: 'fixed',
+          top: (discordSdk && dimensions.upright) ? '4.75em' : '2em',
+          right: '0',
+          zIndex: 40,
+          cursor: 'pointer',
+        }} onClick={() => { props.setShowPlayers(!props.showPlayers) }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '0.25em 0.5em',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: '0.25em',
+            borderRadius: '0 0 0 1em',
+            border: '1px solid #ccc',
+            borderTop: 'none',
+            borderRight: 'none',
+            userSelect: 'none' as const,
+            fontSize: '0.9em',
+          }}>
+            <Icon name='multi' />
+            {props.matchData?.filter(p => p.isConnected).length}
+            {props.showPlayers ? <Icon name='less' /> : <Icon name='more' />}
+          </div>
+        </div>
+      )}
       {showShare && <ShareRoom matchID={props.matchID} setShowShare={setShowShare} />}
     </>
   )
