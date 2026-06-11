@@ -98,7 +98,7 @@ export function Players(props: BoardProps<GameState>) {
       overflowY: 'scroll',
       scrollbarWidth: 'none',
       position: 'fixed',
-      top: (discordSdk && dimensions.upright) ? '4.75em' : '4.5em',
+      top: (discordSdk && dimensions.upright) ? '4.75em' : '4em',
       right: '0',
       zIndex: '20',
       borderRadius: '0 0 0 1em',
@@ -256,7 +256,7 @@ export function Header(props: HeaderProps) {
       <div style={styles.header}>
         <div style={{ ...styles.item, ...styles.match }} onClick={ () => setShowShare(true) }><Icon name='copy' />&nbsp;{props.matchID !== 'default' ? `${props.matchID}` : "Blank White Cards"}</div>
         {props.isMultiplayer && props.matchID !== 'default' && (
-          <div style={{ ...styles.item, fontSize: '1em' }}>
+          <div style={{ ...styles.item, fontSize: '1em', paddingRight: '0.5em' }}>
             {playerName && (editingMyScore ? (
               <Calculator
                 initialValue={myScore}
@@ -296,9 +296,8 @@ export function Header(props: HeaderProps) {
             userSelect: 'none' as const,
             fontSize: '0.9em',
           }}>
-            <Icon name='multi' />
             {props.matchData?.filter(p => p.isConnected).length}
-            {props.showPlayers ? <Icon name='less' /> : <Icon name='more' />}
+            <Icon name='multi' />
           </div>
         </div>
       )}

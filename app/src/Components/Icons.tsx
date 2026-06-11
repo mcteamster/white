@@ -71,12 +71,10 @@ type IconName =
   'heart' |
   'hearted' |
   'info' |
-  'less' |
   'link' |
   'loading' |
   'logout' |
   'menu' |
-  'more' |
   'multi' |
   'next' |
   'play' |
