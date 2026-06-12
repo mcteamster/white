@@ -8,7 +8,7 @@ export const MODE_DOTS = 'dots';
 const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
 const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
 const canvas = document.querySelector('#sketchpad');
-const canvasSize = Math.min(vw * 0.9, vh * 0.7);
+const canvasSize = Math.min(vw * 0.9, vh * 0.6);
 
 // Set CSS size to control display size
 canvas.style.width = `${canvasSize}px`;

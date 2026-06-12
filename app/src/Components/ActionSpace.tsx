@@ -15,7 +15,8 @@ import { Loader } from './Loader.tsx';
 import { submitGlobalCard } from '../lib/clients.ts';
 import { Tutorial } from './About.tsx';
 import { compressImage, resizeImage } from '../lib/images.ts';
-import { externalLink } from '../lib/hooks.ts';
+import { externalLink, useWindowDimensions } from '../lib/hooks.ts';
+import { discordSdk } from '../lib/discord';
 
 interface ToolbarProps extends BoardProps<GameState> {
   mode: string;
@@ -26,6 +27,8 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
   const navigate = useNavigate();
   const { setAuth } = useContext(AuthContext);
   const { loading, setLoading } = useContext(LoadingContext);
+  const dimensions = useWindowDimensions();
+  const headerHeight = (discordSdk && dimensions.upright) ? '4.75em' : '2em';
   const [submitStatus, setSubmitStatus] = useState('Submit');
   const [drawMode, setDrawMode] = useState<string>(MODE_DRAW);
   const [brushSize, setBrushSize] = useState('Medium');
@@ -341,7 +344,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
     </>
   } else if (mode === 'create-sketch') {
     topRow = (
-      <div style={{ position: 'fixed', top: 'calc(2em + 12px)', left: '50%', transform: 'translateX(-50%)', zIndex: 50, display: 'flex', justifyContent: 'space-around', width: '100%', maxWidth: '40em' }}>
+      <div style={{ position: 'fixed', top: `calc(${headerHeight} + ${dimensions.upright ? '3em' : '1em'})`, left: '50%', transform: 'translateX(-50%)', zIndex: 50, display: 'flex', justifyContent: 'space-around', width: '100%', maxWidth: '40em' }}>
         <wired-card style={{ ...styles.button, color: 'red' }} onClick={() => { fillWhite(); setDrawMode(getMode()); }} elevation={2}><Icon name='discard' />Clear</wired-card>
         <wired-card style={{ ...styles.button, color: drawMode === MODE_ERASE ? 'red' : undefined }} onClick={() => {
           const newMode = drawMode === MODE_ERASE ? MODE_DRAW : MODE_ERASE;
