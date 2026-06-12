@@ -31,5 +31,3 @@ app/public/decks/global*
 api/cdk.out
 api/dist
 
-# Engine build cache
-engine/.rpt2_cache/
