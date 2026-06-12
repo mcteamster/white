@@ -57,7 +57,7 @@
     }
   },
   "scripts": {
-    "types": "tsc --declaration --emitDeclarationOnly --declarationDir dist/types --strict false --skipLibCheck --esModuleInterop --jsx react --target esnext --module esnext --moduleResolution node --outDir /tmp/engine-js-ignore"
+    "build": "tsc --declaration --emitDeclarationOnly --declarationDir dist/types --strict false --skipLibCheck --esModuleInterop --jsx react --target esnext --module esnext --moduleResolution node --outDir /tmp/engine-js-ignore"
   },
   "dependencies": {
     "@koa/cors": "^5.0.0",
