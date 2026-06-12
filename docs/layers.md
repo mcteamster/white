@@ -9,10 +9,10 @@ wired-dialog renders at `z-index: 100` (via `--wired-dialog-z-index`). Anything 
 | 20 | QR code share popup | CommonSpace |
 | 20 | Share button/card | CommonSpace |
 | 20 | DeckEditor toolbar item | DeckEditor |
-| 30 | Finalise panel (card create overlay) | Finalise |
 | 40 | Console toggle + panel | Console |
 | 40 | Score editing overlay | CommonSpace |
 | 45 | `#create` canvas overlay | index.css |
+| 46 | Finalise panel (card create overlay) | Finalise |
 | 50 | Header (top fixed bar) | CommonSpace |
 | 50 | Toolbar (bottom fixed action bar) | ActionSpace |
 | 50 | Sketch mode draw tools row | ActionSpace |
