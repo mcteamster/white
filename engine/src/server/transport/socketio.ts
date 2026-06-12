@@ -7,7 +7,9 @@
  */
 
 import type { CorsOptions } from 'cors';
-import IO from 'koa-socket-2';
+import { createServer } from 'http';
+import { createServer as createHttpsServer } from 'https';
+import { Server as SocketIOServer } from 'socket.io';
 import type IOTypes from 'socket.io';
 import type { ServerOptions as HttpsOptions } from 'https';
 import PQueue from 'p-queue';
@@ -153,22 +155,30 @@ export class SocketIO {
     games: Game[],
     origins: CorsOptions['origin'] = []
   ) {
-    const io = new IO({
-      ioOptions: {
-        pingTimeout: PING_TIMEOUT,
-        pingInterval: PING_INTERVAL,
-        cors: {
-          origins,
-        },
-        ...this.socketOpts,
+    const httpServer = this.https
+      ? createHttpsServer(this.https, app.callback())
+      : createServer(app.callback());
+
+    (app as any).server = httpServer;
+    (app as any).listen = (...args: any[]) => {
+      httpServer.listen(...args);
+      return httpServer;
+    };
+
+    const ioServer = new SocketIOServer(httpServer, {
+      pingTimeout: PING_TIMEOUT,
+      pingInterval: PING_INTERVAL,
+      cors: {
+        origin: origins,
       },
+      ...this.socketOpts,
     });
 
-    app.context.io = io;
-    io.attach(app, !!this.https, this.https);
+    app._io = ioServer;
+    app.context.io = ioServer;
 
     if (this.socketAdapter) {
-      io.adapter(this.socketAdapter);
+      ioServer.adapter(this.socketAdapter);
     }
 
     for (const game of games) {
