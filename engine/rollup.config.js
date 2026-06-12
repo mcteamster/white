@@ -28,7 +28,7 @@ const external = [
 const plugins = [
   babel({ exclude: '**/node_modules/**' }),
   resolve({ browser: true, only: [/svelte/] }),
-  commonjs({ include: 'node_modules/**' }),
+  commonjs({ include: 'node_modules/**', namedExports: { 'lodash.isplainobject': ['default'] } }),
   typescript({
     typescript: ts,
     check: false,

@@ -7,13 +7,11 @@
  */
 
 import { nanoid } from 'nanoid/non-secure';
-import 'svelte';
 import type { Dispatch, StoreEnhancer } from 'redux';
 import { createStore, compose, applyMiddleware } from 'redux';
 import * as Actions from '../core/action-types';
 import * as ActionCreators from '../core/action-creators';
 import { ProcessGameConfig } from '../core/game';
-import type Debug from './debug/Debug.svelte';
 import {
   CreateGameReducer,
   TransientHandlingMiddleware,
@@ -48,12 +46,6 @@ type Action =
   | ActionShape.StripTransients
   | ClientAction;
 
-export interface DebugOpt {
-  target?: HTMLElement;
-  impl?: typeof Debug;
-  collapseOnLoad?: boolean;
-  hideToggleButton?: boolean;
-}
 
 /**
  * Global client manager instance that all clients register with.
@@ -118,7 +110,6 @@ export interface ClientOpts<
   PluginAPIs extends Record<string, unknown> = Record<string, unknown>
 > {
   game: Game<G, PluginAPIs>;
-  debug?: DebugOpt | boolean;
   numPlayers?: number;
   multiplayer?: (opts: TransportOpts) => Transport;
   matchID?: string;
@@ -150,7 +141,6 @@ export class _ClientImpl<
   private subscribers: Record<string, (state: State<G> | null) => void>;
   private transport: Transport;
   private manager: ClientManager;
-  readonly debugOpt?: DebugOpt | boolean;
   readonly game: ReturnType<typeof ProcessGameConfig>;
   readonly store: Store;
   log: State['deltalog'];
@@ -177,7 +167,7 @@ export class _ClientImpl<
 
   constructor({
     game,
-    debug,
+
     numPlayers,
     multiplayer,
     matchID: matchID,
@@ -190,7 +180,6 @@ export class _ClientImpl<
     this.matchID = matchID || 'default';
     this.credentials = credentials;
     this.multiplayer = multiplayer;
-    this.debugOpt = debug;
     this.manager = GlobalClientManager;
     this.gameStateOverride = null;
     this.subscribers = {};
