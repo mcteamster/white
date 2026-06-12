@@ -7,7 +7,6 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Client as RawClient } from './client';
 import type { ClientOpts, ClientState, _ClientImpl } from './client';
 
@@ -94,18 +93,6 @@ export function Client<
   > {
     client: _ClientImpl<G>;
     unsubscribe?: () => void;
-
-    static propTypes = {
-      // The ID of a game to connect to.
-      // Only relevant in multiplayer.
-      matchID: PropTypes.string,
-      // The ID of the player associated with this client.
-      // Only relevant in multiplayer.
-      playerID: PropTypes.string,
-      // This client's authentication credentials.
-      // Only relevant in multiplayer.
-      credentials: PropTypes.string,
-    };
 
     static defaultProps = {
       matchID: 'default',
