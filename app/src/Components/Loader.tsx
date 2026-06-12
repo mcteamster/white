@@ -4,7 +4,7 @@ import { sanitiseCard } from "../lib/data";
 import { useCallback, useEffect, useReducer, useState } from "react";
 import { Card, getCardsByLocation } from "@mcteamster/white-core";
 import { Icon } from "./Icons";
-import { BoardProps } from "boardgame.io/dist/types/packages/react";
+import { BoardProps } from "boardgame.io/react";
 import { GameState } from "@mcteamster/white-core";
 import { submitGlobalCard } from "../lib/clients";
 import { BLANK_IMAGE, compressImage, decompressImage, resizeImage } from "../lib/images";

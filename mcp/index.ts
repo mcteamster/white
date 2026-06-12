@@ -1,8 +1,8 @@
 // Use CJS require for boardgame.io — its client entry points to a JSX file that
 // ESM/tsx can't resolve, but the CJS dist works fine.
 /* eslint-disable @typescript-eslint/no-require-imports */
-const { Client, LobbyClient } = require('boardgame.io/dist/cjs/client.js');
-const { SocketIO } = require('boardgame.io/dist/cjs/multiplayer.js');
+const { Client, LobbyClient } = require('boardgame.io/client');
+const { SocketIO } = require('boardgame.io/multiplayer');
 const { Virgo2AWS } = require('@mcteamster/virgo');
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
