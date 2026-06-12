@@ -6,6 +6,8 @@
  * https://opensource.org/licenses/MIT.
  */
 
-import { Client, BoardProps } from '../src/client/react';
+import { Client } from '../src/client/react';
+import type { BoardProps } from '../src/client/react';
 
-export { Client, BoardProps };
+export { Client };
+export type { BoardProps };
