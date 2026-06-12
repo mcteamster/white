@@ -7,6 +7,7 @@
  */
 
 import PluginPlayer from '../src/plugins/plugin-player';
-import { PlayerPlugin } from '../src/plugins/plugin-player';
+import type { PlayerPlugin } from '../src/plugins/plugin-player';
 
-export { PluginPlayer, PlayerPlugin };
+export { PluginPlayer };
+export type { PlayerPlugin };
