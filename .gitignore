@@ -30,3 +30,4 @@ app/public/decks/global*
 # CDK
 api/cdk.out
 api/dist
+

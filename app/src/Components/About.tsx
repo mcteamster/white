@@ -2,7 +2,7 @@ import type { Properties } from 'csstype';
 import { Icon } from './Icons';
 import { useNavigate } from 'react-router';
 import { useContext, useEffect, useState } from 'react';
-import { BoardProps } from 'boardgame.io/dist/types/packages/react';
+import { BoardProps } from '@mcteamster/white-engine/react';
 import { GameState } from '@mcteamster/white-core';
 import { HotkeysContext } from '../lib/contexts';
 import { externalLink } from '../lib/hooks';

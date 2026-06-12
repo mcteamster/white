@@ -1,4 +1,4 @@
-import type { Plugin } from 'boardgame.io';
+import type { Plugin } from '@mcteamster/white-engine';
 import type { Message } from '../Cards';
 import type { GameLogEntry } from './plugin-gamelog';
 import { logEntryToMessage } from './plugin-gamelog';

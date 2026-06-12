@@ -3,6 +3,7 @@
   "private": true,
   "version": "2.3.8",
   "workspaces": [
+    "engine",
     "core",
     "app",
     "server",

@@ -1,0 +1,15 @@
+.cache
+yarn.lock
+.DS_Store
+*.swp
+npm-debug.log*
+dist
+node_modules
+coverage
+.coveralls.yml
+.npm
+npm
+.idea/
+.vscode/*
+.rpt2_cache/
+.rush/

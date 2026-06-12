@@ -1,4 +1,4 @@
-import type { BoardProps } from 'boardgame.io/react';
+import type { BoardProps } from '@mcteamster/white-engine/react';
 import type { GameState } from '@mcteamster/white-core'
 import type { Properties } from 'csstype';
 import { getCardsByLocation, getCardsByOwner } from '@mcteamster/white-core';

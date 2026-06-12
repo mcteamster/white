@@ -6,6 +6,7 @@ ENV NODE_ENV=production \
 
 COPY server/package.json ./
 COPY core/ ./node_modules/@mcteamster/white-core/
+COPY engine/ ./node_modules/@mcteamster/white-engine/
 RUN npm install --omit=dev && npm install tsx
 
 COPY server/index.ts ./

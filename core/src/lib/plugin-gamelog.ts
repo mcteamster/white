@@ -1,4 +1,4 @@
-import type { Plugin } from 'boardgame.io';
+import type { Plugin } from '@mcteamster/white-engine';
 import type { Message } from '../Cards';
 
 export type GameLogMove =

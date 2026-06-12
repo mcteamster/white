@@ -1,6 +1,6 @@
-import type { Game, Move } from "boardgame.io";
-import { INVALID_MOVE, Stage } from 'boardgame.io/core';
-import { PluginPlayer } from 'boardgame.io/plugins';
+import type { Game, Move } from "@mcteamster/white-engine";
+import { INVALID_MOVE, Stage } from '@mcteamster/white-engine/core';
+import { PluginPlayer } from '@mcteamster/white-engine/plugins';
 import { Card, getCardById, getCardsByLocation } from './Cards';
 import { presetDecks } from "./lib/constants";
 import { PluginChat } from "./lib/plugin-chat";

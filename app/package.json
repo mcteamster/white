@@ -1,7 +1,7 @@
 {
   "name": "@mcteamster/white-app",
   "private": true,
-  "version": "2.3.8",
+  "version": "2.3.9",
   "scripts": {
     "dev": "vite --host",
     "build": "tsc -b && vite build",
@@ -18,7 +18,7 @@
     "@microsoft/clarity": "^1.0.0",
     "@mui/icons-material": "^6.4.5",
     "atrament": "^4.6.0",
-    "boardgame.io": "^0.50.2",
+    "@mcteamster/white-engine": "*",
     "nanoid": "^5.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

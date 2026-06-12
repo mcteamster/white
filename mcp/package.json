@@ -1,6 +1,6 @@
 {
   "name": "@mcteamster/white-mcp",
-  "version": "2.3.8",
+  "version": "2.3.9",
   "main": "dist/index.js",
   "bin": "dist/index.js",
   "files": [
@@ -19,7 +19,7 @@
     "@mcteamster/white-core": "*",
     "@mcteamster/virgo": "^0.2.5",
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "boardgame.io": "^0.50.2",
+    "@mcteamster/white-engine": "*",
     "esbuild": "^0.25.0",
     "nanoid": "^5.1.0",
     "zod": "^4.3.6"
