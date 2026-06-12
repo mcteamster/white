@@ -1,7 +1,7 @@
 FROM node:26-alpine AS engine-build
 WORKDIR /engine
 COPY engine/ ./
-RUN npm install && npm run build && npm run proxydirs
+RUN npm install && npm run build
 
 FROM node:26-alpine
 WORKDIR /app

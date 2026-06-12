@@ -1,0 +1,7 @@
+{
+  "name": "boardgame.io/testing",
+  "private": true,
+  "types": "../dist/types/packages/testing.d.ts",
+  "main": "../dist/cjs/testing.js",
+  "module": "../dist/esm/testing.js"
+}
