@@ -219,9 +219,7 @@
     "preset": "ts-jest/presets/js-with-babel",
     "testEnvironment": "jsdom",
     "moduleNameMapper": {
-      "\\.(css)$": "identity-obj-proxy",
-      "\\.(svg)$": "<rootDir>/.empty_module.js",
-      "svelte-json-tree-auto": "<rootDir>/src/client/debug/tests/JSONTree.mock.svelte"
+      "\\.(css)$": "identity-obj-proxy"
     },
     "coveragePathIgnorePatterns": [
       "/node_modules/",
