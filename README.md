@@ -45,7 +45,7 @@ Other noteworthy features:
 - Session memory and persistence
 - Custom image compression for faster multiplayer performance
 
-This new version is made in React TypeScript and uses [`boardgame.io`](https://boardgame.io/) as the game engine and networking stack. [Writing your own multiplayer networking code](https://github.com/mcteamster/twinge?tab=readme-ov-file#twinge-service) is tricky, and `bgio` made it a breeze.
+This new version is made in React TypeScript and uses a trimmed-down fork of [`boardgame.io`](https://boardgame.io/) (maintained as `@mcteamster/white-engine` in the `/engine` workspace) as the game engine and networking stack. [Writing your own multiplayer networking code](https://github.com/mcteamster/twinge?tab=readme-ov-file#twinge-service) is tricky, and `bgio` made it a breeze.
 
 ## More Docs
 [Infrastructure:](./docs/cloud.md)
@@ -67,7 +67,7 @@ Cards submitted to the Global Deck published under [Creative Commons CC BY 4.0](
 ## Credits
 Package | Source | License | Attribution
 --- | --- | --- | ---
-[Boardgame.io](https://boardgame.io/) | https://github.com/boardgameio/boardgame.io | MIT | Copyright (c) 2017 The boardgame.io Authors.
+[Boardgame.io](https://boardgame.io/) | https://github.com/boardgameio/boardgame.io | MIT | Copyright (c) 2017 The boardgame.io Authors. Forked and maintained as [`@mcteamster/white-engine`](./engine).
 [Wired Elements](https://wiredjs.com/) | https://github.com/rough-stuff/wired-elements | MIT | Copyright (c) 2021 Preet Shihn
 [Atrament](https://www.fiala.space/atrament/) | https://github.com/jakubfiala/atrament | MIT | Copyright 2024 Jakub Fiala
 [Virgo](https://virgo.tonz.io/) | https://github.com/mcteamster/virgo | MIT | Copyright (c) 2025 mcteamster
