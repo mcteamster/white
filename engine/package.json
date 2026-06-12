@@ -1,6 +1,6 @@
 {
   "name": "@mcteamster/white-engine",
-  "version": "0.50.2",
+  "version": "2.3.8",
   "description": "library for turn-based games",
   "license": "MIT",
   "sideEffects": false,
