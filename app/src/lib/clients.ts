@@ -108,7 +108,6 @@ setTimeout(fetchGlobalDeck, 100);
 export const GlobalBlankWhiteCardsClient = Client({
   game: { ...BlankWhiteCards, setup: () => (startingDeck) },
   board: BlankWhiteCardsBoard,
-  debug: false,
 });
 
 // Multiplayer Custom Rooms
@@ -129,25 +128,21 @@ export const gameClients = {
   AP: Client({
     game: BlankWhiteCards,
     board: BlankWhiteCardsBoard,
-    debug: false,
     multiplayer: SocketIO({ server: SERVERS.AP }),
   }),
   EU: Client({
     game: BlankWhiteCards,
     board: BlankWhiteCardsBoard,
-    debug: false,
     multiplayer: SocketIO({ server: SERVERS.EU }),
   }),
   NA: Client({
     game: BlankWhiteCards,
     board: BlankWhiteCardsBoard,
-    debug: false,
     multiplayer: SocketIO({ server: SERVERS.NA }),
   }),
   default: Client({
     game: BlankWhiteCards,
     board: BlankWhiteCardsBoard,
-    debug: false,
     multiplayer: SocketIO({ server: import.meta.env.VITE_DEFAULT_SERVER }),
   }),
 }

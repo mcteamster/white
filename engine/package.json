@@ -5,22 +5,60 @@
   "license": "MIT",
   "sideEffects": false,
   "main": "packages/main.js",
-  "types": "src/types.ts",
+  "types": "dist/types/src/types.d.ts",
   "exports": {
-    ".": "./packages/main.js",
-    "./client": "./packages/client.ts",
-    "./core": "./packages/core.ts",
-    "./server": "./packages/server.ts",
-    "./plugins": "./packages/plugins.ts",
-    "./multiplayer": "./packages/multiplayer.ts",
-    "./master": "./packages/master.ts",
-    "./ai": "./packages/ai.ts",
-    "./react": "./packages/react.ts",
-    "./react-native": "./packages/react-native.ts",
-    "./internal": "./packages/internal.ts",
-    "./testing": "./packages/testing.ts"
+    ".": {
+      "types": "./dist/types/src/types.d.ts",
+      "default": "./packages/main.js"
+    },
+    "./client": {
+      "types": "./dist/types/packages/client.d.ts",
+      "default": "./packages/client.ts"
+    },
+    "./core": {
+      "types": "./dist/types/packages/core.d.ts",
+      "default": "./packages/core.ts"
+    },
+    "./server": {
+      "types": "./dist/types/packages/server.d.ts",
+      "default": "./packages/server.ts"
+    },
+    "./plugins": {
+      "types": "./dist/types/packages/plugins.d.ts",
+      "default": "./packages/plugins.ts"
+    },
+    "./multiplayer": {
+      "types": "./dist/types/packages/multiplayer.d.ts",
+      "default": "./packages/multiplayer.ts"
+    },
+    "./master": {
+      "types": "./dist/types/packages/master.d.ts",
+      "default": "./packages/master.ts"
+    },
+    "./ai": {
+      "types": "./dist/types/packages/ai.d.ts",
+      "default": "./packages/ai.ts"
+    },
+    "./react": {
+      "types": "./dist/types/packages/react.d.ts",
+      "default": "./packages/react.ts"
+    },
+    "./react-native": {
+      "types": "./dist/types/packages/react-native.d.ts",
+      "default": "./packages/react-native.ts"
+    },
+    "./internal": {
+      "types": "./dist/types/packages/internal.d.ts",
+      "default": "./packages/internal.ts"
+    },
+    "./testing": {
+      "types": "./dist/types/packages/testing.d.ts",
+      "default": "./packages/testing.ts"
+    }
   },
-  "dependencies": {
+  "scripts": {
+    "types": "tsc --declaration --emitDeclarationOnly --declarationDir dist/types --strict false --skipLibCheck --esModuleInterop --jsx react --target esnext --module esnext --moduleResolution node --outDir /tmp/engine-js-ignore"
+  },
     "@koa/cors": "^5.0.0",
     "@koa/router": "^10.1.1",
     "@types/koa": "^2.13.4",

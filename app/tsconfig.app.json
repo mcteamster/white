@@ -23,4 +23,5 @@
     "noUncheckedSideEffectImports": true
   },
   "include": ["src", "data"],
+  "exclude": ["node_modules"]
 }

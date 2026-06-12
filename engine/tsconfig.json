@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "strict": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "jsx": "react",
+    "composite": true,
+    "declaration": true,
+    "declarationDir": "dist/types",
+    "noEmit": false,
+    "outDir": "dist/js"
+  },
+  "include": ["src", "packages"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.test.js"]
+}
