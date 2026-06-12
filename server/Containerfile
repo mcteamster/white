@@ -1,3 +1,8 @@
+FROM node:26-alpine AS engine-build
+WORKDIR /engine
+COPY engine/ ./
+RUN npm install && npm run build && npm run proxydirs
+
 FROM node:26-alpine
 WORKDIR /app
 ENV NODE_ENV=production \
@@ -6,6 +11,7 @@ ENV NODE_ENV=production \
 
 COPY server/package.json ./
 COPY core/ ./node_modules/@mcteamster/white-core/
+COPY --from=engine-build /engine/ ./node_modules/boardgame.io/
 RUN npm install --omit=dev && npm install tsx
 
 COPY server/index.ts ./
