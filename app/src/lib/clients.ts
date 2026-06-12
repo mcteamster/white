@@ -1,7 +1,7 @@
 // Clients
-import { LobbyClient } from 'boardgame.io/client';
-import { Client } from 'boardgame.io/react';
-import { SocketIO } from 'boardgame.io/multiplayer';
+import { LobbyClient } from '@mcteamster/white-engine/client';
+import { Client } from '@mcteamster/white-engine/react';
+import { SocketIO } from '@mcteamster/white-engine/multiplayer';
 import { BlankWhiteCards, GameState } from '@mcteamster/white-core';
 import { BlankWhiteCardsBoard } from '../Board';
 import { Card } from '@mcteamster/white-core';

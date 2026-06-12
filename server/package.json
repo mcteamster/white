@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@mcteamster/white-core": "*",
-    "boardgame.io": "*",
+    "@mcteamster/white-engine": "*",
     "nanoid": "^5.1.0"
   }
 }

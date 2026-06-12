@@ -1,4 +1,4 @@
-import { Server, Origins } from 'boardgame.io/server';
+import { Server, Origins } from '@mcteamster/white-engine/server';
 import { BlankWhiteCards, startDeckPolling } from '@mcteamster/white-core';
 import { customAlphabet, nanoid } from 'nanoid';
 

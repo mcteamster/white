@@ -1,5 +1,5 @@
 {
-  "name": "boardgame.io",
+  "name": "@mcteamster/white-engine",
   "version": "0.50.2",
   "description": "library for turn-based games",
   "license": "MIT",
