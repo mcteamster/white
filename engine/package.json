@@ -4,7 +4,7 @@
   "description": "library for turn-based games",
   "repository": "https://github.com/boardgameio/boardgame.io",
   "scripts": {
-    "build": "cross-env BABEL_ENV=rollup rollup --config rollup.config.js  --silent",
+    "build": "cross-env BABEL_ENV=rollup rollup --config rollup.config.js --silent",
     "build:watch": "cross-env BABEL_ENV=rollup rollup -w --config rollup.config.js",
     "pretest": "npm run lint",
     "test": "cross-env NODE_ENV=test jest",
