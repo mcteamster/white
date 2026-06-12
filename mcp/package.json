@@ -19,7 +19,7 @@
     "@mcteamster/white-core": "*",
     "@mcteamster/virgo": "^0.2.5",
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "boardgame.io": "^0.50.2",
+    "boardgame.io": "*",
     "esbuild": "^0.25.0",
     "nanoid": "^5.1.0",
     "zod": "^4.3.6"
