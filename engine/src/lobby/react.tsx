@@ -9,7 +9,6 @@
 import React from 'react';
 import Cookies from 'react-cookies';
 import PropTypes from 'prop-types';
-import type { DebugOpt } from '../client/client';
 import { Client } from '../client/react';
 import { MCTSBot } from '../ai/mcts-bot';
 import { Local } from '../client/transport/local';
@@ -39,7 +38,6 @@ type LobbyProps = {
   gameComponents: GameComponent[];
   lobbyServer?: string;
   gameServer?: string;
-  debug?: DebugOpt | boolean;
   clientFactory?: typeof Client;
   refreshInterval?: number;
   renderer?: (args: {
@@ -84,7 +82,6 @@ type LobbyState = {
  *                              If not set, defaults to the server that served the page.
  * @param {function} clientFactory - Function that is used to create the game clients.
  * @param {number} refreshInterval - Interval between server updates (default: 2000ms).
- * @param {bool}   debug - Enable debug information (default: false).
  *
  * Returns:
  *   A React component that provides a UI to create, list, join, leave, play or
@@ -95,13 +92,11 @@ class Lobby extends React.Component<LobbyProps, LobbyState> {
     gameComponents: PropTypes.array.isRequired,
     lobbyServer: PropTypes.string,
     gameServer: PropTypes.string,
-    debug: PropTypes.bool,
     clientFactory: PropTypes.func,
     refreshInterval: PropTypes.number,
   };
 
   static defaultProps = {
-    debug: false,
     clientFactory: Client,
     refreshInterval: 2000,
   };
@@ -275,7 +270,6 @@ class Lobby extends React.Component<LobbyProps, LobbyState> {
     const app = this.props.clientFactory({
       game: gameCode.game,
       board: gameCode.board,
-      debug: this.props.debug,
       multiplayer,
     });
 

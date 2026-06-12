@@ -62,17 +62,6 @@ test('can pass extra props to Client', () => {
   expect(board.props().extraValue).toBe(55);
 });
 
-test('debug ui can be turned off', () => {
-  const Board = Client({
-    game: {},
-    board: TestBoard,
-    debug: false,
-  });
-
-  const game = Enzyme.mount(<Board />);
-  expect(game.find('.debug-ui')).toHaveLength(0);
-});
-
 test('custom loading component', () => {
   const Loading = () => <div>custom</div>;
   const Board = Client({

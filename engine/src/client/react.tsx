@@ -15,7 +15,7 @@ type WrappedBoardDelegates = 'matchID' | 'playerID' | 'credentials';
 
 export type WrappedBoardProps = Pick<
   ClientOpts,
-  WrappedBoardDelegates | 'debug'
+  WrappedBoardDelegates
 >;
 
 type ExposedClientProps<G extends any = any> = Pick<
@@ -58,7 +58,6 @@ type ReactClientOpts<
  * @param {...object} board - The React component for the game.
  * @param {...object} loading - (optional) The React component for the loading state.
  * @param {...object} multiplayer - Set to a falsy value or a transportFactory, e.g., SocketIO()
- * @param {...object} debug - Enables the Debug UI.
  * @param {...object} enhancer - Optional enhancer to send to the Redux store
  *
  * Returns:
@@ -73,7 +72,7 @@ export function Client<
   PluginAPIs extends Record<string, unknown> = Record<string, unknown>
 >(opts: ReactClientOpts<G, P, PluginAPIs>) {
   const { game, numPlayers, board, multiplayer, enhancer } = opts;
-  let { loading, debug } = opts;
+  let { loading } = opts;
 
   // Component that is displayed before the client has synced
   // with the game master.
@@ -106,27 +105,19 @@ export function Client<
       // This client's authentication credentials.
       // Only relevant in multiplayer.
       credentials: PropTypes.string,
-      // Enable / disable the Debug UI.
-      debug: PropTypes.any,
     };
 
     static defaultProps = {
       matchID: 'default',
       playerID: null,
       credentials: null,
-      debug: true,
     };
 
     constructor(props: WrappedBoardProps & AdditionalProps) {
       super(props);
 
-      if (debug === undefined) {
-        debug = props.debug;
-      }
-
       this.client = RawClient({
         game,
-        debug,
         numPlayers,
         multiplayer,
         matchID: props.matchID,
