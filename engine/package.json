@@ -17,74 +17,21 @@
     "clean": "node ./scripts/clean.js"
   },
   "sideEffects": false,
-  "main": "dist/boardgameio.js",
-  "unpkg": "dist/boardgameio.min.js",
-  "module": "dist/boardgameio.es.js",
-  "types": "dist/types/src/types.d.ts",
+  "main": "packages/main.js",
+  "types": "src/types.ts",
   "exports": {
-    ".": {
-      "require": "./dist/boardgameio.js",
-      "import": "./dist/boardgameio.es.js"
-    },
-    "./client": {
-      "require": "./dist/cjs/client.js",
-      "import": "./dist/esm/client.js",
-      "types": "./dist/types/packages/client.d.ts"
-    },
-    "./core": {
-      "require": "./dist/cjs/core.js",
-      "import": "./dist/esm/core.js",
-      "types": "./dist/types/packages/core.d.ts"
-    },
-    "./server": {
-      "require": "./dist/cjs/server.js",
-      "types": "./dist/types/packages/server.d.ts"
-    },
-    "./plugins": {
-      "require": "./dist/cjs/plugins.js",
-      "import": "./dist/esm/plugins.js",
-      "types": "./dist/types/packages/plugins.d.ts"
-    },
-    "./multiplayer": {
-      "require": "./dist/cjs/multiplayer.js",
-      "import": "./dist/esm/multiplayer.js",
-      "types": "./dist/types/packages/multiplayer.d.ts"
-    },
-    "./master": {
-      "require": "./dist/cjs/master.js",
-      "import": "./dist/esm/master.js",
-      "types": "./dist/types/packages/master.d.ts"
-    },
-    "./ai": {
-      "require": "./dist/cjs/ai.js",
-      "import": "./dist/esm/ai.js",
-      "types": "./dist/types/packages/ai.d.ts"
-    },
-    "./debug": {
-      "require": "./dist/cjs/debug.js",
-      "import": "./dist/esm/debug.js",
-      "types": "./dist/types/packages/debug.d.ts"
-    },
-    "./react": {
-      "require": "./dist/cjs/react.js",
-      "import": "./dist/esm/react.js",
-      "types": "./dist/types/packages/react.d.ts"
-    },
-    "./react-native": {
-      "require": "./dist/cjs/react-native.js",
-      "import": "./dist/esm/react-native.js",
-      "types": "./dist/types/packages/react-native.d.ts"
-    },
-    "./internal": {
-      "require": "./dist/cjs/internal.js",
-      "import": "./dist/esm/internal.js",
-      "types": "./dist/types/packages/internal.d.ts"
-    },
-    "./testing": {
-      "require": "./dist/cjs/testing.js",
-      "import": "./dist/esm/testing.js",
-      "types": "./dist/types/packages/testing.d.ts"
-    }
+    ".": "./packages/main.js",
+    "./client": "./packages/client.ts",
+    "./core": "./packages/core.ts",
+    "./server": "./packages/server.ts",
+    "./plugins": "./packages/plugins.ts",
+    "./multiplayer": "./packages/multiplayer.ts",
+    "./master": "./packages/master.ts",
+    "./ai": "./packages/ai.ts",
+    "./react": "./packages/react.ts",
+    "./react-native": "./packages/react-native.ts",
+    "./internal": "./packages/internal.ts",
+    "./testing": "./packages/testing.ts"
   },
   "files": [
     "src",
