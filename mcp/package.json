@@ -20,7 +20,7 @@
     "@mcteamster/virgo": "^0.2.5",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@mcteamster/white-engine": "*",
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.28.1",
     "nanoid": "^5.1.0",
     "zod": "^4.3.6"
   }
