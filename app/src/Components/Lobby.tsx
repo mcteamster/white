@@ -330,8 +330,8 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
             <div>or</div>
             <div style={styles.textentry}>
               <wired-card style={styles.action} onClick={() => { checkForRoomCode() }}>
-                Join Room
-                <wired-input style={styles.code} id="roomInput" placeholder="&nbsp;Code" maxlength={4} value={auth?.matchID} onClick={(e) => e.stopPropagation()}></wired-input>
+                Join Code
+                <wired-input style={styles.code} id="roomInput" placeholder="&nbsp;Room" maxlength={4} value={auth?.matchID} autocomplete="off" onClick={(e) => e.stopPropagation()}></wired-input>
               </wired-card>
             </div>
           </div>
