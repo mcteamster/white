@@ -2,6 +2,7 @@ FROM node:26-alpine AS build
 WORKDIR /app
 COPY mcp/package.json ./
 COPY core/ ./node_modules/@mcteamster/white-core/
+COPY engine/ ./node_modules/@mcteamster/white-engine/
 RUN npm install
 COPY mcp/index.ts ./
 RUN npx esbuild index.ts --bundle --platform=node --format=cjs --outfile=dist/index.js
