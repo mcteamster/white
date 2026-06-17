@@ -291,7 +291,7 @@ export function Header(props: HeaderProps) {
             gap: '0.25em',
             borderRadius: '0 0 0 1em',
             border: '1px solid #ccc',
-            borderTop: 'none',
+            borderTop: '1px solid black',
             borderRight: 'none',
             userSelect: 'none' as const,
             fontSize: '0.9em',
