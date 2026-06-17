@@ -372,26 +372,30 @@ const mcp = new McpServer(
 mcp.registerResource(
   'bwc://docs/image-generation',
   'bwc://docs/image-generation',
-  { description: 'Guidance for generating and uploading card images' },
+  { description: 'How to generate and upload card images' },
   async () => ({
     contents: [{
       uri: 'bwc://docs/image-generation',
       mimeType: 'text/markdown',
       text: `# Card Image Generation
 
-## Image Specs
-- **Size**: 500×500 px (square)
-- **Color**: 1-bit (black and white only) — the server converts uploaded images to 1-bit automatically
-- Generate at higher resolution if needed; the server handles downscaling
+See \`bwc://docs/image-format\` for the full image specification (dimensions, colour, style guidance).
 
-## Local MCP server
+## Generating images
+
+Use a generative image model with this prompt suffix for best results:
+> \`"black ink on white paper, simple bold line art, no background, no shading, no text, no labels"\`
+
+## Uploading — local MCP server
+
 Use the \`upload_image\` tool with an absolute file path:
 \`\`\`
 upload_image({ file_path: '/tmp/card.png' })
 \`\`\`
 
-## Remote HTTP MCP server
-POST the PNG directly to \`{mcp-server-base-url}/upload-image\`:
+## Uploading — remote HTTP MCP server
+
+POST the PNG directly to \`{mcp-server-base-url}/upload-image\` (do NOT use the \`upload_image\` tool — it requires local file access):
 \`\`\`bash
 curl -X POST https://ap.blankwhite.cards/mcp/upload-image \\
   -H "Content-Type: image/png" \\
@@ -399,12 +403,10 @@ curl -X POST https://ap.blankwhite.cards/mcp/upload-image \\
 # Returns: {"image_uuid": "..."}
 \`\`\`
 
-Known MCP server URLs:
-- AP: https://ap.blankwhite.cards/mcp
-- EU: https://eu.blankwhite.cards/mcp
-- NA: https://na.blankwhite.cards/mcp
+Known MCP server URLs: AP = https://ap.blankwhite.cards/mcp, EU = https://eu.blankwhite.cards/mcp, NA = https://na.blankwhite.cards/mcp
 
 ## Using the image UUID
+
 Pass the returned \`image_uuid\` to \`submit_card\`:
 \`\`\`
 submit_card({ ..., image_uuid: 'edef0e0e-...' })
@@ -439,20 +441,11 @@ Upload via \`upload_image\` (local) or \`POST /upload-image\` (remote HTTP). See
 
 On upload the server applies two transforms in order:
 
-1. **Resize** — scales to exactly 500×500 px.
-2. **1-bit quantisation** — each pixel's RGB mean is compared to 128. Values ≥ 128 → white (255), values < 128 → black (0). Alpha is forced opaque.
+1. **Centre-crop** — if the image is not square, it is cropped to the largest centred square.
+2. **Resize** — scaled to exactly 500×500 px.
+3. **1-bit quantisation** — each pixel's RGB mean is compared to 128. Values ≥ 128 → white (255), values < 128 → black (0). Alpha is forced opaque.
 
-The result is a 500×500 monochrome PNG stored as a base64 data URI internally.
-
-## Wire format (internal encoding)
-
-For real-time network transfer the game uses a custom compressed encoding:
-
-1. The 250 000-pixel 1-bit image is **run-length encoded** into an array of run lengths. Odd indices = white runs, even indices = black runs (so colour is implicit from position).
-2. The integer array is **UTF-16 encoded** — each run value maps to the Unicode code point \`(value + 0x20)\` (offset avoids non-printable ASCII). Run values > 55 263 are split to stay within \`U+0020–U+D7FF\`.
-3. The resulting UTF-16 string is stored in the card's \`image\` field and transmitted as JSON.
-
-This yields approximately 4 kB per card (vs ~22 kB for a raw PNG data URI), enabling hundreds of cards to be rendered simultaneously without significant network overhead.
+Images are then compressed server-side for real-time network transfer (~4 kB per card typical).
 
 ## Size limits and constraints
 
@@ -482,6 +475,74 @@ Cards are displayed on a white background. The server converts every image to 1-
 > \`"black ink on white paper, simple bold line art, no background, no shading, no text, no labels"\`
 
 If a generated image has a dark background or contains text, regenerate rather than uploading.
+`,
+    }],
+  }),
+);
+
+mcp.registerResource(
+  'bwc://docs/quickstart',
+  'bwc://docs/quickstart',
+  { description: 'Getting started guide — tools, resources, and available role prompts' },
+  async () => ({
+    contents: [{
+      uri: 'bwc://docs/quickstart',
+      mimeType: 'text/markdown',
+      text: `# Blank White Cards — MCP Quickstart
+
+## Overview
+
+Blank White Cards is a freeform card game where players write and play their own rules. There are no turns — all players act simultaneously.
+
+## Tools
+
+| Tool | Description |
+|---|---|
+| \`create_match\` | Create a new match as host (player 0) |
+| \`join_match\` | Join an existing match by room code |
+| \`get_state\` | See your hand, the pile, deck size, scores |
+| \`pickup_card\` | Draw a card from the deck into your hand |
+| \`move_card\` | Move a card between locations (hand → pile, etc.) |
+| \`submit_card\` | Write a new card into your hand |
+| \`like_card\` | Like a card |
+| \`upload_image\` | Upload a PNG to attach to a card (local only) |
+| \`get_scores\` | Get scores; \`ranked=true\` for leaderboard, \`hint=true\` for suggested action |
+| \`set_score\` | Set a player's score |
+| \`get_messages\` | Read the chat/event feed |
+| \`send_message\` | Post a chat message |
+| \`watch\` | Block until a game event fires (replaces polling) |
+| \`shuffle_cards\` | Reset all cards to the deck (host only) |
+| \`load_cards\` | Bulk load cards into the match (host only) |
+| \`leave_match\` | Leave and clean up the session |
+
+## Resources
+
+| Resource | Description |
+|---|---|
+| \`bwc://docs/quickstart\` | This guide |
+| \`bwc://docs/image-generation\` | How to generate and upload card images |
+| \`bwc://docs/image-format\` | Image spec — dimensions, colour, style guidance |
+
+## Role prompts
+
+This server provides three role prompts. Use \`list_prompts\` to see them, or invoke one to get a detailed play instruction:
+
+| Prompt | Description |
+|---|---|
+| \`autoplay\` | Play autonomously — write cards, react, loop until watch limit |
+| \`referee\` | Moderate the game, enforce house rules, award points |
+| \`spectate\` | Watch and commentate without playing |
+
+## Typical flow
+
+\`\`\`
+create_match or join_match
+→ pickup_card (draw from deck)
+→ submit_card (write a new rule)
+→ move_card (play it to the pile)
+→ watch (wait for others to react)
+→ repeat
+\`\`\`
 `,
     }],
   }),
@@ -597,7 +658,7 @@ mcp.registerTool(
 mcp.registerTool(
   'upload_image',
   {
-    description: 'Upload a PNG image file for use with submit_card. Pass the absolute local file path. Returns { image_uuid } — pass this to submit_card. Note: for remote HTTP MCP servers, POST the PNG file directly to {server}/upload-image instead (Content-Type: image/png) and use the returned image_uuid. Example: curl -X POST https://ap.blankwhite.cards/mcp/upload-image -H "Content-Type: image/png" --data-binary @/tmp/image.png. See resource bwc://docs/image-generation for full guidance including image specs.',
+    description: 'Upload a PNG image file for use with submit_card. Pass the absolute local file path. Non-square images are centre-cropped automatically. Returns { image_uuid } — pass this to submit_card. Note: for remote HTTP MCP servers, POST the PNG file directly to {server}/upload-image instead (Content-Type: image/png) — see resource bwc://docs/image-generation.',
     inputSchema: {
       file_path: z.string().describe('Absolute path to a square PNG image file on disk'),
     },
@@ -820,12 +881,19 @@ mcp.registerTool(
   async ({ matchID, playerID, cards }) => {
     if (playerID !== '0') throw new Error(`load_cards is host-only (player 0). You are player ${playerID}.`);
     const { client } = requireSession(matchID, playerID);
-    const cardObjects: Partial<Card>[] = cards.map(c => {
+    const cardObjects: Partial<Card>[] = await Promise.all(cards.map(async c => {
       let image: string | undefined;
       if (c.image_path) {
         const outPath = join(tmpdir(), `bwc_${Date.now()}_${Math.random().toString(36).slice(2)}.png`);
         try {
-          execSync(`ffmpeg -y -i "${c.image_path}" -vf "crop=min(iw\\,ih):min(iw\\,ih),scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'" "${outPath}"`, { stdio: 'pipe' });
+          await new Promise<void>((resolve, reject) => {
+            const proc = require('node:child_process').spawn('ffmpeg', [
+              '-y', '-i', c.image_path!,
+              '-vf', `crop=min(iw\\,ih):min(iw\\,ih),scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'`,
+              outPath,
+            ], { stdio: 'pipe' });
+            proc.on('close', (code: number) => code === 0 ? resolve() : reject(new Error(`ffmpeg exited ${code}`)));
+          });
           const buf = readFileSync(outPath);
           image = `data:image/png;base64,${buf.toString('base64')}`;
         } finally {
@@ -836,7 +904,7 @@ mcp.registerTool(
         content: { title: c.title, description: c.description ?? '', author: c.author, image },
         location: c.location ?? 'deck',
       };
-    });
+    }));
     const nextState = waitForMove(client);
     client.moves.loadCards(cardObjects);
     const state = await nextState;
@@ -878,7 +946,7 @@ mcp.registerTool(
       if (action.type === 'submit_card') {
         const image = action.image_uuid ? imageUploadStore.get(action.image_uuid) : undefined;
         if (action.image_uuid && !image) throw new Error(`No image found for uuid '${action.image_uuid}'. Call upload_image first.`);
-        if (image) imageUploadStore.delete(action.image_uuid!);
+        if (action.image_uuid) imageUploadStore.delete(action.image_uuid);
         const card: Partial<Card> = { content: { title: action.title, description: action.description ?? '', author: action.author, date: String(Date.now()), image }, location: 'hand', owner: playerID, timestamp: Date.now() };
         client.moves.submitCard(card);
         await waitForMove(client);
