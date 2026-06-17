@@ -431,7 +431,7 @@ mcp.registerResource(
 | Format | PNG |
 | Dimensions | Square (any resolution — server resizes to 500×500) |
 | Colour | Any — server converts to 1-bit (black & white) |
-| Aspect ratio | 1:1 (square) — non-square images are rejected |
+| Aspect ratio | 1:1 (square) recommended — non-square images are centre-cropped to the largest square |
 
 Upload via \`upload_image\` (local) or \`POST /upload-image\` (remote HTTP). See \`bwc://docs/image-generation\` for upload instructions.
 
@@ -605,7 +605,7 @@ mcp.registerTool(
   async ({ file_path }) => {
     const outPath = join(tmpdir(), `bwc_${Date.now()}.png`);
     try {
-      execSync(`ffmpeg -y -i "${file_path}" -vf "scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'" "${outPath}"`, { stdio: 'pipe' });
+      execSync(`ffmpeg -y -i "${file_path}" -vf "crop=min(iw\\,ih):min(iw\\,ih),scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'" "${outPath}"`, { stdio: 'pipe' });
       const buf = readFileSync(outPath);
       const image_uuid = randomUUID();
       imageUploadStore.set(image_uuid, `data:image/png;base64,${buf.toString('base64')}`);
@@ -823,15 +823,9 @@ mcp.registerTool(
     const cardObjects: Partial<Card>[] = cards.map(c => {
       let image: string | undefined;
       if (c.image_path) {
-        const dims = execSync(
-          `ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "${c.image_path}"`,
-          { encoding: 'utf-8' }
-        ).trim().split(',');
-        const [w, h] = [parseInt(dims[0]), parseInt(dims[1])];
-        if (w !== h) throw new Error(`Image must be square, got ${w}x${h}`);
         const outPath = join(tmpdir(), `bwc_${Date.now()}_${Math.random().toString(36).slice(2)}.png`);
         try {
-          execSync(`ffmpeg -y -i "${c.image_path}" -vf "scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'" "${outPath}"`, { stdio: 'pipe' });
+          execSync(`ffmpeg -y -i "${c.image_path}" -vf "crop=min(iw\\,ih):min(iw\\,ih),scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'" "${outPath}"`, { stdio: 'pipe' });
           const buf = readFileSync(outPath);
           image = `data:image/png;base64,${buf.toString('base64')}`;
         } finally {
@@ -1144,7 +1138,7 @@ if (isCLI) {
           const outPath = join(tmpdir(), `bwc_upload_out_${Date.now()}.png`);
           try {
             writeFileSync(inPath, buf);
-            execSync(`ffmpeg -y -i "${inPath}" -vf "scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'" "${outPath}"`, { stdio: 'pipe' });
+            execSync(`ffmpeg -y -i "${inPath}" -vf "crop=min(iw\\,ih):min(iw\\,ih),scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'" "${outPath}"`, { stdio: 'pipe' });
             const processed = readFileSync(outPath);
             const uploadId = randomUUID();
             imageUploadStore.set(uploadId, `data:image/png;base64,${processed.toString('base64')}`);
