@@ -414,6 +414,67 @@ submit_card({ ..., image_uuid: 'edef0e0e-...' })
   }),
 );
 
+mcp.registerResource(
+  'bwc://docs/image-format',
+  'bwc://docs/image-format',
+  { description: 'Technical specification for card images — dimensions, format, colour depth, and encoding' },
+  async () => ({
+    contents: [{
+      uri: 'bwc://docs/image-format',
+      mimeType: 'text/markdown',
+      text: `# Card Image Format Specification
+
+## Input requirements (what to upload)
+
+| Property | Value |
+|---|---|
+| Format | PNG |
+| Dimensions | Square (any resolution — server resizes to 500×500) |
+| Colour | Any — server converts to 1-bit (black & white) |
+| Aspect ratio | 1:1 (square) — non-square images are rejected |
+
+Upload via \`upload_image\` (local) or \`POST /upload-image\` (remote HTTP). See \`bwc://docs/image-generation\` for upload instructions.
+
+## Server-side processing
+
+On upload the server applies two transforms in order:
+
+1. **Resize** — scales to exactly 500×500 px.
+2. **1-bit quantisation** — each pixel's RGB mean is compared to 128. Values ≥ 128 → white (255), values < 128 → black (0). Alpha is forced opaque.
+
+The result is a 500×500 monochrome PNG stored as a base64 data URI internally.
+
+## Wire format (internal encoding)
+
+For real-time network transfer the game uses a custom compressed encoding:
+
+1. The 250 000-pixel 1-bit image is **run-length encoded** into an array of run lengths. Odd indices = white runs, even indices = black runs (so colour is implicit from position).
+2. The integer array is **UTF-16 encoded** — each run value maps to the Unicode code point \`(value + 0x20)\` (offset avoids non-printable ASCII). Run values > 55 263 are split to stay within \`U+0020–U+D7FF\`.
+3. The resulting UTF-16 string is stored in the card's \`image\` field and transmitted as JSON.
+
+This yields approximately 4 kB per card (vs ~22 kB for a raw PNG data URI), enabling hundreds of cards to be rendered simultaneously without significant network overhead.
+
+## Size limits and constraints
+
+| Metric | Value |
+|---|---|
+| Canonical resolution | 500 × 500 px |
+| Max theoretical 1-bit bitmap | 30 518 bytes (~30 kB) |
+| Typical compressed wire size | ~4 kB |
+| Max observed wire size | ~15 kB |
+
+## Visual style guidance
+
+Cards are rendered on a white background. For best visual results:
+- Use **black ink / line art on a white background**
+- High-contrast images survive 1-bit quantisation best
+- Fine detail and gradients are lost — bold simple shapes work best
+- Recommended image generation prompt suffix: \`"black ink on white paper, simple bold line art"\`
+`,
+    }],
+  }),
+);
+
 mcp.registerTool(
   'create_match',
   {
