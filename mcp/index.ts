@@ -465,11 +465,22 @@ This yields approximately 4 kB per card (vs ~22 kB for a raw PNG data URI), enab
 
 ## Visual style guidance
 
-Cards are rendered on a white background. For best visual results:
-- Use **black ink / line art on a white background**
-- High-contrast images survive 1-bit quantisation best
-- Fine detail and gradients are lost — bold simple shapes work best
-- Recommended image generation prompt suffix: \`"black ink on white paper, simple bold line art"\`
+Cards are displayed on a white background. The server converts every image to 1-bit (pure black and white), so the image style critically affects the result:
+
+**Do:**
+- Use a **white or very light background** with **dark/black features** (ink, lines, shapes)
+- Bold, high-contrast line art with thick strokes
+- Simple silhouettes and flat shapes
+
+**Don't:**
+- Use dark or coloured backgrounds — they convert to a solid black fill that obscures everything
+- Use gradients, soft shadows, or glows — they lose all detail after quantisation
+- Use fine detail or thin lines — they may disappear at 500×500
+
+**Recommended prompt suffix for image generation:**
+> \`"black ink on white paper, simple bold line art, no background, no shading"\`
+
+If a generated image has a dark background, regenerate with a stronger white-background instruction rather than uploading — dark backgrounds produce unusable cards.
 `,
     }],
   }),
