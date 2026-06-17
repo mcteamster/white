@@ -92,7 +92,7 @@ export function Console({ moves, playerID, playerName, plugins, matchData, open:
       gap: '0.25em',
       borderRadius: '0 0 1em 0',
       border: '1px solid #ccc',
-      borderTop: 'none',
+      borderTop: '1px solid black',
       borderLeft: 'none',
       cursor: 'pointer',
       userSelect: 'none' as const,

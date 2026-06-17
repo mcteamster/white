@@ -16,13 +16,15 @@ import { BlankWhiteCards } from '@mcteamster/white-core';
 import { version } from './package.json';
 import type { Card, Message } from '@mcteamster/white-core';
 
-// Temporary store for out-of-band image uploads: uploadId -> processed data URI
+// Temporary store for out-of-band image uploads: uploadId -> processed data URI.
+// Module-level so the HTTP POST /upload-image handler and any MCP session can share it.
 const imageUploadStore = new Map<string, string>();
 
 const GAME_SERVER_OVERRIDE = process.env.GAME_SERVER_URL;
 const GAME_NAME = 'blank-white-cards';
 const MIN_REACT_SECONDS = Number(process.env.MCP_MIN_REACT_SECONDS ?? 5);
 const MAX_WATCH_SECONDS = Number(process.env.MCP_MAX_WATCH_SECONDS ?? 30);
+const MOVE_TIMEOUT_MS = Number(process.env.MCP_MOVE_TIMEOUT_MS ?? 5000);
 
 // ── Server resolution ─────────────────────────────────────────────────────────
 
@@ -113,7 +115,7 @@ function waitForMove(client: ReturnType<typeof Client>): Promise<unknown> {
     const timeout = setTimeout(() => {
       unsub();
       reject(new Error('Move timed out waiting for server confirmation'));
-    }, 5000);
+    }, MOVE_TIMEOUT_MS);
     const unsub = client.subscribe((state: unknown) => {
       if ((state as { _stateID?: number })?._stateID !== before) {
         clearTimeout(timeout);
@@ -301,10 +303,8 @@ Cards can optionally have images. See resource 'bwc://docs/image-generation' for
 
 Players have scores tracked per-match. Scores are set manually — they are not computed automatically from likes.
 
-- 'get_scores' — see current scores for all players
-- 'get_leaderboard' — scores sorted by rank
+- 'get_scores' — see current scores; pass ranked=true for leaderboard order, hint=true for a suggested next action
 - 'set_score' — set any player's score to a new value
-- 'get_play_hint' — get a suggested action based on your score position relative to others
 
 ## Chat
 
@@ -320,7 +320,8 @@ This server provides role prompts (autoplay, referee, spectate) that describe ho
 `.trim();
 
 
-// Game session state — persists across MCP transport sessions
+export function createMcpServer() {
+// Per-session state — scoped to this MCP session, not shared across HTTP connections
 const sessions = new Map<string, Session>();
 
 function sessionKey(matchID: string, playerID: string) {
@@ -363,7 +364,6 @@ function requireSession(matchID: string, playerID: string): Session {
   return session;
 }
 
-export function createMcpServer() {
 const mcp = new McpServer(
   { name: 'blank-white-cards', version },
   { instructions: INSTRUCTIONS },
@@ -372,26 +372,30 @@ const mcp = new McpServer(
 mcp.registerResource(
   'bwc://docs/image-generation',
   'bwc://docs/image-generation',
-  { description: 'Guidance for generating and uploading card images' },
+  { description: 'How to generate and upload card images' },
   async () => ({
     contents: [{
       uri: 'bwc://docs/image-generation',
       mimeType: 'text/markdown',
       text: `# Card Image Generation
 
-## Image Specs
-- **Size**: 500×500 px (square)
-- **Color**: 1-bit (black and white only) — the server converts uploaded images to 1-bit automatically
-- Generate at higher resolution if needed; the server handles downscaling
+See \`bwc://docs/image-format\` for the full image specification (dimensions, colour, style guidance).
 
-## Local MCP server
+## Generating images
+
+Use a generative image model with this prompt suffix for best results:
+> \`"black ink on white paper, simple bold line art, no background, no shading, no text, no labels"\`
+
+## Uploading — local MCP server
+
 Use the \`upload_image\` tool with an absolute file path:
 \`\`\`
 upload_image({ file_path: '/tmp/card.png' })
 \`\`\`
 
-## Remote HTTP MCP server
-POST the PNG directly to \`{mcp-server-base-url}/upload-image\`:
+## Uploading — remote HTTP MCP server
+
+POST the PNG directly to \`{mcp-server-base-url}/upload-image\` (do NOT use the \`upload_image\` tool — it requires local file access):
 \`\`\`bash
 curl -X POST https://ap.blankwhite.cards/mcp/upload-image \\
   -H "Content-Type: image/png" \\
@@ -399,15 +403,145 @@ curl -X POST https://ap.blankwhite.cards/mcp/upload-image \\
 # Returns: {"image_uuid": "..."}
 \`\`\`
 
-Known MCP server URLs:
-- AP: https://ap.blankwhite.cards/mcp
-- EU: https://eu.blankwhite.cards/mcp
-- NA: https://na.blankwhite.cards/mcp
+Known MCP server URLs: AP = https://ap.blankwhite.cards/mcp, EU = https://eu.blankwhite.cards/mcp, NA = https://na.blankwhite.cards/mcp
 
 ## Using the image UUID
+
 Pass the returned \`image_uuid\` to \`submit_card\`:
 \`\`\`
 submit_card({ ..., image_uuid: 'edef0e0e-...' })
+\`\`\`
+`,
+    }],
+  }),
+);
+
+mcp.registerResource(
+  'bwc://docs/image-format',
+  'bwc://docs/image-format',
+  { description: 'Technical specification for card images — dimensions, format, colour depth, and encoding' },
+  async () => ({
+    contents: [{
+      uri: 'bwc://docs/image-format',
+      mimeType: 'text/markdown',
+      text: `# Card Image Format Specification
+
+## Input requirements (what to upload)
+
+| Property | Value |
+|---|---|
+| Format | PNG |
+| Dimensions | Square (any resolution — server resizes to 500×500) |
+| Colour | Any — server converts to 1-bit (black & white) |
+| Aspect ratio | 1:1 (square) recommended — non-square images are centre-cropped to the largest square |
+
+Upload via \`upload_image\` (local) or \`POST /upload-image\` (remote HTTP). See \`bwc://docs/image-generation\` for upload instructions.
+
+## Server-side processing
+
+On upload the server applies two transforms in order:
+
+1. **Centre-crop** — if the image is not square, it is cropped to the largest centred square.
+2. **Resize** — scaled to exactly 500×500 px.
+3. **1-bit quantisation** — each pixel's RGB mean is compared to 128. Values ≥ 128 → white (255), values < 128 → black (0). Alpha is forced opaque.
+
+Images are then compressed server-side for real-time network transfer (~4 kB per card typical).
+
+## Size limits and constraints
+
+| Metric | Value |
+|---|---|
+| Canonical resolution | 500 × 500 px |
+| Max theoretical 1-bit bitmap | 30 518 bytes (~30 kB) |
+| Typical compressed wire size | ~4 kB |
+| Max observed wire size | ~15 kB |
+
+## Visual style guidance
+
+Cards are displayed on a white background. The server converts every image to 1-bit (pure black and white), so the image style critically affects the result:
+
+**Do:**
+- Use a **white or very light background** with **dark/black features** (ink, lines, shapes)
+- Bold, high-contrast line art with thick strokes
+- Simple silhouettes and flat shapes
+
+**Don't:**
+- Use dark or coloured backgrounds — they convert to a solid black fill that obscures everything
+- Use gradients, soft shadows, or glows — they lose all detail after quantisation
+- Use fine detail or thin lines — they may disappear at 500×500
+- **Include text or labels in the image** — text renders poorly at 500×500 after 1-bit quantisation and is redundant. Put all text in the card's title and description fields instead; the image should be purely illustrative.
+
+**Recommended prompt suffix for image generation:**
+> \`"black ink on white paper, simple bold line art, no background, no shading, no text, no labels"\`
+
+If a generated image has a dark background or contains text, regenerate rather than uploading.
+`,
+    }],
+  }),
+);
+
+mcp.registerResource(
+  'bwc://docs/quickstart',
+  'bwc://docs/quickstart',
+  { description: 'Getting started guide — tools, resources, and available role prompts' },
+  async () => ({
+    contents: [{
+      uri: 'bwc://docs/quickstart',
+      mimeType: 'text/markdown',
+      text: `# Blank White Cards — MCP Quickstart
+
+## Overview
+
+Blank White Cards is a freeform card game where players write and play their own rules. There are no turns — all players act simultaneously.
+
+## Tools
+
+| Tool | Description |
+|---|---|
+| \`create_match\` | Create a new match as host (player 0) |
+| \`join_match\` | Join an existing match by room code |
+| \`get_state\` | See your hand, the pile, deck size, scores |
+| \`pickup_card\` | Draw a card from the deck into your hand |
+| \`move_card\` | Move a card between locations (hand → pile, etc.) |
+| \`submit_card\` | Write a new card into your hand |
+| \`like_card\` | Like a card |
+| \`upload_image\` | Upload a PNG to attach to a card (local only) |
+| \`get_scores\` | Get scores; \`ranked=true\` for leaderboard, \`hint=true\` for suggested action |
+| \`set_score\` | Set a player's score |
+| \`get_messages\` | Read the chat/event feed |
+| \`send_message\` | Post a chat message |
+| \`watch\` | Block until a game event fires (replaces polling) |
+| \`shuffle_cards\` | Reset all cards to the deck (host only) |
+| \`load_cards\` | Bulk load cards into the match (host only) |
+| \`leave_match\` | Leave and clean up the session |
+
+## Resources
+
+| Resource | Description |
+|---|---|
+| \`bwc://docs/quickstart\` | This guide |
+| \`bwc://docs/image-generation\` | How to generate and upload card images |
+| \`bwc://docs/image-format\` | Image spec — dimensions, colour, style guidance |
+
+## Role prompts
+
+This server provides three role prompts. Use \`list_prompts\` to see them, or invoke one to get a detailed play instruction:
+
+| Prompt | Description |
+|---|---|
+| \`autoplay\` | Play autonomously — write cards, react, loop until watch limit |
+| \`referee\` | Moderate the game, enforce house rules, award points |
+| \`spectate\` | Watch and commentate without playing |
+
+## Typical flow
+
+\`\`\`
+create_match or join_match
+→ pickup_card (draw from deck)
+→ submit_card (write a new rule)
+→ move_card (play it to the pile)
+→ watch (wait for others to react)
+→ repeat
 \`\`\`
 `,
     }],
@@ -483,72 +617,6 @@ mcp.registerTool(
 );
 
 mcp.registerTool(
-  'get_card',
-  {
-    description: 'Get a single card by ID from the current match state',
-    inputSchema: {
-      matchID: z.string().describe('Room code'),
-      playerID: z.string().describe('Your player ID'),
-      cardID: z.number().int().describe('ID of the card to retrieve'),
-    },
-  },
-  async ({ matchID, playerID, cardID }) => {
-    const { client } = requireSession(matchID, playerID);
-    const state = client.store.getState();
-    if (!state?.G) throw new Error('No state available yet');
-    const card = (state.G.cards as Card[]).find(c => c.id === cardID);
-    if (!card) throw new Error(`Card ${cardID} not found`);
-    return text(stripImage(card));
-  }
-);
-
-mcp.registerTool(
-  'search_cards',
-  {
-    description: 'Full-text search over card titles and descriptions in the current match',
-    inputSchema: {
-      matchID: z.string().describe('Room code'),
-      playerID: z.string().describe('Your player ID'),
-      query: z.string().describe('Search term (case-insensitive, matches title or description)'),
-      location: z.enum(['deck', 'pile', 'discard', 'hand', 'table', 'box']).optional().describe('Restrict search to a specific location (default: all)'),
-    },
-  },
-  async ({ matchID, playerID, query, location }) => {
-    const { client } = requireSession(matchID, playerID);
-    const state = client.store.getState();
-    if (!state?.G) throw new Error('No state available yet');
-    const q = query.toLowerCase();
-    const results = (state.G.cards as Card[])
-      .filter(c => !location || c.location === location)
-      .filter(c => {
-        const title = (c.content.title ?? '').toLowerCase();
-        const desc = (c.content.description ?? '').toLowerCase();
-        return title.includes(q) || desc.includes(q);
-      })
-      .map(stripImage);
-    return text({ query, count: results.length, results });
-  }
-);
-
-mcp.registerTool(
-  'export_deck',
-  {
-    description: 'Export all cards in a match as JSON (wraps the server /export/:matchID endpoint)',
-    inputSchema: {
-      matchID: z.string().describe('Room code'),
-    },
-  },
-  async ({ matchID }) => {
-    const server = getServerForMatch(matchID);
-    const res = await fetch(`${server}/export/${matchID}`);
-    if (!res.ok) throw new Error(`Export failed: ${res.status} ${res.statusText}`);
-    const encoded = await res.text();
-    const cards = JSON.parse(decodeURI(atob(encoded)));
-    return text({ matchID, count: cards.length, cards });
-  }
-);
-
-mcp.registerTool(
   'pickup_card',
   {
     description: 'Pick up a card from the deck into your hand. If the deck is empty, calling this will automatically reshuffle the pile and discard back into the deck first — so call it even when the deck is empty.',
@@ -588,28 +656,9 @@ mcp.registerTool(
 );
 
 mcp.registerTool(
-  'claim_card',
-  {
-    description: 'Claim a card from the shared pile into your hand',
-    inputSchema: {
-      matchID: z.string().describe('Room code'),
-      playerID: z.string().describe('Your player ID'),
-      cardID: z.number().int().describe('ID of the pile card to claim'),
-    },
-  },
-  async ({ matchID, playerID, cardID }) => {
-    const { client } = requireSession(matchID, playerID);
-    const nextState = waitForMove(client);
-    client.moves.claimCard(cardID);
-    const state = await nextState;
-    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
-  }
-);
-
-mcp.registerTool(
   'upload_image',
   {
-    description: 'Upload a PNG image file for use with submit_card. Pass the absolute local file path. Returns { image_uuid } — pass this to submit_card. Note: for remote HTTP MCP servers, POST the PNG file directly to {server}/upload-image instead (Content-Type: image/png) and use the returned image_uuid. Example: curl -X POST https://ap.blankwhite.cards/mcp/upload-image -H "Content-Type: image/png" --data-binary @/tmp/image.png. See resource bwc://docs/image-generation for full guidance including image specs.',
+    description: 'Upload a PNG image file for use with submit_card. Pass the absolute local file path. Non-square images are centre-cropped automatically. Returns { image_uuid } — pass this to submit_card. Note: for remote HTTP MCP servers, POST the PNG file directly to {server}/upload-image instead (Content-Type: image/png) — see resource bwc://docs/image-generation.',
     inputSchema: {
       file_path: z.string().describe('Absolute path to a square PNG image file on disk'),
     },
@@ -617,7 +666,7 @@ mcp.registerTool(
   async ({ file_path }) => {
     const outPath = join(tmpdir(), `bwc_${Date.now()}.png`);
     try {
-      execSync(`ffmpeg -y -i "${file_path}" -vf "scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'" "${outPath}"`, { stdio: 'pipe' });
+      execSync(`ffmpeg -y -i "${file_path}" -vf "crop=min(iw\\,ih):min(iw\\,ih),scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'" "${outPath}"`, { stdio: 'pipe' });
       const buf = readFileSync(outPath);
       const image_uuid = randomUUID();
       imageUploadStore.set(image_uuid, `data:image/png;base64,${buf.toString('base64')}`);
@@ -688,90 +737,49 @@ mcp.registerTool(
 mcp.registerTool(
   'get_scores',
   {
-    description: 'Get the current score for each player in the match',
+    description: 'Get player scores. Pass ranked=true for leaderboard order (highest first). Pass hint=true to also get a suggested next action based on your hand, the pile, and your score position.',
     inputSchema: {
       matchID: z.string().describe('Room code'),
       playerID: z.string().describe('Your player ID'),
+      ranked: z.boolean().optional().describe('Sort by score descending with rank numbers'),
+      hint: z.boolean().optional().describe('Include a suggested next action'),
     },
   },
-  async ({ matchID, playerID }) => {
-    const { client } = requireSession(matchID, playerID);
-    const state = client.store.getState();
-    if (!state?.G) throw new Error('No state available yet');
-    const playOrder = (state.ctx.playOrder as string[]);
-    return text(getScores(state, playOrder));
-  }
-);
-
-mcp.registerTool(
-  'get_leaderboard',
-  {
-    description: 'Get players ranked by score, highest first',
-    inputSchema: {
-      matchID: z.string().describe('Room code'),
-      playerID: z.string().describe('Your player ID'),
-    },
-  },
-  async ({ matchID, playerID }) => {
+  async ({ matchID, playerID, ranked, hint }) => {
     const { client } = requireSession(matchID, playerID);
     const state = client.store.getState();
     if (!state?.G) throw new Error('No state available yet');
     const playOrder = state.ctx.playOrder as string[];
     const scores = getScores(state, playOrder);
-    const sorted = playOrder
-      .map((id: string) => ({ playerID: id, score: scores[id] ?? 0 }))
-      .sort((a, b) => b.score - a.score)
-      .map((entry, i) => ({ rank: i + 1, ...entry }));
-    return text(sorted);
-  }
-);
 
-mcp.registerTool(
-  'get_play_hint',
-  {
-    description: 'Get a suggested next action based on the current game state — what\'s in your hand, what\'s on the pile, and where you stand relative to other players',
-    inputSchema: {
-      matchID: z.string().describe('Room code'),
-      playerID: z.string().describe('Your player ID'),
-    },
-  },
-  async ({ matchID, playerID }) => {
-    const { client } = requireSession(matchID, playerID);
-    const state = client.store.getState();
-    if (!state?.G) throw new Error('No state available yet');
-    const cards = state.G.cards as Card[];
-    const playOrder = state.ctx.playOrder as string[];
-    const scores = getScores(state, playOrder);
-    const myScore = scores[playerID] ?? 0;
-    const otherScores = playOrder.filter((id: string) => id !== playerID).map((id: string) => scores[id] ?? 0);
-    const maxOtherScore = otherScores.length > 0 ? Math.max(...otherScores) : 0;
-    const isAhead = myScore > maxOtherScore;
-    const isBehind = myScore < maxOtherScore;
+    const result: Record<string, unknown> = ranked
+      ? { leaderboard: playOrder.map((id: string) => ({ playerID: id, score: scores[id] ?? 0 })).sort((a, b) => b.score - a.score).map((e, i) => ({ rank: i + 1, ...e })) }
+      : { scores };
 
-    const hand = cards.filter(c => c.location === 'hand' && c.owner === playerID);
-    const pile = cards.filter(c => c.location === 'pile');
-
-    let action: string;
-    let reason: string;
-
-    if (hand.length === 0) {
-      action = 'pickup_card';
-      reason = 'Your hand is empty — pick up a card to have options.';
-    } else if (isBehind && pile.length > 0) {
-      action = 'claim_card or submit_card';
-      reason = `You're behind (${myScore} vs ${maxOtherScore}). Claim an interesting pile card or submit a new one to earn likes.`;
-    } else if (isBehind) {
-      action = 'submit_card';
-      reason = `You're behind (${myScore} vs ${maxOtherScore}) and the pile is quiet — submit a card to get things moving.`;
-    } else if (isAhead && hand.length > 2) {
-      action = 'move_card to discard or pass to another player';
-      reason = `You're ahead (${myScore} vs ${maxOtherScore}). Play defensively — discard or pass cards rather than building your hand.`;
-    } else {
-      action = 'submit_card or pickup_card';
-      reason = `Scores are level — keep playing. Submit something creative or pick up more cards.`;
+    if (hint) {
+      const cards = state.G.cards as Card[];
+      const myScore = scores[playerID] ?? 0;
+      const maxOtherScore = Math.max(0, ...playOrder.filter((id: string) => id !== playerID).map((id: string) => scores[id] ?? 0));
+      const isBehind = myScore < maxOtherScore;
+      const isAhead = myScore > maxOtherScore;
+      const hand = cards.filter(c => c.location === 'hand' && c.owner === playerID);
+      const pile = cards.filter(c => c.location === 'pile');
+      let action: string, reason: string;
+      if (hand.length === 0) {
+        action = 'pickup_card'; reason = 'Your hand is empty — pick up a card to have options.';
+      } else if (isBehind && pile.length > 0) {
+        action = 'move_card (claim from pile) or submit_card'; reason = `You're behind (${myScore} vs ${maxOtherScore}). Claim an interesting pile card or submit a new one to earn likes.`;
+      } else if (isBehind) {
+        action = 'submit_card'; reason = `You're behind (${myScore} vs ${maxOtherScore}) and the pile is quiet — submit a card to get things moving.`;
+      } else if (isAhead && hand.length > 2) {
+        action = 'move_card to discard or pass'; reason = `You're ahead (${myScore} vs ${maxOtherScore}). Discard or pass cards rather than building your hand.`;
+      } else {
+        action = 'submit_card or pickup_card'; reason = 'Scores are level — keep playing.';
+      }
+      result.hint = { action, reason, my_score: myScore, max_other_score: maxOtherScore };
     }
 
-    return text({ action, reason, my_score: myScore, max_other_score: maxOtherScore });
+    return text(result);
   }
 );
 
@@ -845,6 +853,7 @@ mcp.registerTool(
     },
   },
   async ({ matchID, playerID }) => {
+    if (playerID !== '0') throw new Error(`shuffle_cards is host-only (player 0). You are player ${playerID}.`);
     const { client } = requireSession(matchID, playerID);
     const nextState = waitForMove(client);
     client.moves.shuffleCards();
@@ -870,19 +879,21 @@ mcp.registerTool(
     },
   },
   async ({ matchID, playerID, cards }) => {
+    if (playerID !== '0') throw new Error(`load_cards is host-only (player 0). You are player ${playerID}.`);
     const { client } = requireSession(matchID, playerID);
-    const cardObjects: Partial<Card>[] = cards.map(c => {
+    const cardObjects: Partial<Card>[] = await Promise.all(cards.map(async c => {
       let image: string | undefined;
       if (c.image_path) {
-        const dims = execSync(
-          `ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "${c.image_path}"`,
-          { encoding: 'utf-8' }
-        ).trim().split(',');
-        const [w, h] = [parseInt(dims[0]), parseInt(dims[1])];
-        if (w !== h) throw new Error(`Image must be square, got ${w}x${h}`);
         const outPath = join(tmpdir(), `bwc_${Date.now()}_${Math.random().toString(36).slice(2)}.png`);
         try {
-          execSync(`ffmpeg -y -i "${c.image_path}" -vf "scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'" "${outPath}"`, { stdio: 'pipe' });
+          await new Promise<void>((resolve, reject) => {
+            const proc = require('node:child_process').spawn('ffmpeg', [
+              '-y', '-i', c.image_path!,
+              '-vf', `crop=min(iw\\,ih):min(iw\\,ih),scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'`,
+              outPath,
+            ], { stdio: 'pipe' });
+            proc.on('close', (code: number) => code === 0 ? resolve() : reject(new Error(`ffmpeg exited ${code}`)));
+          });
           const buf = readFileSync(outPath);
           image = `data:image/png;base64,${buf.toString('base64')}`;
         } finally {
@@ -893,7 +904,7 @@ mcp.registerTool(
         content: { title: c.title, description: c.description ?? '', author: c.author, image },
         location: c.location ?? 'deck',
       };
-    });
+    }));
     const nextState = waitForMove(client);
     client.moves.loadCards(cardObjects);
     const state = await nextState;
@@ -904,7 +915,7 @@ mcp.registerTool(
 mcp.registerTool(
   'watch',
   {
-    description: 'Block until a relevant game event occurs, then return a structured diff of what changed. Use instead of polling get_state. Only one watch can be active at a time per agent session. The response includes a `watch` counter showing how many times you have watched this session.',
+    description: 'Block until a relevant game event occurs, then return a structured diff of what changed. Optionally perform an action first (action+watch in one call, halving round-trips). Use instead of polling get_state. Only one watch can be active at a time per agent session. The response includes a `watch` counter showing how many times you have watched this session.',
     inputSchema: {
       matchID: z.string().describe('Room code'),
       playerID: z.string().describe('Your player ID'),
@@ -913,11 +924,50 @@ mcp.registerTool(
       table: z.boolean().optional().describe('Fire when any table changes occur'),
       messages: z.boolean().optional().describe('Fire when a new chat or system event message appears'),
       timeout_seconds: z.number().int().min(5).max(300).optional().describe(`How long to wait before giving up (default ${MAX_WATCH_SECONDS}s, set by MCP_MAX_WATCH_SECONDS)`),
+      include_state: z.boolean().optional().describe('Include the full formatted game state in the response (default false). Omit to save context — use get_state for a full refresh when needed.'),
+      action: z.discriminatedUnion('type', [
+        z.object({ type: z.literal('submit_card'), title: z.string(), description: z.string().optional(), author: z.string().optional(), image_uuid: z.string().optional() }),
+        z.object({ type: z.literal('move_card'), cardID: z.number().int(), target: z.enum(['deck', 'pile', 'discard', 'hand', 'table']), toOwner: z.string().optional() }),
+        z.object({ type: z.literal('pickup_card') }),
+        z.object({ type: z.literal('like_card'), cardID: z.number().int() }),
+        z.object({ type: z.literal('send_message'), text: z.string() }),
+        z.object({ type: z.literal('set_score'), targetPlayerID: z.string(), score: z.number() }),
+      ]).optional().describe('Optional action to perform before blocking on the watch. Server executes the action then immediately waits for the next event — one round-trip instead of two.'),
     },
   },
-  async ({ matchID, playerID, pile, hand, table, messages, timeout_seconds }) => {
+  async ({ matchID, playerID, pile, hand, table, messages, timeout_seconds, include_state, action }) => {
     const session = requireSession(matchID, playerID);
     const { client } = session;
+
+    // Execute action first, then snapshot and watch for reactions from other players.
+    // Snapshot is taken inside watchForChange *after* the action settles, so the
+    // action's own state change is the baseline — only subsequent changes fire the watch.
+    if (action) {
+      if (action.type === 'submit_card') {
+        const image = action.image_uuid ? imageUploadStore.get(action.image_uuid) : undefined;
+        if (action.image_uuid && !image) throw new Error(`No image found for uuid '${action.image_uuid}'. Call upload_image first.`);
+        if (action.image_uuid) imageUploadStore.delete(action.image_uuid);
+        const card: Partial<Card> = { content: { title: action.title, description: action.description ?? '', author: action.author, date: String(Date.now()), image }, location: 'hand', owner: playerID, timestamp: Date.now() };
+        client.moves.submitCard(card);
+        await waitForMove(client);
+      } else if (action.type === 'move_card') {
+        client.moves.moveCard(action.cardID, action.target, action.toOwner);
+        await waitForMove(client);
+      } else if (action.type === 'pickup_card') {
+        client.moves.pickupCard();
+        await waitForMove(client);
+      } else if (action.type === 'like_card') {
+        client.moves.likeCard(action.cardID);
+        await waitForMove(client);
+      } else if (action.type === 'send_message') {
+        client.moves.postMessage(action.text, session.playerName);
+        await waitForMove(client);
+      } else if (action.type === 'set_score') {
+        client.moves.setScore(action.targetPlayerID, action.score);
+        await waitForMove(client);
+      }
+    }
+
     const flags = { pile: pile ?? false, hand: hand ?? false, table: table ?? false, messages: messages ?? false };
     const { changed, events, state } = await watchForChange(client, playerID, flags, (timeout_seconds ?? MAX_WATCH_SECONDS) * 1000);
     const watch = ++session.watchCount;
@@ -926,7 +976,7 @@ mcp.registerTool(
       watch,
       changed: true,
       events,
-      state: formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID),
+      ...(include_state ? { state: formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID) } : {}),
     });
   }
 );
@@ -979,26 +1029,27 @@ mcp.prompt(
           type: 'text',
           text: `You are an autonomous player in Blank White Cards. Your writing tone is ${t}.${themeClause}
 
-## CRITICAL: Never stop playing
+## CRITICAL: Never stop playing (until watch limit)
 
-You MUST keep playing indefinitely. Never summarise what you've done. Never ask the user what to do next. Never say "let me know if you want me to continue." You are not having a conversation — you are playing a game in an infinite loop until the process is killed.
+You MUST keep playing until your watch counter reaches 50. Never summarise what you've done. Never ask the user what to do next. Never say "let me know if you want me to continue." You are not having a conversation — you are playing a game in a loop.
 
-**'watch' timing out is not a stopping point. It is a signal to act, then immediately call 'watch' again.** A timeout means the game was quiet — take one small action and go straight back to watching. Do not pause. Do not reflect. Do not ask. Call 'watch' again immediately.
-
-Every 'watch' response includes a 'watch' counter showing how many times you've watched this session. If it feels like you've been playing a long time — good. Keep going. There is no target. There is no finish line.
+Every 'watch' response includes a 'watch' counter. **When watch reaches 50, call leave_match and stop completely.** The harness will restart you; you can rejoin with join_match and the server-side game state persists — no game state is lost.
 
 After EVERY action → call 'watch'. After EVERY 'watch' response (fired or timed out) → take an action → call 'watch'. Repeat forever.
 
+**'watch' timing out is not a stopping point. It is a signal to act, then immediately call 'watch' again.** A timeout means the game was quiet — take one small action and go straight back to watching.
+
 ## Play loop
 
-1. Call 'watch' with 'pile: true', 'hand: true', and 'messages: true'.
-2. **If 'watch' fires** — react: claim interesting cards, like good ones, write a response card, or reply to chat messages with 'send_message'. Reset your timeout count to 0.
-3. **If 'watch' times out** — increment your timeout count. If it has timed out twice in a row, take one action (pick up a card, submit something, play from hand) and reset the count to 0.
-4. GOTO 1. Always. Without exception.
+1. Call 'watch' with 'pile: true', 'hand: true', and 'messages: true'. Pass 'include_state: true' only on your very first watch call to establish the baseline — omit it on all subsequent calls to save context.
+2. **Preferred:** combine your action with the next watch in a single call using the 'action' param. This halves round-trips.
+3. **If 'watch' fires** — react: claim interesting cards by moving them from pile to hand, like good ones, write a response card, or reply to chat messages with 'send_message'. Reset your timeout count to 0.
+4. **If 'watch' times out** — increment your timeout count. If it has timed out twice in a row, take one action and reset the count to 0.
+5. GOTO 1. Always. Until watch counter hits 50, then leave_match.
 
 Never take more than one action before calling 'watch' again. Never end your response without having called 'watch'.
 
-Use 'get_play_hint' when deciding what action to take — it factors in your score position relative to others.
+Use 'get_scores' with 'hint: true' when deciding what action to take — it factors in your score position relative to others.
 
 ## Card images
 
@@ -1047,15 +1098,15 @@ After EVERY event or timeout → handle it → call 'watch' again immediately. T
 - Discard cards that violate house rules.
 - Keep the game flowing — if no one has acted in a while, draw attention by posting a prompt card.
 - Award points for good card play using 'set_score'. Suggested scale: 1 point for a solid play, 2 for something clever or well-timed, 3 for a genuinely outstanding card. Identify yourself as "Referee" in any cards you submit using the 'author' field.
-- Post a leaderboard update periodically by calling 'get_leaderboard' and submitting a card with the current standings.
+- Post a leaderboard update periodically by calling 'get_scores' with ranked=true and submitting a card with the current standings.
 
 ## How to monitor
 
 Call 'watch' with all flags ('pile: true', 'hand: true', 'table: true') to see everything that happens. When an event fires, handle it and re-issue 'watch' immediately.
 
-Keep a count of consecutive timeouts. If 'watch' times out 10 times in a row with no events, the game has truly gone stale — call 'get_leaderboard', post a final standings card, and stop.
+Keep a count of consecutive timeouts. If 'watch' times out 10 times in a row with no events, the game has truly gone stale — call 'get_scores' with ranked=true, post a final standings card, and stop.
 
-Use 'search_cards' and 'get_card' to inspect specific cards when reviewing content.${ruleBlock}`,
+Use 'get_state' to inspect cards when reviewing content.${ruleBlock}`,
         },
       }],
     };
@@ -1083,14 +1134,14 @@ After EVERY 'watch' response (fired or timed out) → provide commentary → cal
 
 - Use 'get_state' to see the current game.
 - Use 'watch' with 'pile: true' to follow the action — call it continuously, re-issuing immediately after every response.
-- Use 'get_card' and 'search_cards' to read cards in detail.
+- Use 'get_state' to read cards in detail.
 - Use 'like_card' to show appreciation for cards you enjoy.
-- Use 'get_scores' and 'get_leaderboard' to track standings and include them in your commentary.
+- Use 'get_scores' (ranked=true for leaderboard order) to track standings and include them in your commentary.
 - Provide commentary, narration, or play-by-play to the user. One short comment per routine event; longer analysis for notable or surprising plays.
 
 ## What you should NOT do
 
-- Do not call 'pickup_card', 'submit_card', 'move_card', 'claim_card', or 'shuffle_cards'.
+- Do not call 'pickup_card', 'submit_card', 'move_card', or 'shuffle_cards'.
 - Do not join as a player seat that others need.`,
       },
     }],
@@ -1155,7 +1206,7 @@ if (isCLI) {
           const outPath = join(tmpdir(), `bwc_upload_out_${Date.now()}.png`);
           try {
             writeFileSync(inPath, buf);
-            execSync(`ffmpeg -y -i "${inPath}" -vf "scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'" "${outPath}"`, { stdio: 'pipe' });
+            execSync(`ffmpeg -y -i "${inPath}" -vf "crop=min(iw\\,ih):min(iw\\,ih),scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'" "${outPath}"`, { stdio: 'pipe' });
             const processed = readFileSync(outPath);
             const uploadId = randomUUID();
             imageUploadStore.set(uploadId, `data:image/png;base64,${processed.toString('base64')}`);
