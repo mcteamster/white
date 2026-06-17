@@ -1,7 +1,7 @@
 {
   "name": "blankwhitecards",
   "private": true,
-  "version": "2.3.8",
+  "version": "2.3.10",
   "workspaces": [
     "engine",
     "core",
