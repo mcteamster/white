@@ -476,11 +476,12 @@ Cards are displayed on a white background. The server converts every image to 1-
 - Use dark or coloured backgrounds — they convert to a solid black fill that obscures everything
 - Use gradients, soft shadows, or glows — they lose all detail after quantisation
 - Use fine detail or thin lines — they may disappear at 500×500
+- **Include text or labels in the image** — text renders poorly at 500×500 after 1-bit quantisation and is redundant. Put all text in the card's title and description fields instead; the image should be purely illustrative.
 
 **Recommended prompt suffix for image generation:**
-> \`"black ink on white paper, simple bold line art, no background, no shading"\`
+> \`"black ink on white paper, simple bold line art, no background, no shading, no text, no labels"\`
 
-If a generated image has a dark background, regenerate with a stronger white-background instruction rather than uploading — dark backgrounds produce unusable cards.
+If a generated image has a dark background or contains text, regenerate rather than uploading.
 `,
     }],
   }),
