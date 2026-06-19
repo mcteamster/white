@@ -15,21 +15,23 @@ import type {
   PlayerID,
   State,
   TurnConfig,
+  TurnOrderConfig,
   FnContext,
+  ActivePlayers as ActivePlayersMap,
 } from '../types';
 import { supportDeprecatedMoveLimit } from './backwards-compatibility';
 
 export function SetActivePlayers(ctx: Ctx, arg: ActivePlayersArg): Ctx {
-  let activePlayers: typeof ctx.activePlayers = {};
-  let _prevActivePlayers: typeof ctx._prevActivePlayers = [];
-  let _nextActivePlayers: ActivePlayersArg | null = null;
-  let _activePlayersMinMoves = {};
-  let _activePlayersMaxMoves = {};
+  let activePlayers: ActivePlayersMap | null = {};
+  let _prevActivePlayers: NonNullable<Ctx['_prevActivePlayers']> = [];
+  let _nextActivePlayers: ActivePlayersArg | undefined = undefined;
+  let _activePlayersMinMoves: Record<string, number> | undefined = {};
+  let _activePlayersMaxMoves: Record<string, number> | undefined = {};
 
   if (Array.isArray(arg)) {
     // support a simple array of player IDs as active players
-    const value = {};
-    arg.forEach((v) => (value[v] = Stage.NULL));
+    const value: ActivePlayersMap = {};
+    arg.forEach((v) => (value[v] = Stage.NULL as unknown as string));
     activePlayers = value;
   } else {
     // process active players argument object
@@ -43,7 +45,7 @@ export function SetActivePlayers(ctx: Ctx, arg: ActivePlayersArg): Ctx {
 
     if (arg.revert) {
       _prevActivePlayers = [
-        ...ctx._prevActivePlayers,
+        ...ctx._prevActivePlayers ?? [],
         {
           activePlayers: ctx.activePlayers,
           _activePlayersMinMoves: ctx._activePlayersMinMoves,
@@ -125,14 +127,14 @@ export function SetActivePlayers(ctx: Ctx, arg: ActivePlayersArg): Ctx {
   }
 
   if (Object.keys(_activePlayersMinMoves).length === 0) {
-    _activePlayersMinMoves = null;
+    _activePlayersMinMoves = undefined;
   }
 
   if (Object.keys(_activePlayersMaxMoves).length === 0) {
-    _activePlayersMaxMoves = null;
+    _activePlayersMaxMoves = undefined;
   }
 
-  const _activePlayersNumMoves = {};
+  const _activePlayersNumMoves: Record<string, number> = {};
   for (const id in activePlayers) {
     _activePlayersNumMoves[id] = 0;
   }
@@ -173,19 +175,19 @@ export function UpdateActivePlayersOnceEmpty(ctx: Ctx) {
         _activePlayersNumMoves,
         _prevActivePlayers,
       } = ctx);
-    } else if (_prevActivePlayers.length > 0) {
-      const lastIndex = _prevActivePlayers.length - 1;
+    } else if ((_prevActivePlayers ?? []).length > 0) {
+      const lastIndex = (_prevActivePlayers ?? []).length - 1;
       ({
         activePlayers,
         _activePlayersMinMoves,
         _activePlayersMaxMoves,
         _activePlayersNumMoves,
-      } = _prevActivePlayers[lastIndex]);
-      _prevActivePlayers = _prevActivePlayers.slice(0, lastIndex);
+      } = (_prevActivePlayers ?? [])[lastIndex]);
+      _prevActivePlayers = (_prevActivePlayers ?? []).slice(0, lastIndex);
     } else {
       activePlayers = null;
-      _activePlayersMinMoves = null;
-      _activePlayersMaxMoves = null;
+      _activePlayersMinMoves = undefined;
+      _activePlayersMaxMoves = undefined;
     }
   }
 
@@ -214,17 +216,18 @@ function ApplyActivePlayerArgument(
   playerID: PlayerID,
   arg: StageArg
 ) {
-  if (typeof arg !== 'object' || arg === Stage.NULL) {
-    arg = { stage: arg as string | null };
-  }
+  const normalized: { stage?: string | null; minMoves?: number; maxMoves?: number } =
+    typeof arg !== 'object' || arg === Stage.NULL
+      ? { stage: arg as string | null }
+      : arg;
 
-  if (arg.stage !== undefined) {
+  if (normalized.stage !== undefined) {
     // stages previously did not enforce minMoves, this behaviour is kept intentionally
-    supportDeprecatedMoveLimit(arg);
+    supportDeprecatedMoveLimit(normalized);
 
-    activePlayers[playerID] = arg.stage;
-    if (arg.minMoves) _activePlayersMinMoves[playerID] = arg.minMoves;
-    if (arg.maxMoves) _activePlayersMaxMoves[playerID] = arg.maxMoves;
+    if (activePlayers) activePlayers[playerID] = normalized.stage as string;
+    if (normalized.minMoves && _activePlayersMinMoves) _activePlayersMinMoves[playerID] = normalized.minMoves;
+    if (normalized.maxMoves && _activePlayersMaxMoves) _activePlayersMaxMoves[playerID] = normalized.maxMoves;
   }
 }
 
@@ -254,7 +257,7 @@ export function InitTurnOrderState(state: State, turn: TurnConfig) {
   const { numPlayers } = ctx;
   const pluginAPIs = plugin.GetAPIs(state);
   const context = { ...pluginAPIs, G, ctx };
-  const order = turn.order;
+  const order: TurnOrderConfig = turn.order ?? TurnOrder.DEFAULT;
 
   let playOrder = [...Array.from({ length: numPlayers })].map((_, i) => i + '');
   if (order.playOrder !== undefined) {
@@ -290,7 +293,7 @@ export function UpdateTurnOrderState(
   turn: TurnConfig,
   endTurnArg?: true | { remove?: any; next?: string }
 ) {
-  const order = turn.order;
+  const order: TurnOrderConfig = turn.order ?? TurnOrder.DEFAULT;
 
   let { G, ctx } = state;
   let playOrderPos = ctx.playOrderPos;
@@ -307,8 +310,8 @@ export function UpdateTurnOrderState(
           currentPlayer = getCurrentPlayer(ctx.playOrder, playOrderPos);
           break;
         case 'next':
-          playOrderPos = ctx.playOrder.indexOf(endTurnArg.next);
-          currentPlayer = endTurnArg.next;
+          playOrderPos = ctx.playOrder.indexOf(endTurnArg.next ?? '');
+          currentPlayer = endTurnArg.next ?? currentPlayer;
           break;
         default:
           logging.error(`invalid argument to endTurn: ${arg}`);
