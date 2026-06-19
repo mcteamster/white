@@ -35,7 +35,7 @@ interface SocketIOOpts {
 
 type SocketIOTransportOpts = TransportOpts &
   SocketIOOpts & {
-    socket?;
+    socket?: ioNamespace.Socket;
   };
 
 /**
@@ -45,7 +45,7 @@ type SocketIOTransportOpts = TransportOpts &
  */
 export class SocketIOTransport extends Transport {
   server: string;
-  socket: ioNamespace.Socket;
+  socket: ioNamespace.Socket | null;
   socketOpts: SocketOpts;
 
   /**
@@ -63,19 +63,19 @@ export class SocketIOTransport extends Transport {
   constructor({ socket, socketOpts, server, ...opts }: SocketIOTransportOpts) {
     super(opts);
 
-    this.server = server;
-    this.socket = socket;
-    this.socketOpts = socketOpts;
+    this.server = server ?? '';
+    this.socket = socket ?? null;
+    this.socketOpts = socketOpts ?? {};
   }
 
   sendAction(state: State, action: CredentialedActionShape.Any): void {
     const args: Parameters<Master['onUpdate']> = [
       action,
       state._stateID,
-      this.matchID,
-      this.playerID,
+      this.matchID ?? '',
+      this.playerID ?? '',
     ];
-    this.socket.emit('update', ...args);
+    this.socket!.emit('update', ...args);
   }
 
   sendChatMessage(matchID: string, chatMessage: ChatMessage): void {
@@ -84,7 +84,7 @@ export class SocketIOTransport extends Transport {
       chatMessage,
       this.credentials,
     ];
-    this.socket.emit('chat', ...args);
+    this.socket!.emit('chat', ...args);
   }
 
   connect(): void {
@@ -167,7 +167,7 @@ export class SocketIOTransport extends Transport {
   }
 
   disconnect(): void {
-    this.socket.close();
+    this.socket?.close();
     this.socket = null;
     this.setConnectionStatus(false);
   }

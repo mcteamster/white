@@ -47,18 +47,18 @@ export class ClientManager {
   }
 
   switchPlayerID(playerID: string): void {
-    if (this.currentClient.multiplayer) {
+    if (this.currentClient?.multiplayer) {
       for (const [client] of this.clients) {
         if (
           client.playerID === playerID &&
-          client.multiplayer === this.currentClient.multiplayer
+          client.multiplayer === this.currentClient!.multiplayer
         ) {
           this.switchToClient(client);
           return;
         }
       }
     }
-    this.currentClient.updatePlayerID(playerID);
+    this.currentClient?.updatePlayerID(playerID);
     this.notifySubscribers();
   }
 
@@ -75,7 +75,7 @@ export class ClientManager {
 
   private getState(): SubscriptionState {
     return {
-      client: this.currentClient,
+      client: this.currentClient!,
       debuggableClients: [...this.clients.values()],
     };
   }
