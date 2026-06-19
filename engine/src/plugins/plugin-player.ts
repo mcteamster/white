@@ -61,7 +61,7 @@ const PlayerPlugin = <PlayerState extends any = any>({
       return data.players[ctx.currentPlayer];
     };
 
-    const set = (value) => {
+    const set = (value: PlayerState) => {
       return (state[ctx.currentPlayer] = value);
     };
 
@@ -72,7 +72,7 @@ const PlayerPlugin = <PlayerState extends any = any>({
       const get = () => {
         return data.players[other];
       };
-      const set = (value) => {
+      const set = (value: PlayerState) => {
         return (state[other] = value);
       };
       result.opponent = { get, set };

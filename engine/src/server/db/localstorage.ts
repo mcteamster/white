@@ -6,7 +6,7 @@ class WithLocalStorageMap<Key, Value> extends Map {
   constructor(key: string) {
     super();
     this.key = key;
-    const cache = JSON.parse(localStorage.getItem(this.key)) || [];
+    const cache = JSON.parse(localStorage.getItem(this.key) ?? '[]') || [];
     cache.forEach((entry: [Key, Value]) => this.set(...entry));
   }
 

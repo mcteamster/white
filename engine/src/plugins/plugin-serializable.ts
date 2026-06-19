@@ -1,5 +1,6 @@
 import type { Plugin } from '../types';
-import isPlainObject from 'lodash.isplainobject';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const isPlainObject: (value: unknown) => boolean = require('lodash.isplainobject');
 
 /**
  * Check if a value can be serialized (e.g. using `JSON.stringify`).

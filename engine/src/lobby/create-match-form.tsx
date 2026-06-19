@@ -44,7 +44,7 @@ class LobbyCreateMatchForm extends React.Component<
     }
     this.state = {
       selectedGame: 0,
-      numPlayers: props.games[0].game.minPlayers,
+      numPlayers: props.games[0].game.minPlayers ?? 1,
     };
   }
 
@@ -65,9 +65,9 @@ class LobbyCreateMatchForm extends React.Component<
   };
 
   _createNumPlayersRange = (game: Game) => {
-    return Array.from({ length: game.maxPlayers + 1 })
+    return Array.from({ length: (game.maxPlayers ?? 4) + 1 })
       .map((_, i) => i)
-      .slice(game.minPlayers);
+      .slice(game.minPlayers ?? 1);
   };
 
   render() {
@@ -107,13 +107,13 @@ class LobbyCreateMatchForm extends React.Component<
     const idx = Number.parseInt(event.target.value);
     this.setState({
       selectedGame: idx,
-      numPlayers: this.props.games[idx].game.minPlayers,
+      numPlayers: this.props.games[idx].game.minPlayers ?? 1,
     });
   };
 
   onClickCreate = () => {
     this.props.createMatch(
-      this.props.games[this.state.selectedGame].game.name,
+      this.props.games[this.state.selectedGame].game.name ?? '',
       this.state.numPlayers
     );
   };

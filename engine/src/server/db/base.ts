@@ -91,7 +91,7 @@ export abstract class Async {
   /**
    * Connect.
    */
-  abstract connect();
+  abstract connect(): Promise<void>;
 
   /**
    * Create a new match.
@@ -183,6 +183,7 @@ export abstract class Async {
         'The database connector does not implement a listMatches method.'
       );
     }
+    return [];
   }
 
   /**
@@ -285,6 +286,7 @@ export abstract class Sync {
         'The database connector does not implement a listMatches method.'
       );
     }
+    return [];
   }
 
   /**

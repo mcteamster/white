@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
     "strict": false,
+    "target": "ES2017",
+    "lib": ["ES2017", "DOM"],
+    "module": "CommonJS",
+    "moduleResolution": "node",
     "skipLibCheck": true,
     "esModuleInterop": true,
     "jsx": "react",

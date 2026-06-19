@@ -19,9 +19,9 @@ const ImmerPlugin: Plugin = {
 
   fnWrap:
     (move) =>
-    (context, ...args) => {
+    (context: Parameters<typeof move>[0], ...args: unknown[]) => {
       let isInvalid = false;
-      const newG = produce(context.G, (G) => {
+      const newG = produce(context.G, (G: typeof context.G) => {
         const result = move({ ...context, G }, ...args);
         if (result === INVALID_MOVE) {
           isInvalid = true;
