@@ -9,8 +9,8 @@ const applyPlayerView = (
   state: State
 ): State => ({
   ...state,
-  G: game.playerView({ G: state.G, ctx: state.ctx, playerID }),
-  plugins: PlayerView(state, { playerID, game }),
+  G: game.playerView!({ G: state.G, ctx: state.ctx, playerID }),
+  plugins: PlayerView(state, { playerID: playerID ?? '', game }),
   deltalog: undefined,
   _undo: [],
   _redo: [],
@@ -26,7 +26,7 @@ export const getFilterPlayerView =
     switch (payload.type) {
       case 'patch': {
         const [matchID, stateID, prevState, state] = payload.args;
-        const log = redactLog(state.deltalog, playerID);
+        const log = redactLog(state.deltalog ?? [], playerID);
         const filteredState = applyPlayerView(game, playerID, state);
         const newStateID = state._stateID;
         const prevFilteredState = applyPlayerView(game, playerID, prevState);
@@ -38,7 +38,7 @@ export const getFilterPlayerView =
       }
       case 'update': {
         const [matchID, state] = payload.args;
-        const log = redactLog(state.deltalog, playerID);
+        const log = redactLog(state.deltalog ?? [], playerID);
         const filteredState = applyPlayerView(game, playerID, state);
         return {
           type: 'update',
@@ -48,7 +48,7 @@ export const getFilterPlayerView =
       case 'sync': {
         const [matchID, syncInfo] = payload.args;
         const filteredState = applyPlayerView(game, playerID, syncInfo.state);
-        const log = redactLog(syncInfo.log, playerID);
+        const log = redactLog(syncInfo.log ?? [], playerID);
         const newSyncInfo = {
           ...syncInfo,
           state: filteredState,
@@ -79,7 +79,7 @@ export function redactLog(log: LogEntry[], playerID: PlayerID | null) {
 
   return log.map((logEvent) => {
     // filter for all other players and spectators.
-    if (playerID !== null && +playerID === +logEvent.action.payload.playerID) {
+    if (playerID !== null && +playerID === +(logEvent.action.payload.playerID ?? '')) {
       return logEvent;
     }
 
@@ -98,5 +98,5 @@ export function redactLog(log: LogEntry[], playerID: PlayerID | null) {
 
     const { redact, ...remaining } = filteredEvent;
     return remaining;
-  });
+  }) as LogEntry[];
 }

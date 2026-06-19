@@ -44,13 +44,13 @@ export const ProcessAction = (
   opts: PluginOpts
 ): State => {
   // TODO(#723): Extend error handling to plugins.
-  opts.game.plugins
+  opts.game.plugins!
     .filter((plugin) => plugin.action !== undefined)
     .filter((plugin) => plugin.name === action.payload.type)
     .forEach((plugin) => {
       const name = plugin.name;
       const pluginState = state.plugins[name] || { data: {} };
-      const data = plugin.action(pluginState.data, action.payload);
+      const data = plugin.action!(pluginState.data, action.payload);
 
       state = {
         ...state,
@@ -83,7 +83,7 @@ export const ProcessAction = (
  */
 export const GetAPIs = ({ plugins }: PartialGameState) =>
   Object.entries(plugins || {}).reduce((apis, [name, { api }]) => {
-    apis[name] = api;
+    (apis as unknown as Record<string, unknown>)[name] = api;
     return apis;
   }, {} as DefaultPluginAPIs);
 
@@ -102,7 +102,7 @@ export const FnWrap = (
   return [...CORE_PLUGINS, ...plugins, PluginEvents]
     .filter((plugin) => plugin.fnWrap !== undefined)
     .reduce(
-      (method: AnyFn, { fnWrap }: Plugin) => fnWrap(method, methodType),
+      (method: AnyFn, { fnWrap }: Plugin) => fnWrap!(method, methodType),
       methodToWrap
     );
 };
@@ -114,11 +114,11 @@ export const Setup = (
   state: PartialGameState,
   opts: PluginOpts
 ): PartialGameState => {
-  [...DEFAULT_PLUGINS, ...opts.game.plugins]
+  [...DEFAULT_PLUGINS, ...(opts.game.plugins ?? [])]
     .filter((plugin) => plugin.setup !== undefined)
     .forEach((plugin) => {
       const name = plugin.name;
-      const data = plugin.setup({
+      const data = plugin.setup!({
         G: state.G,
         ctx: state.ctx,
         game: opts.game,
@@ -145,13 +145,13 @@ export const Enhance = <S extends State | PartialGameState>(
   state: S,
   opts: PluginOpts & { playerID: PlayerID }
 ): S => {
-  [...DEFAULT_PLUGINS, ...opts.game.plugins]
+  [...DEFAULT_PLUGINS, ...(opts.game.plugins ?? [])]
     .filter((plugin) => plugin.api !== undefined)
     .forEach((plugin) => {
       const name = plugin.name;
       const pluginState = state.plugins[name] || { data: {} };
 
-      const api = plugin.api({
+      const api = plugin.api!({
         G: state.G,
         ctx: state.ctx,
         data: pluginState.data,
@@ -177,7 +177,7 @@ const Flush = (state: State, opts: PluginOpts): State => {
   // We flush the events plugin first, then custom plugins and the core plugins.
   // This means custom plugins cannot use the events API but will be available in event hooks.
   // Note that plugins are flushed in reverse, to allow custom plugins calling each other.
-  [...CORE_PLUGINS, ...opts.game.plugins, PluginEvents]
+  [...CORE_PLUGINS, ...(opts.game.plugins ?? []), PluginEvents]
     .reverse()
     .forEach((plugin) => {
       const name = plugin.name;
@@ -228,14 +228,14 @@ const Flush = (state: State, opts: PluginOpts): State => {
  * master instead.
  */
 export const NoClient = (state: State, opts: PluginOpts): boolean => {
-  return [...DEFAULT_PLUGINS, ...opts.game.plugins]
+  return [...DEFAULT_PLUGINS, ...(opts.game.plugins ?? [])]
     .filter((plugin) => plugin.noClient !== undefined)
     .map((plugin) => {
       const name = plugin.name;
       const pluginState = state.plugins[name];
 
       if (pluginState) {
-        return plugin.noClient({
+        return plugin.noClient!({
           G: state.G,
           ctx: state.ctx,
           game: opts.game,
@@ -257,13 +257,13 @@ const IsInvalid = (
   state: State,
   opts: PluginOpts
 ): false | { plugin: string; message: string } => {
-  const firstInvalidReturn = [...DEFAULT_PLUGINS, ...opts.game.plugins]
+  const firstInvalidReturn = [...DEFAULT_PLUGINS, ...(opts.game.plugins ?? [])]
     .filter((plugin) => plugin.isInvalid !== undefined)
     .map((plugin) => {
       const { name } = plugin;
       const pluginState = state.plugins[name];
 
-      const message = plugin.isInvalid({
+      const message = plugin.isInvalid!({
         G: state.G,
         ctx: state.ctx,
         game: opts.game,
@@ -298,7 +298,7 @@ export const PlayerView = (
   { G, ctx, plugins = {} }: State,
   { game, playerID }: PluginOpts & { playerID: PlayerID }
 ) => {
-  [...DEFAULT_PLUGINS, ...game.plugins].forEach(({ name, playerView }) => {
+  [...DEFAULT_PLUGINS, ...(game.plugins ?? [])].forEach(({ name, playerView }) => {
     if (!playerView) return;
 
     const { data } = plugins[name] || { data: {} };
