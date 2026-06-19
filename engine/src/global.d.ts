@@ -16,6 +16,11 @@ declare module '@koa/cors' {
   export = cors;
 }
 
+declare module 'lodash.isplainobject' {
+  function isPlainObject(value: unknown): boolean;
+  export = isPlainObject;
+}
+
 // The react-native client is a plain JS file without type declarations.
 declare module '../src/client/react-native' {
   export const Client: any;
