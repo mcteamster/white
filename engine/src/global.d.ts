@@ -15,3 +15,8 @@ declare module '@koa/cors' {
   function cors(options?: CorsOptions): Middleware;
   export = cors;
 }
+
+// The react-native client is a plain JS file without type declarations.
+declare module '../src/client/react-native' {
+  export const Client: any;
+}
