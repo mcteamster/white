@@ -30,7 +30,6 @@ import type {
   PlayerID,
   Move,
   StageConfig,
-  TurnConfig,
 } from '../types';
 import { GameMethod } from './game-methods';
 import { supportDeprecatedMoveLimit } from './backwards-compatibility';

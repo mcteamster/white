@@ -253,7 +253,7 @@ export const BlankWhiteCards: Game<GameState> = {
   ],
 
   turn: {
-    activePlayers: { all: Stage.NULL },
+    activePlayers: { all: Stage.NULL as unknown as string },
   },
 
   events: {
