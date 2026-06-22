@@ -88,11 +88,12 @@ export class Random {
     const seed = R.prngstate ? '' : R.seed;
     const rand = alea(seed, R.prngstate);
 
-    const number = rand();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const number = (rand as any)();
 
     this.state = {
       ...R,
-      prngstate: rand.state(),
+      prngstate: rand.state?.(),
     };
 
     return number;
@@ -118,14 +119,14 @@ export class Random {
     // Generate functions for predefined dice values D4 - D20.
     const predefined = {} as Record<keyof typeof SpotValue, DieFn>;
     for (const key in SpotValue) {
-      const spotvalue = SpotValue[key];
-      predefined[key] = (diceCount?: number) => {
+      const spotvalue = (SpotValue as Record<string, number>)[key];
+      (predefined as Record<string, DieFn>)[key] = ((diceCount?: number) => {
         return diceCount === undefined
           ? Math.floor(random() * spotvalue) + 1
           : Array.from({ length: diceCount }).map(
               () => Math.floor(random() * spotvalue) + 1
             );
-      };
+      }) as DieFn;
     }
 
     function Die(spotValue?: number): number;

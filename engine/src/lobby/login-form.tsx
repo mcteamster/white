@@ -53,7 +53,7 @@ class LobbyLoginForm extends React.Component<LoginFormProps, LoginFormState> {
   }
 
   onClickEnter = () => {
-    if (this.state.playerName === '') return;
+    if (!this.state.playerName) return;
     this.props.onEnter(this.state.playerName);
   };
 

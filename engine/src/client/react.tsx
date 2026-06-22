@@ -121,18 +121,18 @@ export function Client<
 
     componentWillUnmount() {
       this.client.stop();
-      this.unsubscribe();
+      this.unsubscribe?.();
     }
 
     componentDidUpdate(prevProps: WrappedBoardProps & AdditionalProps) {
       if (this.props.matchID != prevProps.matchID) {
-        this.client.updateMatchID(this.props.matchID);
+        this.client.updateMatchID(this.props.matchID ?? 'default');
       }
       if (this.props.playerID != prevProps.playerID) {
-        this.client.updatePlayerID(this.props.playerID);
+        this.client.updatePlayerID(this.props.playerID ?? null);
       }
       if (this.props.credentials != prevProps.credentials) {
-        this.client.updateCredentials(this.props.credentials);
+        this.client.updateCredentials(this.props.credentials ?? '');
       }
     }
 

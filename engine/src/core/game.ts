@@ -9,7 +9,7 @@
 import * as plugins from '../plugins/main';
 import { Flow } from './flow';
 import type { INVALID_MOVE } from './constants';
-import type { ActionPayload, Game, Move, LongFormMove, State } from '../types';
+import type { ActionPayload, AnyFn, Game, Move, LongFormMove, State } from '../types';
 import * as logging from './logger';
 import { GameMethod } from './game-methods';
 
@@ -81,14 +81,13 @@ export function ProcessGameConfig(game: Game | ProcessedGame): ProcessedGame {
     pluginNames: game.plugins.map((p) => p.name) as string[],
 
     processMove: (state: State, action: ActionPayload.MakeMove) => {
-      let moveFn = flow.getMove(state.ctx, action.type, action.playerID);
-
-      if (IsLongFormMove(moveFn)) {
-        moveFn = moveFn.move;
-      }
+      const rawMoveFn = flow.getMove(state.ctx, action.type, action.playerID ?? '');
+      const moveFn: AnyFn | null = (rawMoveFn !== null && IsLongFormMove(rawMoveFn))
+        ? (rawMoveFn as LongFormMove).move as AnyFn
+        : (rawMoveFn as unknown) as AnyFn | null;
 
       if (moveFn instanceof Function) {
-        const fn = plugins.FnWrap(moveFn, GameMethod.MOVE, game.plugins);
+        const fn = plugins.FnWrap(moveFn, GameMethod.MOVE, game.plugins ?? []);
         let args = [];
         if (action.args !== undefined) {
           args = Array.isArray(action.args) ? action.args : [action.args];

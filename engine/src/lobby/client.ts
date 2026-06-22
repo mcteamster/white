@@ -69,7 +69,7 @@ export class LobbyClient {
         try {
           details = await response.text();
         } catch (error) {
-          details = error.message;
+          details = error instanceof Error ? error.message : String(error);
         }
       }
 

@@ -17,7 +17,7 @@ export type BotAction = ActionShape.GameEvent | ActionShape.MakeMove;
  * Base class that bots can extend.
  */
 export abstract class Bot {
-  private enumerateFn: Game['ai']['enumerate'];
+  private enumerateFn: NonNullable<Game['ai']>['enumerate'];
   private seed?: string | number;
   protected iterationCounter: number;
   private _opts: Record<
@@ -33,7 +33,7 @@ export abstract class Bot {
     enumerate,
     seed,
   }: {
-    enumerate: Game['ai']['enumerate'];
+    enumerate: NonNullable<Game['ai']>['enumerate'];
     seed?: string | number;
   }) {
     this.enumerateFn = enumerate;
@@ -77,8 +77,8 @@ export abstract class Bot {
   }
 
   enumerate(G: any, ctx: Ctx, playerID: PlayerID) {
-    const actions = this.enumerateFn(G, ctx, playerID);
-    return actions.map((a) => {
+    const actions = this.enumerateFn!(G, ctx, playerID);
+    return actions.map((a: any) => {
       if ('payload' in a) {
         return a;
       }
@@ -102,8 +102,9 @@ export abstract class Bot {
       const seed = this.prngstate ? '' : this.seed;
       const rand = alea(seed, this.prngstate);
 
-      number = rand();
-      this.prngstate = rand.state();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      number = (rand as any)();
+      this.prngstate = rand.state?.();
     } else {
       number = Math.random();
     }

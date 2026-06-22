@@ -199,7 +199,7 @@ export class Master {
     const reducer = CreateGameReducer({
       game: this.game,
     });
-    const middleware = applyMiddleware(TransientHandlingMiddleware);
+    const middleware = applyMiddleware(TransientHandlingMiddleware as any);
     const store = createStore(reducer, state, middleware);
 
     // Only allow UNDO / REDO if there is exactly one player
@@ -214,8 +214,8 @@ export class Master {
         (!hasActivePlayers && !isCurrentPlayer) ||
         // If player is not active or multiple players are active, can’t undo.
         (hasActivePlayers &&
-          (state.ctx.activePlayers[playerID] === undefined ||
-            Object.keys(state.ctx.activePlayers).length > 1))
+          ((state.ctx.activePlayers as NonNullable<typeof state.ctx.activePlayers>)[playerID] === undefined ||
+            Object.keys(state.ctx.activePlayers as NonNullable<typeof state.ctx.activePlayers>).length > 1))
       ) {
         logging.error(`playerID=[${playerID}] cannot undo / redo right now`);
         return;
@@ -234,7 +234,7 @@ export class Master {
     // Get move for further checks
     const move =
       action.type == MAKE_MOVE
-        ? this.game.flow.getMove(state.ctx, action.payload.type, playerID)
+        ? this.game.flow!.getMove(state.ctx, action.payload.type ?? '', playerID)
         : null;
 
     // Check whether the player is allowed to make the move.
@@ -262,12 +262,12 @@ export class Master {
     const prevState = store.getState();
 
     // Update server's version of the store.
-    store.dispatch(action);
-    state = store.getState();
+    store.dispatch(action as any);
+    state = store.getState() as State;
 
     this.subscribeCallback({
       state,
-      action,
+      action: action as import('../types').ActionShape.Any,
       matchID,
     });
 
@@ -375,7 +375,7 @@ export class Master {
       }
     }
 
-    const filteredMetadata = metadata ? filterMatchData(metadata) : undefined;
+    const filteredMetadata = metadata ? filterMatchData(metadata) : [];
 
     const syncInfo: SyncInfo = {
       state,
@@ -385,7 +385,7 @@ export class Master {
     };
 
     this.transportAPI.send({
-      playerID,
+      playerID: playerID!,
       type: 'sync',
       args: [matchID, syncInfo],
     });
@@ -423,7 +423,7 @@ export class Master {
       return { error: 'metadata not found' };
     }
 
-    if (metadata.players[playerID] === undefined) {
+    if (metadata.players[playerID as unknown as number] === undefined) {
       logging.error(
         `Player not in the match, matchID=[${key}] playerID=[${playerID}]`
       );
@@ -441,7 +441,7 @@ export class Master {
       }
     }
 
-    metadata.players[playerID].isConnected = connected;
+    metadata.players[playerID as unknown as number].isConnected = connected;
 
     const filteredMetadata = filterMatchData(metadata);
 

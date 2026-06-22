@@ -22,6 +22,9 @@ export const MockRandom = (
   const { flush, ...rest } = RandomPlugin;
   return {
     ...rest,
-    api: (context) => ({ ...RandomPlugin.api(context), ...overrides }),
+    api: (context: Parameters<NonNullable<typeof RandomPlugin.api>>[0]) => ({
+      ...RandomPlugin.api!(context),
+      ...overrides,
+    }),
   };
 };

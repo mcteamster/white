@@ -149,11 +149,11 @@ export function Server({
           apiServer = api.listen(lobbyConfig.apiPort, () => resolve());
         });
         if (lobbyConfig.apiCallback) lobbyConfig.apiCallback();
-        logger.info(`API serving on ${getPortFromServer(apiServer)}...`);
+        logger.info(`API serving on ${getPortFromServer(apiServer!)}...`);
       }
 
       // Run Game Server (+ API, if necessary).
-      let appServer: KoaServer;
+      let appServer!: KoaServer;
       await new Promise<void>((resolve) => {
         appServer = app.listen(serverRunConfig.port, () => resolve());
       });

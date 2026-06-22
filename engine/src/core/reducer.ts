@@ -59,11 +59,11 @@ const CanUndoMove = (G: any, ctx: Ctx, move: Move): boolean => {
     return true;
   }
 
-  if (IsFunction(move.undoable)) {
-    return move.undoable({ G, ctx });
+  if (IsFunction(move.undoable as any)) {
+    return (move.undoable as (...args: any[]) => boolean)({ G, ctx });
   }
 
-  return move.undoable;
+  return !!(move.undoable ?? true);
 };
 
 /**
@@ -250,12 +250,17 @@ export function CreateGameReducer({
     stateWithTransients: TransientState | null = null,
     action: ActionShape.Any
   ): TransientState => {
-    let [state /*, transients */] = ExtractTransients(stateWithTransients);
+    const [rawState /*, transients */] = ExtractTransients(stateWithTransients);
+    // state can only be null on the very first call (initialState=null).
+    // All subsequent dispatches operate on a non-null state. The STRIP_TRANSIENTS
+    // case handles null explicitly; all other cases are only reachable after
+    // SYNC/RESET has populated state.
+    let state = rawState as State<any>;
     switch (action.type) {
       case Actions.STRIP_TRANSIENTS: {
         // This action indicates that transient metadata in the state has been
         // consumed and should now be stripped from the state..
-        return state;
+        return rawState as TransientState;
       }
 
       case Actions.GAME_EVENT: {
@@ -278,7 +283,7 @@ export function CreateGameReducer({
         // Ignore the event if the player isn't active.
         if (
           actionHasPlayerID(action) &&
-          !game.flow.isPlayerActive(state.G, state.ctx, action.payload.playerID)
+          !game.flow!.isPlayerActive(state.G, state.ctx, action.payload.playerID ?? '')
         ) {
           error(`disallowed event: ${action.payload.type}`);
           return WithError(state, ActionErrorType.InactivePlayer);
@@ -288,11 +293,11 @@ export function CreateGameReducer({
         state = plugins.Enhance(state, {
           game,
           isClient: false,
-          playerID: action.payload.playerID,
+          playerID: action.payload.playerID ?? "",
         });
 
         // Process event.
-        let newState = game.flow.processEvent(state, action);
+        let newState = game.flow!.processEvent(state, action);
 
         // Execute plugins.
         let stateWithError: TransientState | undefined;
@@ -312,11 +317,11 @@ export function CreateGameReducer({
         const oldState = (state = { ...state, deltalog: [] });
 
         // Check whether the move is allowed at this time.
-        const move: Move = game.flow.getMove(
+        const move: Move = game.flow!.getMove(
           state.ctx,
-          action.payload.type,
+          action.payload.type ?? '',
           action.payload.playerID || state.ctx.currentPlayer
-        );
+        ) as Move;
         if (move === null) {
           error(`disallowed move: ${action.payload.type}`);
           return WithError(state, ActionErrorType.UnavailableMove);
@@ -336,7 +341,7 @@ export function CreateGameReducer({
         // Ignore the move if the player isn't active.
         if (
           actionHasPlayerID(action) &&
-          !game.flow.isPlayerActive(state.G, state.ctx, action.payload.playerID)
+          !game.flow!.isPlayerActive(state.G, state.ctx, action.payload.playerID ?? '')
         ) {
           error(`disallowed move: ${action.payload.type}`);
           return WithError(state, ActionErrorType.InactivePlayer);
@@ -346,11 +351,11 @@ export function CreateGameReducer({
         state = plugins.Enhance(state, {
           game,
           isClient,
-          playerID: action.payload.playerID,
+          playerID: action.payload.playerID ?? "",
         });
 
         // Process the move.
-        const G = game.processMove(state, action.payload);
+        const G = game.processMove!(state, action.payload);
 
         // The game declared the move as invalid.
         if (G === INVALID_MOVE) {
@@ -393,7 +398,7 @@ export function CreateGameReducer({
         state = initializeDeltalog(state, action, move);
 
         // Allow the flow reducer to process any triggers that happen after moves.
-        state = game.flow.processMove(state, action.payload);
+        state = game.flow!.processMove(state, action.payload);
         let stateWithError: TransientState | undefined;
         [state, stateWithError] = flushAndValidatePlugins(state, oldState, {
           game,
@@ -444,11 +449,11 @@ export function CreateGameReducer({
 
         // If undoing a move, check it is undoable.
         if (last.moveType) {
-          const lastMove: Move = game.flow.getMove(
+          const lastMove: Move = game.flow!.getMove(
             restore.ctx,
             last.moveType,
-            last.playerID
-          );
+            last.playerID ?? ''
+          ) as Move;
           if (!CanUndoMove(G, ctx, lastMove)) {
             error(`Move cannot be undone`);
             return WithError(state, ActionErrorType.ActionInvalid);

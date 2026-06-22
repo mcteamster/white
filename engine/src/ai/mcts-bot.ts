@@ -54,7 +54,7 @@ export class MCTSBot extends Bot {
     metadata: Node;
   }) => void;
   private reducer: Reducer;
-  iterations: number | ((G: any, ctx: Ctx, playerID?: PlayerID) => number);
+  iterations?: number | ((G: any, ctx: Ctx, playerID?: PlayerID) => number);
   playoutDepth?: number | ((G: any, ctx: Ctx, playerID?: PlayerID) => number);
 
   constructor({
@@ -66,7 +66,7 @@ export class MCTSBot extends Bot {
     playoutDepth,
     iterationCallback,
   }: {
-    enumerate: Game['ai']['enumerate'];
+    enumerate: NonNullable<Game['ai']>['enumerate'];
     seed?: string | number;
     game: Game;
     objectives?: (G: any, ctx: Ctx, playerID?: PlayerID) => Objectives;
@@ -149,7 +149,7 @@ export class MCTSBot extends Bot {
     };
   }
 
-  private select(node: Node) {
+  private select(node: Node): Node {
     // This node has unvisited children.
     if (node.actions.length > 0) {
       return node;
@@ -174,7 +174,7 @@ export class MCTSBot extends Bot {
       }
     }
 
-    return this.select(selectedChild);
+    return this.select(selectedChild!);
   }
 
   private expand(node: Node) {
@@ -283,7 +283,7 @@ export class MCTSBot extends Bot {
         }
       }
 
-      const action = selectedChild && selectedChild.parentAction;
+      const action = (selectedChild && selectedChild.parentAction) as BotAction;
       const metadata = root;
       return { action, metadata };
     };

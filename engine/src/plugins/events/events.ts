@@ -67,8 +67,8 @@ export class Events {
   }>;
   maxEndedTurnsPerAction: number;
   initialTurn: number;
-  currentPhase: string;
-  currentTurn: number;
+  currentPhase!: string;
+  currentTurn!: number;
   currentMethod?: GameMethod;
 
   constructor(flow: Game['flow'], ctx: Ctx, playerID?: PlayerID) {
@@ -86,8 +86,8 @@ export class Events {
     const events = {
       _private: this,
     } as unknown as EventsAPI & PrivateEventsAPI;
-    for (const type of this.flow.eventNames) {
-      events[type] = (...args: any[]) => {
+    for (const type of this.flow!.eventNames) {
+      (events as unknown as Record<string, unknown>)[type] = (...args: any[]) => {
         this.dispatch.push({
           type,
           args,
@@ -202,7 +202,7 @@ export class Events {
       }
 
       const action = automaticGameEvent(event.type, event.args, this.playerID);
-      state = this.flow.processEvent(state, action);
+      state = this.flow!.processEvent(state, action);
     }
     return state;
   }

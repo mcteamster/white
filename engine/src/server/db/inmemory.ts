@@ -68,11 +68,11 @@ export class InMemory extends StorageAPI.Sync {
     const result = {} as StorageAPI.FetchFields;
 
     if (opts.state) {
-      result.state = this.state.get(matchID);
+      result.state = this.state.get(matchID)!;
     }
 
     if (opts.metadata) {
-      result.metadata = this.metadata.get(matchID);
+      result.metadata = this.metadata.get(matchID)!;
     }
 
     if (opts.log) {
@@ -80,7 +80,7 @@ export class InMemory extends StorageAPI.Sync {
     }
 
     if (opts.initialState) {
-      result.initialState = this.initial.get(matchID);
+      result.initialState = this.initial.get(matchID)!;
     }
 
     return result as StorageAPI.FetchResult<O>;

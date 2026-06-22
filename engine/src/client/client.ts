@@ -67,7 +67,7 @@ function assumedPlayerID(
     playerID = state.ctx.currentPlayer;
   }
 
-  return playerID;
+  return playerID ?? '';
 }
 
 /**
@@ -134,11 +134,11 @@ export class _ClientImpl<
   PluginAPIs extends Record<string, unknown> = Record<string, unknown>
 > {
   private gameStateOverride?: any;
-  private initialState: State<G>;
-  readonly multiplayer: (opts: TransportOpts) => Transport;
+  private initialState: State<G> | null;
+  readonly multiplayer?: (opts: TransportOpts) => Transport;
   private reducer: Reducer;
   private _running: boolean;
-  private subscribers: Record<string, (state: State<G> | null) => void>;
+  private subscribers: Record<string, (state: ClientState<G>) => void>;
   private transport: Transport;
   private manager: ClientManager;
   readonly game: ReturnType<typeof ProcessGameConfig>;
@@ -148,8 +148,8 @@ export class _ClientImpl<
   playerID: PlayerID | null;
   credentials: string;
   matchData?: FilteredMetadata;
-  moves: Record<string, (...args: any[]) => void>;
-  events: {
+  moves!: Record<string, (...args: any[]) => void>;
+  events!: {
     endGame?: (gameover?: any) => void;
     endPhase?: () => void;
     endTurn?: (arg?: { next: PlayerID }) => void;
@@ -158,7 +158,7 @@ export class _ClientImpl<
     setStage?: (newStage: string) => void;
     setActivePlayers?: (arg: ActivePlayersArg) => void;
   };
-  plugins: Record<string, (...args: any[]) => void>;
+  plugins!: Record<string, (...args: any[]) => void>;
   reset: () => void;
   undo: () => void;
   redo: () => void;
@@ -175,10 +175,10 @@ export class _ClientImpl<
     credentials,
     enhancer,
   }: ClientOpts<G, PluginAPIs>) {
-    this.game = ProcessGameConfig(game);
-    this.playerID = playerID;
+    this.game = ProcessGameConfig(game as any);
+    this.playerID = playerID ?? null;
     this.matchID = matchID || 'default';
-    this.credentials = credentials;
+    this.credentials = credentials ?? '';
     this.multiplayer = multiplayer;
     this.manager = GlobalClientManager;
     this.gameStateOverride = null;
@@ -196,7 +196,7 @@ export class _ClientImpl<
     }
 
     this.reset = () => {
-      this.store.dispatch(ActionCreators.reset(this.initialState));
+      this.store.dispatch(ActionCreators.reset(this.initialState!));
     };
     this.undo = () => {
       const undo = ActionCreators.undo(
@@ -235,7 +235,7 @@ export class _ClientImpl<
           case Actions.UNDO:
           case Actions.REDO: {
             const deltalog = state.deltalog;
-            this.log = [...this.log, ...deltalog];
+            this.log = [...(this.log ?? []), ...(deltalog ?? [])];
             break;
           }
 
@@ -246,7 +246,7 @@ export class _ClientImpl<
           case Actions.PATCH:
           case Actions.UPDATE: {
             let id = -1;
-            if (this.log.length > 0) {
+            if (this.log && this.log.length > 0) {
               id = this.log[this.log.length - 1]._stateID;
             }
 
@@ -258,7 +258,7 @@ export class _ClientImpl<
             // the update from the master here.
             deltalog = deltalog.filter((l) => l._stateID > id);
 
-            this.log = [...this.log, ...deltalog];
+            this.log = [...(this.log ?? []), ...deltalog];
             break;
           }
 
@@ -302,22 +302,22 @@ export class _ClientImpl<
       };
 
     const middleware = applyMiddleware(
-      TransientHandlingMiddleware,
-      SubscriptionMiddleware,
-      TransportMiddleware,
-      LogMiddleware
+      TransientHandlingMiddleware as any,
+      SubscriptionMiddleware as any,
+      TransportMiddleware as any,
+      LogMiddleware as any
     );
 
     enhancer =
-      enhancer !== undefined ? compose(middleware, enhancer) : middleware;
+      enhancer !== undefined ? (compose(middleware, enhancer) as unknown as StoreEnhancer) : middleware;
 
-    this.store = createStore(this.reducer, this.initialState, enhancer);
+    this.store = createStore(this.reducer, this.initialState as any, enhancer);
 
     if (!multiplayer) multiplayer = DummyTransport;
     this.transport = multiplayer({
       transportDataCallback: (data) => this.receiveTransportData(data),
-      gameKey: game,
-      game: this.game,
+      gameKey: game as any,
+      game: this.game as any,
       matchID,
       playerID,
       credentials,
@@ -329,9 +329,9 @@ export class _ClientImpl<
 
     this.chatMessages = [];
     this.sendChatMessage = (payload) => {
-      this.transport.sendChatMessage(this.matchID, {
+      this.transport.sendChatMessage(this.matchID ?? '', {
         id: nanoid(7),
-        sender: this.playerID,
+        sender: this.playerID ?? '',
         payload: payload,
       });
     };
@@ -456,10 +456,10 @@ export class _ClientImpl<
 
     let isActive = true;
 
-    const isPlayerActive = this.game.flow.isPlayerActive(
+    const isPlayerActive = this.game.flow!.isPlayerActive(
       state.G,
       state.ctx,
-      this.playerID
+      this.playerID ?? ''
     );
 
     if (this.multiplayer && !isPlayerActive) {
@@ -469,7 +469,6 @@ export class _ClientImpl<
     if (
       !this.multiplayer &&
       this.playerID !== null &&
-      this.playerID !== undefined &&
       !isPlayerActive
     ) {
       isActive = false;
@@ -487,19 +486,19 @@ export class _ClientImpl<
     if (!this.multiplayer) {
       state = {
         ...state,
-        G: this.game.playerView({
+        G: this.game.playerView!({
           G: state.G,
           ctx: state.ctx,
           playerID: this.playerID,
         }),
-        plugins: PlayerView(state, this),
+        plugins: PlayerView(state, { playerID: this.playerID ?? '', game: this.game }),
       };
     }
 
     // Combine into return value.
     return {
       ...state,
-      log: this.log,
+      log: this.log ?? [],
       isActive,
       isConnected: this.transport.isConnected,
     };
@@ -509,15 +508,15 @@ export class _ClientImpl<
     this.moves = createMoveDispatchers(
       this.game.moveNames,
       this.store,
-      this.playerID,
+      this.playerID ?? '',
       this.credentials,
       this.multiplayer
     );
 
     this.events = createEventDispatchers(
-      this.game.flow.enabledEventNames,
+      this.game.flow!.enabledEventNames,
       this.store,
-      this.playerID,
+      this.playerID ?? '',
       this.credentials,
       this.multiplayer
     );
@@ -525,7 +524,7 @@ export class _ClientImpl<
     this.plugins = createPluginDispatchers(
       this.game.pluginNames,
       this.store,
-      this.playerID,
+      this.playerID ?? '',
       this.credentials,
       this.multiplayer
     );
@@ -534,7 +533,7 @@ export class _ClientImpl<
   updatePlayerID(playerID: PlayerID | null) {
     this.playerID = playerID;
     this.createDispatchers();
-    this.transport.updatePlayerID(playerID);
+    this.transport.updatePlayerID(playerID ?? '');
     this.notifySubscribers();
   }
 

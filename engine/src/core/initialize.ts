@@ -28,7 +28,7 @@ export function InitializeGame({
     numPlayers = 2;
   }
 
-  const ctx: Ctx = game.flow.ctx(numPlayers);
+  const ctx: Ctx = game.flow!.ctx(numPlayers);
 
   let state: PartialGameState = {
     // User managed state.
@@ -41,10 +41,10 @@ export function InitializeGame({
 
   // Run plugins over initial state.
   state = plugins.Setup(state, { game });
-  state = plugins.Enhance(state, { game, playerID: undefined });
+  state = plugins.Enhance(state, { game, playerID: undefined as unknown as string });
 
   const pluginAPIs = plugins.GetAPIs(state);
-  state.G = game.setup({ ...pluginAPIs, ctx: state.ctx }, setupData);
+  state.G = game.setup!({ ...pluginAPIs, ctx: state.ctx }, setupData);
 
   let initial: State = {
     ...state,
@@ -59,7 +59,7 @@ export function InitializeGame({
     _stateID: 0,
   };
 
-  initial = game.flow.init(initial);
+  initial = game.flow!.init(initial);
   [initial] = plugins.FlushAndValidate(initial, { game });
 
   // Initialize undo stack.

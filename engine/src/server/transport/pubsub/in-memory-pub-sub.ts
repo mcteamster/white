@@ -7,7 +7,7 @@ export class InMemoryPubSub<T> implements GenericPubSub<T> {
     if (!this.callbacks.has(channelId)) {
       return;
     }
-    const allCallbacks = this.callbacks.get(channelId);
+    const allCallbacks = this.callbacks.get(channelId)!;
     for (const callback of allCallbacks) {
       callback(payload);
     }
@@ -17,7 +17,7 @@ export class InMemoryPubSub<T> implements GenericPubSub<T> {
     if (!this.callbacks.has(channelId)) {
       this.callbacks.set(channelId, []);
     }
-    this.callbacks.get(channelId).push(callback);
+    this.callbacks.get(channelId)!.push(callback);
   }
 
   unsubscribeAll(channelId: string) {

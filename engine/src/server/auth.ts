@@ -34,9 +34,9 @@ export const areCredentialsAuthentic: Server.AuthenticateCredentials = (
 export const extractPlayerMetadata = (
   matchData: Server.MatchData,
   playerID: PlayerID
-): Server.PlayerMetadata => {
+): Server.PlayerMetadata | undefined => {
   if (matchData && matchData.players) {
-    return matchData.players[playerID];
+    return matchData.players[playerID as unknown as number];
   }
 };
 
@@ -83,7 +83,7 @@ export class Auth {
   }) {
     const playerMetadata = extractPlayerMetadata(metadata, playerID);
     return this.shouldAuthenticate(metadata)
-      ? this.authenticate(credentials, playerMetadata)
+      ? this.authenticate(credentials ?? '', playerMetadata!)
       : true;
   }
 }

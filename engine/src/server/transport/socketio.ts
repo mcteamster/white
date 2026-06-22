@@ -80,9 +80,9 @@ export class SocketIO {
   protected clientInfo: Map<string, Client>;
   protected roomInfo: Map<string, Set<string>>;
   protected perMatchQueue: Map<string, PQueue>;
-  private readonly https: HttpsOptions;
+  private readonly https?: HttpsOptions;
   private readonly socketAdapter: any;
-  private readonly socketOpts: IOTypes.ServerOptions;
+  private readonly socketOpts?: IOTypes.ServerOptions;
   protected pubSub: GenericPubSub<IntermediateTransportData>;
 
   constructor({ https, socketAdapter, socketOpts, pubSub }: SocketOpts = {}) {
@@ -105,9 +105,9 @@ export class SocketIO {
     // Remove client from list of connected sockets for this match.
     const { matchID } = client;
     const matchClients = this.roomInfo.get(matchID);
-    matchClients.delete(socketID);
+    matchClients!.delete(socketID);
     // If the match is now empty, delete its promise queue & client ID list.
-    if (matchClients.size === 0) {
+    if (matchClients!.size === 0) {
       this.unsubscribePubSubChannel(matchID);
       this.roomInfo.delete(matchID);
       this.deleteMatchQueue(matchID);
@@ -136,8 +136,8 @@ export class SocketIO {
   private subscribePubSubChannel(matchID: string, game: Game) {
     const filterPlayerView = getFilterPlayerView(game);
     const broadcast = (payload: IntermediateTransportData) => {
-      this.roomInfo.get(matchID).forEach((clientID) => {
-        const client = this.clientInfo.get(clientID);
+      this.roomInfo.get(matchID)!.forEach((clientID) => {
+        const client = this.clientInfo.get(clientID)!;
         const data = filterPlayerView(client.playerID, payload);
         emit(client.socket, data);
       });
@@ -182,7 +182,7 @@ export class SocketIO {
     }
 
     for (const game of games) {
-      const nsp = app._io.of(game.name);
+      const nsp = app._io.of(game.name ?? '');
       const filterPlayerView = getFilterPlayerView(game);
 
       nsp.on('connection', (socket: IOTypes.Socket) => {
@@ -205,7 +205,7 @@ export class SocketIO {
           const [matchID, playerID, credentials] = args;
           socket.join(matchID);
           this.removeClient(socket.id);
-          const requestingClient = { socket, matchID, playerID, credentials };
+          const requestingClient = { socket, matchID, playerID: playerID ?? '', credentials };
           const transport = TransportAPI(
             matchID,
             socket,
@@ -274,7 +274,7 @@ export class SocketIO {
       // PQueue should process only one action at a time.
       this.perMatchQueue.set(matchID, new PQueue({ concurrency: 1 }));
     }
-    return this.perMatchQueue.get(matchID);
+    return this.perMatchQueue.get(matchID)!;
   }
 
   /**

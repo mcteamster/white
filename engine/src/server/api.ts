@@ -42,6 +42,7 @@ const CreateMatch = async ({
 
   if ('setupDataError' in match) {
     ctx.throw(400, match.setupDataError);
+    return '';
   } else {
     await db.createMatch(matchID, match);
     return matchID;
@@ -94,7 +95,7 @@ export const configureRouter = ({
    * @return - Array of game names as string.
    */
   router.get('/games', async (ctx) => {
-    const body: LobbyAPI.GameList = games.map((game) => game.name);
+    const body: LobbyAPI.GameList = games.map((game) => game.name ?? '');
     ctx.body = body;
   });
 
@@ -124,8 +125,8 @@ export const configureRouter = ({
     if (
       ctx.request.body.numPlayers !== undefined &&
       (Number.isNaN(numPlayers) ||
-        (game.minPlayers && numPlayers < game.minPlayers) ||
-        (game.maxPlayers && numPlayers > game.maxPlayers))
+        ((game as NonNullable<typeof game>).minPlayers && numPlayers < (game as NonNullable<typeof game>).minPlayers!) ||
+        ((game as NonNullable<typeof game>).maxPlayers && numPlayers > (game as NonNullable<typeof game>).maxPlayers!))
     ) {
       ctx.throw(400, 'Invalid numPlayers');
     }
@@ -133,7 +134,7 @@ export const configureRouter = ({
     const matchID = await CreateMatch({
       ctx,
       db,
-      game,
+      game: game!,
       numPlayers,
       setupData,
       uuid,
@@ -378,7 +379,7 @@ export const configureRouter = ({
     const nextMatchID = await CreateMatch({
       ctx,
       db,
-      game,
+      game: game!,
       numPlayers,
       setupData,
       uuid,
@@ -476,7 +477,7 @@ export const configureApp = (
   app.use(
     cors({
       // Set Access-Control-Allow-Origin header for allowed origins.
-      origin: (ctx) => {
+      origin: (ctx: import('koa').Context) => {
         const origin = ctx.get('Origin');
         return isOriginAllowed(origin, origins) ? origin : '';
       },

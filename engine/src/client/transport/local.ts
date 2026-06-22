@@ -12,6 +12,7 @@ import { Master } from '../../master/master';
 import type { TransportAPI, TransportData } from '../../master/master';
 import { Transport } from './transport';
 import type { TransportOpts } from './transport';
+import type { Bot } from '../../ai/bot';
 import type {
   ChatMessage,
   CredentialedActionShape,
@@ -65,7 +66,7 @@ export class LocalMaster extends Master {
 
   constructor({ game, bots, storageKey, persist }: LocalMasterOpts) {
     const clientCallbacks: Record<PlayerID, (data: TransportData) => void> = {};
-    const initializedBots = {};
+    const initializedBots: Record<PlayerID, Bot> = {};
 
     if (game && game.ai && bots) {
       for (const playerID in bots) {
@@ -113,10 +114,10 @@ export class LocalMaster extends Master {
             botPlayer
           );
           await this.onUpdate(
-            botAction.action,
+            botAction.action as import('../../types').CredentialedActionShape.Any,
             state._stateID,
             matchID,
-            botAction.action.payload.playerID
+            botAction.action.payload.playerID ?? ''
           );
         }, 100);
       }
@@ -146,7 +147,7 @@ export class LocalTransport extends Transport {
    */
   constructor({ master, ...opts }: LocalTransportOpts) {
     super(opts);
-    this.master = master;
+    this.master = master!;
   }
 
   sendChatMessage(matchID: string, chatMessage: ChatMessage): void {
@@ -159,12 +160,12 @@ export class LocalTransport extends Transport {
   }
 
   sendAction(state: State, action: CredentialedActionShape.Any): void {
-    this.master.onUpdate(action, state._stateID, this.matchID, this.playerID);
+    this.master.onUpdate(action, state._stateID, this.matchID ?? '', this.playerID ?? '');
   }
 
   requestSync(): void {
     this.master.onSync(
-      this.matchID,
+      this.matchID ?? '',
       this.playerID,
       this.credentials,
       this.numPlayers
@@ -173,7 +174,7 @@ export class LocalTransport extends Transport {
 
   connect(): void {
     this.setConnectionStatus(true);
-    this.master.connect(this.playerID, (data) => this.notifyClient(data));
+    this.master.connect(this.playerID ?? '', (data) => this.notifyClient(data));
     this.requestSync();
   }
 
@@ -208,7 +209,7 @@ const localMasters: Map<Game, { master: LocalMaster } & LocalOpts> = new Map();
 export function Local({ bots, persist, storageKey }: LocalOpts = {}) {
   return (transportOpts: TransportOpts) => {
     const { gameKey, game } = transportOpts;
-    let master: LocalMaster;
+    let master!: LocalMaster;
 
     const instance = localMasters.get(gameKey);
     if (

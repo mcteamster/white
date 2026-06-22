@@ -16,7 +16,7 @@ export const createMetadata = ({
   unlisted?: boolean;
 }): Server.MatchData => {
   const metadata: Server.MatchData = {
-    gameName: game.name,
+    gameName: game.name ?? '',
     unlisted: !!unlisted,
     players: {},
     createdAt: Date.now(),

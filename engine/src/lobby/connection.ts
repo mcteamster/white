@@ -104,7 +104,7 @@ class _LobbyConnectionImpl {
         if (player.name === this.playerName) {
           await this.client.leaveMatch(gameName, matchID, {
             playerID: player.id.toString(),
-            credentials: this.playerCredentials,
+            credentials: this.playerCredentials ?? '',
           });
           delete player.name;
           delete this.playerCredentials;
@@ -131,8 +131,8 @@ class _LobbyConnectionImpl {
       const comp = this._getGameComponents(gameName);
       if (!comp) throw new Error('game not found');
       if (
-        numPlayers < comp.game.minPlayers ||
-        numPlayers > comp.game.maxPlayers
+        numPlayers < (comp.game.minPlayers ?? 1) ||
+        numPlayers > (comp.game.maxPlayers ?? Infinity)
       )
         throw new Error('invalid number of players ' + numPlayers);
       await this.client.createMatch(gameName, { numPlayers });
