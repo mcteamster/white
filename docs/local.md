@@ -36,45 +36,40 @@ Congratulations! You can now start playing or extending `Blank White Cards` to y
 
 ### 4. Remote Play (Self-Hosting for Friends)
 
-Want friends on other networks to join your game? Use `cloudflared` to expose your local server:
+Want friends on other networks to join your game? You can use `cloudflared` to expose your local server via a temporary public URL.
 
-**Install cloudflared:**
+First, install cloudflared:
 - macOS: `brew install cloudflared`
-- Linux: [Download from GitHub](https://github.com/cloudflare/cloudflared/releases)
-- Windows: [Download from GitHub](https://github.com/cloudflare/cloudflared/releases)
+- Linux/Windows: [Download from GitHub](https://github.com/cloudflare/cloudflared/releases)
 
-**Start the server with a tunnel:**
+Then run:
 ```
 npm run tunnel
 ```
 
-This starts the game server (using the port from `server/.env.development`) and creates a public tunnel. Look for a URL like:
+This starts the game server and opens a tunnel. You'll see a URL like:
 ```
 https://random-word-here.trycloudflare.com
 ```
 
-**Share with friends:**
-1. Send them the tunnel URL
-2. They go to https://blankwhite.cards
-3. Create or join a game → select **Custom** server → paste your tunnel URL
-4. Play!
+Send that URL to your friends. They go to https://blankwhite.cards, create or join a game, select **Custom** server, and paste your URL. That's it!
 
-**Notes:**
-- No account needed — quick tunnels are free and anonymous
-- The URL changes each time you restart (fine for game sessions)
-- WebSocket/real-time gameplay works through the tunnel
-- Limit: 200 concurrent requests (more than enough for 2-10 players)
+The URL changes each time you restart — that's fine for game sessions. No Cloudflare account needed. WebSockets work through the tunnel.
+
+> ⚠️ **Heads up:** This exposes your game server to the internet. The server only handles ephemeral card game state — no files, no credentials, nothing persistent — but you should still only share the URL with people you trust, and stop the tunnel (`Ctrl+C`) when you're done. Quick tunnels are subject to [Cloudflare's Terms of Service](https://www.cloudflare.com/website-terms/).
+
+Note: Custom servers don't work from inside the Discord Activity — players there can only connect to the official servers. Friends will need to use the browser client at https://blankwhite.cards to join your tunnel.
 
 ### 5. [OPTIONAL] LAN Play
 
-For same-network play without a tunnel, other devices can connect to your machine's LAN IP directly. Modify `server/.env.development`:
+If everyone's on the same network, you don't need a tunnel. Just leave `ORIGIN` empty in `server/.env.development`:
 ```
 NODE_ENV=development
 PORT=3000
 ORIGIN=
 ```
 
-Players on the same network go to https://blankwhite.cards, select **Custom** server, and enter `http://<YOUR_LAN_IP>:<PORT>` (default port is 3000, configurable in `server/.env.development`).
+Other players go to https://blankwhite.cards, select **Custom** server, and enter your machine's LAN IP (e.g. `http://192.168.1.42:3000`).
 
 ### 6. [OPTIONAL] Production Builds
 This section assumes you have web servers set up and properly configured for production network traffic [see sample architecture](./cloud.md)

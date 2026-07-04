@@ -260,6 +260,12 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
       const detectedRegion = getRegion(roomCode.value.toUpperCase());
       setRegion(detectedRegion);
       if (detectedRegion === 'custom') {
+        if (discordSdk) {
+          // Custom servers not supported inside Discord
+          roomCode.style.color = 'red';
+          setTimeout(() => { roomCode.style.color = ''; }, 500);
+          return;
+        }
         // Custom server — prompt for URL before connecting
         setAuth({ ...auth, matchID: roomCode.value.toUpperCase() });
         setStage('custom-server');
@@ -359,7 +365,7 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
                 <wired-card style={{ ...styles.region, backgroundColor: (region == 'AP') ? '#eee' : undefined }} onClick={() => { setRegion('AP'); }}>Asia</wired-card>
               </>
             }
-            <wired-card style={{ ...styles.region, backgroundColor: (region == 'custom') ? '#eee' : undefined }} onClick={() => { setRegion('custom'); }}>Custom</wired-card>
+            {!discordSdk && <wired-card style={{ ...styles.region, backgroundColor: (region == 'custom') ? '#eee' : undefined }} onClick={() => { setRegion('custom'); }}>Custom</wired-card>}
             {region === 'custom' && (
               <div style={{ width: '100%', margin: '0.25em 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 <wired-input
