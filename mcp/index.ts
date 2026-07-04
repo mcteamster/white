@@ -87,6 +87,7 @@ function getScores(state: Record<string, unknown>, playOrder: string[]): Record<
 function formatState(state: { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID: string) {
   const { G, ctx } = state;
   const cards = G.cards;
+  const rules = (G as any).rules ?? [];
   const playOrder = ctx.playOrder as string[];
   const scores = getScores(state as Record<string, unknown>, playOrder);
   const allMessages = (state as any)?.plugins?.chat?.data?.messages as Message[] | undefined;
@@ -100,6 +101,7 @@ function formatState(state: { G: { cards: Card[] }; ctx: Record<string, unknown>
     num_players: ctx.numPlayers,
     play_order: playOrder,
     scores,
+    rules,
     recent_messages: allMessages ? allMessages.slice(-10) : [],
   };
 }
@@ -820,6 +822,66 @@ mcp.registerTool(
     client.moves.postMessage(messageText, session.playerName);
     const state = await nextState;
     return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
+  }
+);
+
+mcp.registerTool(
+  'declare_rule',
+  {
+    description: 'Declare a house rule. Rules are advisory — they tell other players (and AI) how the group wants to play, but are not enforced by the game engine.',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+      text: z.string().describe('Rule text (1–200 characters)'),
+    },
+  },
+  async ({ matchID, playerID, text: ruleText }) => {
+    const session = requireSession(matchID, playerID);
+    const { client } = session;
+    const nextState = waitForMove(client);
+    client.moves.declareRule(ruleText, session.playerName);
+    const state = await nextState;
+    const rules = (state as any)?.G?.rules ?? [];
+    return text({ declared: rules[rules.length - 1], active_rules: rules });
+  }
+);
+
+mcp.registerTool(
+  'revoke_rule',
+  {
+    description: 'Revoke (remove) a house rule by its ID. Only the declaring player or the host (player 0) can revoke a rule.',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+      ruleID: z.number().describe('ID of the rule to revoke'),
+    },
+  },
+  async ({ matchID, playerID, ruleID }) => {
+    const session = requireSession(matchID, playerID);
+    const { client } = session;
+    const nextState = waitForMove(client);
+    client.moves.revokeRule(ruleID, session.playerName);
+    const state = await nextState;
+    const rules = (state as any)?.G?.rules ?? [];
+    return text({ revoked: ruleID, active_rules: rules });
+  }
+);
+
+mcp.registerTool(
+  'get_rules',
+  {
+    description: 'Get all active house rules for the current game',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+    },
+  },
+  async ({ matchID, playerID }) => {
+    const { client } = requireSession(matchID, playerID);
+    const state = client.store.getState();
+    if (!state?.G) throw new Error('No state available yet');
+    const rules = (state as any)?.G?.rules ?? [];
+    return text({ count: rules.length, rules });
   }
 );
 

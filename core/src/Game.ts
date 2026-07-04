@@ -2,6 +2,7 @@ import type { Game, Move } from "@mcteamster/white-engine";
 import { INVALID_MOVE, Stage } from '@mcteamster/white-engine/core';
 import { PluginPlayer } from '@mcteamster/white-engine/plugins';
 import { Card, getCardById, getCardsByLocation } from './Cards';
+import type { Rule } from './Cards';
 import { presetDecks } from "./lib/constants";
 import { PluginChat } from "./lib/plugin-chat";
 import { PluginGameLog } from "./lib/plugin-gamelog";
@@ -9,6 +10,7 @@ import { PluginGameLog } from "./lib/plugin-gamelog";
 // Game State
 export interface GameState {
   cards: Card[],
+  rules?: Rule[],
 }
 
 // Moves
@@ -165,6 +167,43 @@ const postMessage: Move<GameState> = ({ ctx, playerID, gamelog, chat }: any, tex
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+const declareRule: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, text: string, playerName?: string) => {
+  if (ctx.numPlayers <= 1) return INVALID_MOVE;
+  if (!text || text.trim().length === 0 || text.length > 200) return INVALID_MOVE;
+
+  const rules = G.rules ?? [];
+  const maxId = rules.length > 0 ? Math.max(...rules.map((r: Rule) => r.id)) : 0;
+  const rule: Rule = {
+    id: maxId + 1,
+    text: text.trim(),
+    playerID,
+    playerName,
+    timestamp: Date.now(),
+  };
+  G.rules = [...rules, rule];
+
+  gamelog.record({ move: 'postRule', playerID, playerName, ruleId: rule.id, ruleText: rule.text });
+  chat.syncFromLog(gamelog.entries());
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const revokeRule: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, ruleId: number, playerName?: string) => {
+  if (ctx.numPlayers <= 1) return INVALID_MOVE;
+
+  const rules = G.rules ?? [];
+  const ruleIndex = rules.findIndex((r: Rule) => r.id === ruleId);
+  if (ruleIndex === -1) return INVALID_MOVE;
+
+  const rule = rules[ruleIndex];
+  if (playerID !== rule.playerID && playerID !== '0') return INVALID_MOVE;
+
+  G.rules = rules.filter((r: Rule) => r.id !== ruleId);
+
+  gamelog.record({ move: 'revokeRule', playerID, playerName, ruleId: rule.id, ruleText: rule.text });
+  chat.syncFromLog(gamelog.entries());
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const setScore: Move<GameState> = ({ ctx, player, gamelog, chat }: any, targetPlayerID: string, value: number, setterName?: string, targetName?: string) => {
   if (player?.state && targetPlayerID in player.state) {
     const prev = player.state[targetPlayerID]?.score ?? 0;
@@ -186,17 +225,17 @@ export const BlankWhiteCards: Game<GameState> = {
   setup: (_, setupData) => {
     const preset = (setupData?.presetDeck || 'blank') as string;
     if (preset == 'blank') {
-      return { cards: [] }; // Blank White Deck
+      return { cards: [], rules: [] }; // Blank White Deck
     } else {
       try {
         const deck = presetDecks[preset] // Look for a matching preset deck
         if (deck) {
-          return deck;
+          return { ...deck, rules: deck.rules ?? [] };
         }
       } catch (e) {
         console.error(e);
       }
-      return { cards: [] }; // Blank White Deck as fallback
+      return { cards: [], rules: [] }; // Blank White Deck as fallback
     }
   },
 
@@ -241,6 +280,16 @@ export const BlankWhiteCards: Game<GameState> = {
     },
     postMessage: {
       move: postMessage,
+      client: false,
+      ignoreStaleStateID: true,
+    },
+    declareRule: {
+      move: declareRule,
+      client: false,
+      ignoreStaleStateID: true,
+    },
+    revokeRule: {
+      move: revokeRule,
       client: false,
       ignoreStaleStateID: true,
     },
