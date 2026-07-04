@@ -17,6 +17,7 @@
     "pull:global": "npm run pull:global -w app",
     "serve": "npm run start -w server",
     "local": "npm run dev -w server",
+    "tunnel": "bash app/bin/tunnel.sh",
     "serve:mcp": "npm run serve -w mcp",
     "local:mcp": "npm run dev -w mcp",
     "version:bump": "npm version patch --workspaces --include-workspace-root"

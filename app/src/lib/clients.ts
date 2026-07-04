@@ -111,59 +111,72 @@ export const GlobalBlankWhiteCardsClient = Client({
 });
 
 // Multiplayer Custom Rooms
-export const SERVERS = {
+export type Region = 'AP' | 'EU' | 'NA' | 'custom';
+
+export const SERVERS: Record<string, string> = {
   'AP': 'https://ap.blankwhite.cards',
   'EU': 'https://eu.blankwhite.cards',
   'NA': 'https://na.blankwhite.cards',
-}
-
-export const lobbyClients: Record<'AP' | 'EU' | 'NA' | 'default', LobbyClient> = {
-  AP: new LobbyClient({ server: SERVERS.AP }),
-  EU: new LobbyClient({ server: SERVERS.EU }),
-  NA: new LobbyClient({ server: SERVERS.NA }),
-  default: new LobbyClient({ server: import.meta.env.VITE_DEFAULT_SERVER }),
 };
 
-export const gameClients = {
-  AP: Client({
-    game: BlankWhiteCards,
-    board: BlankWhiteCardsBoard,
-    multiplayer: SocketIO({ server: SERVERS.AP }),
-  }),
-  EU: Client({
-    game: BlankWhiteCards,
-    board: BlankWhiteCardsBoard,
-    multiplayer: SocketIO({ server: SERVERS.EU }),
-  }),
-  NA: Client({
-    game: BlankWhiteCards,
-    board: BlankWhiteCardsBoard,
-    multiplayer: SocketIO({ server: SERVERS.NA }),
-  }),
-  default: Client({
-    game: BlankWhiteCards,
-    board: BlankWhiteCardsBoard,
-    multiplayer: SocketIO({ server: import.meta.env.VITE_DEFAULT_SERVER }),
-  }),
+const CUSTOM_SERVER_KEY = 'customServerUrl';
+const DEFAULT_CUSTOM_SERVER = 'http://localhost:3000';
+
+export function getCustomServer(): string {
+  return localStorage.getItem(CUSTOM_SERVER_KEY) || DEFAULT_CUSTOM_SERVER;
 }
 
-export const getRegion = (room: string) => {
+export function setCustomServer(url: string): void {
+  localStorage.setItem(CUSTOM_SERVER_KEY, url);
+}
+
+export function getServerUrl(region: Region): string {
+  if (region === 'custom') return getCustomServer();
+  return SERVERS[region];
+}
+
+// Lazy client factories with URL-keyed caches
+const lobbyClientCache = new Map<string, LobbyClient>();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const gameClientCache = new Map<string, any>();
+
+export function getLobbyClient(region: Region): LobbyClient {
+  const url = getServerUrl(region);
+  if (!lobbyClientCache.has(url)) {
+    lobbyClientCache.set(url, new LobbyClient({ server: url }));
+  }
+  return lobbyClientCache.get(url)!;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// TODO: boardgame.io Client() generic variance prevents proper typing here
+export function getGameClient(region: Region): any {
+  const url = getServerUrl(region);
+  if (!gameClientCache.has(url)) {
+    gameClientCache.set(url, Client({
+      game: BlankWhiteCards,
+      board: BlankWhiteCardsBoard,
+      multiplayer: SocketIO({ server: url }),
+    }));
+  }
+  return gameClientCache.get(url)!;
+}
+
+export const getRegion = (room: string): Region => {
   if (import.meta.env.VITE_MULTI_REGION === 'true') {
-    // This implementation is specific to a 3 global region server setup, adjust balancing accordingly here and in server.ts
     if (room.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
-      // Set server region based on room code
       if (room.match(/[BCDFG]$/)) {
         return 'AP';
       } else if (room.match(/[HJKLM]$/)) {
         return 'EU';
       } else if (room.match(/[NPQRS]$/)) {
         return 'NA';
-      } else { // Fallback to default server (TVWXZ)
-        return 'default';
+      } else { // Custom server (TVWXZ)
+        return 'custom';
       }
     }
   }
-  return 'default';
+  return 'custom';
 }
 
 export const parsePathCode = () => {

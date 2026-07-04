@@ -19,21 +19,6 @@ npm run local
 ```
 This will run a `boardgame.io` server at http://localhost:3000
 
-[Optional] If you'd like to host across your local network, modify the LAN IP Address and/or PORT in `server/.env.development`:
-```
-NODE_ENV=development
-PORT=<PORT>
-ORIGIN=http://<YOUR_LAN_IP_ADDRESS>:<PORT>
-```
-
-And update `app/.env.development`:
-```
-VITE_ORIGIN='http://<YOUR_LAN_IP_ADDRESS>:5173'
-VITE_COMPRESS_IMAGES='true'
-VITE_MULTI_REGION='false'
-VITE_DEFAULT_SERVER='http://<YOUR_LAN_IP_ADDRESS>:<PORT>'
-```
-
 ### 3. Start hosting the Client
 Open a new terminal and run:
 ```
@@ -49,7 +34,44 @@ npm run preview -w app
 
 Congratulations! You can now start playing or extending `Blank White Cards` to your heart's content!
 
-### 4. [OPTIONAL] Production Builds
+### 4. Remote Play (Self-Hosting for Friends)
+
+Want friends on other networks to join your game? You can use `cloudflared` to expose your local server via a temporary public URL.
+
+First, install cloudflared:
+- macOS: `brew install cloudflared`
+- Linux/Windows: [Download from GitHub](https://github.com/cloudflare/cloudflared/releases)
+
+Then run:
+```
+npm run tunnel
+```
+
+This starts the game server and opens a tunnel. You'll see a URL like:
+```
+https://random-word-here.trycloudflare.com
+```
+
+Send that URL to your friends. They go to https://blankwhite.cards, create or join a game, select **Custom** server, and paste your URL. That's it!
+
+The URL changes each time you restart — that's fine for game sessions. No Cloudflare account needed. WebSockets work through the tunnel.
+
+> ⚠️ **Heads up:** This exposes your game server to the internet. The server only handles ephemeral card game state — no files, no credentials, nothing persistent — but you should still only share the URL with people you trust, and stop the tunnel (`Ctrl+C`) when you're done. Quick tunnels are subject to [Cloudflare's Terms of Service](https://www.cloudflare.com/website-terms/).
+
+Note: Custom servers don't work from inside the Discord Activity — players there can only connect to the official servers. Friends will need to use the browser client at https://blankwhite.cards to join your tunnel.
+
+### 5. [OPTIONAL] LAN Play
+
+If everyone's on the same network, you don't need a tunnel. Just leave `ORIGIN` empty in `server/.env.development`:
+```
+NODE_ENV=development
+PORT=3000
+ORIGIN=
+```
+
+Other players go to https://blankwhite.cards, select **Custom** server, and enter your machine's LAN IP (e.g. `http://192.168.1.42:3000`).
+
+### 6. [OPTIONAL] Production Builds
 This section assumes you have web servers set up and properly configured for production network traffic [see sample architecture](./cloud.md)
 
 Update `app/.env.production` with the details of your hosting setup:
@@ -59,7 +81,6 @@ VITE_COMPRESS_IMAGES='true'
 VITE_MULTI_REGION='false'
 VITE_API_SERVER='<COMMON_API>'
 VITE_CARD_API='<CARD_API_ENDPOINT>'
-VITE_DEFAULT_SERVER='<GAME_SERVER>'
 ```
 
 Update `server/.env.production`:
@@ -80,7 +101,7 @@ Run the game server:
 npm run serve
 ```
 
-### 5. [OPTIONAL] MCP Server
+### 7. [OPTIONAL] MCP Server
 The MCP server lets AI agents play Blank White Cards via the [Model Context Protocol](https://modelcontextprotocol.io/).
 
 By default, the MCP server connects to the public game servers (ap/eu/na.blankwhite.cards) based on the room code. To point it at your own server instead, set the `GAME_SERVER_URL` environment variable:
@@ -130,7 +151,7 @@ Add to your MCP client config:
 }
 ```
 
-### 6. Project Structure
+### 8. Project Structure
 ```
 white/
 ├── core/       ← Shared game logic (Game.ts, Cards.ts)

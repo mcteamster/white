@@ -3,7 +3,8 @@ import { Properties } from 'csstype';
 import { Icon } from './Icons';
 import { useCallback, useContext, useEffect, useState } from "react";
 import { AuthContext, HotkeysContext } from "../lib/contexts";
-import { lobbyClients, getRegion } from "../lib/clients";
+import { getLobbyClient, getRegion, getCustomServer, setCustomServer } from "../lib/clients";
+import type { Region } from "../lib/clients";
 import { externalLink } from "../lib/hooks";
 import { discordSdk } from "../lib/discord";
 import discordLogo from '../assets/discord.svg';
@@ -132,8 +133,8 @@ const styles: { [key: string]: Properties<string | number> } = {
 interface LobbyProps {
   globalSize: number;
   deckLoading: boolean;
-  region: 'AP' | 'EU' | 'NA' | 'default';
-  setRegion: (region: 'AP' | 'EU' | 'NA' | 'default') => void;
+  region: Region;
+  setRegion: (region: Region) => void;
 }
 
 export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps) {
@@ -181,7 +182,7 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
     const playerName = checkForPlayerName();
     if (playerName) {
       // Create Match on Server
-      const { matchID } = await lobbyClients[region].createMatch('blank-white-cards', {
+      const { matchID } = await getLobbyClient(region).createMatch('blank-white-cards', {
         unlisted: true,
         numPlayers: 100, // TODO: What is a realistic upper bound?
         setupData: {
@@ -202,7 +203,7 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
         }
 
         // Join Match as playerID 0
-        const { playerCredentials } = await lobbyClients[region].joinMatch(
+        const { playerCredentials } = await getLobbyClient(region).joinMatch(
           'blank-white-cards',
           matchID,
           {
@@ -227,7 +228,7 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
       const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
       if (roomCode.value.toUpperCase().match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
         setRegion(getRegion(roomCode.value.toUpperCase()))
-        const lobbyClient = lobbyClients[getRegion(roomCode.value.toUpperCase())];
+        const lobbyClient = getLobbyClient(getRegion(roomCode.value.toUpperCase()));
         try {
           const { playerID, playerCredentials } = await lobbyClient.joinMatch(
             'blank-white-cards',
@@ -256,8 +257,21 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
   const checkForRoomCode = useCallback(() => {
     const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
     if (roomCode.value && roomCode.value.toUpperCase().match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
-      setRegion(getRegion(roomCode.value.toUpperCase()))
-      const lobbyClient = lobbyClients[getRegion(roomCode.value.toUpperCase())];
+      const detectedRegion = getRegion(roomCode.value.toUpperCase());
+      setRegion(detectedRegion);
+      if (detectedRegion === 'custom') {
+        if (discordSdk) {
+          // Custom servers not supported inside Discord
+          roomCode.style.color = 'red';
+          setTimeout(() => { roomCode.style.color = ''; }, 500);
+          return;
+        }
+        // Custom server — prompt for URL before connecting
+        setAuth({ ...auth, matchID: roomCode.value.toUpperCase() });
+        setStage('custom-server');
+        return;
+      }
+      const lobbyClient = getLobbyClient(detectedRegion);
       lobbyClient.getMatch('blank-white-cards', roomCode.value.toUpperCase()).then(async () => {
         setAuth({ ...auth, matchID: roomCode.value.toUpperCase() });
         setStage('join');
@@ -271,9 +285,8 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
 
   const checkLobbyConnection = useCallback(() => {
     const roomCode = (document.getElementById("roomInput") as HTMLInputElement);
-    const lobbyMatches = Object.keys(lobbyClients).map((server) => {
-      const key = server as ('AP' | 'EU' | 'NA' | 'default')
-      return lobbyClients[key].listMatches('blank-white-cards');
+    const lobbyMatches = (['AP', 'EU', 'NA'] as const).map((server) => {
+      return getLobbyClient(server).listMatches('blank-white-cards');
     })
     Promise.any(lobbyMatches).then(() => {
       if (roomCode.value) {
@@ -292,7 +305,7 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
   const { hotkeys } = useContext(HotkeysContext);
   useEffect(() => {
     if (hotkeys.enter) {
-      if (stage == 'landing') {
+      if (stage == 'landing' || stage == 'down') {
         checkForRoomCode();
       } else if (stage == 'join') {
         joinGame();
@@ -319,12 +332,12 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
               </a>
             }
           </div>
-          <div style={{ display: (stage == 'down') ? undefined : 'none' }}>
-            <div style={styles.subheading}>Servers Currently Unavailable</div>
-          </div>
+          {stage === 'down' && (
+            <div style={{ ...styles.subheading, color: '#c00', fontSize: '0.85em' }}>Public servers unavailable — custom servers still work</div>
+          )}
 
-          <div style={{ display: (stage == 'landing') ? undefined : 'none' }}>
-            <wired-card style={{ ...styles.action, fontSize: '1.5em' }} onClick={() => { setStage('create-setup') }}>
+          <div style={{ display: (stage == 'landing' || stage == 'down') ? undefined : 'none' }}>
+            <wired-card style={{ ...styles.action, fontSize: '1.5em' }} onClick={() => { setStage('create-region') }}>
               Create New Game
             </wired-card>
             <div>or</div>
@@ -341,7 +354,64 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
             <wired-card style={{ ...styles.code, fontSize: '1.5em', color: 'grey' }}>{auth?.matchID}</wired-card>
           </div>
 
-          <div style={{ ...styles.presets, display: (stage == 'create-setup') ? undefined : 'none' }}>
+          {/* Step 1: Choose Region */}
+          <div style={{ ...styles.presets, display: (stage == 'create-region') ? undefined : 'none' }}>
+            <div style={styles.subheading}>Choose Region</div>
+            {
+              import.meta.env.VITE_MULTI_REGION == 'true' &&
+              <>
+                <wired-card style={{ ...styles.region, backgroundColor: (region == 'NA') ? '#eee' : undefined }} onClick={() => { setRegion('NA'); }}>America</wired-card>
+                <wired-card style={{ ...styles.region, backgroundColor: (region == 'EU') ? '#eee' : undefined }} onClick={() => { setRegion('EU'); }}>Europe</wired-card>
+                <wired-card style={{ ...styles.region, backgroundColor: (region == 'AP') ? '#eee' : undefined }} onClick={() => { setRegion('AP'); }}>Asia</wired-card>
+              </>
+            }
+            {!discordSdk && <wired-card style={{ ...styles.region, backgroundColor: (region == 'custom') ? '#eee' : undefined }} onClick={() => { setRegion('custom'); }}>Custom</wired-card>}
+            {region === 'custom' && (
+              <div style={{ width: '100%', margin: '0.25em 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <wired-input
+                  id="customServerInput"
+                  placeholder="http://localhost:3000"
+                  style={{ width: '12em' }}
+                  onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                    const val = (e.target as HTMLInputElement).value || (e.target?.shadowRoot?.querySelector('input') as HTMLInputElement)?.value;
+                    if (val) setCustomServer(val);
+                  }}
+                ></wired-input>
+                <span style={{ cursor: 'pointer', fontSize: '1.5em', color: '#000', marginLeft: '0.25em' }} onClick={() => {
+                  const input = document.getElementById('customServerInput') as HTMLInputElement;
+                  const inner = input?.shadowRoot?.querySelector('input') as HTMLInputElement;
+                  if (inner) inner.value = '';
+                  if (input) input.value = '';
+                }}>×</span>
+              </div>
+            )}
+            <div style={{ ...styles.presets }}>
+              <wired-card style={styles.action} onClick={() => { roomCodeError(); setStage('landing') }}><Icon name="back" />Back</wired-card>
+              <wired-card style={styles.action} onClick={() => {
+                if (region === 'custom') {
+                  // Save the URL and validate connectivity before proceeding
+                  const input = document.getElementById('customServerInput') as HTMLInputElement;
+                  const val = input?.value || input?.shadowRoot?.querySelector('input')?.value || getCustomServer();
+                  setCustomServer(val);
+                  getLobbyClient('custom').listMatches('blank-white-cards').then(() => {
+                    setStage('create-deck');
+                  }).catch(() => {
+                    // Flash the input red to indicate connection failure
+                    const el = document.getElementById('customServerInput') as HTMLElement;
+                    if (el) {
+                      el.style.color = 'red';
+                      setTimeout(() => { el.style.color = ''; }, 500);
+                    }
+                  });
+                } else {
+                  setStage('create-deck');
+                }
+              }}><Icon name="done" />Confirm</wired-card>
+            </div>
+          </div>
+
+          {/* Step 2: Select Deck */}
+          <div style={{ ...styles.presets, display: (stage == 'create-deck') ? undefined : 'none' }}>
             <div style={styles.subheading}>Select a Starting Deck</div>
             <wired-card style={{ ...styles.action, backgroundColor: (preset == 'blank') ? '#eee' : undefined }} onClick={() => { setPreset('blank'); }}><Icon name="copy" />Blank</wired-card>
             <wired-card style={{ ...styles.action, backgroundColor: (preset == 'global') ? '#eee' : undefined }} onClick={() => { setPreset('global'); }}><Icon name="global" />Global</wired-card>
@@ -363,22 +433,64 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
               {preset == 'party-2026' && 'A curated 100 card party deck — dares, chaos mechanics, and social fun.'}
             </div>
             <div style={{ ...styles.presets }}>
-              <wired-card style={styles.action} onClick={() => { roomCodeError(); setStage('landing') }}><Icon name="back" />Back</wired-card>
+              <wired-card style={styles.action} onClick={() => { roomCodeError(); setStage('create-region') }}><Icon name="back" />Back</wired-card>
               <wired-card style={styles.action} onClick={() => { roomCodeError(); setStage('create') }}><Icon name="done" />Confirm</wired-card>
             </div>
           </div>
 
-          <div style={{ ...styles.presets, display: (stage == 'create') ? undefined : 'none' }}>
-            <div style={styles.subheading}>Choose Region</div>
-            {
-              import.meta.env.VITE_MULTI_REGION == 'true' ?
-              <>
-                <wired-card style={{ ...styles.region, backgroundColor: (region == 'NA') ? '#eee' : undefined }} onClick={() => { setRegion('NA'); }}>America</wired-card>
-                <wired-card style={{ ...styles.region, backgroundColor: (region == 'EU') ? '#eee' : undefined }} onClick={() => { setRegion('EU'); }}>Europe</wired-card>
-                <wired-card style={{ ...styles.region, backgroundColor: (region == 'AP') ? '#eee' : undefined }} onClick={() => { setRegion('AP'); }}>Asia</wired-card>
-              </>
-              : <wired-card style={{ ...styles.region, backgroundColor: (region == 'default') ? '#eee' : undefined }} onClick={() => { setRegion('default'); }}>LAN</wired-card>
-            }
+
+          {/* Custom server prompt (join flow — TVWXZ room codes) */}
+          <div style={{ ...styles.presets, display: (stage == 'custom-server') ? undefined : 'none' }}>
+            <div style={styles.subheading}>Custom Server</div>
+            <div style={styles.textentry}>
+              <wired-input style={styles.name} id="customServerJoinInput" placeholder="http://localhost:3000"></wired-input>
+              <span style={{ cursor: 'pointer', fontSize: '1.5em', color: '#000', marginLeft: '0.25em' }} onClick={() => {
+                const input = document.getElementById('customServerJoinInput') as HTMLInputElement;
+                const inner = input?.shadowRoot?.querySelector('input') as HTMLInputElement;
+                if (inner) inner.value = '';
+                if (input) input.value = '';
+              }}>×</span>
+            </div>
+            <div style={styles.subheading}>Room Code</div>
+            <div style={styles.textentry}>
+              <wired-input style={{ ...styles.code, fontSize: '1.5em' }} id="customServerRoomInput" placeholder="&nbsp;Room" maxlength={4} value={auth?.matchID} key={`room-${auth?.matchID}`}></wired-input>
+            </div>
+            <div style={{ ...styles.presets }}>
+              <wired-card style={styles.action} onClick={() => {
+                setAuth({});
+                setStage('landing');
+              }}><Icon name="back" />Back</wired-card>
+              <wired-card style={styles.action} onClick={() => {
+                const roomInput = document.getElementById('customServerRoomInput') as HTMLInputElement;
+                const urlInput = document.getElementById('customServerJoinInput') as HTMLInputElement;
+                const roomVal = (roomInput?.value || roomInput?.shadowRoot?.querySelector('input')?.value || '').toUpperCase();
+                const urlVal = urlInput?.value || urlInput?.shadowRoot?.querySelector('input')?.value || getCustomServer();
+
+                // Validate room code format
+                if (!roomVal.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
+                  roomInput.style.color = 'red';
+                  setTimeout(() => { roomInput.style.color = ''; }, 500);
+                  return;
+                }
+
+                setCustomServer(urlVal);
+                setAuth({ ...auth, matchID: roomVal });
+
+                // Try to connect and find the room
+                const lobbyClient = getLobbyClient('custom');
+                lobbyClient.getMatch('blank-white-cards', roomVal).then(async () => {
+                  setStage('join');
+                }).catch((err) => {
+                  if (err?.message?.includes('404') || err?.status === 404) {
+                    roomInput.style.color = 'red';
+                    setTimeout(() => { roomInput.style.color = ''; }, 500);
+                  } else {
+                    urlInput.style.color = 'red';
+                    setTimeout(() => { urlInput.style.color = ''; }, 500);
+                  }
+                });
+              }}><Icon name="play" />Connect</wired-card>
+            </div>
           </div>
 
           <div style={{ display: (['join', 'create'].includes(stage)) ? undefined : 'none' }}>
@@ -390,7 +502,7 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
                 if (stage == 'join') {
                   setStage('landing');
                 } else if (stage == 'create') {
-                  setStage('create-setup')
+                  setStage('create-deck');
                 };
               }}><Icon name="back" />Back</wired-card>
               <wired-card id='enterGameButton' style={styles.action} onClick={() => {
@@ -458,7 +570,7 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
 }
 
 interface NoticesProps {
-  region: 'AP' | 'EU' | 'NA' | 'default';
+  region: Region;
 }
 
 interface Notice {
