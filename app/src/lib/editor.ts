@@ -3,7 +3,7 @@ import { useParams } from 'react-router';
 import { Card } from '@mcteamster/white-core';
 import { sanitiseCard } from './data';
 import { dbManager } from './indexedDB';
-import { getRegion, SERVERS } from './clients';
+import { getRegion, getServerUrl } from './clients';
 
 export interface DeckEditorState {
   cards: Card[];
@@ -49,7 +49,7 @@ export const useDeckEditor = () => {
       if (deckId) {
         try {
           const region = getRegion(deckId);
-          const serverUrl = region === 'default' ? import.meta.env.VITE_DEFAULT_SERVER : SERVERS[region];
+          const serverUrl = getServerUrl(region);
           const response = await fetch(`${serverUrl}/export/${deckId}`);
           if (response.ok) {
             const rawData = await response.text();

@@ -5,7 +5,8 @@ import { Lobby } from './Components/Lobby';
 import { About } from "./Components/About";
 import { DeckEditor } from "./Components/Editor/DeckEditor";
 import { AuthContext, AuthType, FocusContext, HotkeysContext, LoadingContext } from "./lib/contexts";
-import { GlobalBlankWhiteCardsClient, parsePathCode, getRegion, startingDeck, lobbyClients, gameClients, onDeckUpdate, deckLoading } from "./lib/clients";
+import { GlobalBlankWhiteCardsClient, parsePathCode, getRegion, startingDeck, getLobbyClient, getGameClient, onDeckUpdate, deckLoading } from "./lib/clients";
+import type { Region } from "./lib/clients";
 import { Rotate } from "./Components/Icons";
 import { useHotkeys, useWindowDimensions } from "./lib/hooks";
 import { Gallery } from "./Components/Gallery";
@@ -51,7 +52,7 @@ const App = () => {
   }, [])
 
   // Region
-  const [region, setRegion] = useState<'AP' | 'EU' | 'NA' | 'default'>(() => {
+  const [region, setRegion] = useState<Region>(() => {
     // Predefined Match IDs
     if (auth.matchID) {
       return getRegion(auth.matchID);
@@ -65,24 +66,24 @@ const App = () => {
           'eu-central-1': 'EU',
           'ap-southeast-1': 'AP',
         }
-        return awsToRegionMap[closestRegion] || 'default'
+        return awsToRegionMap[closestRegion] || 'custom'
       } else {
-        console.warn('No region autodetected, falling back to default.');
-        return 'default'
+        console.warn('No region autodetected, falling back to custom.');
+        return 'custom'
       }
     }
-    return 'default'
+    return 'custom'
   });
 
   // Multiplayer Client
-  const MultiplayerClient = gameClients[region];
+  const MultiplayerClient = getGameClient(region);
 
   // Check Credential Validity
   const [validMatch, setValidMatch] = useState(false);
   useEffect(() => {
     if (auth.matchID) {
       setRegion(getRegion(auth.matchID))
-      const lobbyClient = lobbyClients[region];
+      const lobbyClient = getLobbyClient(region);
       try {
         lobbyClient.getMatch('blank-white-cards', auth.matchID).then(async () => {
           if (auth.matchID && auth.playerID && auth.credentials) {

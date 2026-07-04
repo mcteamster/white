@@ -20,10 +20,18 @@ const roomCodeGen = () => {
   return roomCode
 };
 
+// CORS Configuration
+// Deployed servers: set ORIGIN to restrict (e.g. 'https://blankwhite.cards')
+// Self-hosted: leave unset for permissive CORS (allows any origin)
+const corsOrigin = process.env.ORIGIN;
+const origins = corsOrigin
+  ? [corsOrigin, Origins.LOCALHOST]
+  : [/.*/]; // Allow all origins when not configured (self-hosted default)
+
 // Initialise Server
 const server = Server({
   games: [BlankWhiteCards],
-  origins: [process.env.ORIGIN || '', Origins.LOCALHOST],
+  origins,
   uuid: roomCodeGen,
   generateCredentials: () => nanoid(),
 });
