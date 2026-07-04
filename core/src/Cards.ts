@@ -1,12 +1,21 @@
 // Types
+export interface Rule {
+  id: number;
+  text: string;
+  playerID: string;
+  playerName?: string;
+  timestamp: number;
+}
+
 export interface Message {
   id: number;
-  type: 'chat' | 'event';
+  type: 'chat' | 'event' | 'rule';
   playerID?: string;
   playerName?: string;
   targetPlayerID?: string;
   text: string;
   timestamp: number;
+  ruleId?: number;
 }
 
 export interface Card {

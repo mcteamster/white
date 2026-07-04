@@ -33,6 +33,8 @@ import PeopleIcon from '@mui/icons-material/People';
 import PersonIcon from '@mui/icons-material/Person';
 import PlayArrowOutlinedIcon from '@mui/icons-material/PlayArrowOutlined';
 import PresentToAllOutlinedIcon from '@mui/icons-material/PresentToAllOutlined';
+import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
+import GavelOutlinedIcon from '@mui/icons-material/GavelOutlined';
 import QuestionMarkOutlinedIcon from '@mui/icons-material/QuestionMarkOutlined';
 import RecyclingIcon from '@mui/icons-material/Recycling';
 import SaveAltOutlinedIcon from '@mui/icons-material/SaveAltOutlined';
@@ -80,8 +82,10 @@ type IconName =
   'play' |
   'party' |
   'pile' |
+  'pin' |
   'prev' |
   'redo' |
+  'rule' |
   'search' |
   'settings' |
   'send' |
@@ -134,7 +138,9 @@ export function Icon(props: { name: IconName }) {
     play: <PlayArrowOutlinedIcon></PlayArrowOutlinedIcon>,
     party: <CelebrationOutlinedIcon></CelebrationOutlinedIcon>,
     pile: <CollectionsOutlinedIcon></CollectionsOutlinedIcon>,
+    pin: <PushPinOutlinedIcon></PushPinOutlinedIcon>,
     prev: <ArrowBackIosNewIcon></ArrowBackIosNewIcon>,
+    rule: <GavelOutlinedIcon></GavelOutlinedIcon>,
     search: <SearchOutlinedIcon></SearchOutlinedIcon>,
     settings: <BuildOutlinedIcon></BuildOutlinedIcon>,
     send: <ForwardOutlinedIcon></ForwardOutlinedIcon>,

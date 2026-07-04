@@ -1,5 +1,5 @@
 import type { BoardProps } from '@mcteamster/white-engine/react';
-import type { GameState, Message } from '@mcteamster/white-core';
+import type { GameState, Message, Rule } from '@mcteamster/white-core';
 import type { Properties } from 'csstype';
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from './Icons';
@@ -12,9 +12,10 @@ interface ConsoleProps extends BoardProps<GameState> {
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export function Console({ moves, playerID, playerName, plugins, matchData, open: openProp, setOpen: setOpenProp }: ConsoleProps) {
+export function Console({ G, moves, playerID, playerName, plugins, matchData, open: openProp, setOpen: setOpenProp }: ConsoleProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const messages: Message[] = (plugins as any)?.chat?.data?.messages ?? [];
+  const rules: Rule[] = G?.rules ?? [];
   const dimensions = useWindowDimensions();
   const headerHeight = (discordSdk && dimensions.upright) ? '4.75em' : '2em';
   const [localOpen, setLocalOpen] = useState(false);
@@ -22,6 +23,7 @@ export function Console({ moves, playerID, playerName, plugins, matchData, open:
   const setOpen = setOpenProp ?? setLocalOpen;
   const [unread, setUnread] = useState(0);
   const [showEvents, setShowEvents] = useState(true);
+  const [rulesExpanded, setRulesExpanded] = useState(true);
   const listRef = useRef<HTMLDivElement>(null);
   const prevLenRef = useRef(messages.length);
 
@@ -46,7 +48,12 @@ export function Console({ moves, playerID, playerName, plugins, matchData, open:
     const el = document.getElementById('consoleInput') as HTMLInputElement & { value: string };
     const text = el?.value?.trim();
     if (!text || !playerID) return;
-    moves.postMessage(text, playerName);
+    if (text.startsWith('/rule ')) {
+      const ruleText = text.slice(6).trim();
+      if (ruleText) moves.declareRule(ruleText, playerName);
+    } else {
+      moves.postMessage(text, playerName);
+    }
     el.value = '';
   };
 
@@ -153,6 +160,43 @@ export function Console({ moves, playerID, playerName, plugins, matchData, open:
       color: '#888',
       overflowWrap: 'break-word',
     },
+    ruleMsg: {
+      marginBottom: '0.3em',
+      overflowWrap: 'break-word',
+      color: 'red',
+    },
+    pinnedRules: {
+      borderBottom: '1px solid #e5e7eb',
+      padding: '0.4em 0.5em',
+      fontSize: '0.85em',
+      maxHeight: '30%',
+      overflowY: 'auto' as const,
+    },
+    pinnedRule: {
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      gap: '0.25em',
+      marginBottom: '0.2em',
+    },
+    pinnedRuleText: {
+      flex: 1,
+      color: 'red',
+    },
+    revokeBtn: {
+      fontSize: '0.7em',
+      cursor: 'pointer',
+      color: '#999',
+      flexShrink: 0,
+    },
+    rulesCollapsed: {
+      padding: '0.3em 0.5em',
+      borderBottom: '1px solid #e5e7eb',
+      fontSize: '0.8em',
+      color: 'red',
+      cursor: 'pointer',
+      userSelect: 'none' as const,
+    },
   };
 
   return (
@@ -193,11 +237,37 @@ export function Console({ moves, playerID, playerName, plugins, matchData, open:
               events <Icon name={showEvents ? 'show' : 'hide'} />
             </span>
           </div>
+          {/* Pinned rules */}
+          {rules.length > 0 && (
+            rules.length > 2 && !rulesExpanded ? (
+              <div style={styles.rulesCollapsed} onClick={() => setRulesExpanded(true)}>
+                {rules.length} rules active ›
+              </div>
+            ) : (
+              <div style={styles.pinnedRules}>
+                {rules.length > 2 && (
+                  <div style={{ cursor: 'pointer', color: '#999', fontSize: '0.75em', marginBottom: '0.2em' }} onClick={() => setRulesExpanded(false)}>
+                    hide
+                  </div>
+                )}
+                {rules.map(rule => (
+                  <div key={rule.id} style={styles.pinnedRule}>
+                    <span style={styles.pinnedRuleText}>• {rule.text}</span>
+                    {(playerID === rule.playerID || playerID === '0') && (
+                      <span style={styles.revokeBtn} onClick={() => moves.revokeRule(rule.id, playerName)}>×</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )
+          )}
           <div ref={listRef} style={styles.list}>
-            {messages.filter(msg => showEvents || msg.type === 'chat').map((msg, i) => (
-              <div key={`${msg.id}-${i}`} style={msg.type === 'chat' ? styles.chatMsg : styles.eventMsg}>
+            {messages.filter(msg => showEvents || msg.type === 'chat' || msg.type === 'rule').map((msg, i) => (
+              <div key={`${msg.id}-${i}`} style={msg.type === 'chat' ? styles.chatMsg : msg.type === 'rule' ? styles.ruleMsg : styles.eventMsg}>
                 {msg.type === 'chat' ? (
                   <><strong>{msg.playerName || resolveName(msg.playerID)}:</strong> {msg.text}</>
+                ) : msg.type === 'rule' ? (
+                  <><strong>{msg.playerName || resolveName(msg.playerID)}</strong> declared rule: {msg.text}</>
                 ) : (
                   <>{msg.playerID ? <><strong>{resolveName(msg.playerID)}</strong> {msg.targetPlayerID ? msg.text.replace('{recipient}', resolveName(msg.targetPlayerID)) : msg.text}</> : msg.text}</>
                 )}

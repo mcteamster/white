@@ -9,7 +9,9 @@ export type GameLogMove =
   | 'shuffleCards'
   | 'loadCards'
   | 'setScore'
-  | 'postMessage';
+  | 'postMessage'
+  | 'postRule'
+  | 'revokeRule';
 
 export interface GameLogEntry {
   id: number;
@@ -27,6 +29,8 @@ export interface GameLogEntry {
   setterID?: string; // for setScore (who set the score)
   setterName?: string;
   text?: string;    // for postMessage chat text
+  ruleId?: number;  // for postRule, revokeRule
+  ruleText?: string; // for postRule, revokeRule
 }
 
 interface GameLogData {
@@ -91,6 +95,12 @@ export function logEntryToMessage(entry: GameLogEntry): Message | null {
 
     case 'postMessage':
       return { ...base, type: 'chat', playerName: entry.playerName, text: entry.text || '' };
+
+    case 'postRule':
+      return { ...base, type: 'rule', playerName: entry.playerName, text: entry.ruleText || '', ruleId: entry.ruleId };
+
+    case 'revokeRule':
+      return { ...base, type: 'event', playerName: entry.playerName, text: `removed rule: "${entry.ruleText}"` };
 
     default:
       return null;
