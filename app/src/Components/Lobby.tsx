@@ -433,8 +433,7 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
           </div>
 
 
-          {/* Custom server prompt (shared by create + join flows) */}
-          {/* Custom server prompt (join flow only — TVWXZ room codes) */}
+          {/* Custom server prompt (join flow — TVWXZ room codes) */}
           <div style={{ ...styles.presets, display: (stage == 'custom-server') ? undefined : 'none' }}>
             <div style={styles.subheading}>Custom Server</div>
             <div style={styles.textentry}>

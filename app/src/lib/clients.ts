@@ -149,6 +149,7 @@ export function getLobbyClient(region: Region): LobbyClient {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// TODO: boardgame.io Client() generic variance prevents proper typing here
 export function getGameClient(region: Region): any {
   const url = getServerUrl(region);
   if (!gameClientCache.has(url)) {
