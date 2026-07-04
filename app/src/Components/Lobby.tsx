@@ -299,7 +299,7 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
   const { hotkeys } = useContext(HotkeysContext);
   useEffect(() => {
     if (hotkeys.enter) {
-      if (stage == 'landing') {
+      if (stage == 'landing' || stage == 'down') {
         checkForRoomCode();
       } else if (stage == 'join') {
         joinGame();
@@ -326,12 +326,12 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
               </a>
             }
           </div>
-          <div style={{ display: (stage == 'down') ? undefined : 'none' }}>
-            <div style={styles.subheading}>Servers Currently Unavailable</div>
-          </div>
+          {stage === 'down' && (
+            <div style={{ ...styles.subheading, color: '#c00', fontSize: '0.85em' }}>Public servers unavailable — custom servers still work</div>
+          )}
 
-          <div style={{ display: (stage == 'landing') ? undefined : 'none' }}>
-            <wired-card style={{ ...styles.action, fontSize: '1.5em' }} onClick={() => { setStage('create-setup') }}>
+          <div style={{ display: (stage == 'landing' || stage == 'down') ? undefined : 'none' }}>
+            <wired-card style={{ ...styles.action, fontSize: '1.5em' }} onClick={() => { setStage('create-region') }}>
               Create New Game
             </wired-card>
             <div>or</div>
@@ -348,7 +348,64 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
             <wired-card style={{ ...styles.code, fontSize: '1.5em', color: 'grey' }}>{auth?.matchID}</wired-card>
           </div>
 
-          <div style={{ ...styles.presets, display: (stage == 'create-setup') ? undefined : 'none' }}>
+          {/* Step 1: Choose Region */}
+          <div style={{ ...styles.presets, display: (stage == 'create-region') ? undefined : 'none' }}>
+            <div style={styles.subheading}>Choose Region</div>
+            {
+              import.meta.env.VITE_MULTI_REGION == 'true' &&
+              <>
+                <wired-card style={{ ...styles.region, backgroundColor: (region == 'NA') ? '#eee' : undefined }} onClick={() => { setRegion('NA'); }}>America</wired-card>
+                <wired-card style={{ ...styles.region, backgroundColor: (region == 'EU') ? '#eee' : undefined }} onClick={() => { setRegion('EU'); }}>Europe</wired-card>
+                <wired-card style={{ ...styles.region, backgroundColor: (region == 'AP') ? '#eee' : undefined }} onClick={() => { setRegion('AP'); }}>Asia</wired-card>
+              </>
+            }
+            <wired-card style={{ ...styles.region, backgroundColor: (region == 'custom') ? '#eee' : undefined }} onClick={() => { setRegion('custom'); }}>Custom</wired-card>
+            {region === 'custom' && (
+              <div style={{ width: '100%', margin: '0.25em 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <wired-input
+                  id="customServerInput"
+                  placeholder="http://localhost:3000"
+                  style={{ width: '12em' }}
+                  onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                    const val = (e.target as HTMLInputElement).value || (e.target?.shadowRoot?.querySelector('input') as HTMLInputElement)?.value;
+                    if (val) setCustomServer(val);
+                  }}
+                ></wired-input>
+                <span style={{ cursor: 'pointer', fontSize: '1.5em', color: '#000', marginLeft: '0.25em' }} onClick={() => {
+                  const input = document.getElementById('customServerInput') as HTMLInputElement;
+                  const inner = input?.shadowRoot?.querySelector('input') as HTMLInputElement;
+                  if (inner) inner.value = '';
+                  if (input) input.value = '';
+                }}>×</span>
+              </div>
+            )}
+            <div style={{ ...styles.presets }}>
+              <wired-card style={styles.action} onClick={() => { roomCodeError(); setStage('landing') }}><Icon name="back" />Back</wired-card>
+              <wired-card style={styles.action} onClick={() => {
+                if (region === 'custom') {
+                  // Save the URL and validate connectivity before proceeding
+                  const input = document.getElementById('customServerInput') as HTMLInputElement;
+                  const val = input?.value || input?.shadowRoot?.querySelector('input')?.value || getCustomServer();
+                  setCustomServer(val);
+                  getLobbyClient('custom').listMatches('blank-white-cards').then(() => {
+                    setStage('create-deck');
+                  }).catch(() => {
+                    // Flash the input red to indicate connection failure
+                    const el = document.getElementById('customServerInput') as HTMLElement;
+                    if (el) {
+                      el.style.color = 'red';
+                      setTimeout(() => { el.style.color = ''; }, 500);
+                    }
+                  });
+                } else {
+                  setStage('create-deck');
+                }
+              }}><Icon name="done" />Confirm</wired-card>
+            </div>
+          </div>
+
+          {/* Step 2: Select Deck */}
+          <div style={{ ...styles.presets, display: (stage == 'create-deck') ? undefined : 'none' }}>
             <div style={styles.subheading}>Select a Starting Deck</div>
             <wired-card style={{ ...styles.action, backgroundColor: (preset == 'blank') ? '#eee' : undefined }} onClick={() => { setPreset('blank'); }}><Icon name="copy" />Blank</wired-card>
             <wired-card style={{ ...styles.action, backgroundColor: (preset == 'global') ? '#eee' : undefined }} onClick={() => { setPreset('global'); }}><Icon name="global" />Global</wired-card>
@@ -370,66 +427,63 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
               {preset == 'party-2026' && 'A curated 100 card party deck — dares, chaos mechanics, and social fun.'}
             </div>
             <div style={{ ...styles.presets }}>
-              <wired-card style={styles.action} onClick={() => { roomCodeError(); setStage('landing') }}><Icon name="back" />Back</wired-card>
+              <wired-card style={styles.action} onClick={() => { roomCodeError(); setStage('create-region') }}><Icon name="back" />Back</wired-card>
               <wired-card style={styles.action} onClick={() => { roomCodeError(); setStage('create') }}><Icon name="done" />Confirm</wired-card>
             </div>
           </div>
 
-          <div style={{ ...styles.presets, display: (stage == 'create') ? undefined : 'none' }}>
-            <div style={styles.subheading}>Choose Region</div>
-            {
-              import.meta.env.VITE_MULTI_REGION == 'true' &&
-              <>
-                <wired-card style={{ ...styles.region, backgroundColor: (region == 'NA') ? '#eee' : undefined }} onClick={() => { setRegion('NA'); }}>America</wired-card>
-                <wired-card style={{ ...styles.region, backgroundColor: (region == 'EU') ? '#eee' : undefined }} onClick={() => { setRegion('EU'); }}>Europe</wired-card>
-                <wired-card style={{ ...styles.region, backgroundColor: (region == 'AP') ? '#eee' : undefined }} onClick={() => { setRegion('AP'); }}>Asia</wired-card>
-              </>
-            }
-            <wired-card style={{ ...styles.region, backgroundColor: (region == 'custom') ? '#eee' : undefined }} onClick={() => { setRegion('custom'); setStage('custom-server'); }}>Custom</wired-card>
-            <div
-              onClick={() => { setRegion('custom'); setStage('custom-server'); }}
-              style={{ width: '100%', textAlign: 'center', fontSize: '0.75em', color: region === 'custom' ? '#333' : '#999', cursor: 'pointer', margin: '0.1em 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-            >
-              {getCustomServer().replace(/^https?:\/\//, '')}
-            </div>
-          </div>
 
           {/* Custom server prompt (shared by create + join flows) */}
+          {/* Custom server prompt (join flow only — TVWXZ room codes) */}
           <div style={{ ...styles.presets, display: (stage == 'custom-server') ? undefined : 'none' }}>
             <div style={styles.subheading}>Custom Server</div>
-            <div style={{ width: '100%', margin: '0.25em 0', textAlign: 'center' }}>
-              <div style={{ fontSize: '0.85em', color: '#666', marginBottom: '0.25em' }}>
-                {auth?.matchID ? `Enter the server URL for room ${auth.matchID}` : 'Enter custom server URL'}
-              </div>
-              <wired-input
-                id="customServerInput"
-                placeholder="Server URL"
-                style={{ width: '12em' }}
-                value={getCustomServer()}
-              ></wired-input>
+            <div style={styles.textentry}>
+              <wired-input style={styles.name} id="customServerJoinInput" placeholder="http://localhost:3000"></wired-input>
+              <span style={{ cursor: 'pointer', fontSize: '1.5em', color: '#000', marginLeft: '0.25em' }} onClick={() => {
+                const input = document.getElementById('customServerJoinInput') as HTMLInputElement;
+                const inner = input?.shadowRoot?.querySelector('input') as HTMLInputElement;
+                if (inner) inner.value = '';
+                if (input) input.value = '';
+              }}>×</span>
+            </div>
+            <div style={styles.subheading}>Room Code</div>
+            <div style={styles.textentry}>
+              <wired-input style={{ ...styles.code, fontSize: '1.5em' }} id="customServerRoomInput" placeholder="&nbsp;Room" maxlength={4} value={auth?.matchID} key={`room-${auth?.matchID}`}></wired-input>
             </div>
             <div style={{ ...styles.presets }}>
               <wired-card style={styles.action} onClick={() => {
-                roomCodeError();
-                setStage(auth?.matchID ? 'landing' : 'create');
+                setAuth({});
+                setStage('landing');
               }}><Icon name="back" />Back</wired-card>
               <wired-card style={styles.action} onClick={() => {
-                const input = document.getElementById('customServerInput') as HTMLInputElement;
-                const val = input?.value || input?.shadowRoot?.querySelector('input')?.value || getCustomServer();
-                setCustomServer(val);
-                if (auth?.matchID) {
-                  // Join flow — validate room exists on custom server
-                  const lobbyClient = getLobbyClient('custom');
-                  lobbyClient.getMatch('blank-white-cards', auth.matchID).then(async () => {
-                    setStage('join');
-                  }).catch(() => {
-                    roomCodeError();
-                    setStage('custom-server');
-                  });
-                } else {
-                  // Create flow — proceed to name/play
-                  setStage('create');
+                const roomInput = document.getElementById('customServerRoomInput') as HTMLInputElement;
+                const urlInput = document.getElementById('customServerJoinInput') as HTMLInputElement;
+                const roomVal = (roomInput?.value || roomInput?.shadowRoot?.querySelector('input')?.value || '').toUpperCase();
+                const urlVal = urlInput?.value || urlInput?.shadowRoot?.querySelector('input')?.value || getCustomServer();
+
+                // Validate room code format
+                if (!roomVal.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
+                  roomInput.style.color = 'red';
+                  setTimeout(() => { roomInput.style.color = ''; }, 500);
+                  return;
                 }
+
+                setCustomServer(urlVal);
+                setAuth({ ...auth, matchID: roomVal });
+
+                // Try to connect and find the room
+                const lobbyClient = getLobbyClient('custom');
+                lobbyClient.getMatch('blank-white-cards', roomVal).then(async () => {
+                  setStage('join');
+                }).catch((err) => {
+                  if (err?.message?.includes('404') || err?.status === 404) {
+                    roomInput.style.color = 'red';
+                    setTimeout(() => { roomInput.style.color = ''; }, 500);
+                  } else {
+                    urlInput.style.color = 'red';
+                    setTimeout(() => { urlInput.style.color = ''; }, 500);
+                  }
+                });
               }}><Icon name="play" />Connect</wired-card>
             </div>
           </div>
@@ -442,10 +496,8 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
                 roomCodeError();
                 if (stage == 'join') {
                   setStage('landing');
-                } else if (stage == 'create' && region === 'custom') {
-                  setStage('custom-server');
                 } else if (stage == 'create') {
-                  setStage('create-setup')
+                  setStage('create-deck');
                 };
               }}><Icon name="back" />Back</wired-card>
               <wired-card id='enterGameButton' style={styles.action} onClick={() => {
