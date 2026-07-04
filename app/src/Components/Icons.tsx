@@ -163,7 +163,7 @@ export function Icon(props: { name: IconName }) {
   }
 
   return (
-    <div style={styles.icon} className="icon-inherit">
+    <div style={styles.icon}>
       {icons[props.name]}
     </div>
   )

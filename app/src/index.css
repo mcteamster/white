@@ -90,8 +90,3 @@ input:focus {
     overflow-x: hidden;
   }
 }
-
-/* MUI icons: use app-level CSS variable to avoid compounding in large-text contexts */
-.icon-inherit svg {
-  font-size: var(--icon-size, 24px) !important;
-}

@@ -116,6 +116,13 @@ const App = () => {
   // Check Screen Size
   const dimensions = useWindowDimensions();
 
+  // Responsive: scale root font-size so all em/rem units adapt to viewport
+  useEffect(() => {
+    const baseFontSize = Math.max(8, Math.min(16, Math.min(dimensions.width / 24, dimensions.height / 48)));
+    document.documentElement.style.fontSize = `${baseFontSize}px`;
+    return () => { document.documentElement.style.fontSize = ''; };
+  }, [dimensions.width, dimensions.height]);
+
   // Check for In-App Browsers
   if (navigator.userAgent.match(/FBAN|FBAV|Instagram/i)) {
     console.log('In-app browser detected');
@@ -132,7 +139,7 @@ const App = () => {
         <FocusContext.Provider value={{ focus, setFocus }}>
           <HotkeysContext.Provider value={{ hotkeys, setHotkeys }}>
             {(dimensions.height > 300) ?
-              <div style={{ backgroundColor: (dimensions.upright) ? 'white' : '#eee', fontSize: `${Math.min(16, Math.min(dimensions.width / 24, dimensions.height / 48))}px`, '--icon-size': `${Math.min(16, Math.min(dimensions.width / 24, dimensions.height / 48)) * 1.5}px` } as React.CSSProperties}>
+              <div style={{ backgroundColor: (dimensions.upright) ? 'white' : '#eee' }}>
                 <BrowserRouter>
                   <Routes>
                     <Route path="/" element={<Lobby globalSize={globalSize} deckLoading={isDeckLoading} region={region} setRegion={setRegion} />} />

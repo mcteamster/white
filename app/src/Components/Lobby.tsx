@@ -328,7 +328,7 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
               !discordSdk &&
               <a href='https://discord.com/discovery/applications/1389508624774201395' target='_blank' style={styles.discord}>
 
-                <img style={{ height: 'var(--icon-size, 24px)', width: 'var(--icon-size, 24px)' }} src={discordLogo} /><br></br>
+                <img style={{ height: '1.25rem', width: '1.25rem' }} src={discordLogo} /><br></br>
               </a>
             }
           </div>
