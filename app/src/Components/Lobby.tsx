@@ -360,12 +360,12 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
             {
               import.meta.env.VITE_MULTI_REGION == 'true' &&
               <>
-                <wired-card style={{ ...styles.region, backgroundColor: (region == 'NA') ? '#eee' : undefined }} onClick={() => { setRegion('NA'); }}>America</wired-card>
-                <wired-card style={{ ...styles.region, backgroundColor: (region == 'EU') ? '#eee' : undefined }} onClick={() => { setRegion('EU'); }}>Europe</wired-card>
-                <wired-card style={{ ...styles.region, backgroundColor: (region == 'AP') ? '#eee' : undefined }} onClick={() => { setRegion('AP'); }}>Asia</wired-card>
+                <wired-card style={{ ...styles.region, backgroundColor: (region == 'NA') ? '#eee' : undefined }} onClick={() => { setRegion('NA'); }}><Icon name="global" />America</wired-card>
+                <wired-card style={{ ...styles.region, backgroundColor: (region == 'EU') ? '#eee' : undefined }} onClick={() => { setRegion('EU'); }}><Icon name="global" />Europe</wired-card>
+                <wired-card style={{ ...styles.region, backgroundColor: (region == 'AP') ? '#eee' : undefined }} onClick={() => { setRegion('AP'); }}><Icon name="global" />Asia</wired-card>
               </>
             }
-            {!discordSdk && <wired-card style={{ ...styles.region, backgroundColor: (region == 'custom') ? '#eee' : undefined }} onClick={() => { setRegion('custom'); }}>Custom</wired-card>}
+            {!discordSdk && <wired-card style={{ ...styles.region, backgroundColor: (region == 'custom') ? '#eee' : undefined }} onClick={() => { setRegion('custom'); }}><Icon name="settings" />Custom</wired-card>}
             {region === 'custom' && (
               <div style={{ width: '100%', margin: '0.25em 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 <wired-input
