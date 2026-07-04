@@ -22,8 +22,9 @@ export function Console({ G, moves, playerID, playerName, plugins, matchData, op
   const open = openProp ?? localOpen;
   const setOpen = setOpenProp ?? setLocalOpen;
   const [unread, setUnread] = useState(0);
-  const [showEvents, setShowEvents] = useState(true);
+  const [filters, setFilters] = useState({ chat: true, events: true, rules: true });
   const [rulesExpanded, setRulesExpanded] = useState(true);
+  const [ruleMode, setRuleMode] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const prevLenRef = useRef(messages.length);
 
@@ -48,14 +49,19 @@ export function Console({ G, moves, playerID, playerName, plugins, matchData, op
     const el = document.getElementById('consoleInput') as HTMLInputElement & { value: string };
     const text = el?.value?.trim();
     if (!text || !playerID) return;
-    if (text.startsWith('/rule ')) {
-      const ruleText = text.slice(6).trim();
-      if (ruleText) moves.declareRule(ruleText, playerName);
+    if (ruleMode) {
+      moves.declareRule(text, playerName);
+      setRuleMode(false);
+      if (!filters.rules) setFilters(f => ({ ...f, rules: true }));
     } else {
       moves.postMessage(text, playerName);
+      if (!filters.chat) setFilters(f => ({ ...f, chat: true }));
     }
     el.value = '';
   };
+
+  const sendRef = useRef(sendMessage);
+  sendRef.current = sendMessage;
 
   // Attach Enter key listener to the wired-input's shadow DOM input
   useEffect(() => {
@@ -63,7 +69,7 @@ export function Console({ G, moves, playerID, playerName, plugins, matchData, op
     const timer = setTimeout(() => {
       const inp = document.getElementById('consoleInput')?.shadowRoot?.querySelector('input');
       if (!inp) return;
-      const handler = (e: Event) => { if ((e as KeyboardEvent).key === 'Enter') sendMessage(); };
+      const handler = (e: Event) => { if ((e as KeyboardEvent).key === 'Enter') sendRef.current(); };
       inp.addEventListener('keydown', handler);
       return () => inp.removeEventListener('keydown', handler);
     }, 50);
@@ -174,7 +180,7 @@ export function Console({ G, moves, playerID, playerName, plugins, matchData, op
     },
     pinnedRule: {
       display: 'flex',
-      alignItems: 'flex-start',
+      alignItems: 'center',
       justifyContent: 'space-between',
       gap: '0.25em',
       marginBottom: '0.2em',
@@ -184,10 +190,11 @@ export function Console({ G, moves, playerID, playerName, plugins, matchData, op
       color: 'red',
     },
     revokeBtn: {
-      fontSize: '0.7em',
+      fontSize: '1em',
       cursor: 'pointer',
       color: '#999',
       flexShrink: 0,
+      padding: '0 0.3em',
     },
     rulesCollapsed: {
       padding: '0.3em 0.5em',
@@ -211,7 +218,7 @@ export function Console({ G, moves, playerID, playerName, plugins, matchData, op
             )}
           </span>
           {open
-            ? 'Close Chat'
+            ? 'Close Console'
             : !open && messages.length > 0
             ? <span style={{ ...styles.previewText, ...(messages[messages.length - 1].type === 'event' ? { fontStyle: 'italic', color: '#888' } : {}) }}>
                 {messages[messages.length - 1].type === 'chat'
@@ -229,16 +236,22 @@ export function Console({ G, moves, playerID, playerName, plugins, matchData, op
       {/* Panel */}
       {open && (
         <div style={styles.panel}>
-          <div style={{ position: 'absolute', top: '0.25em', right: '0.5em', zIndex: 1, fontSize: '0.75em' }}>
+          <div style={{ padding: '0.3em 0.75em', borderBottom: '1px solid #e5e7eb', fontSize: '0.75em', display: 'flex', gap: '0.75em' }}>
             <span
-              onClick={() => setShowEvents(v => !v)}
-              style={{ cursor: 'pointer', color: showEvents ? '#888' : '#bbb', userSelect: 'none' }}
-            >
-              events <Icon name={showEvents ? 'show' : 'hide'} />
-            </span>
+              onClick={() => setFilters(f => ({ ...f, chat: !f.chat }))}
+              style={{ cursor: 'pointer', color: filters.chat ? '#333' : '#bbb', userSelect: 'none' }}
+            >chat</span>
+            <span
+              onClick={() => setFilters(f => ({ ...f, events: !f.events }))}
+              style={{ cursor: 'pointer', color: filters.events ? '#333' : '#bbb', userSelect: 'none' }}
+            >events</span>
+            <span
+              onClick={() => setFilters(f => ({ ...f, rules: !f.rules }))}
+              style={{ cursor: 'pointer', color: filters.rules ? '#333' : '#bbb', userSelect: 'none' }}
+            >rules</span>
           </div>
           {/* Pinned rules */}
-          {rules.length > 0 && (
+          {rules.length > 0 && filters.rules && (
             rules.length > 2 && !rulesExpanded ? (
               <div style={styles.rulesCollapsed} onClick={() => setRulesExpanded(true)}>
                 {rules.length} rules active ›
@@ -262,7 +275,12 @@ export function Console({ G, moves, playerID, playerName, plugins, matchData, op
             )
           )}
           <div ref={listRef} style={styles.list}>
-            {messages.filter(msg => showEvents || msg.type === 'chat' || msg.type === 'rule').map((msg, i) => (
+            {messages.filter(msg => {
+              if (msg.type === 'chat' && !filters.chat) return false;
+              if (msg.type === 'event' && !filters.events) return false;
+              if (msg.type === 'rule' && !filters.rules) return false;
+              return true;
+            }).map((msg, i) => (
               <div key={`${msg.id}-${i}`} style={msg.type === 'chat' ? styles.chatMsg : msg.type === 'rule' ? styles.ruleMsg : styles.eventMsg}>
                 {msg.type === 'chat' ? (
                   <><strong>{msg.playerName || resolveName(msg.playerID)}:</strong> {msg.text}</>
@@ -277,10 +295,14 @@ export function Console({ G, moves, playerID, playerName, plugins, matchData, op
           <div style={styles.inputRow}>
             <wired-input
               id="consoleInput"
-              placeholder="All chat - visible to everyone"
-              maxlength={500}
-              style={{ flex: 1 }}
+              placeholder={ruleMode ? "Declare a rule..." : "All chat - visible to everyone"}
+              maxlength={ruleMode ? 200 : 500}
+              style={{ flex: 1, color: ruleMode ? 'red' : 'inherit' }}
             ></wired-input>
+            <wired-button
+              onClick={() => setRuleMode(r => !r)}
+              style={{ backgroundColor: ruleMode ? '#eee' : 'white' }}
+            ><Icon name='book' /></wired-button>
             <wired-button
               onClick={sendMessage}
               style={{ backgroundColor: '#eee' }}
