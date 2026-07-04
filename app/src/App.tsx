@@ -132,7 +132,7 @@ const App = () => {
         <FocusContext.Provider value={{ focus, setFocus }}>
           <HotkeysContext.Provider value={{ hotkeys, setHotkeys }}>
             {(dimensions.height > 300) ?
-              <div style={{ backgroundColor: (dimensions.upright) ? 'white' : '#eee' }}>
+              <div style={{ backgroundColor: (dimensions.upright) ? 'white' : '#eee', fontSize: `${Math.min(16, Math.min(dimensions.width / 24, dimensions.height / 48))}px`, '--icon-size': `${Math.min(16, Math.min(dimensions.width / 24, dimensions.height / 48)) * 1.5}px` } as React.CSSProperties}>
                 <BrowserRouter>
                   <Routes>
                     <Route path="/" element={<Lobby globalSize={globalSize} deckLoading={isDeckLoading} region={region} setRegion={setRegion} />} />

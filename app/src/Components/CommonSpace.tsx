@@ -21,7 +21,6 @@ const getPlayerScore = (plugins: any, playerID: string): number => {
 
 export function Pile(props: BoardProps<GameState>) {
   const { focus, setFocus } = useContext(FocusContext);
-  const dimensions = useWindowDimensions();
   const focusCard = useCallback(((id: number, focusState: boolean) => {
     if (focus?.id != id && focusState == true) {
       setFocus({ id });
@@ -30,10 +29,6 @@ export function Pile(props: BoardProps<GameState>) {
     }
   }), [focus, setFocus]);
   const pile = getCardsByLocation(props.G.cards, "pile").sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // Newest to Oldest
-
-  // Responsive pile card: scale via font-size since all card dimensions are in em
-  // Divisors: ~24 for width (card is 20em + borders), ~35 for height (card + action bar)
-  const pileFontSize = Math.min(16, Math.min(dimensions.width / 24, dimensions.height / 35));
 
   const styles: { [key: string]: Properties<string | number> } = {
     pile: {
@@ -54,7 +49,7 @@ export function Pile(props: BoardProps<GameState>) {
         if (pile.length > 0) { 
           focusCard(pile[0].id, true) 
         }
-      }} style={{ position: 'relative', fontSize: `${pileFontSize}px` }}>
+      }} style={{ position: 'relative' }}>
         {pile.length > 0 && (
           <div style={{ position: 'absolute', bottom: '1.25em', right: '1.75em', zIndex: 10 }}>
             <Likes card={pile[0]} likeCard={props.moves.likeCard} matchId={props.matchID} />
