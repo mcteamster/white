@@ -47,16 +47,19 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
   }, {})
 
   // Mutual exclusion on mobile: chat and players tray can't both be open
-  const [showPlayers, setShowPlayers] = useState(!dimensions.upright);
+  const [playersMode, setPlayersMode] = useState<'hidden' | 'collapsed' | 'expanded'>(dimensions.upright ? 'hidden' : 'expanded');
+  const showPlayers = playersMode !== 'hidden';
+  const allExpanded = playersMode === 'expanded';
   const [chatOpen, setChatOpen] = useState(false);
 
   const isMobile = dimensions.width < 600;
 
   const handleSetShowPlayers = useCallback<React.Dispatch<React.SetStateAction<boolean>>>((value) => {
-    setShowPlayers(prev => {
-      const next = typeof value === 'function' ? value(prev) : value;
+    setPlayersMode(prev => {
+      const wasVisible = prev !== 'hidden';
+      const next = typeof value === 'function' ? value(wasVisible) : value;
       if (next && isMobile) setChatOpen(false);
-      return next;
+      return next ? 'collapsed' : 'hidden';
     });
   }, [isMobile]);
 
@@ -88,7 +91,7 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
       .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)); // Oldest to Newest
 
     if (tableCards.length === 0) return; // 5.5: no effect if target has no table cards
-    setFocus({ id: tableCards[0].id });
+    setFocus({ id: tableCards[tableCards.length - 1].id });
   }, [hotkeys.n1, hotkeys.n2, hotkeys.n3, hotkeys.n4, hotkeys.n5, hotkeys.n6, hotkeys.n7, hotkeys.n8, hotkeys.n9, hotkeys.n0, focus?.id, props.matchData, props.playerID, props.G.cards, setFocus]);
 
   // 6.3-6.6 Panel toggle hotkeys
@@ -108,9 +111,14 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
 
   useEffect(() => {
     if (hotkeys.p) {
-      handleSetShowPlayers(prev => !prev);
+      setPlayersMode(prev => {
+        if (isMobile) setChatOpen(false);
+        if (prev === 'hidden') return 'collapsed';
+        if (prev === 'collapsed') return 'expanded';
+        return 'hidden';
+      });
     }
-  }, [hotkeys.p, handleSetShowPlayers]);
+  }, [hotkeys.p, isMobile]);
 
   // 7.2-7.5 Tab zone cycling
   useEffect(() => {
@@ -161,7 +169,7 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
     <ImageCacheContext.Provider value={{ imageCache, dispatchImage }}>
       <div style={boardStyle}>
         <ActionSpace {...props} />
-        <CommonSpace {...props} showPlayers={showPlayers} setShowPlayers={handleSetShowPlayers} />
+        <CommonSpace {...props} showPlayers={showPlayers} setShowPlayers={handleSetShowPlayers} allExpanded={allExpanded} />
         <PlayerSpace {...props} />
       </div>
       {props.isMultiplayer && <Console {...props} playerName={playerName} open={chatOpen} setOpen={handleSetChatOpen} />}

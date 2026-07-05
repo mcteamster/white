@@ -69,6 +69,7 @@ export function Console({ G, moves, playerID, playerName, plugins, matchData, op
     const timer = setTimeout(() => {
       const inp = document.getElementById('consoleInput')?.shadowRoot?.querySelector('input');
       if (!inp) return;
+      inp.focus();
       const handler = (e: Event) => { if ((e as KeyboardEvent).key === 'Enter') sendRef.current(); };
       inp.addEventListener('keydown', handler);
       return () => inp.removeEventListener('keydown', handler);
@@ -79,10 +80,12 @@ export function Console({ G, moves, playerID, playerName, plugins, matchData, op
   const handleOpen = () => {
     setOpen(true);
     setUnread(0);
-    // Scroll to bottom after opening
+    // Scroll to bottom and focus input after opening
     setTimeout(() => {
       if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
-    }, 0);
+      const inp = document.getElementById('consoleInput')?.shadowRoot?.querySelector('input');
+      if (inp) inp.focus();
+    }, 50);
   };
 
   const styles: { [key: string]: Properties<string | number> } = {

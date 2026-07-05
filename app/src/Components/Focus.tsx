@@ -392,6 +392,11 @@ export function Focus(props: BoardProps<GameState>) {
         } else {
           unfocusCards();
         }
+      } else if (!owned && card.location === 'pile' && (hotkeys.down || hotkeys.s)) {
+        // Yoink — claim pile card into hand
+        props.moves.claimCard(card.id);
+        setLoading(true);
+        if (!props.isMultiplayer) unfocusCards();
       } else if (owned && (hotkeys.delete || hotkeys.x)) {
         const adjacentCard = getAdjacentCard(props.G.cards, card.id, 'prev', props.playerID) || getAdjacentCard(props.G.cards, card.id, 'next', props.playerID);
         props.moves.moveCard(card.id, "discard");

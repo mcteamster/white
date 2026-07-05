@@ -70,7 +70,7 @@ export const useHotkeys = ({ hotkeys, setHotkeys}: HotkeysContextType) => {
     const keyDownHandler = (event: globalThis.KeyboardEvent) => {
       const tag = document.activeElement?.tagName?.toUpperCase();
       const isInputFocused = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'WIRED-INPUT' || tag === 'WIRED-TEXTAREA';
-      const guardExempt = ['Enter', 'Escape', 'Tab', 'Backquote', 'Equal'];
+      const guardExempt = ['Enter', 'Escape', 'Backquote'];
       if (isInputFocused && !guardExempt.includes(event.code)) return;
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (hotkeyMapping[event.code as keyof typeof hotkeyMapping]) {
