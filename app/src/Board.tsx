@@ -184,3 +184,4 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
     </ImageCacheContext.Provider>
   );
 }
+
