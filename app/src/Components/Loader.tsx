@@ -1,5 +1,5 @@
 import { Properties } from "csstype";
-import { useWindowDimensions } from "../lib/hooks";
+import { externalLink, useWindowDimensions } from "../lib/hooks";
 import { sanitiseCard } from "../lib/data";
 import { useCallback, useEffect, useReducer, useState } from "react";
 import { Card, getCardsByLocation } from "@mcteamster/white-core";
@@ -20,6 +20,8 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
   const [globalSubmit, setGlobalSubmit] = useState(false); // Global Submission Mode - Only one card can be uploaded
   const [loaded, setLoaded] = useState([] as Card[]); // List of cards staged for submitting
   const [progress, setProgress] = useState([-1, 0]); // Progress index of currently processing load: [currentIndex, endIndex]. -1 means no processing
+  const [compressImages, setCompressImages] = useState(true); // Whether to compress PNG images on load
+  const isCustomServer = !!localStorage.getItem('customServerUrl');
   const fileSelector = document.getElementById('fileselector') as HTMLInputElement;
 
   // Cache All Images from Imported Deck
@@ -83,10 +85,15 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
           });
 
           // Process images for preview
+          // Note: forEach with async callbacks fires concurrently (not sequentially awaited).
+          // compressImages is captured from the closure at callback creation time, which is
+          // safe here because uploadDeck is re-created when compressImages changes (see dep array).
           deck.forEach(async (card: Card, i: number, arr: Card[]) => {
             if (card.content.image && card.content.image?.startsWith('data:image/png;base64,')) {
               dispatchImage({ id: i, value: card.content.image }) // Cache the Uncompressed Image
-              card.content.image = await compressImage(await resizeImage(card.content.image)); // Import Compressed image
+              if (compressImages) {
+                card.content.image = await compressImage(await resizeImage(card.content.image)); // Import Compressed image
+              }
             } else if (card.content.image) {
               // Cache the Decompressed Image
               decompressImage(card.content.image).then(res => {
@@ -124,7 +131,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
       setLoaded([]);
       setProgress([-1, 0])
     }
-  }, [fileSelector, globalSubmit])
+  }, [compressImages, fileSelector, globalSubmit])
 
   // Batch Submissions
   useEffect(() => {
@@ -257,6 +264,34 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
         backgroundColor: '#eee',
         borderRadius: '1em',
       },
+      compressionOption: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '0.25em',
+        marginTop: '0.5em',
+      },
+      compressionToggle: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.5em',
+        cursor: 'pointer',
+      },
+      checkbox: {
+        height: '1em',
+        width: '1em',
+        fontWeight: 'bold',
+        textAlign: 'center',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#eee',
+        borderRadius: '1em',
+      },
+      compressionWarning: {
+        color: 'red',
+      },
     }
 
       // Submit loaded cards to server
@@ -319,9 +354,15 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
                     </div>)
                   })}
                 </div>
-                <div style={styles.prompt}>
-                  {globalSubmit ? 'Limited to ONE card per submission' : 'Tap cards to include/exclude'}
-                </div>
+                {globalSubmit ? (
+                  <div style={styles.prompt}>
+                    Limited to ONE card per submission
+                  </div>
+                ) : (
+                  <div style={styles.prompt}>
+                    Tap cards to include/exclude
+                  </div>
+                )}
               </wired-card> :
               <div style={styles.instructionsContainer} >
                 {
@@ -331,15 +372,43 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
                       <Icon name='global' />
                       Submit a card to the Global Deck
                     </wired-card>
+                    <wired-card style={{...styles.instructions }} onClick={() => { externalLink('https://blankwhite.cards/editor') }}>
+                      <Icon name='create' />
+                      Open Deck Editor
+                    </wired-card>
                   </> :
-                  <wired-card style={{...styles.instructions }} onClick={() => { setGlobalSubmit(false); document.getElementById('fileselector')?.click() }}>
-                    <Icon name='display' />
-                    Load cards into this session
-                  </wired-card>
+                  <>
+                    <wired-card style={{...styles.instructions }} onClick={() => { setGlobalSubmit(false); document.getElementById('fileselector')?.click() }}>
+                      <Icon name='display' />
+                      Load cards into this session
+                    </wired-card>
+                    <wired-card style={{...styles.instructions }} onClick={() => { externalLink('https://blankwhite.cards/editor') }}>
+                      <Icon name='create' />
+                      Open Deck Editor
+                    </wired-card>
+                  </>
                 }
-                <div id="fileCard" style={styles.prompt}>
-                  From a Saved Deck File
-                </div>
+                <div id="fileCard" style={styles.prompt}>From a Saved Deck File</div>
+                {isCustomServer && isMultiplayer && (
+                  <div style={styles.compressionOption}>
+                    <div
+                      role="checkbox"
+                      aria-checked={compressImages}
+                      tabIndex={0}
+                      style={styles.compressionToggle}
+                      onClick={() => setCompressImages(!compressImages)}
+                      onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); setCompressImages(!compressImages) } }}
+                    >
+                      <span>Compress images</span>
+                      <wired-card style={styles.checkbox}>
+                        {compressImages && <Icon name="done" />}
+                      </wired-card>
+                    </div>
+                    {!compressImages && (
+                      <span id="uploadWarning" style={styles.compressionWarning}>Not recommended for decks larger than 100 cards</span>
+                    )}
+                  </div>
+                )}
               </div>
           } 
           </div>
@@ -372,7 +441,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
         </div>
       </wired-dialog>
     )
-  }, [globalSubmit, height, imageCache, isMultiplayer, leaveLoader, loaded, mode, progress, setMode, uploadDeck, width])
+  }, [compressImages, globalSubmit, height, imageCache, isMultiplayer, leaveLoader, loaded, mode, progress, setMode, uploadDeck, width])
 
   return (displayLoader)
 }

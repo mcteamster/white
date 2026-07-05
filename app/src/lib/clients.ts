@@ -153,14 +153,14 @@ export async function resolveCustomServer(input: string): Promise<string> {
   try {
     await fetch(`${httpsUrl}/games`, { signal: AbortSignal.timeout(5000) });
     return httpsUrl;
-  } catch (_) { /* fall through */ }
+  } catch { /* fall through */ }
 
   // Fall back to http
   const httpUrl = `http://${bare}`;
   try {
     await fetch(`${httpUrl}/games`, { signal: AbortSignal.timeout(5000) });
     return httpUrl;
-  } catch (_) { /* fall through */ }
+  } catch { /* fall through */ }
 
   throw new Error(`Could not connect to ${bare} over HTTPS or HTTP`);
 }
@@ -183,8 +183,8 @@ export function getLobbyClient(region: Region): LobbyClient {
   return lobbyClientCache.get(url)!;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // TODO: boardgame.io Client() generic variance prevents proper typing here
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getGameClient(region: Region): any {
   const url = getServerUrl(region);
   if (!gameClientCache.has(url)) {
