@@ -5,7 +5,7 @@ import type { Properties } from 'csstype';
 import { CardFace } from './CardFace.tsx';
 import { getCardsByLocation, getCardsByOwner } from '@mcteamster/white-core';
 import { Icon } from './Icons';
-import { useCallback, useContext, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { useWindowDimensions } from '../lib/hooks.ts';
 import { FocusContext } from '../lib/contexts.ts';
 import { discordSdk } from '../lib/discord.ts';
@@ -71,7 +71,11 @@ export function Pile(props: BoardProps<GameState>) {
   );
 }
 
-export function Players(props: BoardProps<GameState>) {
+interface PlayersProps extends BoardProps<GameState> {
+  allExpanded?: boolean;
+}
+
+export function Players(props: PlayersProps) {
   const dimensions = useWindowDimensions();
   const { focus, setFocus } = useContext(FocusContext);
   const focusCard = useCallback(((id: number, focusState: boolean) => {
@@ -83,7 +87,7 @@ export function Players(props: BoardProps<GameState>) {
   }), [focus, setFocus]);
   const initialOpenPlayers: number[] = [];
   if (props.isMultiplayer && props.matchData) {
-    if (!dimensions.upright) {
+    if (!dimensions.upright || props.allExpanded) {
       props.matchData?.forEach((player) => {
         initialOpenPlayers.push(player.id)
       });
@@ -91,6 +95,16 @@ export function Players(props: BoardProps<GameState>) {
   } 
   const [openPlayers, setOpenPlayers] = useState<number[]>(initialOpenPlayers); // List of players with open table trays
   const [editingScore, setEditingScore] = useState<number | null>(null); // playerID being score-edited
+
+  // Respond to allExpanded prop toggle
+  useEffect(() => {
+    if (props.allExpanded) {
+      const allIds = props.matchData?.filter(p => p.isConnected && p.name && p.id !== Number(props.playerID)).map(p => p.id) ?? [];
+      setOpenPlayers(allIds);
+    } else if (props.allExpanded === false) {
+      setOpenPlayers([]);
+    }
+  }, [props.allExpanded, props.matchData, props.playerID]);
   const styles: { [key: string]: Properties<string | number> } = {
     players: {
       maxWidth: '100vw',
@@ -373,6 +387,7 @@ export function ShareRoom(props: { matchID: string, setShowShare: React.Dispatch
 interface CommonSpaceProps extends BoardProps<GameState> {
   showPlayers?: boolean;
   setShowPlayers?: React.Dispatch<React.SetStateAction<boolean>>;
+  allExpanded?: boolean;
 }
 
 export function CommonSpace(props: CommonSpaceProps) {
@@ -384,7 +399,7 @@ export function CommonSpace(props: CommonSpaceProps) {
   return (
     <>
       <Header {...props} showPlayers={showPlayers} setShowPlayers={setShowPlayers} />
-      { props.isMultiplayer && showPlayers && <Players {...props} /> }
+      { props.isMultiplayer && showPlayers && <Players {...props} allExpanded={props.allExpanded} /> }
       <Pile {...props} />
     </>
   );

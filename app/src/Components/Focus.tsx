@@ -201,7 +201,16 @@ export function Focus(props: BoardProps<GameState>) {
       carouselCards.push({ card, isFocused: true });
       for (const c of nextCards) carouselCards.push({ card: c, isFocused: false });
 
-      const carousel = carouselCards.length > 1 ? (
+      // Zone label for the focused card
+      const zoneLabel = (() => {
+        const loc = card.location;
+        if (loc === 'hand') return <><Icon name='hand' />Hand</>;
+        if (loc === 'table') return <><Icon name='display' />Table</>;
+        if (loc === 'pile') return <><Icon name='pile' />Pile</>;
+        return '';
+      })();
+
+      const carousel = carouselCards.length >= 1 ? (
         <div style={{
           display: 'flex',
           flexDirection: 'row',
@@ -212,6 +221,7 @@ export function Focus(props: BoardProps<GameState>) {
           width: '100%',
           boxSizing: 'border-box',
           scrollSnapType: 'x mandatory',
+          alignItems: 'center',
         }}>
           {carouselCards.map(({ card: c, isFocused }) => (
             <div key={c.id}
@@ -226,6 +236,22 @@ export function Focus(props: BoardProps<GameState>) {
               <CardFace {...{ ...c, location: 'table' }} />
             </div>
           ))}
+          <wired-card key="zone-label" style={{
+            flexShrink: 0,
+            height: '3em',
+            width: '3em',
+            margin: '0.25em 0.1em',
+            backgroundColor: '#eee',
+            borderRadius: '1em',
+            fontSize: '1em',
+            fontWeight: 'bold',
+            whiteSpace: 'nowrap',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }} elevation={1}>
+            {zoneLabel}
+          </wired-card>
         </div>
       ) : null;
 
@@ -285,7 +311,7 @@ export function Focus(props: BoardProps<GameState>) {
       </wired-dialog>
 
       setDisplayedCard(<>
-        {carousel && (
+        {(carousel || zoneLabel) && (
           <div style={{
             position: 'fixed',
             top: 0,
@@ -294,7 +320,20 @@ export function Focus(props: BoardProps<GameState>) {
             zIndex: 110,
             pointerEvents: 'auto',
           }} onClick={e => e.stopPropagation()}>
-            {carousel}
+            {carousel || (
+              <div style={{ textAlign: 'center', padding: '0.5em 0' }}>
+                <wired-card style={{
+                  display: 'inline-block',
+                  padding: '0.25em 1em',
+                  backgroundColor: '#eee',
+                  borderRadius: '1em',
+                  fontSize: '1em',
+                  fontWeight: 'bold',
+                }}>
+                  {zoneLabel}
+                </wired-card>
+              </div>
+            )}
           </div>
         )}
         <wired-dialog open onClick={() => { unfocusCards() }}>
@@ -353,6 +392,11 @@ export function Focus(props: BoardProps<GameState>) {
         } else {
           unfocusCards();
         }
+      } else if (!owned && card.location === 'pile' && (hotkeys.down || hotkeys.s)) {
+        // Yoink — claim pile card into hand
+        props.moves.claimCard(card.id);
+        setLoading(true);
+        if (!props.isMultiplayer) unfocusCards();
       } else if (owned && (hotkeys.delete || hotkeys.x)) {
         const adjacentCard = getAdjacentCard(props.G.cards, card.id, 'prev', props.playerID) || getAdjacentCard(props.G.cards, card.id, 'next', props.playerID);
         props.moves.moveCard(card.id, "discard");
