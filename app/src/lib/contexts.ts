@@ -47,6 +47,14 @@ export interface HotkeysType {
   enter?: boolean | undefined,
   escape?: boolean | undefined,
   space?: boolean | undefined,
+  q?: boolean | undefined,
+  w?: boolean | undefined,
+  a?: boolean | undefined,
+  s?: boolean | undefined,
+  d?: boolean | undefined,
+  f?: boolean | undefined,
+  r?: boolean | undefined,
+  x?: boolean | undefined,
 }
 
 export interface HotkeysContextType {
