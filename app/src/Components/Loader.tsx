@@ -85,6 +85,9 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
           });
 
           // Process images for preview
+          // Note: forEach with async callbacks fires concurrently (not sequentially awaited).
+          // compressImages is captured from the closure at callback creation time, which is
+          // safe here because uploadDeck is re-created when compressImages changes (see dep array).
           deck.forEach(async (card: Card, i: number, arr: Card[]) => {
             if (card.content.image && card.content.image?.startsWith('data:image/png;base64,')) {
               dispatchImage({ id: i, value: card.content.image }) // Cache the Uncompressed Image
@@ -261,6 +264,34 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
         backgroundColor: '#eee',
         borderRadius: '1em',
       },
+      compressionOption: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '0.25em',
+        marginTop: '0.5em',
+      },
+      compressionToggle: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.5em',
+        cursor: 'pointer',
+      },
+      checkbox: {
+        height: '1em',
+        width: '1em',
+        fontWeight: 'bold',
+        textAlign: 'center',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#eee',
+        borderRadius: '1em',
+      },
+      compressionWarning: {
+        color: 'red',
+      },
     }
 
       // Submit loaded cards to server
@@ -333,7 +364,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
                   </div>
                 )}
               </wired-card> :
-              <div id="fileCard" style={styles.instructionsContainer} >
+              <div style={styles.instructionsContainer} >
                 {
                   !isMultiplayer ?
                   <>
@@ -357,16 +388,24 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
                     </wired-card>
                   </>
                 }
+                <div id="fileCard" style={styles.prompt}>From a Saved Deck File</div>
                 {isCustomServer && isMultiplayer && (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25em', marginTop: '0.5em' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5em', cursor: 'pointer' }} onClick={() => setCompressImages(!compressImages)}>
+                  <div style={styles.compressionOption}>
+                    <div
+                      role="checkbox"
+                      aria-checked={compressImages}
+                      tabIndex={0}
+                      style={styles.compressionToggle}
+                      onClick={() => setCompressImages(!compressImages)}
+                      onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); setCompressImages(!compressImages) } }}
+                    >
                       <span>Compress images</span>
-                      <wired-card style={{ height: '1em', width: '1em', fontWeight: 'bold', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#eee', borderRadius: '1em' }}>
+                      <wired-card style={styles.checkbox}>
                         {compressImages && <Icon name="done" />}
                       </wired-card>
                     </div>
                     {!compressImages && (
-                      <span style={{ color: 'red' }}>Not recommended for decks larger than 100 cards</span>
+                      <span id="uploadWarning" style={styles.compressionWarning}>Not recommended for decks larger than 100 cards</span>
                     )}
                   </div>
                 )}
