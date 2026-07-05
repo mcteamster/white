@@ -11,7 +11,7 @@ fi
 
 # Read port from server env file, default to 3000
 PORT=3000
-ENV_FILE="$(dirname "$0")/../../server/.env.development"
+ENV_FILE="$(dirname "$0")/../.env.development"
 if [[ -f "$ENV_FILE" ]]; then
   PARSED_PORT=$(grep '^PORT=' "$ENV_FILE" | cut -d= -f2)
   [[ -n "$PARSED_PORT" ]] && PORT="$PARSED_PORT"

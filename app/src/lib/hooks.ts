@@ -55,7 +55,8 @@ export const useHotkeys = ({ hotkeys, setHotkeys}: HotkeysContextType) => {
     const keyDownHandler = (event: globalThis.KeyboardEvent) => {
       const tag = document.activeElement?.tagName?.toUpperCase();
       const isInputFocused = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'WIRED-INPUT' || tag === 'WIRED-TEXTAREA';
-      if (isInputFocused) return;
+      if (isInputFocused && event.code !== 'Enter' && event.code !== 'Escape') return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (hotkeyMapping[event.code as keyof typeof hotkeyMapping]) {
         event.preventDefault();
         const hotkeyEvent: { [key: string]: boolean } = {};

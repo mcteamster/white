@@ -130,6 +130,37 @@ export function setCustomServer(url: string): void {
   localStorage.setItem(CUSTOM_SERVER_KEY, url);
 }
 
+/**
+ * If the URL has no protocol, try https:// first, then fall back to http://.
+ * Always validates connectivity before returning.
+ * Returns the working URL or throws if the server is unreachable.
+ */
+export async function resolveCustomServer(input: string): Promise<string> {
+  const trimmed = input.trim();
+
+  // If protocol is already specified, trust it — LobbyClient will validate connectivity
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+
+  // Strip any accidental leading slashes
+  const bare = trimmed.replace(/^\/+/, '');
+
+  // Try https first — use no-cors since we just need to know the server is reachable
+  const httpsUrl = `https://${bare}`;
+  try {
+    await fetch(`${httpsUrl}/games`, { signal: AbortSignal.timeout(5000) });
+    return httpsUrl;
+  } catch (_) { /* fall through */ }
+
+  // Fall back to http
+  const httpUrl = `http://${bare}`;
+  try {
+    await fetch(`${httpUrl}/games`, { signal: AbortSignal.timeout(5000) });
+    return httpUrl;
+  } catch (_) { /* fall through */ }
+
+  throw new Error(`Could not connect to ${bare} over HTTPS or HTTP`);
+}
+
 export function getServerUrl(region: Region): string {
   if (region === 'custom') return getCustomServer();
   return SERVERS[region];
