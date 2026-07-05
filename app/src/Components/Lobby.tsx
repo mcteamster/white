@@ -3,7 +3,7 @@ import { Properties } from 'csstype';
 import { Icon } from './Icons';
 import { useCallback, useContext, useEffect, useState } from "react";
 import { AuthContext, HotkeysContext } from "../lib/contexts";
-import { getLobbyClient, getRegion, getCustomServer, setCustomServer, resolveCustomServer } from "../lib/clients";
+import { getLobbyClient, getRegion, getCustomServer, setCustomServer, clearCustomServer, resolveCustomServer } from "../lib/clients";
 import type { Region } from "../lib/clients";
 import { externalLink } from "../lib/hooks";
 import { discordSdk } from "../lib/discord";
@@ -176,7 +176,7 @@ function CustomServerInput({ id, onConnect, autoFocus }: { id: string; onConnect
           const inner = input?.shadowRoot?.querySelector('input') as HTMLInputElement;
           if (inner) inner.value = '';
           if (input) input.value = '';
-          localStorage.removeItem('customServerUrl');
+          clearCustomServer();
         }}>×</span>
       </div>
       <div style={{ fontSize: '1em', margin: '0.5em 0', textAlign: 'center' }}>Custom servers are not managed by Blank White Cards. Connect at your own risk.</div>
@@ -213,7 +213,6 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
     }).then(() => {
       setStage('create-deck');
     }).catch(() => {
-      setConnecting(false);
       requestAnimationFrame(() => {
         const el = document.getElementById('customServerCreateInput') as HTMLElement;
         if (el) {
@@ -253,7 +252,6 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
           setStage('join');
         }).catch(() => {
           // Server is reachable but room not found
-          setConnecting(false);
           requestAnimationFrame(() => {
             const room = document.getElementById('customServerRoomInput') as HTMLElement;
             if (room) {
@@ -265,7 +263,6 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
       });
     }).catch(() => {
       // Server unreachable
-      setConnecting(false);
       requestAnimationFrame(() => {
         const el = document.getElementById('customServerJoinInput') as HTMLElement;
         if (el) {

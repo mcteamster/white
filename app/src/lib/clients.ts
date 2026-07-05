@@ -130,6 +130,10 @@ export function setCustomServer(url: string): void {
   localStorage.setItem(CUSTOM_SERVER_KEY, url);
 }
 
+export function clearCustomServer(): void {
+  localStorage.removeItem(CUSTOM_SERVER_KEY);
+}
+
 /**
  * If the URL has no protocol, try https:// first, then fall back to http://.
  * Always validates connectivity before returning.
