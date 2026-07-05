@@ -61,6 +61,16 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
     }
   }, [hotkeys.space, focus?.id, doPickup]);
 
+  // Auto-play to pile in single player: whenever a card appears in hand from the deck, move it to pile
+  useEffect(() => {
+    if (!isMultiplayer && hand.length > 0) {
+      const justPickedUpCard = hand.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))[0];
+      if (!justPickedUpCard.previousOwner) {
+        moves.moveCard(justPickedUpCard.id, 'pile');
+      }
+    }
+  }, [hand.length, isMultiplayer, moves]);
+
   // C key toggles create card screen (only when unfocused)
   useEffect(() => {
     if (hotkeys.c && !focus?.id) {
@@ -205,14 +215,6 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
         // Handle Pickup Debounce
         if (loading) {
           if (hand.length > 0) {
-            // Auto-play to pile immediately in single player mode
-            if (!isMultiplayer) {
-              const justPickedUpCard = hand.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))[0]; // Newest to Oldest
-              // If it came from the Pile, no need to auto-play
-              if (!justPickedUpCard.previousOwner) {
-                moves.moveCard(justPickedUpCard.id, 'pile');
-              }
-            }
             setTimeout(() => {
               // Scroll to latest card only in multiplayer
               if (isMultiplayer) {
