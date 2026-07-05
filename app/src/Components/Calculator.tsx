@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Icon } from './Icons';
 
@@ -131,6 +131,49 @@ export function Calculator({ initialValue, onConfirm, onCancel, label }: Calcula
   const parsed = evalExpr(expr);
   const valid = parsed !== null;
 
+  // Keyboard input capture
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+
+      const key = e.key;
+
+      if (key >= '0' && key <= '9') {
+        append(key);
+      } else if (key === '.') {
+        append('.');
+      } else if (key === '+') {
+        append('+');
+      } else if (key === '-') {
+        append('−');
+      } else if (key === '*') {
+        append('×');
+      } else if (key === '/') {
+        append('÷');
+      } else if (key === '^') {
+        append('^');
+      } else if (key === 'Backspace') {
+        backspace();
+      } else if (key === 'Delete') {
+        clear();
+      } else if (key === '=' || key === 'Enter') {
+        // If expression is already a plain number, confirm; otherwise evaluate
+        const result = evalExpr(expr);
+        if (result !== null && String(result) === expr) {
+          onConfirm(result);
+        } else {
+          evaluate();
+        }
+      } else if (key === 'Escape') {
+        onCancel();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
+  }, [expr, onConfirm, onCancel]);
+
   const sp = (e: { stopPropagation: () => void }) => e.stopPropagation();
 
   const base: CSSProperties = {
@@ -147,12 +190,12 @@ export function Calculator({ initialValue, onConfirm, onCancel, label }: Calcula
     <wired-dialog open onClick={sp}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, padding: '0.5em 0.75em 0.75em' }}>
         {/* Display */}
-        <wired-card style={{ width: '17em', margin: '0.5em 0', cursor: 'default' } as CSSProperties}
+        <wired-card style={{ width: '17em', margin: '0.5em 0', cursor: 'default', position: 'relative' } as CSSProperties}
           onClick={(e) => e.stopPropagation()}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: 'monospace', fontSize: '1.5em', minHeight: '2.25em', padding: '0 0.25em' }}>
-            {label && <span style={{ color: '#888', fontSize: '0.8em' }}>{label}</span>}
-            <span style={{ textAlign: 'right', maxWidth: '9.5em', overflowX: 'hidden' }}>{expr}</span>
+          {label && <span style={{ position: 'absolute', top: '0em', left: '0.3em', fontSize: '0.8em', color: '#888' }}>{label}</span>}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', fontFamily: 'monospace', fontSize: '1.5em', minHeight: '2.25em', padding: '0 0.25em' }}>
+            <span style={{ textAlign: 'right', maxWidth: '15em', overflowX: 'hidden' }}>{expr}</span>
           </div>
         </wired-card>
         {/* Row 1: ⌫ | C | ^ | ÷ */}
