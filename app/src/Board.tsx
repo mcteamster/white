@@ -66,7 +66,7 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
   const handleSetChatOpen = useCallback<React.Dispatch<React.SetStateAction<boolean>>>((value) => {
     setChatOpen(prev => {
       const next = typeof value === 'function' ? value(prev) : value;
-      if (next && isMobile) setShowPlayers(false);
+      if (next && isMobile) setPlayersMode('hidden');
       return next;
     });
   }, [isMobile]);
