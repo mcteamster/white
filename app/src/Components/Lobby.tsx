@@ -3,7 +3,7 @@ import { Properties } from 'csstype';
 import { Icon } from './Icons';
 import { useCallback, useContext, useEffect, useState } from "react";
 import { AuthContext, HotkeysContext } from "../lib/contexts";
-import { getLobbyClient, getRegion, getCustomServer, setCustomServer } from "../lib/clients";
+import { getLobbyClient, getRegion, getCustomServer, setCustomServer, clearCustomServer, resolveCustomServer } from "../lib/clients";
 import type { Region } from "../lib/clients";
 import { externalLink } from "../lib/hooks";
 import { discordSdk } from "../lib/discord";
@@ -130,6 +130,60 @@ const styles: { [key: string]: Properties<string | number> } = {
   }
 }
 
+function CustomServerInput({ id, onConnect, autoFocus }: { id: string; onConnect: () => void; autoFocus?: boolean }) {
+  const saved = getCustomServer();
+  const defaultValue = saved !== 'http://localhost:3000' ? saved : '';
+
+  useEffect(() => {
+    setTimeout(() => {
+      const el = document.getElementById(id) as HTMLInputElement;
+      const inner = el?.shadowRoot?.querySelector('input') as HTMLInputElement;
+      if (defaultValue) {
+        if (inner) inner.value = defaultValue;
+        else if (el) el.value = defaultValue;
+      }
+    }, 50);
+  }, []);
+
+  useEffect(() => {
+    if (autoFocus) {
+      setTimeout(() => {
+        const el = document.getElementById(id) as HTMLInputElement;
+        const inner = el?.shadowRoot?.querySelector('input') as HTMLInputElement;
+        if (inner) inner.focus();
+        else if (el) el.focus();
+      }, 50);
+    }
+  }, [autoFocus]);
+
+  return (
+    <>
+      <div style={{ width: '100%', margin: '0.25em 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <wired-input
+          id={id}
+          placeholder="http://localhost:3000"
+          style={{ width: '12em' }}
+          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === 'Enter') onConnect();
+          }}
+          onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+            const val = (e.target as HTMLInputElement).value || (e.target?.shadowRoot?.querySelector('input') as HTMLInputElement)?.value;
+            if (val) setCustomServer(val);
+          }}
+        ></wired-input>
+        <span style={{ cursor: 'pointer', fontSize: '1.5em', color: '#000', marginLeft: '0.25em' }} onClick={() => {
+          const input = document.getElementById(id) as HTMLInputElement;
+          const inner = input?.shadowRoot?.querySelector('input') as HTMLInputElement;
+          if (inner) inner.value = '';
+          if (input) input.value = '';
+          clearCustomServer();
+        }}>×</span>
+      </div>
+      <div style={{ fontSize: '1em', margin: '0.5em 0', textAlign: 'center' }}>Custom servers are not managed by Blank White Cards. Connect at your own risk.</div>
+    </>
+  );
+}
+
 interface LobbyProps {
   globalSize: number;
   deckLoading: boolean;
@@ -143,6 +197,83 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
   const [stage, setStage] = useState('landing');
   const [joining, setJoining] = useState(false);
   const [preset, setPreset] = useState('blank');
+  const [connecting, setConnecting] = useState(false);
+
+  const connectCustomServer = useCallback(() => {
+    if (connecting) return;
+    setConnecting(true);
+    const input = document.getElementById('customServerCreateInput') as HTMLInputElement;
+    const val = (input?.shadowRoot?.querySelector('input') as HTMLInputElement)?.value || input?.value || getCustomServer();
+    resolveCustomServer(val).then((resolvedUrl) => {
+      setCustomServer(resolvedUrl);
+      const inner = input?.shadowRoot?.querySelector('input') as HTMLInputElement;
+      if (inner) inner.value = resolvedUrl;
+      else if (input) input.value = resolvedUrl;
+      return getLobbyClient('custom').listMatches('blank-white-cards');
+    }).then(() => {
+      setStage('create-deck');
+    }).catch(() => {
+      requestAnimationFrame(() => {
+        const el = document.getElementById('customServerCreateInput') as HTMLElement;
+        if (el) {
+          el.style.color = 'red';
+          setTimeout(() => { el.style.color = ''; }, 1000);
+        }
+      });
+    }).finally(() => {
+      setConnecting(false);
+    });
+  }, [connecting]);
+
+  const connectJoinServer = useCallback(() => {
+    if (connecting) return;
+    const roomInput = document.getElementById('customServerRoomInput') as HTMLInputElement;
+    const urlInput = document.getElementById('customServerJoinInput') as HTMLInputElement;
+    const roomVal = ((roomInput?.shadowRoot?.querySelector('input') as HTMLInputElement)?.value || roomInput?.value || '').toUpperCase();
+    const urlVal = (urlInput?.shadowRoot?.querySelector('input') as HTMLInputElement)?.value || urlInput?.value || getCustomServer();
+
+    // Validate room code format
+    if (!roomVal.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
+      roomInput.style.color = 'red';
+      setTimeout(() => { roomInput.style.color = ''; }, 500);
+      return;
+    }
+
+    setConnecting(true);
+    resolveCustomServer(urlVal).then((resolvedUrl) => {
+      setCustomServer(resolvedUrl);
+      const inner = urlInput?.shadowRoot?.querySelector('input') as HTMLInputElement;
+      if (inner) inner.value = resolvedUrl;
+      else if (urlInput) urlInput.value = resolvedUrl;
+      setAuth({ ...auth, matchID: roomVal });
+      // First validate server is reachable, then look up the room
+      return getLobbyClient('custom').listMatches('blank-white-cards').then(() => {
+        return getLobbyClient('custom').getMatch('blank-white-cards', roomVal).then(() => {
+          setStage('join');
+        }).catch(() => {
+          // Server is reachable but room not found
+          requestAnimationFrame(() => {
+            const room = document.getElementById('customServerRoomInput') as HTMLElement;
+            if (room) {
+              room.style.color = 'red';
+              setTimeout(() => { room.style.color = ''; }, 1000);
+            }
+          });
+        });
+      });
+    }).catch(() => {
+      // Server unreachable
+      requestAnimationFrame(() => {
+        const el = document.getElementById('customServerJoinInput') as HTMLElement;
+        if (el) {
+          el.style.color = 'red';
+          setTimeout(() => { el.style.color = ''; }, 1000);
+        }
+      });
+    }).finally(() => {
+      setConnecting(false);
+    });
+  }, [connecting, auth, setAuth]);
 
   const enterSinglePlayer = () => {
     setAuth({});
@@ -295,8 +426,12 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
         setStage('landing');
       }
     }).catch(() => {
-      setStage('down');
-      setTimeout(checkLobbyConnection, 30000);
+      if (discordSdk) {
+        setStage('down');
+        setTimeout(checkLobbyConnection, 30000);
+      } else {
+        setStage('landing');
+      }
     });
   }, [setStage, checkForRoomCode]);
   useEffect(checkLobbyConnection, []);
@@ -332,8 +467,9 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
               </a>
             }
           </div>
+
           {stage === 'down' && (
-            <div style={{ ...styles.subheading, color: '#c00', fontSize: '0.85em' }}>Public servers unavailable — custom servers still work</div>
+            <div style={{ ...styles.subheading, fontSize: '0.85em' }}>Public servers unavailable</div>
           )}
 
           <div style={{ display: (stage == 'landing' || stage == 'down') ? undefined : 'none' }}>
@@ -367,46 +503,17 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
             }
             {!discordSdk && <wired-card style={{ ...styles.region, backgroundColor: (region == 'custom') ? '#eee' : undefined }} onClick={() => { setRegion('custom'); }}><Icon name="settings" />Custom</wired-card>}
             {region === 'custom' && (
-              <div style={{ width: '100%', margin: '0.25em 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <wired-input
-                  id="customServerInput"
-                  placeholder="http://localhost:3000"
-                  style={{ width: '12em' }}
-                  onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
-                    const val = (e.target as HTMLInputElement).value || (e.target?.shadowRoot?.querySelector('input') as HTMLInputElement)?.value;
-                    if (val) setCustomServer(val);
-                  }}
-                ></wired-input>
-                <span style={{ cursor: 'pointer', fontSize: '1.5em', color: '#000', marginLeft: '0.25em' }} onClick={() => {
-                  const input = document.getElementById('customServerInput') as HTMLInputElement;
-                  const inner = input?.shadowRoot?.querySelector('input') as HTMLInputElement;
-                  if (inner) inner.value = '';
-                  if (input) input.value = '';
-                }}>×</span>
-              </div>
+              <CustomServerInput id="customServerCreateInput" onConnect={connectCustomServer} autoFocus={region === 'custom' && stage === 'create-region'} />
             )}
             <div style={{ ...styles.presets }}>
               <wired-card style={styles.action} onClick={() => { roomCodeError(); setStage('landing') }}><Icon name="back" />Back</wired-card>
               <wired-card style={styles.action} onClick={() => {
                 if (region === 'custom') {
-                  // Save the URL and validate connectivity before proceeding
-                  const input = document.getElementById('customServerInput') as HTMLInputElement;
-                  const val = input?.value || input?.shadowRoot?.querySelector('input')?.value || getCustomServer();
-                  setCustomServer(val);
-                  getLobbyClient('custom').listMatches('blank-white-cards').then(() => {
-                    setStage('create-deck');
-                  }).catch(() => {
-                    // Flash the input red to indicate connection failure
-                    const el = document.getElementById('customServerInput') as HTMLElement;
-                    if (el) {
-                      el.style.color = 'red';
-                      setTimeout(() => { el.style.color = ''; }, 500);
-                    }
-                  });
+                  connectCustomServer();
                 } else {
                   setStage('create-deck');
                 }
-              }}><Icon name="done" />Confirm</wired-card>
+              }}>{connecting ? <div className="spin"><Icon name="loading" /></div> : <Icon name="done" />}Confirm</wired-card>
             </div>
           </div>
 
@@ -441,55 +548,20 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
 
           {/* Custom server prompt (join flow — TVWXZ room codes) */}
           <div style={{ ...styles.presets, display: (stage == 'custom-server') ? undefined : 'none' }}>
-            <div style={styles.subheading}>Custom Server</div>
-            <div style={styles.textentry}>
-              <wired-input style={styles.name} id="customServerJoinInput" placeholder="http://localhost:3000"></wired-input>
-              <span style={{ cursor: 'pointer', fontSize: '1.5em', color: '#000', marginLeft: '0.25em' }} onClick={() => {
-                const input = document.getElementById('customServerJoinInput') as HTMLInputElement;
-                const inner = input?.shadowRoot?.querySelector('input') as HTMLInputElement;
-                if (inner) inner.value = '';
-                if (input) input.value = '';
-              }}>×</span>
-            </div>
             <div style={styles.subheading}>Room Code</div>
             <div style={styles.textentry}>
-              <wired-input style={{ ...styles.code, fontSize: '1.5em' }} id="customServerRoomInput" placeholder="&nbsp;Room" maxlength={4} value={auth?.matchID} key={`room-${auth?.matchID}`}></wired-input>
+              <wired-input style={{ ...styles.code, fontSize: '1.5em', margin: 0 }} id="customServerRoomInput" placeholder="Room" maxlength={4} value={auth?.matchID} key={`room-${auth?.matchID}`} onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => { if (e.key === 'Enter') connectJoinServer(); }}></wired-input>
             </div>
+            <div style={styles.subheading}>Custom Server</div>
+            <CustomServerInput id="customServerJoinInput" onConnect={connectJoinServer} autoFocus={stage === 'custom-server'} />
             <div style={{ ...styles.presets }}>
               <wired-card style={styles.action} onClick={() => {
                 setAuth({});
                 setStage('landing');
               }}><Icon name="back" />Back</wired-card>
               <wired-card style={styles.action} onClick={() => {
-                const roomInput = document.getElementById('customServerRoomInput') as HTMLInputElement;
-                const urlInput = document.getElementById('customServerJoinInput') as HTMLInputElement;
-                const roomVal = (roomInput?.value || roomInput?.shadowRoot?.querySelector('input')?.value || '').toUpperCase();
-                const urlVal = urlInput?.value || urlInput?.shadowRoot?.querySelector('input')?.value || getCustomServer();
-
-                // Validate room code format
-                if (!roomVal.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
-                  roomInput.style.color = 'red';
-                  setTimeout(() => { roomInput.style.color = ''; }, 500);
-                  return;
-                }
-
-                setCustomServer(urlVal);
-                setAuth({ ...auth, matchID: roomVal });
-
-                // Try to connect and find the room
-                const lobbyClient = getLobbyClient('custom');
-                lobbyClient.getMatch('blank-white-cards', roomVal).then(async () => {
-                  setStage('join');
-                }).catch((err) => {
-                  if (err?.message?.includes('404') || err?.status === 404) {
-                    roomInput.style.color = 'red';
-                    setTimeout(() => { roomInput.style.color = ''; }, 500);
-                  } else {
-                    urlInput.style.color = 'red';
-                    setTimeout(() => { urlInput.style.color = ''; }, 500);
-                  }
-                });
-              }}><Icon name="play" />Connect</wired-card>
+                connectJoinServer();
+              }}>{connecting ? <div className="spin"><Icon name="loading" /></div> : <Icon name="play" />}Connect</wired-card>
             </div>
           </div>
 
