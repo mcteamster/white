@@ -118,10 +118,10 @@ const App = () => {
 
   // Responsive: scale root font-size so all em/rem units adapt to viewport width
   useEffect(() => {
-    const baseFontSize = Math.max(8, Math.min(16, dimensions.width / 24));
+    const baseFontSize = Math.round(Math.max(8, Math.min(16, Math.min(dimensions.width / 24, dimensions.height / 48))));
     document.documentElement.style.fontSize = `${baseFontSize}px`;
     return () => { document.documentElement.style.fontSize = ''; };
-  }, [dimensions.width]);
+  }, [dimensions.width, dimensions.height]);
 
   // Check for In-App Browsers
   if (navigator.userAgent.match(/FBAN|FBAV|Instagram/i)) {
