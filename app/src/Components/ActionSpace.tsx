@@ -61,6 +61,13 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
     }
   }, [hotkeys.space, focus?.id, doPickup]);
 
+  // C key toggles create card screen (only when unfocused)
+  useEffect(() => {
+    if (hotkeys.c && !focus?.id) {
+      setMode(prev => prev.startsWith('create') ? 'play' : 'create-sketch');
+    }
+  }, [hotkeys.c, focus?.id, setMode]);
+
   useEffect(() => {
     const create = (document.getElementById('create') as HTMLElement);
     if (mode === 'create-sketch' || mode === 'create-finalise') {

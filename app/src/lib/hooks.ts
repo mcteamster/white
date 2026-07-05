@@ -42,6 +42,7 @@ export const useHotkeys = ({ hotkeys, setHotkeys}: HotkeysContextType) => {
       Enter: 'enter',
       Escape: 'escape',
       Space: 'space',
+      Tab: 'tab',
       KeyQ: 'q',
       KeyW: 'w',
       KeyA: 'a',
@@ -50,12 +51,27 @@ export const useHotkeys = ({ hotkeys, setHotkeys}: HotkeysContextType) => {
       KeyF: 'f',
       KeyR: 'r',
       KeyX: 'x',
+      KeyC: 'c',
+      KeyP: 'p',
+      Backquote: 'backtick',
+      Equal: 'equals',
+      Digit1: 'n1',
+      Digit2: 'n2',
+      Digit3: 'n3',
+      Digit4: 'n4',
+      Digit5: 'n5',
+      Digit6: 'n6',
+      Digit7: 'n7',
+      Digit8: 'n8',
+      Digit9: 'n9',
+      Digit0: 'n0',
     }
 
     const keyDownHandler = (event: globalThis.KeyboardEvent) => {
       const tag = document.activeElement?.tagName?.toUpperCase();
       const isInputFocused = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'WIRED-INPUT' || tag === 'WIRED-TEXTAREA';
-      if (isInputFocused && event.code !== 'Enter' && event.code !== 'Escape') return;
+      const guardExempt = ['Enter', 'Escape', 'Tab', 'Backquote', 'Equal'];
+      if (isInputFocused && !guardExempt.includes(event.code)) return;
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (hotkeyMapping[event.code as keyof typeof hotkeyMapping]) {
         event.preventDefault();
@@ -63,6 +79,10 @@ export const useHotkeys = ({ hotkeys, setHotkeys}: HotkeysContextType) => {
         // Slow Down repeated keys
         if (keyTicks.current > 6 || keyTicks.current == 0) {
           hotkeyEvent[hotkeyMapping[event.code as keyof typeof hotkeyMapping]] = true;
+          // Track Shift+Tab for reverse zone cycling
+          if (event.code === 'Tab' && event.shiftKey) {
+            hotkeyEvent['shiftTab'] = true;
+          }
           setHotkeys(hotkeyEvent);
           keyTicks.current = 0;
         }
