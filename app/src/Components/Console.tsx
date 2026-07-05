@@ -142,15 +142,18 @@ export function Console({ G, moves, playerID, playerName, plugins, matchData, op
       borderRadius: '0.5em',
       background: 'white',
       boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+      overscrollBehavior: 'contain',
+      overflow: 'hidden',
     },
     list: {
       overflowY: 'scroll',
+      overscrollBehavior: 'contain',
       scrollbarWidth: 'none',
+      touchAction: 'pan-y',
       flex: 1,
       padding: '0.5em 0.5em 0.5em 0.75em',
       display: 'flex',
       flexDirection: 'column',
-      justifyContent: 'flex-end',
     },
     inputRow: {
       display: 'flex',
@@ -278,6 +281,7 @@ export function Console({ G, moves, playerID, playerName, plugins, matchData, op
             )
           )}
           <div ref={listRef} style={styles.list}>
+            <div style={{ marginTop: 'auto' }} />
             {messages.filter(msg => {
               if (msg.type === 'chat' && !filters.chat) return false;
               if (msg.type === 'event' && !filters.events) return false;
