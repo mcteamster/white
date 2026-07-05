@@ -9,7 +9,7 @@ import { useState, useEffect, useContext, useRef, useCallback } from 'react';
 //@ts-expect-error: JS Module
 import { undo, redo, strokes, sketchpad, fillWhite, cycleBrushSize, getCurrentBrushSize, getMode, setMode as setCanvasMode, MODE_DRAW, MODE_ERASE, MODE_DOTS } from '../Canvas.js';
 import { Link, useNavigate } from 'react-router';
-import { AuthContext, FocusContext, LoadingContext } from '../lib/contexts.ts';
+import { AuthContext, FocusContext, HotkeysContext, LoadingContext } from '../lib/contexts.ts';
 import { openDeckEditor } from '../lib/data.ts';
 import { Loader } from './Loader.tsx';
 import { submitGlobalCard } from '../lib/clients.ts';
@@ -45,6 +45,21 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
   const pile = getCardsByLocation(G.cards, "pile");
   const discard = getCardsByLocation(G.cards, "discard");
   const hand = getCardsByLocation(getCardsByOwner(G.cards, playerID || "0"), "hand");
+
+  const doPickup = useCallback(() => {
+    if (!loading && mode === 'play') {
+      setLoading(true);
+      moves.pickupCard(true);
+    }
+  }, [loading, mode, setLoading, moves]);
+
+  // Spacebar pickup when no card is focused
+  const { hotkeys } = useContext(HotkeysContext);
+  useEffect(() => {
+    if (hotkeys.space && !focus?.id) {
+      doPickup();
+    }
+  }, [hotkeys.space, focus?.id, doPickup]);
 
   useEffect(() => {
     const create = (document.getElementById('create') as HTMLElement);
@@ -313,10 +328,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
       <wired-card style={styles.button} onClick={() => { setMode('menu') }} elevation={2}><Icon name='menu' />Menu</wired-card>
       <wired-card style={{ ...styles.button, width: '9.75em', margin: '0' }} onClick={() => {
         if (deck.length > 0) {
-          if (!loading) {
-            setLoading(true);
-            moves.pickupCard(true);
-          }
+          doPickup();
         } else if (G.cards.length == 0) {
           if (playerID == '0') {
             setMode('menu-tools-loader')
@@ -324,10 +336,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
             setMode('create-sketch')
           }
         } else if (pile.length + discard.length > 0) {
-          if (!loading) {
-            setLoading(true);
-            moves.pickupCard(true);
-          }
+          doPickup();
         } else {
           if (playerID == '0') {
             setMode('menu-tools-reset')

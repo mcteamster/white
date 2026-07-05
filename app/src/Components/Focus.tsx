@@ -321,15 +321,15 @@ export function Focus(props: BoardProps<GameState>) {
     if (card) {
       const owned = card.owner == props.playerID;
 
-      if (hotkeys.escape) {
+      if (hotkeys.escape || hotkeys.q) {
         unfocusCards();
-      } else if (props.isMultiplayer && owned && hotkeys.enter) {
+      } else if (props.isMultiplayer && owned && (hotkeys.enter || hotkeys.f)) {
         setSendCardMode(true);
-      } else if (hotkeys.left && card.id) {
+      } else if ((hotkeys.left || hotkeys.a) && card.id) {
         changeFocus('prev');
-      } else if (hotkeys.right && card.id) {
+      } else if ((hotkeys.right || hotkeys.d) && card.id) {
         changeFocus('next');
-      } else if (props.isMultiplayer && owned && hotkeys.up) {
+      } else if (props.isMultiplayer && owned && (hotkeys.up || hotkeys.w)) {
         if (card.location != "table") {
           const adjacentCard = getAdjacentCard(props.G.cards, card.id, 'prev', props.playerID) || getAdjacentCard(props.G.cards, card.id, 'next', props.playerID);
           props.moves.moveCard(card.id, "table");
@@ -341,7 +341,7 @@ export function Focus(props: BoardProps<GameState>) {
         } else {
           unfocusCards();
         }
-      } else if (props.isMultiplayer && owned && hotkeys.down) {
+      } else if (props.isMultiplayer && owned && (hotkeys.down || hotkeys.s)) {
         if (card.location != "hand") {
           const adjacentCard = getAdjacentCard(props.G.cards, card.id, 'prev', props.playerID) || getAdjacentCard(props.G.cards, card.id, 'next', props.playerID);
           props.moves.moveCard(card.id, "hand");
@@ -353,7 +353,7 @@ export function Focus(props: BoardProps<GameState>) {
         } else {
           unfocusCards();
         }
-      } else if (owned && hotkeys.delete) {
+      } else if (owned && (hotkeys.delete || hotkeys.x)) {
         const adjacentCard = getAdjacentCard(props.G.cards, card.id, 'prev', props.playerID) || getAdjacentCard(props.G.cards, card.id, 'next', props.playerID);
         props.moves.moveCard(card.id, "discard");
         if (adjacentCard) {
@@ -361,7 +361,7 @@ export function Focus(props: BoardProps<GameState>) {
         } else {
           unfocusCards();
         }
-      } else if (props.isMultiplayer && owned && hotkeys.backspace) {
+      } else if (props.isMultiplayer && owned && (hotkeys.backspace || hotkeys.r)) {
         const adjacentCard = getAdjacentCard(props.G.cards, card.id, 'prev', props.playerID) || getAdjacentCard(props.G.cards, card.id, 'next', props.playerID);
         props.moves.moveCard(card.id, "deck");
         if (adjacentCard) {

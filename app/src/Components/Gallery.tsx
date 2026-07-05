@@ -193,15 +193,15 @@ export function Gallery() {
       }
     }
 
-    if (hotkeys.left) {
+    if (hotkeys.left || hotkeys.a) {
       setTimeout(() => {
         changeViewed('old');
       }, 0)
-    } else if (hotkeys.right) {
+    } else if (hotkeys.right || hotkeys.d) {
       setTimeout(() => {
         changeViewed('new');
       }, 0)
-    } else if (hotkeys.escape) {
+    } else if (hotkeys.escape || hotkeys.q) {
       setTimeout(() => {
         navigate('/card');
       }, 0)

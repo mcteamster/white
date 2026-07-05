@@ -42,10 +42,22 @@ export const useHotkeys = ({ hotkeys, setHotkeys}: HotkeysContextType) => {
       Enter: 'enter',
       Escape: 'escape',
       Space: 'space',
+      KeyQ: 'q',
+      KeyW: 'w',
+      KeyA: 'a',
+      KeyS: 's',
+      KeyD: 'd',
+      KeyF: 'f',
+      KeyR: 'r',
+      KeyX: 'x',
     }
 
     const keyDownHandler = (event: globalThis.KeyboardEvent) => {
+      const tag = document.activeElement?.tagName?.toUpperCase();
+      const isInputFocused = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'WIRED-INPUT' || tag === 'WIRED-TEXTAREA';
+      if (isInputFocused) return;
       if (hotkeyMapping[event.code as keyof typeof hotkeyMapping]) {
+        event.preventDefault();
         const hotkeyEvent: { [key: string]: boolean } = {};
         // Slow Down repeated keys
         if (keyTicks.current > 6 || keyTicks.current == 0) {
