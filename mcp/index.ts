@@ -917,7 +917,7 @@ mcp.registerTool(
   async ({ matchID, playerID }) => {
     const { client } = requireSession(matchID, playerID);
     const currentState = client.getState();
-    const hostID = (currentState?.G as any)?.hostPlayerID ?? '0';
+    const hostID = (currentState?.plugins as any)?.player?.data?.hostPlayerID ?? '0';
     if (playerID !== hostID) throw new Error(`shuffle_cards is host-only. You are player ${playerID}. The current host is player ${hostID}.`);
     const nextState = waitForMove(client);
     client.moves.shuffleCards();
@@ -945,7 +945,7 @@ mcp.registerTool(
   async ({ matchID, playerID, cards }) => {
     const { client } = requireSession(matchID, playerID);
     const currentState = client.getState();
-    const hostID = (currentState?.G as any)?.hostPlayerID ?? '0';
+    const hostID = (currentState?.plugins as any)?.player?.data?.hostPlayerID ?? '0';
     if (playerID !== hostID) throw new Error(`load_cards is host-only. You are player ${playerID}. The current host is player ${hostID}.`);
     const cardObjects: Partial<Card>[] = await Promise.all(cards.map(async c => {
       let image: string | undefined;
