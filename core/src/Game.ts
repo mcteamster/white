@@ -11,10 +11,13 @@ import { PluginGameLog } from "./lib/plugin-gamelog";
 export interface GameState {
   cards: Card[],
   rules?: Rule[],
+  hostPlayerID?: string,
+  kickedPlayers?: string[],
 }
 
 // Moves
 const pickupCard: Move<GameState> = ({ G, ctx, random, playerID, gamelog, chat }: any) => {
+  if (G.kickedPlayers?.includes(playerID)) return INVALID_MOVE;
   const deck = getCardsByLocation(G.cards, "deck");
   if (deck.length === 0) {
     // Reshuffle Pile and Discard into Deck
@@ -52,6 +55,7 @@ const pickupCard: Move<GameState> = ({ G, ctx, random, playerID, gamelog, chat }
 }
 
 const moveCard: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, id, target, owner) => {
+  if (G.kickedPlayers?.includes(playerID)) return INVALID_MOVE;
   const selectedCard = getCardById(G.cards, id);
   if (selectedCard) {
     const sourceLocation = selectedCard.location;
@@ -84,6 +88,7 @@ const moveCard: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, id,
 }
 
 const claimCard: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, id) => {
+  if (G.kickedPlayers?.includes(playerID)) return INVALID_MOVE;
   const selectedCard = getCardById(G.cards, id);
   if (selectedCard) {
     if (selectedCard.location == 'pile') {
@@ -103,7 +108,8 @@ const claimCard: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, id
   }
 }
 
-const likeCard: Move<GameState> = ({ G }, id) => {
+const likeCard: Move<GameState> = ({ G, playerID }: any, id) => {
+  if (G.kickedPlayers?.includes(playerID)) return INVALID_MOVE;
   const selectedCard = getCardById(G.cards, id);
   if (selectedCard?.likes) {
     selectedCard.likes++;
@@ -115,6 +121,7 @@ const likeCard: Move<GameState> = ({ G }, id) => {
 }
 
 const submitCard: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, card: Card, playerName?: string) => {
+  if (G.kickedPlayers?.includes(playerID)) return INVALID_MOVE;
   card.id = G.cards.length + 1; // Commit ID sequentially to GameState
   G.cards.push(card);
   if (ctx.numPlayers > 1) {
@@ -124,7 +131,8 @@ const submitCard: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, c
 }
 
 const loadCards: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, cards: Card[]) => {
-  if(playerID !== '0') return INVALID_MOVE; // Only the host can bulk load cards
+  if (G.kickedPlayers?.includes(playerID)) return INVALID_MOVE;
+  if(playerID !== (G.hostPlayerID ?? '0')) return INVALID_MOVE; // Only the host can bulk load cards
 
   // Bulk load batches of cards
   const loadBuffer: Card[] = [];
@@ -142,7 +150,8 @@ const loadCards: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, ca
 }
 
 const shuffleCards: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any) => {
-  if(playerID !== '0') return INVALID_MOVE; // Only the host can reset the game
+  if (G.kickedPlayers?.includes(playerID)) return INVALID_MOVE;
+  if(playerID !== (G.hostPlayerID ?? '0')) return INVALID_MOVE; // Only the host can reset the game
 
   // Return all cards to the deck, except those in the box
   G.cards.forEach((card: Card) => { 
@@ -159,7 +168,8 @@ const shuffleCards: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const postMessage: Move<GameState> = ({ ctx, playerID, gamelog, chat }: any, text: string, playerName?: string) => {
+const postMessage: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, text: string, playerName?: string) => {
+  if (G.kickedPlayers?.includes(playerID)) return INVALID_MOVE;
   if (ctx.numPlayers <= 1) return INVALID_MOVE;
   if (!text || text.length > 500) return INVALID_MOVE;
   gamelog.record({ move: 'postMessage', playerID, playerName, text: text.trim() });
@@ -168,6 +178,7 @@ const postMessage: Move<GameState> = ({ ctx, playerID, gamelog, chat }: any, tex
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const declareRule: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, text: string, playerName?: string) => {
+  if (G.kickedPlayers?.includes(playerID)) return INVALID_MOVE;
   if (ctx.numPlayers <= 1) return INVALID_MOVE;
   if (!text || text.trim().length === 0 || text.length > 200) return INVALID_MOVE;
 
@@ -188,6 +199,7 @@ const declareRule: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const revokeRule: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, ruleId: number, playerName?: string) => {
+  if (G.kickedPlayers?.includes(playerID)) return INVALID_MOVE;
   if (ctx.numPlayers <= 1) return INVALID_MOVE;
 
   const rules = G.rules ?? [];
@@ -195,7 +207,7 @@ const revokeRule: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, r
   if (ruleIndex === -1) return INVALID_MOVE;
 
   const rule = rules[ruleIndex];
-  if (playerID !== rule.playerID && playerID !== '0') return INVALID_MOVE;
+  if (playerID !== rule.playerID && playerID !== (G.hostPlayerID ?? '0')) return INVALID_MOVE;
 
   G.rules = rules.filter((r: Rule) => r.id !== ruleId);
 
@@ -204,7 +216,8 @@ const revokeRule: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, r
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const setScore: Move<GameState> = ({ ctx, player, gamelog, chat }: any, targetPlayerID: string, value: number, setterName?: string, targetName?: string) => {
+const setScore: Move<GameState> = ({ G, ctx, playerID, player, gamelog, chat }: any, targetPlayerID: string, value: number, setterName?: string, targetName?: string) => {
+  if (G.kickedPlayers?.includes(playerID)) return INVALID_MOVE;
   if (player?.state && targetPlayerID in player.state) {
     const prev = player.state[targetPlayerID]?.score ?? 0;
     player.state[targetPlayerID] = { score: value };
@@ -218,6 +231,43 @@ const setScore: Move<GameState> = ({ ctx, player, gamelog, chat }: any, targetPl
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const transferHost: Move<GameState> = ({ G, playerID, gamelog, chat }: any, targetHostID: string) => {
+  if (G.kickedPlayers?.includes(playerID)) return INVALID_MOVE;
+  if (targetHostID === (G.hostPlayerID ?? '0')) return INVALID_MOVE; // Already host
+  if (G.kickedPlayers?.includes(targetHostID)) return INVALID_MOVE; // Can't transfer to kicked
+
+  G.hostPlayerID = targetHostID;
+  gamelog.record({ move: 'transferHost', playerID, newHostID: targetHostID });
+  chat.syncFromLog(gamelog.entries());
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const forceLeave: Move<GameState> = ({ G, ctx, playerID, gamelog, chat }: any, targetPlayerID: string, playerName?: string) => {
+  if (G.kickedPlayers?.includes(playerID)) return INVALID_MOVE;
+  if (playerID !== (G.hostPlayerID ?? '0')) return INVALID_MOVE; // Only host can kick
+  if (targetPlayerID === (G.hostPlayerID ?? '0')) return INVALID_MOVE; // Can't kick yourself
+  if (ctx.numPlayers <= 1) return INVALID_MOVE;
+
+  // Initialize kick list if needed
+  if (!G.kickedPlayers) G.kickedPlayers = [];
+  if (G.kickedPlayers.includes(targetPlayerID)) return INVALID_MOVE; // Already kicked
+
+  // Return target's hand and table cards to deck
+  G.cards.filter((c: Card) => c.owner === targetPlayerID).forEach((card: Card) => {
+    card.location = 'deck';
+    card.previousOwner = targetPlayerID;
+    card.owner = undefined;
+    card.timestamp = Number(Date.now());
+  });
+
+  // Mark as kicked
+  G.kickedPlayers.push(targetPlayerID);
+
+  gamelog.record({ move: 'forceLeave', playerID, targetPlayerID, playerName });
+  chat.syncFromLog(gamelog.entries());
+}
+
 // Game
 export const BlankWhiteCards: Game<GameState> = {
   name: 'blank-white-cards',
@@ -225,17 +275,17 @@ export const BlankWhiteCards: Game<GameState> = {
   setup: (_, setupData) => {
     const preset = (setupData?.presetDeck || 'blank') as string;
     if (preset == 'blank') {
-      return { cards: [], rules: [] }; // Blank White Deck
+      return { cards: [], rules: [], hostPlayerID: '0' }; // Blank White Deck
     } else {
       try {
         const deck = presetDecks[preset] // Look for a matching preset deck
         if (deck) {
-          return { ...deck, rules: deck.rules ?? [] };
+          return { ...deck, rules: deck.rules ?? [], hostPlayerID: '0' };
         }
       } catch (e) {
         console.error(e);
       }
-      return { cards: [], rules: [] }; // Blank White Deck as fallback
+      return { cards: [], rules: [], hostPlayerID: '0' }; // Blank White Deck as fallback
     }
   },
 
@@ -290,6 +340,16 @@ export const BlankWhiteCards: Game<GameState> = {
     },
     revokeRule: {
       move: revokeRule,
+      client: false,
+      ignoreStaleStateID: true,
+    },
+    transferHost: {
+      move: transferHost,
+      client: false,
+      ignoreStaleStateID: true,
+    },
+    forceLeave: {
+      move: forceLeave,
       client: false,
       ignoreStaleStateID: true,
     },

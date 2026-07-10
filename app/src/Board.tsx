@@ -165,6 +165,44 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
   const myScore: number = (props.plugins as any)?.player?.data?.players?.[props.playerID || '0']?.score ?? 0;
   const playerName = props.matchData?.find(p => p.id === Number(props.playerID))?.name;
 
+  // Host transfer detection: when current host disconnects, elect new host
+  useEffect(() => {
+    if (!props.isMultiplayer || !props.matchData) return;
+    const hostID = props.G.hostPlayerID ?? '0';
+    const hostPlayer = props.matchData.find(p => p.id === Number(hostID));
+    // Only trigger if host is disconnected (or left entirely)
+    if (hostPlayer?.isConnected) return;
+
+    // Compute lowest eligible player: connected, named, not kicked
+    const eligible = props.matchData
+      .filter(p => p.isConnected && p.name && !props.G.kickedPlayers?.includes(String(p.id)))
+      .sort((a, b) => a.id - b.id);
+
+    if (eligible.length === 0) return;
+    const newHostID = String(eligible[0].id);
+    // Don't fire if already the host (no-op) or if we'd target current host
+    if (newHostID === hostID) return;
+
+    props.moves.transferHost(newHostID);
+  }, [props.isMultiplayer, props.matchData, props.G.hostPlayerID, props.G.kickedPlayers, props.moves]);
+
+  // Kick detection: if local player is kicked, disconnect and navigate away
+  const [kicked, setKicked] = useState(false);
+  useEffect(() => {
+    if (!props.isMultiplayer || !props.playerID) return;
+    if (props.G.kickedPlayers?.includes(props.playerID)) {
+      setKicked(true);
+    }
+  }, [props.isMultiplayer, props.playerID, props.G.kickedPlayers]);
+
+  useEffect(() => {
+    if (kicked) {
+      // Navigate to lobby — use window.location since we don't have router access here
+      alert('You were removed by the host.');
+      window.location.href = '/';
+    }
+  }, [kicked]);
+
   return (
     <ImageCacheContext.Provider value={{ imageCache, dispatchImage }}>
       <div style={boardStyle}>

@@ -849,7 +849,7 @@ mcp.registerTool(
 mcp.registerTool(
   'revoke_rule',
   {
-    description: 'Revoke (remove) a house rule by its ID. Only the declaring player or the host (player 0) can revoke a rule.',
+    description: 'Revoke (remove) a house rule by its ID. Only the declaring player or the host can revoke a rule.',
     inputSchema: {
       matchID: z.string().describe('Room code'),
       playerID: z.string().describe('Your player ID'),
@@ -908,15 +908,17 @@ mcp.registerTool(
 mcp.registerTool(
   'shuffle_cards',
   {
-    description: 'Reset all cards back to the deck and shuffle (host / player 0 only)',
+    description: 'Reset all cards back to the deck and shuffle (host only)',
     inputSchema: {
       matchID: z.string().describe('Room code'),
-      playerID: z.string().describe('Your player ID (must be 0)'),
+      playerID: z.string().describe('Your player ID (must be host)'),
     },
   },
   async ({ matchID, playerID }) => {
-    if (playerID !== '0') throw new Error(`shuffle_cards is host-only (player 0). You are player ${playerID}.`);
     const { client } = requireSession(matchID, playerID);
+    const currentState = client.getState();
+    const hostID = (currentState?.G as any)?.hostPlayerID ?? '0';
+    if (playerID !== hostID) throw new Error(`shuffle_cards is host-only. You are player ${playerID}. The current host is player ${hostID}.`);
     const nextState = waitForMove(client);
     client.moves.shuffleCards();
     const state = await nextState;
@@ -927,10 +929,10 @@ mcp.registerTool(
 mcp.registerTool(
   'load_cards',
   {
-    description: 'Bulk load a set of cards into the match (host / player 0 only)',
+    description: 'Bulk load a set of cards into the match (host only)',
     inputSchema: {
       matchID: z.string().describe('Room code'),
-      playerID: z.string().describe('Your player ID (must be 0)'),
+      playerID: z.string().describe('Your player ID (must be host)'),
       cards: z.array(z.object({
         title: z.string(),
         description: z.string().optional(),
@@ -941,8 +943,10 @@ mcp.registerTool(
     },
   },
   async ({ matchID, playerID, cards }) => {
-    if (playerID !== '0') throw new Error(`load_cards is host-only (player 0). You are player ${playerID}.`);
     const { client } = requireSession(matchID, playerID);
+    const currentState = client.getState();
+    const hostID = (currentState?.G as any)?.hostPlayerID ?? '0';
+    if (playerID !== hostID) throw new Error(`load_cards is host-only. You are player ${playerID}. The current host is player ${hostID}.`);
     const cardObjects: Partial<Card>[] = await Promise.all(cards.map(async c => {
       let image: string | undefined;
       if (c.image_path) {
