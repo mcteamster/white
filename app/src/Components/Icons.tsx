@@ -38,6 +38,7 @@ import RecyclingIcon from '@mui/icons-material/Recycling';
 import SaveAltOutlinedIcon from '@mui/icons-material/SaveAltOutlined';
 import ScreenRotationOutlinedIcon from '@mui/icons-material/ScreenRotationOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
+import StarOutlinedIcon from '@mui/icons-material/StarOutlined';
 import SportsEsportsOutlinedIcon from '@mui/icons-material/SportsEsportsOutlined';
 import SyncOutlinedIcon from '@mui/icons-material/SyncOutlined';
 import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
@@ -94,6 +95,7 @@ type IconName =
   'view_module' |
   'show' |
   'hide' |
+  'special' |
   'solid' |
   'stipple' |
   'wand' |
@@ -148,6 +150,7 @@ export function Icon(props: { name: IconName }) {
     stop: <StopIcon></StopIcon>,
     show: <VisibilityIcon></VisibilityIcon>,
     hide: <VisibilityOffIcon></VisibilityOffIcon>,
+    special: <StarOutlinedIcon></StarOutlinedIcon>,
     solid: <StopIcon></StopIcon>,
     stipple: <GrainIcon></GrainIcon>,
     wand: <AutoFixHighIcon></AutoFixHighIcon>,

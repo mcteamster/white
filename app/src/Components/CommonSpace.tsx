@@ -178,35 +178,36 @@ export function Players(props: PlayersProps) {
     }
   }
 
-  const isHost = props.playerID === (props.G.hostPlayerID ?? '0');
+  const isHost = props.playerID === ((props.plugins as any)?.player?.data?.hostPlayerID ?? '0');
 
   const playerAvatars = props.matchData ? props.matchData.map((player, i) => {
     if (player.isConnected && player.name && player.id != Number(props.playerID)) { 
       const playerTable = getCardsByLocation(getCardsByOwner(props.G.cards, String(player.id)), 'table').sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)); // Oldest to Newest
       const score = getPlayerScore(props.plugins, String(player.id));
-      const isPlayerHost = String(player.id) === (props.G.hostPlayerID ?? '0');
-      const isKicked = props.G.kickedPlayers?.includes(String(player.id));
+      const isPlayerHost = String(player.id) === ((props.plugins as any)?.player?.data?.hostPlayerID ?? '0');
+      const isKicked = ((props.plugins as any)?.player?.data?.kickedPlayers ?? []).includes(String(player.id));
       if (isKicked) return undefined;
       
       return (
         <div key={`player-avatar-${i}`} style={styles.avatarBox}>
-          {isHost && !isPlayerHost && (
-            <span
-              style={{ cursor: 'pointer', fontSize: '1.2em', padding: '0 0.25em', color: '#c00' }}
-              title="Kick player"
-              onClick={(e) => { e.stopPropagation(); props.moves.forceLeave(String(player.id), props.matchData?.find(p => p.id === Number(props.playerID))?.name); }}
-            >×</span>
-          )}
-          <wired-card style={styles.avatar} onClick={() => { if (playerTable.length > 0) { toggleOpenPlayers(player.id) }}}>
-            {isPlayerHost && <span title="Host" style={{ fontSize: '0.7em' }}>👑</span>}
-            {(player.name).slice(0, 6)}{(player.name.length > 6) && '.'}
-            <div style={styles.score}>
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            {isHost && !isPlayerHost && (
               <span
-                style={{ cursor: 'pointer', textDecoration: 'underline dotted' }}
-                onClick={(e) => { e.stopPropagation(); setEditingScore(player.id); }}
-              >{formatScore(score)}</span>
-            </div>
-          </wired-card>
+                style={{ position: 'absolute', top: '0.7em', right: '0.7em', cursor: 'pointer', fontSize: '14px', color: '#000', lineHeight: 1, zIndex: 1 }}
+                title="Kick player"
+                onClick={(e) => { e.stopPropagation(); props.moves.forceLeave(String(player.id), props.matchData?.find(p => p.id === Number(props.playerID))?.name); }}
+              >×</span>
+            )}
+            <wired-card style={styles.avatar} onClick={() => { if (playerTable.length > 0) { toggleOpenPlayers(player.id) }}}>
+              {(player.name).slice(0, 6)}{(player.name.length > 6) && '.'}
+              <div style={styles.score}>
+                <span
+                  style={{ cursor: 'pointer', textDecoration: 'underline dotted' }}
+                  onClick={(e) => { e.stopPropagation(); setEditingScore(player.id); }}
+                >{formatScore(score)}</span>
+              </div>
+            </wired-card>
+          </div>
           {(playerTable.length > 0) && <span style={styles.stats}>{(!openPlayers.includes(player.id)) ? '<' : '>'}</span>}
           {
             openPlayers.includes(player.id) &&
@@ -231,7 +232,7 @@ export function Players(props: PlayersProps) {
         <Calculator
           initialValue={getPlayerScore(props.plugins, String(editingScore))}
           label={props.matchData?.find(p => p.id === editingScore)?.name}
-          onConfirm={(val) => { props.moves.setScore(String(editingScore), val, props.matchData?.find(p => p.id === Number(props.playerID))?.name, props.matchData?.find(p => p.id === editingScore)?.name); setEditingScore(null); }}
+          onConfirm={(val) => { if (val !== getPlayerScore(props.plugins, String(editingScore))) props.moves.setScore(String(editingScore), val, props.matchData?.find(p => p.id === Number(props.playerID))?.name, props.matchData?.find(p => p.id === editingScore)?.name); setEditingScore(null); }}
           onCancel={() => setEditingScore(null)}
         />
       )}
@@ -288,11 +289,11 @@ export function Header(props: HeaderProps) {
               <Calculator
                 initialValue={myScore}
                 label={playerName || undefined}
-                onConfirm={(val) => { props.moves.setScore(props.playerID || '0', val, playerName, playerName); setEditingMyScore(false); }}
+                onConfirm={(val) => { if (val !== myScore) props.moves.setScore(props.playerID || '0', val, playerName, playerName); setEditingMyScore(false); }}
                 onCancel={() => setEditingMyScore(false)}
               />
             ) : (
-              <>{props.playerID === (props.G.hostPlayerID ?? '0') && <span title="Host">👑</span>}{playerName}&nbsp;<span
+              <>{props.playerID === ((props.plugins as any)?.player?.data?.hostPlayerID ?? '0') && <span title="Host" style={{ display: 'inline-flex', verticalAlign: 'middle' }}><Icon name='special' /></span>}{playerName}&nbsp;<span
                 style={{ fontVariantNumeric: 'tabular-nums', cursor: 'pointer', textDecoration: 'underline dotted' }}
                 onClick={(e) => { e.stopPropagation(); setEditingMyScore(true); }}
               >{formatScore(myScore)} pts</span></>

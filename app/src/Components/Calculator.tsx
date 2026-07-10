@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { CSSProperties } from 'react';
 import { Icon } from './Icons';
 
@@ -186,56 +187,69 @@ export function Calculator({ initialValue, onConfirm, onCancel, label }: Calcula
   const confirmBtn: CSSProperties = { ...base, backgroundColor: '#ccc' };
   const cancelBtn: CSSProperties = { ...base, backgroundColor: '#ccc', color: '#c00' };
 
-  return (
-    <wired-dialog open onClick={sp}>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, padding: '0.5em 0.75em 0.75em' }}>
-        {/* Display */}
-        <wired-card style={{ width: '17em', margin: '0.5em 0', cursor: 'default', position: 'relative' } as CSSProperties}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {label && <span style={{ position: 'absolute', top: '0em', left: '0.3em', fontSize: '0.8em', color: '#888' }}>{label}</span>}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', fontFamily: 'monospace', fontSize: '1.5em', minHeight: '2.25em', padding: '0 0.25em' }}>
-            <span style={{ textAlign: 'right', maxWidth: '15em', overflowX: 'hidden' }}>{expr}</span>
+  const overlay: CSSProperties = {
+    position: 'fixed',
+    inset: 0,
+    zIndex: 100,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  };
+
+  return createPortal(
+    <div style={overlay} onClick={sp}>
+      <wired-card style={{ padding: '0', cursor: 'default', backgroundColor: 'white' } as CSSProperties} onClick={sp}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, padding: '0.5em 0.75em 0.75em' }}>
+          {/* Display */}
+          <wired-card style={{ width: '17em', margin: '0.5em 0', cursor: 'default', position: 'relative' } as CSSProperties}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {label && <span style={{ position: 'absolute', top: '0em', left: '0.3em', fontSize: '0.8em', color: '#888' }}>{label}</span>}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', fontFamily: 'monospace', fontSize: '1.5em', minHeight: '2.25em', padding: '0 0.25em' }}>
+              <span style={{ textAlign: 'right', maxWidth: '15em', overflowX: 'hidden' }}>{expr}</span>
+            </div>
+          </wired-card>
+          {/* Row 1: ⌫ | C | ^ | ÷ */}
+          <div style={{ display: 'flex' }}>
+            <wired-card style={btn} onClick={() => backspace()}>⌫</wired-card>
+            <wired-card style={btn} onClick={() => clear()}>C</wired-card>
+            <wired-card style={btn} onClick={() => append('^')}>^</wired-card>
+            <wired-card style={btn} onClick={() => append('÷')}>÷</wired-card>
           </div>
-        </wired-card>
-        {/* Row 1: ⌫ | C | ^ | ÷ */}
-        <div style={{ display: 'flex' }}>
-          <wired-card style={btn} onClick={() => backspace()}>⌫</wired-card>
-          <wired-card style={btn} onClick={() => clear()}>C</wired-card>
-          <wired-card style={btn} onClick={() => append('^')}>^</wired-card>
-          <wired-card style={btn} onClick={() => append('÷')}>÷</wired-card>
+          {/* Row 2: 7 8 9 × */}
+          <div style={{ display: 'flex' }}>
+            {['7','8','9'].map(k => <wired-card key={k} style={btn} onClick={() => append(k)}>{k}</wired-card>)}
+            <wired-card style={btn} onClick={() => append('×')}>×</wired-card>
+          </div>
+          {/* Row 3: 4 5 6 − */}
+          <div style={{ display: 'flex' }}>
+            {['4','5','6'].map(k => <wired-card key={k} style={btn} onClick={() => append(k)}>{k}</wired-card>)}
+            <wired-card style={btn} onClick={() => append('−')}>−</wired-card>
+          </div>
+          {/* Row 4: 1 2 3 + */}
+          <div style={{ display: 'flex' }}>
+            {['1','2','3'].map(k => <wired-card key={k} style={btn} onClick={() => append(k)}>{k}</wired-card>)}
+            <wired-card style={btn} onClick={() => append('+')}>+</wired-card>
+          </div>
+          {/* Row 5: . | 0 | = (wide) */}
+          <div style={{ display: 'flex', width: '100%' }}>
+            <wired-card style={btn} onClick={() => append('.')}>.</wired-card>
+            <wired-card style={btn} onClick={() => append('0')}>0</wired-card>
+            <wired-card style={{ ...btn, flex: 1 }} onClick={() => evaluate()}>=</wired-card>
+          </div>
+          {/* Row 6: Cancel (half) | Done (half) */}
+          <div style={{ display: 'flex', width: '100%', gap: 0 }}>
+            <wired-card style={{ ...cancelBtn, flex: 1 }} onClick={() => onCancel()}>
+              <Icon name='exit' />
+            </wired-card>
+            <wired-card style={{ ...confirmBtn, flex: 1 }} onClick={() => { if (valid) onConfirm(parsed!); }}>
+              <Icon name='done' />
+            </wired-card>
+          </div>
         </div>
-        {/* Row 2: 7 8 9 × */}
-        <div style={{ display: 'flex' }}>
-          {['7','8','9'].map(k => <wired-card key={k} style={btn} onClick={() => append(k)}>{k}</wired-card>)}
-          <wired-card style={btn} onClick={() => append('×')}>×</wired-card>
-        </div>
-        {/* Row 3: 4 5 6 − */}
-        <div style={{ display: 'flex' }}>
-          {['4','5','6'].map(k => <wired-card key={k} style={btn} onClick={() => append(k)}>{k}</wired-card>)}
-          <wired-card style={btn} onClick={() => append('−')}>−</wired-card>
-        </div>
-        {/* Row 4: 1 2 3 + */}
-        <div style={{ display: 'flex' }}>
-          {['1','2','3'].map(k => <wired-card key={k} style={btn} onClick={() => append(k)}>{k}</wired-card>)}
-          <wired-card style={btn} onClick={() => append('+')}>+</wired-card>
-        </div>
-        {/* Row 5: . | 0 | = (wide) */}
-        <div style={{ display: 'flex', width: '100%' }}>
-          <wired-card style={btn} onClick={() => append('.')}>.</wired-card>
-          <wired-card style={btn} onClick={() => append('0')}>0</wired-card>
-          <wired-card style={{ ...btn, flex: 1 }} onClick={() => evaluate()}>=</wired-card>
-        </div>
-        {/* Row 6: Cancel (half) | Done (half) */}
-        <div style={{ display: 'flex', width: '100%', gap: 0 }}>
-          <wired-card style={{ ...cancelBtn, flex: 1 }} onClick={() => onCancel()}>
-            <Icon name='exit' />
-          </wired-card>
-          <wired-card style={{ ...confirmBtn, flex: 1 }} onClick={() => { if (valid) onConfirm(parsed!); }}>
-            <Icon name='done' />
-          </wired-card>
-        </div>
-      </div>
-    </wired-dialog>
+      </wired-card>
+    </div>,
+    document.body
   );
 }

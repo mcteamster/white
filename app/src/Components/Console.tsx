@@ -272,7 +272,7 @@ export function Console({ G, moves, playerID, playerName, plugins, matchData, op
                 {rules.map(rule => (
                   <div key={rule.id} style={styles.pinnedRule}>
                     <span style={styles.pinnedRuleText}>• {rule.text}</span>
-                    {(playerID === rule.playerID || playerID === (G.hostPlayerID ?? '0')) && (
+                    {(playerID === rule.playerID || playerID === ((plugins as any)?.player?.data?.hostPlayerID ?? '0')) && (
                       <span style={styles.revokeBtn} onClick={() => moves.revokeRule(rule.id, playerName)}>×</span>
                     )}
                   </div>

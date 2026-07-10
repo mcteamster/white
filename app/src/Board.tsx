@@ -168,14 +168,16 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
   // Host transfer detection: when current host disconnects, elect new host
   useEffect(() => {
     if (!props.isMultiplayer || !props.matchData) return;
-    const hostID = props.G.hostPlayerID ?? '0';
+    const playerData = (props.plugins as any)?.player?.data;
+    const hostID = playerData?.hostPlayerID ?? '0';
+    const kickedPlayers: string[] = playerData?.kickedPlayers ?? [];
     const hostPlayer = props.matchData.find(p => p.id === Number(hostID));
     // Only trigger if host is disconnected (or left entirely)
     if (hostPlayer?.isConnected) return;
 
     // Compute lowest eligible player: connected, named, not kicked
     const eligible = props.matchData
-      .filter(p => p.isConnected && p.name && !props.G.kickedPlayers?.includes(String(p.id)))
+      .filter(p => p.isConnected && p.name && !kickedPlayers.includes(String(p.id)))
       .sort((a, b) => a.id - b.id);
 
     if (eligible.length === 0) return;
@@ -184,16 +186,17 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
     if (newHostID === hostID) return;
 
     props.moves.transferHost(newHostID);
-  }, [props.isMultiplayer, props.matchData, props.G.hostPlayerID, props.G.kickedPlayers, props.moves]);
+  }, [props.isMultiplayer, props.matchData, (props.plugins as any)?.player?.data?.hostPlayerID, (props.plugins as any)?.player?.data?.kickedPlayers, props.moves]);
 
   // Kick detection: if local player is kicked, disconnect and navigate away
   const [kicked, setKicked] = useState(false);
   useEffect(() => {
     if (!props.isMultiplayer || !props.playerID) return;
-    if (props.G.kickedPlayers?.includes(props.playerID)) {
+    const kickedPlayers: string[] = (props.plugins as any)?.player?.data?.kickedPlayers ?? [];
+    if (kickedPlayers.includes(props.playerID)) {
       setKicked(true);
     }
-  }, [props.isMultiplayer, props.playerID, props.G.kickedPlayers]);
+  }, [props.isMultiplayer, props.playerID, (props.plugins as any)?.player?.data?.kickedPlayers]);
 
   useEffect(() => {
     if (kicked) {
@@ -215,7 +218,7 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
         <Calculator
           initialValue={myScore}
           label={playerName}
-          onConfirm={(val) => { props.moves.setScore(props.playerID || '0', val, playerName, playerName); setScoreCalcOpen(false); }}
+          onConfirm={(val) => { if (val !== myScore) props.moves.setScore(props.playerID || '0', val, playerName, playerName); setScoreCalcOpen(false); }}
           onCancel={() => setScoreCalcOpen(false)}
         />
       )}

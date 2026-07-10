@@ -10,6 +10,8 @@ import type { Plugin, PlayerID } from '../types';
 
 interface PlayerData<PlayerState extends any = any> {
   players: Record<PlayerID, PlayerState>;
+  hostPlayerID: string;
+  kickedPlayers: string[];
 }
 
 export interface PlayerAPI<PlayerState extends any = any> {
@@ -20,6 +22,12 @@ export interface PlayerAPI<PlayerState extends any = any> {
     get(): PlayerState;
     set(value: PlayerState): PlayerState;
   };
+  hostPlayerID: string;
+  kickedPlayers: string[];
+  isHost(playerID: string): boolean;
+  isKicked(playerID: string): boolean;
+  setHost(playerID: string): void;
+  kick(playerID: string): void;
 }
 
 interface PluginPlayerOpts<PlayerState extends any = any> {
@@ -50,8 +58,12 @@ const PlayerPlugin = <PlayerState extends any = any>({
 > => ({
   name: 'player',
 
-  flush: ({ api }) => {
-    return { players: api.state };
+  flush: ({ api, data }) => {
+    return {
+      players: api.state,
+      hostPlayerID: data.hostPlayerID ?? '0',
+      kickedPlayers: data.kickedPlayers ?? [],
+    };
   },
 
   api: ({ ctx, data }): PlayerAPI => {
@@ -65,7 +77,25 @@ const PlayerPlugin = <PlayerState extends any = any>({
       return (state[ctx.currentPlayer] = value);
     };
 
-    const result: PlayerAPI = { state, get, set };
+    const isHost = (playerID: string) => playerID === data.hostPlayerID;
+    const isKicked = (playerID: string) => (data.kickedPlayers ?? []).includes(playerID);
+    const setHost = (playerID: string) => { data.hostPlayerID = playerID; };
+    const kick = (playerID: string) => {
+      if (!data.kickedPlayers) data.kickedPlayers = [];
+      data.kickedPlayers.push(playerID);
+    };
+
+    const result: PlayerAPI = {
+      state,
+      get,
+      set,
+      get hostPlayerID() { return data.hostPlayerID ?? '0'; },
+      get kickedPlayers() { return data.kickedPlayers ?? []; },
+      isHost,
+      isKicked,
+      setHost,
+      kick,
+    };
 
     if (ctx.numPlayers === 2) {
       const other = ctx.currentPlayer === '0' ? '1' : '0';
@@ -90,11 +120,19 @@ const PlayerPlugin = <PlayerState extends any = any>({
       }
       players[i + ''] = playerState;
     }
-    return { players };
+    return { players, hostPlayerID: '0', kickedPlayers: [] };
   },
 
-  playerView: ({ data, playerID }) =>
-    playerView ? { players: playerView(data.players, playerID) } : data,
+  playerView: ({ data, playerID }) => {
+    if (playerView) {
+      return {
+        players: playerView(data.players, playerID),
+        hostPlayerID: data.hostPlayerID ?? '0',
+        kickedPlayers: data.kickedPlayers ?? [],
+      };
+    }
+    return data;
+  },
 });
 
 export default PlayerPlugin;

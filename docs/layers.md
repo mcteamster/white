@@ -21,4 +21,5 @@ wired-dialog renders at `z-index: 100` (via `--wired-dialog-z-index`). Anything 
 | 60 | Console toggle + panel | Console |
 | 60 | DeckEditor modals / image picker | DeckEditor |
 | 60 | CardEditor modal | CardEditor |
+| 100 | Calculator modal overlay | Calculator |
 | 110 | Focus overlay (fullscreen card focus, beats wired-dialog) | Focus |
