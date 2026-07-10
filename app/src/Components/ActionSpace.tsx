@@ -303,7 +303,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
         </>
       }
     } else if (G.cards.length == 0) {
-      if (playerID == '0') {
+      if (playerID == (G.hostPlayerID ?? '0')) {
         mainButtonContent = <>
           <Icon name='display' />
           Load Deck?
@@ -320,7 +320,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
         Reset Pile ({pile.length + discard.length})
       </>
     } else {
-      if (playerID == '0') {
+      if (playerID == (G.hostPlayerID ?? '0')) {
         mainButtonContent = <>
           <Icon name='shuffle' />
           Shuffle ALL ({G.cards.length})
@@ -339,7 +339,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
         if (deck.length > 0) {
           doPickup();
         } else if (G.cards.length == 0) {
-          if (playerID == '0') {
+          if (playerID == (G.hostPlayerID ?? '0')) {
             setMode('menu-tools-loader')
           } else {
             setMode('create-sketch')
@@ -347,7 +347,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
         } else if (pile.length + discard.length > 0) {
           doPickup();
         } else {
-          if (playerID == '0') {
+          if (playerID == (G.hostPlayerID ?? '0')) {
             setMode('menu-tools-reset')
           } else {
             setMode('create-sketch')

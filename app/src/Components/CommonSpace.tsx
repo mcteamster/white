@@ -178,14 +178,27 @@ export function Players(props: PlayersProps) {
     }
   }
 
+  const isHost = props.playerID === (props.G.hostPlayerID ?? '0');
+
   const playerAvatars = props.matchData ? props.matchData.map((player, i) => {
     if (player.isConnected && player.name && player.id != Number(props.playerID)) { 
       const playerTable = getCardsByLocation(getCardsByOwner(props.G.cards, String(player.id)), 'table').sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)); // Oldest to Newest
       const score = getPlayerScore(props.plugins, String(player.id));
+      const isPlayerHost = String(player.id) === (props.G.hostPlayerID ?? '0');
+      const isKicked = props.G.kickedPlayers?.includes(String(player.id));
+      if (isKicked) return undefined;
       
       return (
         <div key={`player-avatar-${i}`} style={styles.avatarBox}>
+          {isHost && !isPlayerHost && (
+            <span
+              style={{ cursor: 'pointer', fontSize: '1.2em', padding: '0 0.25em', color: '#c00' }}
+              title="Kick player"
+              onClick={(e) => { e.stopPropagation(); props.moves.forceLeave(String(player.id), props.matchData?.find(p => p.id === Number(props.playerID))?.name); }}
+            >×</span>
+          )}
           <wired-card style={styles.avatar} onClick={() => { if (playerTable.length > 0) { toggleOpenPlayers(player.id) }}}>
+            {isPlayerHost && <span title="Host" style={{ fontSize: '0.7em' }}>👑</span>}
             {(player.name).slice(0, 6)}{(player.name.length > 6) && '.'}
             <div style={styles.score}>
               <span
@@ -279,7 +292,7 @@ export function Header(props: HeaderProps) {
                 onCancel={() => setEditingMyScore(false)}
               />
             ) : (
-              <>{playerName}&nbsp;<span
+              <>{props.playerID === (props.G.hostPlayerID ?? '0') && <span title="Host">👑</span>}{playerName}&nbsp;<span
                 style={{ fontVariantNumeric: 'tabular-nums', cursor: 'pointer', textDecoration: 'underline dotted' }}
                 onClick={(e) => { e.stopPropagation(); setEditingMyScore(true); }}
               >{formatScore(myScore)} pts</span></>
