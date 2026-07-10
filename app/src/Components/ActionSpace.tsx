@@ -15,7 +15,7 @@ import { Loader } from './Loader.tsx';
 import { submitGlobalCard } from '../lib/clients.ts';
 import { Tutorial } from './About.tsx';
 import { compressImage, resizeImage } from '../lib/images.ts';
-import { externalLink, useWindowDimensions } from '../lib/hooks.ts';
+import { externalLink, useWindowDimensions, usePlayerData } from '../lib/hooks.ts';
 import { discordSdk } from '../lib/discord';
 
 interface ToolbarProps extends BoardProps<GameState> {
@@ -28,6 +28,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
   const { setAuth } = useContext(AuthContext);
   const { loading, setLoading } = useContext(LoadingContext);
   const dimensions = useWindowDimensions();
+  const { hostPlayerID } = usePlayerData(plugins);
   const headerHeight = (discordSdk && dimensions.upright) ? '4.75em' : '2em';
   const [submitStatus, setSubmitStatus] = useState('Submit');
   const [drawMode, setDrawMode] = useState<string>(MODE_DRAW);
@@ -303,7 +304,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
         </>
       }
     } else if (G.cards.length == 0) {
-      if (playerID == ((plugins as any)?.player?.data?.hostPlayerID ?? '0')) {
+      if (playerID == hostPlayerID) {
         mainButtonContent = <>
           <Icon name='display' />
           Load Deck?
@@ -320,7 +321,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
         Reset Pile ({pile.length + discard.length})
       </>
     } else {
-      if (playerID == ((plugins as any)?.player?.data?.hostPlayerID ?? '0')) {
+      if (playerID == hostPlayerID) {
         mainButtonContent = <>
           <Icon name='shuffle' />
           Shuffle ALL ({G.cards.length})
@@ -339,7 +340,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
         if (deck.length > 0) {
           doPickup();
         } else if (G.cards.length == 0) {
-          if (playerID == ((plugins as any)?.player?.data?.hostPlayerID ?? '0')) {
+          if (playerID == hostPlayerID) {
             setMode('menu-tools-loader')
           } else {
             setMode('create-sketch')
@@ -347,7 +348,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
         } else if (pile.length + discard.length > 0) {
           doPickup();
         } else {
-          if (playerID == ((plugins as any)?.player?.data?.hostPlayerID ?? '0')) {
+          if (playerID == hostPlayerID) {
             setMode('menu-tools-reset')
           } else {
             setMode('create-sketch')

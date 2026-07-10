@@ -6,7 +6,7 @@ import { CardFace } from './CardFace.tsx';
 import { getCardsByLocation, getCardsByOwner } from '@mcteamster/white-core';
 import { Icon } from './Icons';
 import { useCallback, useContext, useEffect, useState } from 'react';
-import { useWindowDimensions } from '../lib/hooks.ts';
+import { useWindowDimensions, usePlayerData } from '../lib/hooks.ts';
 import { FocusContext } from '../lib/contexts.ts';
 import { discordSdk } from '../lib/discord.ts';
 import { Likes } from './Focus.tsx';
@@ -178,14 +178,15 @@ export function Players(props: PlayersProps) {
     }
   }
 
-  const isHost = props.playerID === ((props.plugins as any)?.player?.data?.hostPlayerID ?? '0');
+  const { hostPlayerID, kickedPlayers } = usePlayerData(props.plugins);
+  const isHost = props.playerID === hostPlayerID;
 
   const playerAvatars = props.matchData ? props.matchData.map((player, i) => {
     if (player.isConnected && player.name && player.id != Number(props.playerID)) { 
       const playerTable = getCardsByLocation(getCardsByOwner(props.G.cards, String(player.id)), 'table').sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)); // Oldest to Newest
       const score = getPlayerScore(props.plugins, String(player.id));
-      const isPlayerHost = String(player.id) === ((props.plugins as any)?.player?.data?.hostPlayerID ?? '0');
-      const isKicked = ((props.plugins as any)?.player?.data?.kickedPlayers ?? []).includes(String(player.id));
+      const isPlayerHost = String(player.id) === hostPlayerID;
+      const isKicked = kickedPlayers.includes(String(player.id));
       if (isKicked) return undefined;
       
       return (
@@ -250,6 +251,7 @@ export function Header(props: HeaderProps) {
   const [showShare, setShowShare] = useState(false);
   const [editingMyScore, setEditingMyScore] = useState(false);
   const dimensions = useWindowDimensions();
+  const { hostPlayerID: headerHostID } = usePlayerData(props.plugins);
 
   const playerName = props.isMultiplayer && props.matchData?.find((player) => player.id == Number(props.playerID))?.name?.toUpperCase() || ""
   const myScore = getPlayerScore(props.plugins, props.playerID || '0');
@@ -293,7 +295,7 @@ export function Header(props: HeaderProps) {
                 onCancel={() => setEditingMyScore(false)}
               />
             ) : (
-              <>{props.playerID === ((props.plugins as any)?.player?.data?.hostPlayerID ?? '0') && <span title="Host" style={{ display: 'inline-flex', verticalAlign: 'middle' }}><Icon name='special' /></span>}{playerName}&nbsp;<span
+              <>{props.playerID === headerHostID && <span title="Host" style={{ display: 'inline-flex', verticalAlign: 'middle' }}><Icon name='special' /></span>}{playerName}&nbsp;<span
                 style={{ fontVariantNumeric: 'tabular-nums', cursor: 'pointer', textDecoration: 'underline dotted' }}
                 onClick={(e) => { e.stopPropagation(); setEditingMyScore(true); }}
               >{formatScore(myScore)} pts</span></>

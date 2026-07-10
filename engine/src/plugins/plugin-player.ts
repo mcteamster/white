@@ -59,6 +59,9 @@ const PlayerPlugin = <PlayerState extends any = any>({
   name: 'player',
 
   flush: ({ api, data }) => {
+    // Player scores come from api.state (mutated via api.set/state assignment in moves),
+    // but hostPlayerID/kickedPlayers are mutated directly on `data` by setHost()/kick()
+    // since they're session-level concerns shared across all players, not per-player state.
     return {
       players: api.state,
       hostPlayerID: data.hostPlayerID ?? '0',

@@ -7,7 +7,7 @@ import { CommonSpace } from './Components/CommonSpace.tsx';
 import { PlayerSpace } from './Components/PlayerSpace.tsx';
 import { Console } from './Components/Console.tsx';
 import { Calculator } from './Components/Calculator.tsx';
-import { useWindowDimensions } from './lib/hooks.ts';
+import { useWindowDimensions, usePlayerData } from './lib/hooks.ts';
 import { discordSdk } from './lib/discord.ts';
 
 // Web Components from https://wiredjs.com/
@@ -166,12 +166,10 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
   const playerName = props.matchData?.find(p => p.id === Number(props.playerID))?.name;
 
   // Host transfer detection: when current host disconnects, elect new host
+  const { hostPlayerID, kickedPlayers } = usePlayerData(props.plugins);
   useEffect(() => {
     if (!props.isMultiplayer || !props.matchData) return;
-    const playerData = (props.plugins as any)?.player?.data;
-    const hostID = playerData?.hostPlayerID ?? '0';
-    const kickedPlayers: string[] = playerData?.kickedPlayers ?? [];
-    const hostPlayer = props.matchData.find(p => p.id === Number(hostID));
+    const hostPlayer = props.matchData.find(p => p.id === Number(hostPlayerID));
     // Only trigger if host is disconnected (or left entirely)
     if (hostPlayer?.isConnected) return;
 
@@ -183,24 +181,26 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
     if (eligible.length === 0) return;
     const newHostID = String(eligible[0].id);
     // Don't fire if already the host (no-op) or if we'd target current host
-    if (newHostID === hostID) return;
+    if (newHostID === hostPlayerID) return;
 
     props.moves.transferHost(newHostID);
-  }, [props.isMultiplayer, props.matchData, (props.plugins as any)?.player?.data?.hostPlayerID, (props.plugins as any)?.player?.data?.kickedPlayers, props.moves]);
+  }, [props.isMultiplayer, props.matchData, hostPlayerID, kickedPlayers, props.moves]);
 
   // Kick detection: if local player is kicked, disconnect and navigate away
   const [kicked, setKicked] = useState(false);
   useEffect(() => {
     if (!props.isMultiplayer || !props.playerID) return;
-    const kickedPlayers: string[] = (props.plugins as any)?.player?.data?.kickedPlayers ?? [];
     if (kickedPlayers.includes(props.playerID)) {
       setKicked(true);
     }
-  }, [props.isMultiplayer, props.playerID, (props.plugins as any)?.player?.data?.kickedPlayers]);
+  }, [props.isMultiplayer, props.playerID, kickedPlayers]);
 
   useEffect(() => {
     if (kicked) {
-      // Navigate to lobby — use window.location since we don't have router access here
+      // Clear session so the player doesn't get redirected back to this match
+      localStorage.removeItem('matchID');
+      localStorage.removeItem('playerID');
+      localStorage.removeItem('credentials');
       alert('You were removed by the host.');
       window.location.href = '/';
     }

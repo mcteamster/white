@@ -4,7 +4,7 @@ import type { Properties } from 'csstype';
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from './Icons';
 import { discordSdk } from '../lib/discord';
-import { useWindowDimensions } from '../lib/hooks';
+import { useWindowDimensions, usePlayerData } from '../lib/hooks';
 
 interface ConsoleProps extends BoardProps<GameState> {
   playerName?: string;
@@ -17,6 +17,7 @@ export function Console({ G, moves, playerID, playerName, plugins, matchData, op
   const messages: Message[] = (plugins as any)?.chat?.data?.messages ?? [];
   const rules: Rule[] = G?.rules ?? [];
   const dimensions = useWindowDimensions();
+  const { hostPlayerID } = usePlayerData(plugins);
   const headerHeight = (discordSdk && dimensions.upright) ? '4.75em' : '2em';
   const [localOpen, setLocalOpen] = useState(false);
   const open = openProp ?? localOpen;
@@ -272,7 +273,7 @@ export function Console({ G, moves, playerID, playerName, plugins, matchData, op
                 {rules.map(rule => (
                   <div key={rule.id} style={styles.pinnedRule}>
                     <span style={styles.pinnedRuleText}>• {rule.text}</span>
-                    {(playerID === rule.playerID || playerID === ((plugins as any)?.player?.data?.hostPlayerID ?? '0')) && (
+                    {(playerID === rule.playerID || playerID === hostPlayerID) && (
                       <span style={styles.revokeBtn} onClick={() => moves.revokeRule(rule.id, playerName)}>×</span>
                     )}
                   </div>

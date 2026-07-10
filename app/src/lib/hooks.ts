@@ -1,7 +1,17 @@
 // Hooks
-import { useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { HotkeysContextType } from './contexts';
 import { discordSdk } from './discord';
+
+// Plugin Player Data
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function usePlayerData(plugins: any) {
+  const data = plugins?.player?.data;
+  return useMemo(() => ({
+    hostPlayerID: (data?.hostPlayerID ?? '0') as string,
+    kickedPlayers: (data?.kickedPlayers ?? []) as string[],
+  }), [data?.hostPlayerID, data?.kickedPlayers]);
+}
 
 // Dimensions
 const getWindowDimensions = () => {
