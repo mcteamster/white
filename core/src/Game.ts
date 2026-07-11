@@ -3,7 +3,7 @@ import { INVALID_MOVE, Stage } from '@mcteamster/white-engine/core';
 import { PluginPlayer } from '@mcteamster/white-engine/plugins';
 import { Card, getCardById, getCardsByLocation } from './Cards';
 import type { Rule } from './Cards';
-import { presetDecks } from "./lib/constants";
+import { presetDecks } from "./lib/presets";
 import { PluginChat } from "./lib/plugin-chat";
 import { PluginGameLog } from "./lib/plugin-gamelog";
 

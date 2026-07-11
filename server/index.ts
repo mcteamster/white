@@ -1,5 +1,6 @@
 import { Server, Origins } from '@mcteamster/white-engine/server';
-import { BlankWhiteCards, startDeckPolling } from '@mcteamster/white-core';
+import { BlankWhiteCards, presetDecks } from '@mcteamster/white-core';
+import { loadPresets } from './src/presets';
 import { customAlphabet, nanoid } from 'nanoid';
 
 // Custom alphabet for room codes
@@ -68,8 +69,23 @@ server.router.get('/export/:matchID', async (ctx) => {
   }
 });
 
+// Presets endpoint — returns available preset decks with metadata
+server.router.get('/presets', (ctx) => {
+  const presets = presetConfig.map(({ key, name, description, icon }) => {
+    const cards = presetDecks[key]?.cards?.length ?? 0;
+    return {
+      key,
+      name,
+      description: description.replace('${cards}', String(cards)),
+      icon,
+      cards,
+    };
+  });
+  ctx.body = { presets };
+});
+
 server.run(Number(process.env.PORT));
-startDeckPolling();
+const presetConfig = loadPresets(process.env.PRESETS_CONFIG || './presets.json');
 
 // Cleanup rooms older than 12 hours
 setInterval(async () => {

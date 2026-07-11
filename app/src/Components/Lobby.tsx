@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router";
 import { Properties } from 'csstype';
-import { Icon } from './Icons';
+import { Icon, resolveIcon } from './Icons';
 import { useCallback, useContext, useEffect, useState } from "react";
 import { AuthContext, HotkeysContext } from "../lib/contexts";
-import { getLobbyClient, getRegion, getCustomServer, setCustomServer, clearCustomServer, resolveCustomServer } from "../lib/clients";
+import { getServerUrl, getLobbyClient, getRegion, getCustomServer, setCustomServer, clearCustomServer, resolveCustomServer } from "../lib/clients";
 import type { Region } from "../lib/clients";
 import { externalLink } from "../lib/hooks";
 import { discordSdk } from "../lib/discord";
@@ -184,6 +184,14 @@ function CustomServerInput({ id, onConnect, autoFocus }: { id: string; onConnect
   );
 }
 
+interface Preset {
+  key: string;
+  name: string;
+  description: string;
+  icon: string;
+  cards: number;
+}
+
 interface LobbyProps {
   globalSize: number;
   deckLoading: boolean;
@@ -198,6 +206,17 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
   const [joining, setJoining] = useState(false);
   const [preset, setPreset] = useState('blank');
   const [connecting, setConnecting] = useState(false);
+  const [presets, setPresets] = useState<Preset[]>([]);
+
+  // Fetch presets from server when entering deck selection
+  useEffect(() => {
+    if (stage !== 'create-deck') return;
+    const serverUrl = getServerUrl(region);
+    fetch(`${serverUrl}/presets`)
+      .then((res) => res.json())
+      .then((data) => { if (data?.presets) setPresets(data.presets); })
+      .catch(() => { setPresets([]); });
+  }, [stage, region]);
 
   const connectCustomServer = useCallback(() => {
     if (connecting) return;
@@ -521,9 +540,9 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
           <div style={{ ...styles.presets, display: (stage == 'create-deck') ? undefined : 'none' }}>
             <div style={styles.subheading}>Select a Starting Deck</div>
             <wired-card style={{ ...styles.action, backgroundColor: (preset == 'blank') ? '#eee' : undefined }} onClick={() => { setPreset('blank'); }}><Icon name="copy" />Blank</wired-card>
-            <wired-card style={{ ...styles.action, backgroundColor: (preset == 'global') ? '#eee' : undefined }} onClick={() => { setPreset('global'); }}><Icon name="global" />Global</wired-card>
-            <wired-card style={{ ...styles.action, backgroundColor: (preset == 'standard') ? '#eee' : undefined }} onClick={() => { setPreset('standard'); }}><Icon name="die" />Standard</wired-card>
-            <wired-card style={{ ...styles.action, backgroundColor: (preset == 'party-2026') ? '#eee' : undefined }} onClick={() => { setPreset('party-2026'); }}><Icon name="party" />Party</wired-card>
+            {presets.map((p) => (
+              <wired-card key={p.key} style={{ ...styles.action, backgroundColor: (preset == p.key) ? '#eee' : undefined }} onClick={() => { setPreset(p.key); }}>{resolveIcon(p.icon)}{p.name}</wired-card>
+            ))}
             <div style={styles.flavourbox}>
               {preset == 'blank' && (
                 <div>
@@ -535,9 +554,7 @@ export function Lobby({ globalSize, deckLoading, region, setRegion }: LobbyProps
                   </div>
                 </div>
               )}
-              {preset == 'global' && `A copy of the ${globalSize} card global deck. (Cards made here are not submitted)`}
-              {preset == 'standard' && 'The standard 52 card deck for more traditional games.'}
-              {preset == 'party-2026' && 'A curated 100 card party deck — dares, chaos mechanics, and social fun.'}
+              {preset !== 'blank' && presets.find((p) => p.key === preset)?.description}
             </div>
             <div style={{ ...styles.presets }}>
               <wired-card style={styles.action} onClick={() => { roomCodeError(); setStage('create-region') }}><Icon name="back" />Back</wired-card>
