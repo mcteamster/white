@@ -10,7 +10,7 @@ import type { Plugin, PlayerID } from '../types';
 
 interface PlayerData<PlayerState extends any = any> {
   players: Record<PlayerID, PlayerState>;
-  hostPlayerID: string;
+  connectedPlayers: string[];
   kickedPlayers: string[];
 }
 
@@ -22,11 +22,10 @@ export interface PlayerAPI<PlayerState extends any = any> {
     get(): PlayerState;
     set(value: PlayerState): PlayerState;
   };
-  hostPlayerID: string;
+  connectedPlayers: string[];
   kickedPlayers: string[];
   isHost(playerID: string): boolean;
   isKicked(playerID: string): boolean;
-  setHost(playerID: string): void;
   kick(playerID: string): void;
 }
 
@@ -58,13 +57,21 @@ const PlayerPlugin = <PlayerState extends any = any>({
 > => ({
   name: 'player',
 
+  action: (data, payload) => {
+    const args = Array.isArray(payload.args) ? payload.args[0] : payload.args;
+    if (args?.action === 'syncPlayers' && Array.isArray(args.connectedPlayers)) {
+      return { ...data, connectedPlayers: args.connectedPlayers };
+    }
+    return data;
+  },
+
   flush: ({ api, data }) => {
     // Player scores come from api.state (mutated via api.set/state assignment in moves),
-    // but hostPlayerID/kickedPlayers are mutated directly on `data` by setHost()/kick()
+    // but connectedPlayers/kickedPlayers are mutated directly on `data` by action/kick()
     // since they're session-level concerns shared across all players, not per-player state.
     return {
       players: api.state,
-      hostPlayerID: data.hostPlayerID ?? '0',
+      connectedPlayers: data.connectedPlayers ?? [],
       kickedPlayers: data.kickedPlayers ?? [],
     };
   },
@@ -80,9 +87,15 @@ const PlayerPlugin = <PlayerState extends any = any>({
       return (state[ctx.currentPlayer] = value);
     };
 
-    const isHost = (playerID: string) => playerID === data.hostPlayerID;
+    const isHost = (playerID: string) => {
+      const connected = data.connectedPlayers ?? [];
+      const kicked = data.kickedPlayers ?? [];
+      const eligible = connected
+        .filter(id => !kicked.includes(id))
+        .sort((a, b) => Number(a) - Number(b));
+      return eligible.length > 0 ? eligible[0] === playerID : playerID === '0';
+    };
     const isKicked = (playerID: string) => (data.kickedPlayers ?? []).includes(playerID);
-    const setHost = (playerID: string) => { data.hostPlayerID = playerID; };
     const kick = (playerID: string) => {
       if (!data.kickedPlayers) data.kickedPlayers = [];
       data.kickedPlayers.push(playerID);
@@ -92,11 +105,10 @@ const PlayerPlugin = <PlayerState extends any = any>({
       state,
       get,
       set,
-      get hostPlayerID() { return data.hostPlayerID ?? '0'; },
+      get connectedPlayers() { return data.connectedPlayers ?? []; },
       get kickedPlayers() { return data.kickedPlayers ?? []; },
       isHost,
       isKicked,
-      setHost,
       kick,
     };
 
@@ -123,14 +135,14 @@ const PlayerPlugin = <PlayerState extends any = any>({
       }
       players[i + ''] = playerState;
     }
-    return { players, hostPlayerID: '0', kickedPlayers: [] };
+    return { players, connectedPlayers: [], kickedPlayers: [] };
   },
 
   playerView: ({ data, playerID }) => {
     if (playerView) {
       return {
         players: playerView(data.players, playerID),
-        hostPlayerID: data.hostPlayerID ?? '0',
+        connectedPlayers: data.connectedPlayers ?? [],
         kickedPlayers: data.kickedPlayers ?? [],
       };
     }
