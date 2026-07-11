@@ -10,6 +10,8 @@ COPY engine/ ./node_modules/@mcteamster/white-engine/
 RUN npm install --omit=dev && npm install tsx
 
 COPY server/index.ts ./
+COPY server/src/ ./src/
+COPY server/presets.json ./
 
 EXPOSE 80
 CMD ["node", "--import", "tsx", "./index.ts"]
