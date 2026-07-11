@@ -7,10 +7,15 @@ import { discordSdk } from './discord';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function usePlayerData(plugins: any) {
   const data = plugins?.player?.data;
-  return useMemo(() => ({
-    hostPlayerID: (data?.hostPlayerID ?? '0') as string,
-    kickedPlayers: (data?.kickedPlayers ?? []) as string[],
-  }), [data?.hostPlayerID, data?.kickedPlayers]);
+  return useMemo(() => {
+    const connectedPlayers = (data?.connectedPlayers ?? []) as string[];
+    const kickedPlayers = (data?.kickedPlayers ?? []) as string[];
+    const eligible = connectedPlayers
+      .filter(id => !kickedPlayers.includes(id))
+      .sort((a, b) => Number(a) - Number(b));
+    const hostPlayerID = eligible.length > 0 ? eligible[0] : '0';
+    return { hostPlayerID, kickedPlayers, connectedPlayers };
+  }, [data?.connectedPlayers, data?.kickedPlayers]);
 }
 
 // Dimensions

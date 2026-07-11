@@ -152,6 +152,7 @@ export function Client<
           isMultiplayer: !!multiplayer,
           moves: this.client.moves,
           events: this.client.events,
+          pluginDispatchers: this.client.plugins,
           matchID: this.client.matchID,
           playerID: this.client.playerID,
           reset: this.client.reset,

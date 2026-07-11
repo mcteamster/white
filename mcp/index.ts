@@ -84,6 +84,16 @@ function getScores(state: Record<string, unknown>, playOrder: string[]): Record<
   return Object.fromEntries(playOrder.map(id => [id, players?.[id]?.score ?? 0]));
 }
 
+function getDerivedHost(state: Record<string, unknown>): string {
+  const data = (state as any)?.plugins?.player?.data;
+  const connected: string[] = data?.connectedPlayers ?? [];
+  const kicked: string[] = data?.kickedPlayers ?? [];
+  const eligible = connected
+    .filter(id => !kicked.includes(id))
+    .sort((a, b) => Number(a) - Number(b));
+  return eligible.length > 0 ? eligible[0] : '0';
+}
+
 function formatState(state: { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID: string) {
   const { G, ctx } = state;
   const cards = G.cards;
@@ -515,6 +525,7 @@ Blank White Cards is a freeform card game where players write and play their own
 | \`watch\` | Block until a game event fires (replaces polling) |
 | \`shuffle_cards\` | Reset all cards to the deck (host only) |
 | \`load_cards\` | Bulk load cards into the match (host only) |
+| \`kick_player\` | Kick a player from the match (host only) |
 | \`leave_match\` | Leave and clean up the session |
 
 ## Resources
@@ -917,7 +928,7 @@ mcp.registerTool(
   async ({ matchID, playerID }) => {
     const { client } = requireSession(matchID, playerID);
     const currentState = client.getState();
-    const hostID = (currentState?.plugins as any)?.player?.data?.hostPlayerID ?? '0';
+    const hostID = getDerivedHost(currentState);
     if (playerID !== hostID) throw new Error(`shuffle_cards is host-only. You are player ${playerID}. The current host is player ${hostID}.`);
     const nextState = waitForMove(client);
     client.moves.shuffleCards();
@@ -945,7 +956,7 @@ mcp.registerTool(
   async ({ matchID, playerID, cards }) => {
     const { client } = requireSession(matchID, playerID);
     const currentState = client.getState();
-    const hostID = (currentState?.plugins as any)?.player?.data?.hostPlayerID ?? '0';
+    const hostID = getDerivedHost(currentState);
     if (playerID !== hostID) throw new Error(`load_cards is host-only. You are player ${playerID}. The current host is player ${hostID}.`);
     const cardObjects: Partial<Card>[] = await Promise.all(cards.map(async c => {
       let image: string | undefined;
@@ -973,6 +984,29 @@ mcp.registerTool(
     }));
     const nextState = waitForMove(client);
     client.moves.loadCards(cardObjects);
+    const state = await nextState;
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
+  }
+);
+
+mcp.registerTool(
+  'kick_player',
+  {
+    description: 'Kick a player from the match (host only). Their cards are returned to the deck.',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID (must be host)'),
+      targetPlayerID: z.string().describe('Player ID to kick'),
+    },
+  },
+  async ({ matchID, playerID, targetPlayerID }) => {
+    const { client } = requireSession(matchID, playerID);
+    const currentState = client.getState();
+    const hostID = getDerivedHost(currentState);
+    if (playerID !== hostID) throw new Error(`kick_player is host-only. You are player ${playerID}. The current host is player ${hostID}.`);
+    if (targetPlayerID === playerID) throw new Error(`Cannot kick yourself.`);
+    const nextState = waitForMove(client);
+    client.moves.forceLeave(targetPlayerID);
     const state = await nextState;
     return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
   }

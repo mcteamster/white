@@ -231,17 +231,6 @@ const setScore: Move<GameState> = ({ ctx, playerID, player, gamelog, chat }: any
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const transferHost: Move<GameState> = ({ playerID, player, gamelog, chat }: any, targetHostID: string) => {
-  if (player.isKicked(playerID)) return INVALID_MOVE;
-  if (player.isHost(targetHostID)) return INVALID_MOVE; // Already host
-  if (player.isKicked(targetHostID)) return INVALID_MOVE; // Can't transfer to kicked
-
-  player.setHost(targetHostID);
-  gamelog.record({ move: 'transferHost', playerID, newHostID: targetHostID });
-  chat.syncFromLog(gamelog.entries());
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const forceLeave: Move<GameState> = ({ G, ctx, playerID, player, gamelog, chat }: any, targetPlayerID: string, playerName?: string) => {
   if (player.isKicked(playerID)) return INVALID_MOVE;
   if (!player.isHost(playerID)) return INVALID_MOVE; // Only host can kick
@@ -336,11 +325,6 @@ export const BlankWhiteCards: Game<GameState> = {
     },
     revokeRule: {
       move: revokeRule,
-      client: false,
-      ignoreStaleStateID: true,
-    },
-    transferHost: {
-      move: transferHost,
       client: false,
       ignoreStaleStateID: true,
     },
