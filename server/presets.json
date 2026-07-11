@@ -1,0 +1,26 @@
+[
+  {
+    "key": "global",
+    "name": "Global",
+    "description": "A copy of the ${cards} card community deck",
+    "icon": "global",
+    "url": "https://blankwhite.cards/decks/global.json",
+    "refreshMs": 600000
+  },
+  {
+    "key": "standard",
+    "name": "Standard",
+    "description": "The traditional ${cards} card deck",
+    "icon": "die",
+    "url": "https://blankwhite.cards/decks/standard.json",
+    "refreshMs": 86400000
+  },
+  {
+    "key": "party-2026",
+    "name": "Party",
+    "description": "Curated ${cards} card party deck for instant fun",
+    "icon": "party",
+    "url": "https://blankwhite.cards/decks/party-2026.json",
+    "refreshMs": 86400000
+  }
+]

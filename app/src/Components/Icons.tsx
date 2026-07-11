@@ -103,6 +103,32 @@ type IconName =
 
 type BrowseType = 'prev' | 'next'
 
+const ICON_NAMES: Set<string> = new Set<string>([
+  'about', 'back', 'book', 'chat', 'checklist', 'coffee', 'copy', 'create',
+  'die', 'discard', 'display', 'done', 'exit', 'game', 'github', 'global',
+  'hand', 'heart', 'hearted', 'info', 'link', 'loading', 'logout', 'menu',
+  'multi', 'next', 'play', 'party', 'pile', 'prev', 'redo', 'search',
+  'settings', 'send', 'shuffle', 'single', 'take', 'undo', 'stop',
+  'view_list', 'view_module', 'show', 'hide', 'special', 'solid', 'stipple',
+  'wand', 'weight',
+]);
+
+const EMOJI_REGEX = /^\p{Extended_Pictographic}$/u;
+
+/**
+ * Resolve an icon string into a renderable element.
+ * Priority: known Icon name → single emoji → fallback Icon.
+ */
+export function resolveIcon(icon: string): JSX.Element {
+  if (ICON_NAMES.has(icon)) {
+    return <Icon name={icon as IconName} />;
+  }
+  if (EMOJI_REGEX.test(icon)) {
+    return <span>{icon}</span>;
+  }
+  return <Icon name="copy" />;
+}
+
 export function Icon(props: { name: IconName }) {
   const icons = {
     about: <QuestionMarkOutlinedIcon></QuestionMarkOutlinedIcon>,
