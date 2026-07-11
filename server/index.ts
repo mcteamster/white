@@ -70,7 +70,7 @@ server.router.get('/export/:matchID', async (ctx) => {
 });
 
 // Load preset config and start deck polling
-const presetConfig = loadPresets(process.env.PRESETS_CONFIG || './presets.json');
+const presetConfig = loadPresets(process.env.PRESETS_CONFIG || './src/presets.json');
 
 // Presets endpoint — returns available preset decks with metadata
 server.router.get('/presets', (ctx) => {
