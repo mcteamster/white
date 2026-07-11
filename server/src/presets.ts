@@ -34,9 +34,11 @@ function refreshDeck(preset: PresetDeckConfig) {
     fetch(preset.url).then(async (res) => {
       if (res.ok) {
         presetDecks[preset.key] = await res.json();
+      } else {
+        console.warn(`[presets] Failed to refresh ${preset.key}: HTTP ${res.status}`);
       }
-    }).catch(() => {
-      // Fetch failed — retain previous cache state
+    }).catch((err) => {
+      console.warn(`[presets] Failed to fetch ${preset.key}: ${err instanceof Error ? err.message : String(err)}`);
     });
     setTimeout(refreshDeck, preset.refreshMs, preset);
   } catch (e) {

@@ -69,6 +69,9 @@ server.router.get('/export/:matchID', async (ctx) => {
   }
 });
 
+// Load preset config and start deck polling
+const presetConfig = loadPresets(process.env.PRESETS_CONFIG || './presets.json');
+
 // Presets endpoint — returns available preset decks with metadata
 server.router.get('/presets', (ctx) => {
   const presets = presetConfig.map(({ key, name, description, icon }) => {
@@ -85,7 +88,6 @@ server.router.get('/presets', (ctx) => {
 });
 
 server.run(Number(process.env.PORT));
-const presetConfig = loadPresets(process.env.PRESETS_CONFIG || './presets.json');
 
 // Cleanup rooms older than 12 hours
 setInterval(async () => {
