@@ -94,13 +94,25 @@ function getDerivedHost(state: Record<string, unknown>): string {
   return eligible.length > 0 ? eligible[0] : '0';
 }
 
-function formatState(state: { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID: string) {
+function formatState(state: { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID: string, matchData?: { id: number; name?: string; isConnected?: boolean }[]) {
   const { G, ctx } = state;
   const cards = G.cards;
   const rules = (G as any).rules ?? [];
   const playOrder = ctx.playOrder as string[];
   const scores = getScores(state as Record<string, unknown>, playOrder);
   const allMessages = (state as any)?.plugins?.chat?.data?.messages as Message[] | undefined;
+  const hostID = getDerivedHost(state as Record<string, unknown>);
+  const kicked: string[] = (state as any)?.plugins?.player?.data?.kickedPlayers ?? [];
+  const players = (matchData ?? [])
+    .filter(p => p.name)
+    .map(p => ({
+      id: String(p.id),
+      name: p.name!,
+      isConnected: p.isConnected ?? false,
+      isHost: String(p.id) === hostID,
+      isKicked: kicked.includes(String(p.id)),
+      score: scores[String(p.id)] ?? 0,
+    }));
   return {
     my_hand: cards.filter(c => c.location === 'hand' && c.owner === playerID).map(stripImage),
     my_table: cards.filter(c => c.location === 'table' && c.owner === playerID).map(stripImage),
@@ -110,6 +122,7 @@ function formatState(state: { G: { cards: Card[] }; ctx: Record<string, unknown>
     box: cards.filter(c => c.location === 'box').map(stripImage),
     num_players: ctx.numPlayers,
     play_order: playOrder,
+    players,
     scores,
     rules,
     recent_messages: allMessages ? allMessages.slice(-10) : [],
@@ -615,7 +628,7 @@ mcp.registerTool(
 mcp.registerTool(
   'get_state',
   {
-    description: 'Get the current game state — your hand, the pile, deck size, and all cards in play',
+    description: 'Get the current game state — your hand, the pile, deck size, connected players, and all cards in play',
     inputSchema: {
       matchID: z.string().describe('Room code'),
       playerID: z.string().describe('Your player ID'),
@@ -625,7 +638,7 @@ mcp.registerTool(
     const { client } = requireSession(matchID, playerID);
     const state = client.store.getState();
     if (!state?.G) throw new Error('No state available yet');
-    return text(formatState(state, playerID));
+    return text(formatState(state, playerID, client.matchData));
   }
 );
 
@@ -643,7 +656,7 @@ mcp.registerTool(
     const nextState = waitForMove(client);
     client.moves.pickupCard();
     const state = await nextState;
-    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID, client.matchData));
   }
 );
 
@@ -664,7 +677,7 @@ mcp.registerTool(
     const nextState = waitForMove(client);
     client.moves.moveCard(cardID, target, toOwner);
     const state = await nextState;
-    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID, client.matchData));
   }
 );
 
@@ -724,7 +737,7 @@ mcp.registerTool(
     const nextState = waitForMove(client);
     client.moves.submitCard(card);
     const state = await nextState;
-    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID, client.matchData));
   }
 );
 
@@ -743,7 +756,7 @@ mcp.registerTool(
     const nextState = waitForMove(client);
     client.moves.likeCard(cardID);
     const state = await nextState;
-    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID, client.matchData));
   }
 );
 
@@ -832,7 +845,7 @@ mcp.registerTool(
     const nextState = waitForMove(client);
     client.moves.postMessage(messageText, session.playerName);
     const state = await nextState;
-    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID, client.matchData));
   }
 );
 
@@ -912,7 +925,7 @@ mcp.registerTool(
     const nextState = waitForMove(client);
     client.moves.setScore(targetPlayerID, score);
     const state = await nextState;
-    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID, client.matchData));
   }
 );
 
@@ -933,7 +946,7 @@ mcp.registerTool(
     const nextState = waitForMove(client);
     client.moves.shuffleCards();
     const state = await nextState;
-    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID, client.matchData));
   }
 );
 
@@ -985,7 +998,7 @@ mcp.registerTool(
     const nextState = waitForMove(client);
     client.moves.loadCards(cardObjects);
     const state = await nextState;
-    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID, client.matchData));
   }
 );
 
@@ -1008,7 +1021,7 @@ mcp.registerTool(
     const nextState = waitForMove(client);
     client.moves.forceLeave(targetPlayerID);
     const state = await nextState;
-    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID));
+    return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID, client.matchData));
   }
 );
 
@@ -1076,7 +1089,7 @@ mcp.registerTool(
       watch,
       changed: true,
       events,
-      ...(include_state ? { state: formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID) } : {}),
+      ...(include_state ? { state: formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID, client.matchData) } : {}),
     });
   }
 );
