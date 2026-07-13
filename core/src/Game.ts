@@ -118,6 +118,26 @@ const likeCard: Move<GameState> = ({ G, playerID, player }: any, id) => {
   }
 }
 
+const editCard: Move<GameState> = ({ G, ctx, playerID, player, gamelog, chat }: any, id: number, content: { title?: string, description?: string, author?: string, image?: string }) => {
+  if (player.isKicked(playerID)) return INVALID_MOVE;
+  const selectedCard = getCardById(G.cards, id);
+  if (!selectedCard) return INVALID_MOVE;
+  if (selectedCard.location !== 'hand' && selectedCard.location !== 'table') return INVALID_MOVE;
+  if (!player.isHost(playerID) && selectedCard.owner !== playerID) return INVALID_MOVE;
+  if (content.title !== undefined && content.title.length > 50) return INVALID_MOVE;
+  if (content.description !== undefined && content.description.length > 140) return INVALID_MOVE;
+  if (content.author !== undefined && content.author.length > 25) return INVALID_MOVE;
+  if (content.title !== undefined) selectedCard.content.title = content.title;
+  if (content.description !== undefined) selectedCard.content.description = content.description;
+  if (content.author !== undefined) selectedCard.content.author = content.author;
+  if (content.image !== undefined) selectedCard.content.image = content.image;
+  selectedCard.timestamp = Number(Date.now());
+  if (ctx.numPlayers > 1) {
+    gamelog.record({ move: 'editCard', playerID, cardID: selectedCard.id, cardTitle: selectedCard.content.title.slice(0, 30) });
+    chat.syncFromLog(gamelog.entries());
+  }
+}
+
 const submitCard: Move<GameState> = ({ G, ctx, playerID, player, gamelog, chat }: any, card: Card, playerName?: string) => {
   if (player.isKicked(playerID)) return INVALID_MOVE;
   card.id = G.cards.length + 1; // Commit ID sequentially to GameState
@@ -295,6 +315,11 @@ export const BlankWhiteCards: Game<GameState> = {
     },
     submitCard: {
       move: submitCard,
+      client: false,
+      ignoreStaleStateID: true,
+    },
+    editCard: {
+      move: editCard,
       client: false,
       ignoreStaleStateID: true,
     },
