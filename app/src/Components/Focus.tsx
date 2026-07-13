@@ -4,6 +4,8 @@ import type { Properties } from 'csstype';
 import { Card, getAdjacentCard, getCardById } from '@mcteamster/white-core';
 import { Icon, Browse } from './Icons';
 import { CardFace } from './CardFace.tsx';
+import { CardEditor } from './Editor/CardEditor';
+import { DrawingControls } from './Editor/EditorControls';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { FocusContext, HotkeysContext, ImageCacheContext, LoadingContext } from '../lib/contexts.ts';
 import { BLANK_IMAGE } from '../lib/images.ts';
@@ -15,6 +17,9 @@ export function Focus(props: BoardProps<GameState>) {
   const { focus, setFocus } = useContext(FocusContext);
   const [displayedCard, setDisplayedCard] = useState(<></>);
   const [sendCardMode, setSendCardMode] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [showDrawingControls, setShowDrawingControls] = useState(false);
+  const [drawingHandlers, setDrawingHandlers] = useState<{ onBack: () => void, onUndo: () => void, onRedo: () => void, onCancel: () => void } | null>(null);
   const { hotkeys } = useContext(HotkeysContext);
   const { imageCache } = useContext(ImageCacheContext);
 
@@ -159,6 +164,7 @@ export function Focus(props: BoardProps<GameState>) {
       if (owned && card.location != 'deck') {
         tray = <div style={styles.tray}>
           {<wired-card style={{ ...styles.button, color: 'red' }} id="discardButton" onClick={() => { moveCardTo(card.id, 'discard') }}><Icon name='discard' />Discard</wired-card>}
+          {props.isMultiplayer && <wired-card style={{ ...styles.button }} id="editButton" onClick={() => { setEditMode(true) }}><Icon name='create' />Edit</wired-card>}
           {props.isMultiplayer && card.location != 'hand' &&<wired-card style={{ ...styles.button }} id="handButton" onClick={() => { moveCardTo(card.id, 'hand') }}><Icon name='hand' />Hand</wired-card>}
           {props.isMultiplayer && card.location != 'table' && <wired-card style={{ ...styles.button }} id="tableButton" onClick={() => { moveCardTo(card.id, 'table') }}><Icon name='display' />Table</wired-card>}
           {props.isMultiplayer && <wired-card style={{ ...styles.button }} id="sendButton" onClick={() => { setSendCardMode(true) }}><Icon name='send' />Send</wired-card>}
@@ -348,6 +354,36 @@ export function Focus(props: BoardProps<GameState>) {
           {tray}
           {browse}
           {sendMenu}
+          {editMode && (
+            <>
+              {showDrawingControls && drawingHandlers && (
+                <DrawingControls
+                  onBack={drawingHandlers.onBack}
+                  onUndo={drawingHandlers.onUndo}
+                  onRedo={drawingHandlers.onRedo}
+                  onCancel={drawingHandlers.onCancel}
+                />
+              )}
+              <CardEditor
+                onSave={(updatedContent) => {
+                  props.moves.editCard(card.id, {
+                    title: updatedContent.content.title,
+                    description: updatedContent.content.description,
+                    author: updatedContent.content.author,
+                    image: updatedContent.content.image,
+                  });
+                  setEditMode(false);
+                  setFocus({});
+                }}
+                onCancel={() => { setEditMode(false); }}
+                editingCard={card}
+                onShowDrawingControls={(show, handlers) => {
+                  setDrawingHandlers(handlers);
+                  setShowDrawingControls(show);
+                }}
+              />
+            </>
+          )}
         </div>
       </wired-dialog>
       </>)
@@ -416,9 +452,24 @@ export function Focus(props: BoardProps<GameState>) {
       } else if (owned && hotkeys.space) {
         props.moves.moveCard(card.id, "pile");
         unfocusCards();
+      } else if (hotkeys.e && owned && props.isMultiplayer && (card.location === 'hand' || card.location === 'table')) {
+        setEditMode(true);
       }
     }
   }, [props, hotkeys, focus, focusCard, changeFocus, unfocusCards])
+
+  // Close editor if ownership changes
+  useEffect(() => {
+    if (!editMode) return;
+    const card = focus?.id && getCardById(props.G.cards, focus?.id);
+    if (card) {
+      const owned = card.owner == props.playerID;
+      const inEditableLocation = card.location === 'hand' || card.location === 'table';
+      if (!owned || !inEditableLocation) {
+        setEditMode(false);
+      }
+    }
+  }, [props.G.cards, focus?.id, props.playerID, editMode])
 
   return (displayedCard);
 }

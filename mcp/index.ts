@@ -761,6 +761,37 @@ mcp.registerTool(
 );
 
 mcp.registerTool(
+  'edit_card',
+  {
+    description: 'Edit the content of an existing card. Only works for cards owned by the player (or by the host). Text fields only — image editing requires canvas interaction in the game UI.',
+    inputSchema: {
+      matchID: z.string().describe('Room code'),
+      playerID: z.string().describe('Your player ID'),
+      cardID: z.number().int().describe('ID of the card to edit'),
+      title: z.string().optional().describe('New title (max 50 chars)'),
+      description: z.string().optional().describe('New description (max 140 chars)'),
+      author: z.string().optional().describe('New author (max 25 chars)'),
+    },
+  },
+  async ({ matchID, playerID, cardID, title, description, author }) => {
+    const { client } = requireSession(matchID, playerID);
+    const state = client.store.getState();
+    if (!state?.G) throw new Error('No state available yet');
+    const card = (state.G.cards as Card[]).find(c => c.id === cardID);
+    if (!card) throw new Error(`Card ${cardID} not found`);
+    if (card.location !== 'hand' && card.location !== 'table') throw new Error(`Cannot edit card in '${card.location}' location — only hand and table are editable`);
+    if (card.owner !== playerID && card.owner !== undefined) {
+      const hostID = getDerivedHost(state as Record<string, unknown>);
+      if (playerID !== hostID) throw new Error(`Card ${cardID} is owned by player ${card.owner} — only the owner (or host) can edit it`);
+    }
+    const nextState = waitForMove(client);
+    client.moves.editCard(cardID, { title, description, author });
+    const resultState = await nextState;
+    return text(formatState(resultState as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID, client.matchData));
+  }
+);
+
+mcp.registerTool(
   'get_scores',
   {
     description: 'Get player scores. Pass ranked=true for leaderboard order (highest first). Pass hint=true to also get a suggested next action based on your hand, the pile, and your score position.',
