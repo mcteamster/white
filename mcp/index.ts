@@ -1119,9 +1119,12 @@ mcp.registerTool(
   }
 );
 
-// ── Prompts ───────────────────────────────────────────────────────────────────
+// ── Role Tools ────────────────────────────────────────────────────────────────
+// These replace the former mcp.prompt() definitions. Tools are universally
+// supported across MCP clients; prompts require the client to call list_prompts
+// and inject context, which many runtimes (e.g. AgentCore) do not do reliably.
 
-mcp.prompt(
+mcp.tool(
   'autoplay',
   'Autonomously play Blank White Cards — pick up cards, write and play creative cards, react to other players, loop forever',
   {
@@ -1136,11 +1139,9 @@ mcp.prompt(
     const themeClause = themeList.length > 0 ? `\nYour thematic interests: ${themeList.join(', ')}. Lean into these when writing cards or choosing which to claim.` : '';
 
     return {
-      messages: [{
-        role: 'user',
-        content: {
-          type: 'text',
-          text: `You are an autonomous player in Blank White Cards. Your writing tone is ${t}.${themeClause}
+      content: [{
+        type: 'text',
+        text: `You are an autonomous player in Blank White Cards. Your writing tone is ${t}.${themeClause}
 
 ## CRITICAL: Never stop playing (until watch limit)
 
@@ -1175,13 +1176,12 @@ ${a === 'aggressive' ? 'Submit cards frequently and respond to everything on the
 Keep 1–3 cards in hand at any time. Don't hoard and don't play everything immediately.
 
 Do not narrate. Do not explain. Just play.`,
-        },
       }],
     };
   }
 );
 
-mcp.prompt(
+mcp.tool(
   'referee',
   'Moderate the game — manage the deck, enforce house rules, keep the game flowing',
   {
@@ -1191,11 +1191,9 @@ mcp.prompt(
     const ruleBlock = rules ? `\n\n## House rules to enforce\n\n${rules}` : '';
 
     return {
-      messages: [{
-        role: 'user',
-        content: {
-          type: 'text',
-          text: `You are a referee/arbiter for Blank White Cards. You do NOT play cards yourself — you manage the game.
+      content: [{
+        type: 'text',
+        text: `You are a referee/arbiter for Blank White Cards. You do NOT play cards yourself — you manage the game.
 
 ## CRITICAL: Never stop refereeing
 
@@ -1220,22 +1218,19 @@ Call 'watch' with all flags ('pile: true', 'hand: true', 'table: true') to see e
 Keep a count of consecutive timeouts. If 'watch' times out 10 times in a row with no events, the game has truly gone stale — call 'get_scores' with ranked=true, post a final standings card, and stop.
 
 Use 'get_state' to inspect cards when reviewing content.${ruleBlock}`,
-        },
       }],
     };
   }
 );
 
-mcp.prompt(
+mcp.tool(
   'spectate',
   'Watch the game and provide commentary without taking game actions',
   {},
   () => ({
-    messages: [{
-      role: 'user',
-      content: {
-        type: 'text',
-        text: `You are a spectator of Blank White Cards. You observe and comment but do NOT play cards, claim cards, or pick up from the deck.
+    content: [{
+      type: 'text',
+      text: `You are a spectator of Blank White Cards. You observe and comment but do NOT play cards, claim cards, or pick up from the deck.
 
 ## CRITICAL: Never stop watching
 
@@ -1256,7 +1251,6 @@ After EVERY 'watch' response (fired or timed out) → provide commentary → cal
 
 - Do not call 'pickup_card', 'submit_card', 'move_card', or 'shuffle_cards'.
 - Do not join as a player seat that others need.`,
-      },
     }],
   })
 );
