@@ -2,7 +2,7 @@ import { Properties } from "csstype";
 import { externalLink, useWindowDimensions } from "../lib/hooks";
 import { sanitiseCard } from "../lib/data";
 import { useCallback, useEffect, useReducer, useState } from "react";
-import { Card, getCardsByLocation } from "@mcteamster/white-core";
+import { Card, Rule, getCardsByLocation } from "@mcteamster/white-core";
 import { Icon } from "./Icons";
 import { BoardProps } from "@mcteamster/white-engine/react";
 import { GameState } from "@mcteamster/white-core";
@@ -19,6 +19,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
   const { width, height } = useWindowDimensions();
   const [globalSubmit, setGlobalSubmit] = useState(false); // Global Submission Mode - Only one card can be uploaded
   const [loaded, setLoaded] = useState([] as Card[]); // List of cards staged for submitting
+  const [loadedRules, setLoadedRules] = useState<Omit<Rule, 'playerID' | 'playerName'>[]>([]); // Rules parsed from deck file
   const [progress, setProgress] = useState([-1, 0]); // Progress index of currently processing load: [currentIndex, endIndex]. -1 means no processing
   const [compressImages, setCompressImages] = useState(true); // Whether to compress PNG images on load
   const isCustomServer = !!localStorage.getItem('customServerUrl');
@@ -54,11 +55,13 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
         if (event.target && event.target.result) {
           const result = event.target.result as string;
           let cards;
+          let parsedRules: Omit<Rule, 'playerID' | 'playerName'>[] = [];
           if (deckFile?.name?.endsWith('.json')) {
-            // JSON Deck Format
-            cards = JSON.parse(result);
-            if (cards && typeof cards === 'object' && !Array.isArray(cards) && cards.cards) {
-              cards = cards.cards; // Support {cards: [...]} wrapper
+            // JSON Deck Format: { cards: Card[], rules?: Rule[] }
+            const parsed = JSON.parse(result);
+            cards = parsed.cards ?? [];
+            if (Array.isArray(parsed.rules)) {
+              parsedRules = parsed.rules;
             }
           } else {
             const dataLine = result.split("\n")[1]; // Read 2nd Line
@@ -68,13 +71,22 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
               const base64Data = trimmedData.substring(1, trimmedData.length - 2); // Remove excess whitespace, trailing semicolon, and quotes
               const decodedData = atob(base64Data); // Base 64 decode
               const jsonData = decodeURI(decodedData); // URI decode
-              cards = JSON.parse(jsonData); // JSON parse
+              const parsed = JSON.parse(jsonData); // JSON parse
+              if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && parsed.cards) {
+                cards = parsed.cards;
+                if (Array.isArray(parsed.rules)) {
+                  parsedRules = parsed.rules;
+                }
+              } else {
+                cards = parsed; // legacy bare array
+              }
             } catch (err) {
               console.error(err);
               // v1 Deck Data Format
               cards = JSON.parse(dataLine.substring(0, dataLine.length - 1)); // Remove Trailing Semicolon and parse
             }
           }
+          setLoadedRules(parsedRules);
           // @ts-expect-error Legacy Card Input Compatibiity
           const deck = cards.map((card) => {
             const sanitisedCard = sanitiseCard(card);
@@ -154,7 +166,8 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
             timestamp: Number(new Date()),
           }
         });
-        moves.loadCards(createdCards);
+        moves.loadCards(createdCards, progress[0] === 0 && loadedRules.length > 0 ? loadedRules : undefined);
+        if (progress[0] === 0 && loadedRules.length > 0) setLoadedRules([]); // Rules sent with first batch only
         // Wait a moment before submitting again
         setTimeout(() => {
           setProgress([bounds[1], progress[1]]); // Start next batch

@@ -155,7 +155,7 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
 }
 import { useDeckEditor } from '../../lib/editor';
 import { sanitiseCard, downloadDeck, downloadDeckJSON } from '../../lib/data';
-import { Card } from '@mcteamster/white-core';
+import { Card, Rule } from '@mcteamster/white-core';
 
 export function DeckEditor() {
   const navigate = useNavigate();
@@ -186,7 +186,7 @@ export function DeckEditor() {
   const [merging, setMerging] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [loadedDeckData, setLoadedDeckData] = useState<{cards: Card[], name: string} | null>(null);
+  const [loadedDeckData, setLoadedDeckData] = useState<{cards: Card[], rules?: Rule[], name: string} | null>(null);
   const [viewMode, setViewMode] = useState<'full' | 'compact' | 'image'>(() => {
     const saved = localStorage.getItem('deckEditor_viewMode');
     return (saved as 'full' | 'compact' | 'image') || 'full';
@@ -537,15 +537,30 @@ export function DeckEditor() {
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
-          const html = e.target?.result as string;
-          const match = html.match(/const rawData =\s*'([^']+)'/);
-          if (!match) {
-            throw new Error('Invalid deck file format');
+          const text = e.target?.result as string;
+          const isJson = file.name.endsWith('.json');
+          let cardsData: unknown[];
+          let rawRules: Rule[] | undefined;
+
+          if (isJson) {
+            // JSON deck file format: { cards: Card[], rules?: Rule[] }
+            const parsed = JSON.parse(text) as { cards: unknown[], rules?: Rule[] };
+            cardsData = parsed.cards ?? [];
+            rawRules = parsed.rules;
+            if (!Array.isArray(cardsData)) {
+              throw new Error('Invalid JSON deck format: expected a cards array');
+            }
+          } else {
+            // HTML deck file: rawData = btoa(encodeURI(JSON.stringify({ cards, rules? })))
+            const match = text.match(/const rawData =\s*'([^']+)'/);
+            if (!match) {
+              throw new Error('Invalid deck file format');
+            }
+            const decoded = JSON.parse(decodeURI(atob(match[1]))) as { cards: unknown[], rules?: Rule[] };
+            cardsData = decoded.cards ?? [];
+            rawRules = decoded.rules;
           }
-          
-          const rawData = match[1];
-          const cardsData = JSON.parse(decodeURI(atob(rawData)));
-          
+
           const cards = cardsData.map((card: unknown, index: number) => {
             const sanitized = sanitiseCard(card);
             sanitized.id = index + 1;
@@ -555,12 +570,14 @@ export function DeckEditor() {
 
           const deckData = {
             cards,
+            rules: rawRules,
             name: file.name.replace(/\.[^/.]+$/, '') || 'Loaded Deck'
           };
 
           if (deck.cards.length === 0) {
             updateDeck({
               cards: deckData.cards,
+              rules: deckData.rules,
               name: deckData.name,
               modified: false
             });
@@ -588,6 +605,7 @@ export function DeckEditor() {
     
     updateDeck({
       cards: loadedDeckData.cards,
+      rules: loadedDeckData.rules,
       name: loadedDeckData.name,
       modified: false
     });
@@ -917,7 +935,7 @@ export function DeckEditor() {
                       style={styles.saveButton}
                       onClick={() => {
                         updateDeck({ ...deck, name: saveFileName, modified: false });
-                        if (saveFormat === 'json') { downloadDeckJSON(deck.cards, saveFileName); } else { downloadDeck(deck.cards, saveFileName); }
+                        if (saveFormat === 'json') { downloadDeckJSON(deck.cards, saveFileName, deck.rules); } else { downloadDeck(deck.cards, saveFileName, deck.rules); }
                         setModalState('closed');
                       }}
                       elevation={2}

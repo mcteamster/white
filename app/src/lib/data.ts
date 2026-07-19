@@ -1,4 +1,4 @@
-import { Card } from "@mcteamster/white-core";
+import { Card, Rule } from "@mcteamster/white-core";
 import { externalLink } from './hooks';
 
 // Sanitise Cards
@@ -45,7 +45,7 @@ export const openDeckEditor = async (matchID: string) => {
   await externalLink(editorUrl);
 }
 
-export const downloadDeck = (cards: Card[], customFilename?: string) => {
+export const downloadDeck = (cards: Card[], customFilename?: string, rules?: Rule[]) => {
   const strippedCards = cards.map((card) => {
     const strippedCard = {
       id: card.id,
@@ -56,7 +56,7 @@ export const downloadDeck = (cards: Card[], customFilename?: string) => {
     return strippedCard
   })
 
-  const outputHTML = generateDeckHTML(strippedCards);
+  const outputHTML = generateDeckHTML(strippedCards, rules);
   const today = new Date();
   const datetime = today.getFullYear() + '-' + (today.getMonth() + 1).toString().padStart(2, "0") + '-' + today.getDate().toString().padStart(2, "0") + "_" + today.getHours().toString().padStart(2, "0") + today.getMinutes().toString().padStart(2, "0") + today.getSeconds().toString().padStart(2, "0");
 
@@ -69,7 +69,7 @@ export const downloadDeck = (cards: Card[], customFilename?: string) => {
   document.body.removeChild(dltemp);
 }
 
-export const downloadDeckJSON = (cards: Card[], customFilename?: string) => {
+export const downloadDeckJSON = (cards: Card[], customFilename?: string, rules?: Rule[]) => {
   const strippedCards = cards.map((card) => ({
     id: card.id,
     content: card.content,
@@ -77,11 +77,21 @@ export const downloadDeckJSON = (cards: Card[], customFilename?: string) => {
     likes: (card?.likes && card.likes > 0 && card.likes < 1_000_000_000) ? card.likes : undefined,
   }));
 
+  const strippedRules = (rules && rules.length > 0) ? rules.map((r) => ({
+    id: r.id,
+    text: r.text,
+    timestamp: r.timestamp,
+    // playerID and playerName stripped
+  })) : undefined;
+
+  const deckObj: { cards: typeof strippedCards, rules?: typeof strippedRules } = { cards: strippedCards };
+  if (strippedRules) deckObj.rules = strippedRules;
+
   const today = new Date();
   const datetime = today.getFullYear() + '-' + (today.getMonth() + 1).toString().padStart(2, "0") + '-' + today.getDate().toString().padStart(2, "0") + "_" + today.getHours().toString().padStart(2, "0") + today.getMinutes().toString().padStart(2, "0") + today.getSeconds().toString().padStart(2, "0");
 
   const dltemp = document.createElement('a');
-  dltemp.setAttribute("href", 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify({ cards: strippedCards })));
+  dltemp.setAttribute("href", 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(deckObj)));
   dltemp.setAttribute("download", (customFilename || `BlankWhiteCards_${datetime}`) + '.json');
   dltemp.style.display = "none";
   document.body.append(dltemp);
@@ -90,11 +100,19 @@ export const downloadDeckJSON = (cards: Card[], customFilename?: string) => {
 }
 
 // Generate Deck HTML (shared between client and server)
-export const generateDeckHTML = (cards: Card[]) => {
-  const rawData = btoa(encodeURI(JSON.stringify(cards)));
+export const generateDeckHTML = (cards: Card[], rules?: Pick<Rule, 'id' | 'text' | 'timestamp'>[]) => {
+  const strippedRules = (rules && rules.length > 0) ? rules.map((r) => ({
+    id: r.id,
+    text: r.text,
+    timestamp: r.timestamp,
+  })) : undefined;
+  const deckObj: { cards: Card[], rules?: typeof strippedRules } = { cards };
+  if (strippedRules) deckObj.rules = strippedRules;
+  const rawData = btoa(encodeURI(JSON.stringify(deckObj)));
   return `<!DOCTYPE html><html><head><script>const rawData =
       '${rawData}';
-      const cards = JSON.parse(decodeURI(atob(rawData)));
+      const _deck = JSON.parse(decodeURI(atob(rawData)));
+      const cards = Array.isArray(_deck) ? _deck : (_deck.cards ?? []);
       </script>
       <title>Blank White Cards</title>
       <link rel="icon" type="image/png" href="https://blankwhite.cards/favicon.png"/>
