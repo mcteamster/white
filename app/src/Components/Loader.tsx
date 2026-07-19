@@ -57,15 +57,11 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
           let cards;
           let parsedRules: Omit<Rule, 'playerID' | 'playerName'>[] = [];
           if (deckFile?.name?.endsWith('.json')) {
-            // JSON Deck Format
+            // JSON Deck Format: { cards: Card[], rules?: Rule[] }
             const parsed = JSON.parse(result);
-            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && parsed.cards) {
-              cards = parsed.cards; // Support {cards: [...]} wrapper
-              if (Array.isArray(parsed.rules)) {
-                parsedRules = parsed.rules;
-              }
-            } else {
-              cards = parsed;
+            cards = parsed.cards ?? [];
+            if (Array.isArray(parsed.rules)) {
+              parsedRules = parsed.rules;
             }
           } else {
             const dataLine = result.split("\n")[1]; // Read 2nd Line
