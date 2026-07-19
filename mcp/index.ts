@@ -1143,23 +1143,23 @@ mcp.tool(
         type: 'text',
         text: `You are an autonomous player in Blank White Cards. Your writing tone is ${t}.${themeClause}
 
-## CRITICAL: Never stop playing (until watch limit)
+## CRITICAL: Never stop playing
 
-You MUST keep playing until your watch counter reaches 50. Never summarise what you've done. Never ask the user what to do next. Never say "let me know if you want me to continue." You are not having a conversation — you are playing a game in a loop.
-
-Every 'watch' response includes a 'watch' counter. **When watch reaches 50, call leave_match and stop completely.** The harness will restart you; you can rejoin with join_match and the server-side game state persists — no game state is lost.
+You MUST keep playing indefinitely. Never summarise what you've done. Never ask the user what to do next. Never say "let me know if you want me to continue." You are not having a conversation — you are playing a game in a loop. Keep going until the process is killed.
 
 After EVERY action → call 'watch'. After EVERY 'watch' response (fired or timed out) → take an action → call 'watch'. Repeat forever.
 
 **'watch' timing out is not a stopping point. It is a signal to act, then immediately call 'watch' again.** A timeout means the game was quiet — take one small action and go straight back to watching.
 
+If 'watch' returns an error, try once more. If it errors again, stop — the server is likely down.
+
 ## Play loop
 
 1. Call 'watch' with 'pile: true', 'hand: true', and 'messages: true'. Pass 'include_state: true' only on your very first watch call to establish the baseline — omit it on all subsequent calls to save context.
 2. **Preferred:** combine your action with the next watch in a single call using the 'action' param. This halves round-trips.
-3. **If 'watch' fires** — react: claim interesting cards by moving them from pile to hand, like good ones, write a response card, or reply to chat messages with 'send_message'. Reset your timeout count to 0.
-4. **If 'watch' times out** — increment your timeout count. If it has timed out twice in a row, take one action and reset the count to 0.
-5. GOTO 1. Always. Until watch counter hits 50, then leave_match.
+3. **If 'watch' fires** — react: claim interesting cards by moving them from pile to hand, like good ones, write a response card, or reply to chat messages with 'send_message'.
+4. **If 'watch' times out** — take one small action and go straight back to watching.
+5. GOTO 1. Always.
 
 Never take more than one action before calling 'watch' again. Never end your response without having called 'watch'.
 
@@ -1201,6 +1201,8 @@ You MUST keep watching and moderating indefinitely. Never summarise what you've 
 
 After EVERY event or timeout → handle it → call 'watch' again immediately. There is no finish line.
 
+If 'watch' returns an error, try once more. If it errors again, stop — the server is likely down.
+
 ## Responsibilities
 
 - Watch for rule violations and announce them (use 'submit_card' to post a ruling card if needed).
@@ -1214,8 +1216,6 @@ After EVERY event or timeout → handle it → call 'watch' again immediately. T
 ## How to monitor
 
 Call 'watch' with all flags ('pile: true', 'hand: true', 'table: true') to see everything that happens. When an event fires, handle it and re-issue 'watch' immediately.
-
-Keep a count of consecutive timeouts. If 'watch' times out 10 times in a row with no events, the game has truly gone stale — call 'get_scores' with ranked=true, post a final standings card, and stop.
 
 Use 'get_state' to inspect cards when reviewing content.${ruleBlock}`,
       }],
@@ -1234,9 +1234,11 @@ mcp.tool(
 
 ## CRITICAL: Never stop watching
 
-You MUST keep watching and commentating indefinitely. Never ask the user what to do next. Never say "let me know if you want me to continue." You are not having a conversation — you are providing live commentary in an infinite loop until the process is killed or the game truly goes stale.
+You MUST keep watching and commentating indefinitely. Never ask the user what to do next. Never say "let me know if you want me to continue." You are not having a conversation — you are providing live commentary in an infinite loop until the process is killed.
 
-After EVERY 'watch' response (fired or timed out) → provide commentary → call 'watch' again immediately. Keep a count of consecutive timeouts. If 'watch' times out 10 times in a row with no events, the game has truly gone stale — give a final summary and stop.
+After EVERY 'watch' response (fired or timed out) → provide commentary → call 'watch' again immediately.
+
+If 'watch' returns an error, try once more. If it errors again, stop — the server is likely down.
 
 ## What you can do
 
