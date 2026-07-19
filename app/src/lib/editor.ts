@@ -1,12 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router';
-import { Card } from '@mcteamster/white-core';
+import { Card, Rule } from '@mcteamster/white-core';
 import { sanitiseCard } from './data';
 import { dbManager } from './indexedDB';
 import { getRegion, getServerUrl } from './clients';
 
 export interface DeckEditorState {
   cards: Card[];
+  rules?: Rule[];
   name: string;
   modified: boolean;
 }
@@ -54,13 +55,22 @@ export const useDeckEditor = () => {
           if (response.ok) {
             const rawData = await response.text();
             const cardsData = JSON.parse(decodeURI(atob(rawData)));
-            const cards = cardsData.map((card: unknown, index: number) => {
+            const parsed = cardsData;
+            const rawCards = Array.isArray(parsed) ? parsed : (parsed.cards ?? []);
+            const rawRules = !Array.isArray(parsed) && Array.isArray(parsed.rules) ? parsed.rules.map((r: any) => ({
+              id: r.id,
+              text: r.text,
+              timestamp: r.timestamp,
+              playerID: '', // ownership stripped on export
+            })) : undefined;
+            const cards = rawCards.map((card: unknown, index: number) => {
               const sanitized = sanitiseCard(card);
               sanitized.id = index + 1;
               return sanitized;
             });
             const loadedDeck = {
               cards,
+              rules: rawRules,
               name: `Deck from ${deckId}`,
               modified: false
             };

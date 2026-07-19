@@ -26,7 +26,14 @@ export function registerRoutes(server: ServerInstance) {
         likes: (card?.likes && card.likes > 0 && card.likes < 1_000_000_000) ? card.likes : undefined,
       }));
 
-      const rawData = btoa(encodeURI(JSON.stringify(strippedCards)));
+      const strippedRules = (state.G.rules && state.G.rules.length > 0)
+        ? state.G.rules.map((r: any) => ({ id: r.id, text: r.text, timestamp: r.timestamp }))
+        : undefined;
+
+      const deckObj: { cards: typeof strippedCards, rules?: typeof strippedRules } = { cards: strippedCards };
+      if (strippedRules) deckObj.rules = strippedRules;
+
+      const rawData = btoa(encodeURI(JSON.stringify(deckObj)));
 
       console.log(`Deck exported: ${matchID} (${strippedCards.length} cards)`);
 

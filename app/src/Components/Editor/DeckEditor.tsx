@@ -917,7 +917,7 @@ export function DeckEditor() {
                       style={styles.saveButton}
                       onClick={() => {
                         updateDeck({ ...deck, name: saveFileName, modified: false });
-                        if (saveFormat === 'json') { downloadDeckJSON(deck.cards, saveFileName); } else { downloadDeck(deck.cards, saveFileName); }
+                        if (saveFormat === 'json') { downloadDeckJSON(deck.cards, saveFileName, deck.rules); } else { downloadDeck(deck.cards, saveFileName, deck.rules); }
                         setModalState('closed');
                       }}
                       elevation={2}
