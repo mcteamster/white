@@ -1,7 +1,7 @@
 {
   "name": "@mcteamster/white-server",
   "private": true,
-  "version": "2.3.10",
+  "version": "2.3.11",
   "scripts": {
     "start": "node --env-file=.env.production --import tsx ./index.ts",
     "dev": "node --env-file=.env.development --import tsx ./index.ts"

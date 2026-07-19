@@ -1,7 +1,7 @@
 {
   "name": "@mcteamster/white-app",
   "private": true,
-  "version": "2.3.11",
+  "version": "2.3.12",
   "scripts": {
     "dev": "vite --host",
     "build": "tsc -b && vite build",

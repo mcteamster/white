@@ -109,15 +109,17 @@ Cards can optionally have images. Pass a square PNG file path as `image_path` in
 
 Use a white background with bold black line art for best results. Requires ffmpeg and ffprobe on PATH.
 
-## Prompts
+## Role Tools
 
-The server provides role prompts that shape how an agent uses the tools:
+The server provides role tools that return instructions for how an agent should use the other tools. Call one at the start of a session to enter a role:
 
-| Prompt | Description | Parameters |
-|--------|-------------|------------|
+| Tool | Description | Parameters |
+|------|-------------|------------|
 | `autoplay` | Autonomously play the game in a loop | `tone`, `themes`, `aggression` |
 | `referee` | Moderate and enforce rules | `rules` |
 | `spectate` | Watch and comment only | — |
+
+These replace the former MCP prompts (`list_prompts` / `get_prompt`). Tools are universally supported across MCP clients; prompts require explicit client-side injection which many runtimes do not perform reliably.
 
 ## Pacing
 
