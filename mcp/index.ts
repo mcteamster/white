@@ -1152,8 +1152,8 @@ mcp.registerTool(
 
     if (format === 'html') {
       // Encode as base64 HTML deck file (same format as DeckEditor "Visual" save)
-      const rawData = Buffer.from(encodeURIComponent(JSON.stringify(resolvedCards))).toString('base64');
-      const html = `<!DOCTYPE html><html><head><script>const rawData = '${rawData}'; const cards = JSON.parse(decodeURIComponent(atob(rawData)));</script><title>Blank White Cards</title></head><body><p>Blank White Cards deck file. Open in the <a href="https://blankwhite.cards/editor">Deck Editor</a> to view and edit.</p></body></html>`;
+      const rawData = Buffer.from(encodeURIComponent(JSON.stringify(deckObj))).toString('base64');
+      const html = `<!DOCTYPE html><html><head><script>const rawData = '${rawData}'; const _deck = JSON.parse(decodeURIComponent(atob(rawData))); const cards = Array.isArray(_deck) ? _deck : (_deck.cards ?? []);</script><title>Blank White Cards</title></head><body><p>Blank White Cards deck file. Open in the <a href="https://blankwhite.cards/editor">Deck Editor</a> to view and edit.</p></body></html>`;
       return { content: [{ type: 'text', text: html }] };
     }
 
