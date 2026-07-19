@@ -128,7 +128,7 @@ const submitCard: Move<GameState> = ({ G, ctx, playerID, player, gamelog, chat }
   }
 }
 
-const loadCards: Move<GameState> = ({ G, ctx, playerID, player, gamelog, chat }: any, cards: Card[]) => {
+const loadCards: Move<GameState> = ({ G, ctx, playerID, player, gamelog, chat }: any, cards: Card[], rules?: Rule[]) => {
   if (player.isKicked(playerID)) return INVALID_MOVE;
   if(!player.isHost(playerID)) return INVALID_MOVE; // Only the host can bulk load cards
 
@@ -140,6 +140,21 @@ const loadCards: Move<GameState> = ({ G, ctx, playerID, player, gamelog, chat }:
     loadBuffer.push(card);
   })
   G.cards.push(...loadBuffer);
+
+  // Load rules if provided — strip ownership, reassign IDs to avoid collisions
+  if (rules && rules.length > 0) {
+    const existingRules: Rule[] = G.rules ?? [];
+    const maxId = existingRules.length > 0 ? Math.max(...existingRules.map((r: Rule) => r.id)) : 0;
+    const importedRules: Rule[] = rules.map((r: Partial<Rule>, i: number) => ({
+      id: maxId + i + 1,
+      text: r.text ?? '',
+      playerID: '', // ownership stripped
+      playerName: undefined,
+      timestamp: r.timestamp ?? Date.now(),
+    }));
+    G.rules = [...existingRules, ...importedRules];
+  }
+
   if (ctx.numPlayers > 1) {
     const deckSize = G.cards.filter((c: Card) => c.location === 'deck').length;
     gamelog.record({ move: 'loadCards', playerID, count: cards.length, delta: deckSize });

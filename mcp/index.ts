@@ -14,7 +14,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BlankWhiteCards } from '@mcteamster/white-core';
 import { version } from './package.json';
-import type { Card, Message } from '@mcteamster/white-core';
+import type { Card, Message, Rule } from '@mcteamster/white-core';
 
 // Temporary store for out-of-band image uploads: uploadId -> processed data URI.
 // Module-level so the HTTP POST /upload-image handler and any MCP session can share it.
@@ -574,6 +574,85 @@ create_match or join_match
   }),
 );
 
+mcp.registerResource(
+  'bwc://docs/deck-schema',
+  'bwc://docs/deck-schema',
+  { description: 'Card and deck data model — field names, limits, locations, image workflow, and the build_deck tool workflow for creating and modifying deck files' },
+  async () => ({
+    contents: [{
+      uri: 'bwc://docs/deck-schema',
+      mimeType: 'text/markdown',
+      text: `# Blank White Cards — Deck Schema
+
+## Card fields
+
+| Field | Type | Required | Limit | Notes |
+|---|---|---|---|---|
+| title | string | ✓ | ≤50 chars | The card rule or title text |
+| description | string | ✓ | ≤140 chars | Flavour text or instructions |
+| author | string | | ≤25 chars | Attribution (default "anon") |
+| location | string | | — | \`deck\` \| \`pile\` \| \`discard\` \| \`hand\` \| \`table\` \| \`box\`. Defaults to \`deck\` in deck files. |
+| image_uuid | string | | — | UUID from \`upload_image\` — resolved to data URI by \`build_deck\`. UUIDs expire after 5 minutes. |
+
+## Deck file structure (JSON)
+
+\`\`\`json
+{
+  "cards": [
+    {
+      "id": 1,
+      "content": {
+        "title": "Gain 3 points",
+        "description": "You played this card. Well done.",
+        "author": "someone",
+        "image": "data:image/png;base64,..."
+      },
+      "location": "deck"
+    }
+  ],
+  "rules": [
+    {
+      "id": 1,
+      "text": "No phones at the table.",
+      "timestamp": 1721000000000
+    }
+  ]
+}
+\`\`\`
+
+- \`rules\` is optional — omit if no house rules.
+- Rule ownership (\`playerID\`, \`playerName\`) is stripped on export. Imported rules are anonymous and revokable only by the host.
+- HTML deck files encode the same object in a \`const rawData = '<base64>'\` script tag.
+
+## Rule fields (in deck files)
+
+| Field | Type | Notes |
+|---|---|---|
+| id | number | Sequential; reassigned on import to avoid collisions |
+| text | string | Rule text (1–200 chars) |
+| timestamp | number | Unix epoch ms |
+
+(playerID and playerName are stripped at export time and not present in deck files.)
+
+## build_deck workflow
+
+1. For each card that needs an image: call \`upload_image\` → get \`image_uuid\`
+2. Assemble your card array with \`image_uuid\` fields (or plain text cards — images are optional)
+3. Call \`build_deck({ cards, rules?, format? })\` → returns a deck file string
+4. The agent can write the file to disk, hand it to a human, or chain into \`load_cards\` in the same workflow
+
+To modify an existing deck: read the JSON file, edit the \`cards\` array, call \`build_deck\` with the updated array.
+
+## upload_image notes
+
+- No active match required — call without \`create_match\`/\`join_match\`
+- UUIDs expire after **5 minutes** — call \`build_deck\` promptly after uploading
+- For remote HTTP MCP servers use \`POST /upload-image\` instead of the tool (see \`bwc://docs/image-generation\`)
+`,
+    }],
+  }),
+);
+
 mcp.registerTool(
   'create_match',
   {
@@ -684,7 +763,7 @@ mcp.registerTool(
 mcp.registerTool(
   'upload_image',
   {
-    description: 'Upload a PNG image file for use with submit_card. Pass the absolute local file path. Non-square images are centre-cropped automatically. Returns { image_uuid } — pass this to submit_card. Note: for remote HTTP MCP servers, POST the PNG file directly to {server}/upload-image instead (Content-Type: image/png) — see resource bwc://docs/image-generation.',
+    description: 'Upload a PNG image file for use with submit_card or build_deck. No active match session required — can be called as part of an offline deck generation workflow. Pass the absolute local file path. Non-square images are centre-cropped automatically. Returns { image_uuid } — pass this to submit_card or include in a build_deck card. Note: for remote HTTP MCP servers, POST the PNG file directly to {server}/upload-image instead (Content-Type: image/png) — see resource bwc://docs/image-generation.',
     inputSchema: {
       file_path: z.string().describe('Absolute path to a square PNG image file on disk'),
     },
@@ -964,9 +1043,14 @@ mcp.registerTool(
         location: z.enum(['deck', 'pile', 'discard']).optional(),
         image_path: z.string().optional().describe('Absolute path to a square PNG image file to attach to the card'),
       })).describe('Cards to add'),
+      rules: z.array(z.object({
+        id: z.number().int().optional(),
+        text: z.string(),
+        timestamp: z.number().optional(),
+      })).optional().describe('House rules to load alongside the cards (ownership stripped on import)'),
     },
   },
-  async ({ matchID, playerID, cards }) => {
+  async ({ matchID, playerID, cards, rules }) => {
     const { client } = requireSession(matchID, playerID);
     const currentState = client.getState();
     const hostID = getDerivedHost(currentState);
@@ -996,9 +1080,84 @@ mcp.registerTool(
       };
     }));
     const nextState = waitForMove(client);
-    client.moves.loadCards(cardObjects);
+    client.moves.loadCards(cardObjects, rules ?? []);
     const state = await nextState;
     return text(formatState(state as { G: { cards: Card[] }; ctx: Record<string, unknown>; plugins?: Record<string, unknown> }, playerID, client.matchData));
+  }
+);
+
+mcp.registerTool(
+  'build_deck',
+  {
+    description: 'Build a deck file from a card array — no active match required. Works for both creating decks from scratch and modifying existing ones (agent reads existing JSON, edits the card array, passes it back). Returns a JSON deck file by default (same format as Deck Editor "Raw" save), or HTML on request. The output can be saved as a file or chained directly into load_cards.',
+    inputSchema: {
+      cards: z.array(z.object({
+        title: z.string().describe('Card title / rule text (max 50 chars)'),
+        description: z.string().optional().describe('Flavour text or instructions (max 140 chars)'),
+        author: z.string().optional().describe('Author attribution (max 25 chars)'),
+        location: z.enum(['deck', 'pile', 'discard', 'box']).optional().describe('Card location in the deck (default: deck)'),
+        image_uuid: z.string().optional().describe('Image UUID from upload_image — resolved to data URI and embedded in the card'),
+      })).describe('Cards to include in the deck'),
+      rules: z.array(z.object({
+        text: z.string().describe('Rule text (1–200 chars)'),
+      })).optional().describe('House rules to include in the deck file (optional)'),
+      format: z.enum(['json', 'html']).optional().describe('Output format: json (default, machine-readable { cards, rules } object) or html (human-viewable deck file loadable by the UI Loader)'),
+    },
+  },
+  async ({ cards, rules, format = 'json' }) => {
+    // Validate content limits
+    const validationErrors: string[] = [];
+    cards.forEach((c, i) => {
+      if (c.title.length > 50) validationErrors.push(`Card ${i + 1}: title exceeds 50 chars (${c.title.length})`);
+      if (c.description && c.description.length > 140) validationErrors.push(`Card ${i + 1}: description exceeds 140 chars (${c.description.length})`);
+      if (c.author && c.author.length > 25) validationErrors.push(`Card ${i + 1}: author exceeds 25 chars (${c.author.length})`);
+    });
+    if (validationErrors.length > 0) {
+      throw new Error(`Validation failed:\n${validationErrors.join('\n')}`);
+    }
+
+    // Resolve image UUIDs
+    const resolvedCards: Partial<Card>[] = [];
+    for (let i = 0; i < cards.length; i++) {
+      const c = cards[i];
+      let image: string | undefined;
+      if (c.image_uuid) {
+        const stored = imageUploadStore.get(c.image_uuid);
+        if (!stored) throw new Error(`Card ${i + 1}: no image found for uuid '${c.image_uuid}'. Call upload_image first (UUIDs expire after 5 minutes).`);
+        image = stored;
+        imageUploadStore.delete(c.image_uuid);
+      }
+      resolvedCards.push({
+        id: i + 1,
+        content: {
+          title: c.title,
+          description: c.description ?? '',
+          author: c.author,
+          image,
+          date: String(Date.now()),
+        },
+        location: c.location ?? 'deck',
+      });
+    }
+
+    // Build rules array (anonymous — no playerID/playerName)
+    const deckRules = (rules ?? []).map((r, i) => ({
+      id: i + 1,
+      text: r.text,
+      timestamp: Date.now(),
+    }));
+
+    const deckObj: { cards: Partial<Card>[], rules?: typeof deckRules } = { cards: resolvedCards };
+    if (deckRules.length > 0) deckObj.rules = deckRules;
+
+    if (format === 'html') {
+      // Encode as base64 HTML deck file (same format as DeckEditor "Visual" save)
+      const rawData = Buffer.from(encodeURIComponent(JSON.stringify(resolvedCards))).toString('base64');
+      const html = `<!DOCTYPE html><html><head><script>const rawData = '${rawData}'; const cards = JSON.parse(decodeURIComponent(atob(rawData)));</script><title>Blank White Cards</title></head><body><p>Blank White Cards deck file. Open in the <a href="https://blankwhite.cards/editor">Deck Editor</a> to view and edit.</p></body></html>`;
+      return { content: [{ type: 'text', text: html }] };
+    }
+
+    return { content: [{ type: 'text', text: JSON.stringify(deckObj, null, 2) }] };
   }
 );
 
