@@ -1,6 +1,6 @@
 {
   "name": "@mcteamster/white-mcp",
-  "version": "2.3.12",
+  "version": "2.3.13",
   "main": "dist/index.js",
   "bin": "dist/index.js",
   "files": [
