@@ -432,14 +432,14 @@ export interface LikesProps {
 export function Likes({ card, likeCard, matchId }: LikesProps) {
   const styles: { [key: string]: Properties<string | number> } = {
     likes: {
-      width: '1.75em',
-      height: '1.75em',
+      width: '1.25em',
+      height: '1.25em',
       position: 'absolute',
       zIndex: '10',
-      top: '-1.75em',
-      right: '-2.5em',
-      padding: '1em',
-      fontSize: '0.75em',
+      top: '-1.25em',
+      right: '-2em',
+      padding: '0.75em',
+      fontSize: '1em',
       textAlign: 'center',
       color: 'red',
       backgroundColor: '#eee',
@@ -528,14 +528,14 @@ export function Likes({ card, likeCard, matchId }: LikesProps) {
 export function Share({ id }: { id: number }) {
   const styles: { [key: string]: Properties<string | number> } = {
     likes: {
-      width: '1.75em',
-      height: '1.75em',
+      width: '1.25em',
+      height: '1.25em',
       position: 'absolute',
       zIndex: '10',
-      top: '2.75em',
-      right: '-2.5em',
-      padding: '1em',
-      fontSize: '0.75em',
+      top: '2em',
+      right: '-2em',
+      padding: '0.75em',
+      fontSize: '1em',
       textAlign: 'center',
       backgroundColor: '#eee',
       borderRadius: '2em',

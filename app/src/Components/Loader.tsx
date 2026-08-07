@@ -392,7 +392,7 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
                   </> :
                   <>
                     <wired-card style={{...styles.instructions }} onClick={() => { setGlobalSubmit(false); document.getElementById('fileselector')?.click() }}>
-                      <Icon name='display' />
+                      <Icon name='load' />
                       Load cards into this session
                     </wired-card>
                     <wired-card style={{...styles.instructions }} onClick={() => { externalLink('https://blankwhite.cards/editor') }}>

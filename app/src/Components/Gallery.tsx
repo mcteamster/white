@@ -397,7 +397,6 @@ export function Permalink() {
   return (
     <div style={styles.copybutton}>
       <div id="sharePermalink" style={styles.permalink} onClick={(e) => { copyPermalink(); e.stopPropagation() }}>
-        <Icon name="copy" />
         {url}
       </div>
     </div>
