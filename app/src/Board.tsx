@@ -110,7 +110,7 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
   }, [hotkeys.equals]);
 
   useEffect(() => {
-    if (hotkeys.p) {
+    if (hotkeys.t) {
       setPlayersMode(prev => {
         if (isMobile) setChatOpen(false);
         if (prev === 'hidden') return 'collapsed';
@@ -118,7 +118,7 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
         return 'hidden';
       });
     }
-  }, [hotkeys.p, isMobile]);
+  }, [hotkeys.t, isMobile]);
 
   // 7.2-7.5 Tab zone cycling
   useEffect(() => {

@@ -122,6 +122,7 @@ const styles: { [key: string]: Properties<string | number> } = {
     width: '0.8em',
     height: '0.8em',
     padding: '0.1em',
+    marginLeft: '0.25em',
     border: '1.5pt solid black',
     borderRadius: '50%',
     display: 'flex',

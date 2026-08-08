@@ -214,7 +214,11 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
     button: {
       cursor: 'pointer',
       width: '3em',
-      height: '3em'
+      height: '3em',
+      textAlign: 'center',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     imageThumbnail: {
       width: '3em',

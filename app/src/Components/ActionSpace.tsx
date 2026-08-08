@@ -306,7 +306,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
     } else if (G.cards.length == 0) {
       if (playerID == hostPlayerID) {
         mainButtonContent = <>
-          <Icon name='display' />
+          <Icon name='load' />
           Load Deck?
         </>
       } else {
@@ -434,7 +434,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
         {
           isMultiplayer ?
           <>
-            <Icon name='display' />Load
+            <Icon name='load' />Load
           </> :
           <>
             <Icon name='global' />Submit

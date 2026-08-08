@@ -983,7 +983,7 @@ export function DeckEditor() {
                     {deck.cards.length === 0 ? (
                       <div style={styles.fileModalRow}>
                         <wired-card style={styles.loadButton} onClick={() => fileInputRef.current?.click()} elevation={2}>
-                          <Icon name="display" /> Load
+                          <Icon name="load" /> Load
                         </wired-card>
                         <wired-card style={styles.saveButton} onClick={() => setModalState('closed')} elevation={2}>
                           <Icon name="create" /> New
@@ -1013,7 +1013,7 @@ export function DeckEditor() {
                         </div>
                         <div style={styles.fileModalRow}>
                           <wired-card style={styles.loadButton} onClick={() => fileInputRef.current?.click()} elevation={2}>
-                            <Icon name="display" /> Load
+                            <Icon name="load" /> Load
                           </wired-card>
                           <wired-card
                             style={styles.saveButton}

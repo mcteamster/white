@@ -295,7 +295,7 @@ export function Header(props: HeaderProps) {
                 onCancel={() => setEditingMyScore(false)}
               />
             ) : (
-              <>{props.playerID === headerHostID && <span title="Host" style={{ display: 'inline-flex', verticalAlign: 'middle' }}><Icon name='special' /></span>}{playerName}&nbsp;<span
+              <>{props.playerID === headerHostID && <span title="Host" style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: '0.25em' }}><Icon name='special' /></span>}{playerName}&nbsp;<span
                 style={{ fontVariantNumeric: 'tabular-nums', cursor: 'pointer', textDecoration: 'underline dotted' }}
                 onClick={(e) => { e.stopPropagation(); setEditingMyScore(true); }}
               >{formatScore(myScore)} pts</span></>
