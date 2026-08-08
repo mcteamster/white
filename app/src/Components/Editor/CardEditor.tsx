@@ -215,7 +215,7 @@ export function CardEditor({ onSave, onCancel, editingCard, onShowDrawingControl
       cursor: 'pointer',
       width: '3em',
       height: '3em',
-      textAlign: 'center',
+      textAlign: 'center' as const,
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',

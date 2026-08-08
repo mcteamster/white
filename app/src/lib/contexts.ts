@@ -58,6 +58,7 @@ export interface HotkeysType {
   x?: boolean | undefined,
   c?: boolean | undefined,
   p?: boolean | undefined,
+  t?: boolean | undefined,
   backtick?: boolean | undefined,
   equals?: boolean | undefined,
   n1?: boolean | undefined,
