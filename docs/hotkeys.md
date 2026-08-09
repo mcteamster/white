@@ -3,7 +3,7 @@
 | | | | | |
 |:---:|:---:|:---:|:---:|:---:|
 | Q<br>unfocus | W<br>table | [E]<br>edit | R<br>return to deck | T<br>player's tables |
-| A<br>previous | S<br>hand | D<br>next | F<br>send | [G]<br>like |
+| A<br>previous | S<br>hand | D<br>next | F<br>send | G<br>like |
 | | X<br>discard | C<br>create | | [B]<br>box |
 | | | Space<br>pickup / pile | | |
 

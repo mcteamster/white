@@ -416,6 +416,15 @@ export function Focus(props: BoardProps<GameState>) {
       } else if (owned && hotkeys.space) {
         props.moves.moveCard(card.id, "pile");
         unfocusCards();
+      } else if (hotkeys.g) {
+        const likedKey = `${props.matchID}-${card.id}-liked`;
+        if (sessionStorage.getItem(likedKey) !== '1') {
+          sessionStorage.setItem(likedKey, '1');
+          props.moves.likeCard(card.id);
+          if (!props.isMultiplayer) {
+            likeGlobalCard(card.id);
+          }
+        }
       }
     }
   }, [props, hotkeys, focus, focusCard, changeFocus, unfocusCards])
