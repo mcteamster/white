@@ -19,6 +19,7 @@
 | Play to pile | Space | Space | Card focused, owned |
 | Pick up from deck | Space | Space | No card focused |
 | Create card | | C | No card focused |
+| Like card | | G | Card focused |
 | Enter send mode | Enter | F | Multiplayer, owned card |
 | Return to deck | Backspace | R | Multiplayer, owned card |
 | Discard | Delete | X | Owned card |
