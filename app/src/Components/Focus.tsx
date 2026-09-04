@@ -286,7 +286,7 @@ export function Focus(props: BoardProps<GameState>) {
                 </div>
               </div>
               <div key="box-retire" style={styles.sendplayer}>
-                <div style={styles.title}>Retire from Session</div>
+                <div style={styles.title}>Remove from Play</div>
                 <div style={styles.sendicon} onClick={() => { props.moves.moveCard(card.id, 'box'); setSendCardMode(false); unfocusCards() }}>
                   <Icon name='hide' />
                 </div>
