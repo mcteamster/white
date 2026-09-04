@@ -45,6 +45,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
   const deck = getCardsByLocation(G.cards, "deck");
   const pile = getCardsByLocation(G.cards, "pile");
   const discard = getCardsByLocation(G.cards, "discard");
+  const box = getCardsByLocation(G.cards, "box");
   const hand = getCardsByLocation(getCardsByOwner(G.cards, playerID || "0"), "hand");
 
   const doPickup = useCallback(() => {
@@ -452,8 +453,8 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
       }} onClick={() => { setMode('menu-discard') }} elevation={2}><Icon name='discard' />Discard ({discard.length})</wired-card>}
       {isMultiplayer && playerID === hostPlayerID && <wired-card style={{
         ...styles.button,
-        color: 'grey',
-      }} onClick={() => { setMode('menu-box') }} elevation={2}><Icon name='hide' />Box</wired-card>}
+        color: (box.length > 0 ? undefined : 'grey'),
+      }} onClick={() => { setMode('menu-box') }} elevation={2}><Icon name='hide' />Box ({box.length})</wired-card>}
     </>
   } else if (mode === 'menu-discard') {
     toolset = <>
