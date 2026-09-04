@@ -285,6 +285,12 @@ export function Focus(props: BoardProps<GameState>) {
                   <Icon name='shuffle'></Icon>
                 </div>
               </div>
+              <div key="box-retire" style={styles.sendplayer}>
+                <div style={styles.title}>Remove from Play</div>
+                <div style={styles.sendicon} onClick={() => { props.moves.moveCard(card.id, 'box'); setSendCardMode(false); unfocusCards() }}>
+                  <Icon name='hide' />
+                </div>
+              </div>
               {props.matchData?.map((player, i) => {
                 if (player.isConnected && player.name && player.id != Number(props.playerID)) {
                   return (
@@ -408,6 +414,14 @@ export function Focus(props: BoardProps<GameState>) {
       } else if (props.isMultiplayer && owned && (hotkeys.backspace || hotkeys.r)) {
         const adjacentCard = getAdjacentCard(props.G.cards, card.id, 'prev', props.playerID) || getAdjacentCard(props.G.cards, card.id, 'next', props.playerID);
         props.moves.moveCard(card.id, "deck");
+        if (adjacentCard) {
+          focusCard(adjacentCard.id, true);
+        } else {
+          unfocusCards();
+        }
+      } else if (props.isMultiplayer && owned && hotkeys.b) {
+        const adjacentCard = getAdjacentCard(props.G.cards, card.id, 'prev', props.playerID) || getAdjacentCard(props.G.cards, card.id, 'next', props.playerID);
+        props.moves.moveCard(card.id, "box");
         if (adjacentCard) {
           focusCard(adjacentCard.id, true);
         } else {
