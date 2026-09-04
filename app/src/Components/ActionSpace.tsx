@@ -446,6 +446,22 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
         width: '3em',
         color: ((playerID == '0' && G.cards.length > 0) ? undefined : 'grey') // Only the host can reset the game
       }} onClick={() => { if (playerID == '0' && G.cards.length > 0) { setMode('menu-tools-reset') } }} elevation={2}><Icon name='shuffle' />Reset</wired-card>
+      {isMultiplayer && <wired-card style={{
+        ...styles.button,
+        color: (discard.length > 0 ? undefined : 'grey'),
+      }} onClick={() => { setMode('menu-discard') }} elevation={2}><Icon name='discard' />Discard ({discard.length})</wired-card>}
+      {isMultiplayer && playerID === hostPlayerID && <wired-card style={{
+        ...styles.button,
+        color: 'grey',
+      }} onClick={() => { setMode('menu-box') }} elevation={2}><Icon name='hide' />Box</wired-card>}
+    </>
+  } else if (mode === 'menu-discard') {
+    toolset = <>
+      <wired-card style={styles.button} onClick={() => { setMode('menu-tools') }} elevation={2}><Icon name='back' />Back</wired-card>
+    </>
+  } else if (mode === 'menu-box') {
+    toolset = <>
+      <wired-card style={styles.button} onClick={() => { setMode('menu-tools') }} elevation={2}><Icon name='back' />Back</wired-card>
     </>
   } else if (mode === 'menu-tools-reset') {
     toolset = <>
@@ -478,6 +494,179 @@ export function ActionSpace(props: BoardProps<GameState>) {
       <Toolbar {...props} mode={mode} setMode={setMode} />
       <Loader {...props} mode={mode} setMode={setMode}></Loader>
       <Tutorial {...props} mode={mode} setMode={setMode} />
+      <DiscardBrowser {...props} mode={mode} setMode={setMode} />
+      <BoxBrowser {...props} mode={mode} setMode={setMode} />
     </>
   )
+}
+
+interface BrowserProps extends BoardProps<GameState> {
+  mode: string;
+  setMode: React.Dispatch<React.SetStateAction<string>>;
+}
+
+export function DiscardBrowser({ G, moves, mode, setMode }: BrowserProps) {
+  const discardCards = getCardsByLocation(G.cards, 'discard');
+
+  const styles: { [key: string]: Properties<string | number> } = {
+    overlay: {
+      width: '90vw',
+      maxWidth: '40em',
+      maxHeight: '70vh',
+      padding: '1em',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.75em',
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: '1.5em',
+      fontWeight: 'bold',
+    },
+    grid: {
+      width: '100%',
+      overflowY: 'scroll',
+      scrollbarWidth: 'none',
+      display: 'flex',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      gap: '0.5em',
+      padding: '0.25em',
+    },
+    card: {
+      width: '10em',
+      padding: '0.5em',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '0.25em',
+      backgroundColor: '#eee',
+      borderRadius: '0.5em',
+    },
+    cardTitle: {
+      fontSize: '0.9em',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      wordBreak: 'break-word',
+    },
+    yoinkButton: {
+      height: '2em',
+      width: '6em',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#ddd',
+      borderRadius: '0.5em',
+      cursor: 'pointer',
+    },
+    empty: {
+      color: 'grey',
+      fontStyle: 'italic',
+    },
+  };
+
+  return (
+    <wired-dialog open={mode === 'menu-discard' ? true : undefined} onClick={() => setMode('menu-tools')}>
+      <div style={styles.overlay} onClick={(e) => e.stopPropagation()}>
+        <div style={styles.title}><Icon name='discard' />Discard Pile ({discardCards.length})</div>
+        <div style={styles.grid}>
+          {discardCards.length === 0
+            ? <div style={styles.empty}>The discard pile is empty.</div>
+            : discardCards.map((card) => (
+              <wired-card key={card.id} style={styles.card} elevation={1}>
+                <div style={styles.cardTitle}>{card.content.title}</div>
+                <wired-card style={styles.yoinkButton} onClick={() => { moves.moveCard(card.id, 'hand'); setMode('play'); }} elevation={1}>
+                  <Icon name='hand' />Yoink
+                </wired-card>
+              </wired-card>
+            ))
+          }
+        </div>
+      </div>
+    </wired-dialog>
+  );
+}
+
+export function BoxBrowser({ G, moves, mode, setMode }: BrowserProps) {
+  const boxCards = getCardsByLocation(G.cards, 'box');
+
+  const styles: { [key: string]: Properties<string | number> } = {
+    overlay: {
+      width: '90vw',
+      maxWidth: '40em',
+      maxHeight: '70vh',
+      padding: '1em',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.75em',
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: '1.5em',
+      fontWeight: 'bold',
+    },
+    grid: {
+      width: '100%',
+      overflowY: 'scroll',
+      scrollbarWidth: 'none',
+      display: 'flex',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      gap: '0.5em',
+      padding: '0.25em',
+    },
+    card: {
+      width: '10em',
+      padding: '0.5em',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '0.25em',
+      backgroundColor: '#eee',
+      borderRadius: '0.5em',
+    },
+    cardTitle: {
+      fontSize: '0.9em',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      wordBreak: 'break-word',
+    },
+    yoinkButton: {
+      height: '2em',
+      width: '6em',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#ddd',
+      borderRadius: '0.5em',
+      cursor: 'pointer',
+    },
+    empty: {
+      color: 'grey',
+      fontStyle: 'italic',
+    },
+  };
+
+  return (
+    <wired-dialog open={mode === 'menu-box' ? true : undefined} onClick={() => setMode('menu-tools')}>
+      <div style={styles.overlay} onClick={(e) => e.stopPropagation()}>
+        <div style={styles.title}><Icon name='hide' />Retired Cards ({boxCards.length})</div>
+        <div style={styles.grid}>
+          {boxCards.length === 0
+            ? <div style={styles.empty}>No cards have been retired.</div>
+            : boxCards.map((card) => (
+              <wired-card key={card.id} style={styles.card} elevation={1}>
+                <div style={styles.cardTitle}>{card.content.title}</div>
+                <wired-card style={styles.yoinkButton} onClick={() => { moves.moveCard(card.id, 'deck'); setMode('play'); }} elevation={1}>
+                  <Icon name='shuffle' />Yoink
+                </wired-card>
+              </wired-card>
+            ))
+          }
+        </div>
+      </div>
+    </wired-dialog>
+  );
 }

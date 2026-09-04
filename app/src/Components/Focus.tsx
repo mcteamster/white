@@ -159,6 +159,7 @@ export function Focus(props: BoardProps<GameState>) {
       if (owned && card.location != 'deck') {
         tray = <div style={styles.tray}>
           {<wired-card style={{ ...styles.button, color: 'red' }} id="discardButton" onClick={() => { moveCardTo(card.id, 'discard') }}><Icon name='discard' />Discard</wired-card>}
+          {<wired-card style={{ ...styles.button, color: 'grey' }} id="retireButton" onClick={() => { moveCardTo(card.id, 'box') }}><Icon name='hide' />Retire</wired-card>}
           {props.isMultiplayer && card.location != 'hand' &&<wired-card style={{ ...styles.button }} id="handButton" onClick={() => { moveCardTo(card.id, 'hand') }}><Icon name='hand' />Hand</wired-card>}
           {props.isMultiplayer && card.location != 'table' && <wired-card style={{ ...styles.button }} id="tableButton" onClick={() => { moveCardTo(card.id, 'table') }}><Icon name='display' />Table</wired-card>}
           {props.isMultiplayer && <wired-card style={{ ...styles.button }} id="sendButton" onClick={() => { setSendCardMode(true) }}><Icon name='send' />Send</wired-card>}

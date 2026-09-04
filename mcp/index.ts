@@ -306,7 +306,7 @@ This server provides tools for interacting with Blank White Cards — a creative
 - **pile** — the shared active area, visible to everyone.
 - **table** — cards placed in front of a specific player and stay there as a persistent effect until explicitly moved.
 - **discard** — removed from play but can be reshuffled back into the deck.
-- **box** — cards permanently outside the game, set at load time. Cards cannot be moved to or from the box during play.
+- **box** — cards permanently outside the game. Cards in the box survive reshuffles. Any card can be sent to the box with \`move_card\` to retire it for the session.
 
 ## Writing vs playing cards
 
@@ -742,12 +742,12 @@ mcp.registerTool(
 mcp.registerTool(
   'move_card',
   {
-    description: 'Move a card to a different location. Locations: deck, pile, discard, hand, table. Use "hand" with toOwner to pass a card to another player.',
+    description: 'Move a card to a different location. Locations: deck, pile, discard, hand, table, box. Use "hand" with toOwner to pass a card to another player. Use "box" to retire a card for the remainder of the session (survives reshuffles).',
     inputSchema: {
       matchID: z.string().describe('Room code'),
       playerID: z.string().describe('Your player ID'),
       cardID: z.number().int().describe('ID of the card to move'),
-      target: z.enum(['deck', 'pile', 'discard', 'hand', 'table']).describe('Destination location'),
+      target: z.enum(['deck', 'pile', 'discard', 'hand', 'table', 'box']).describe('Destination location'),
       toOwner: z.string().optional().describe('Player ID to give the card to (only for hand/table)'),
     },
   },
@@ -1199,7 +1199,7 @@ mcp.registerTool(
       include_state: z.boolean().optional().describe('Include the full formatted game state in the response (default false). Omit to save context — use get_state for a full refresh when needed.'),
       action: z.discriminatedUnion('type', [
         z.object({ type: z.literal('submit_card'), title: z.string(), description: z.string().optional(), author: z.string().optional(), image_uuid: z.string().optional() }),
-        z.object({ type: z.literal('move_card'), cardID: z.number().int(), target: z.enum(['deck', 'pile', 'discard', 'hand', 'table']), toOwner: z.string().optional() }),
+        z.object({ type: z.literal('move_card'), cardID: z.number().int(), target: z.enum(['deck', 'pile', 'discard', 'hand', 'table', 'box']), toOwner: z.string().optional() }),
         z.object({ type: z.literal('pickup_card') }),
         z.object({ type: z.literal('like_card'), cardID: z.number().int() }),
         z.object({ type: z.literal('send_message'), text: z.string() }),
