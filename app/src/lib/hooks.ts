@@ -67,6 +67,7 @@ export const useHotkeys = ({ hotkeys, setHotkeys}: HotkeysContextType) => {
       KeyR: 'r',
       KeyX: 'x',
       KeyG: 'g',
+      KeyB: 'b',
       KeyC: 'c',
       KeyP: 'p',
       KeyT: 't',

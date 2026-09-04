@@ -419,6 +419,14 @@ export function Focus(props: BoardProps<GameState>) {
         } else {
           unfocusCards();
         }
+      } else if (props.isMultiplayer && owned && hotkeys.b) {
+        const adjacentCard = getAdjacentCard(props.G.cards, card.id, 'prev', props.playerID) || getAdjacentCard(props.G.cards, card.id, 'next', props.playerID);
+        props.moves.moveCard(card.id, "box");
+        if (adjacentCard) {
+          focusCard(adjacentCard.id, true);
+        } else {
+          unfocusCards();
+        }
       } else if (owned && hotkeys.space) {
         props.moves.moveCard(card.id, "pile");
         unfocusCards();
