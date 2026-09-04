@@ -1040,7 +1040,7 @@ mcp.registerTool(
         title: z.string(),
         description: z.string().optional(),
         author: z.string().optional(),
-        location: z.enum(['deck', 'pile', 'discard']).optional(),
+        location: z.enum(['deck', 'pile', 'discard', 'box']).optional(),
         image_path: z.string().optional().describe('Absolute path to a square PNG image file to attach to the card'),
       })).describe('Cards to add'),
       rules: z.array(z.object({
