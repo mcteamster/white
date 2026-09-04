@@ -159,7 +159,6 @@ export function Focus(props: BoardProps<GameState>) {
       if (owned && card.location != 'deck') {
         tray = <div style={styles.tray}>
           {<wired-card style={{ ...styles.button, color: 'red' }} id="discardButton" onClick={() => { moveCardTo(card.id, 'discard') }}><Icon name='discard' />Discard</wired-card>}
-          {<wired-card style={{ ...styles.button, color: 'grey' }} id="retireButton" onClick={() => { moveCardTo(card.id, 'box') }}><Icon name='hide' />Retire</wired-card>}
           {props.isMultiplayer && card.location != 'hand' &&<wired-card style={{ ...styles.button }} id="handButton" onClick={() => { moveCardTo(card.id, 'hand') }}><Icon name='hand' />Hand</wired-card>}
           {props.isMultiplayer && card.location != 'table' && <wired-card style={{ ...styles.button }} id="tableButton" onClick={() => { moveCardTo(card.id, 'table') }}><Icon name='display' />Table</wired-card>}
           {props.isMultiplayer && <wired-card style={{ ...styles.button }} id="sendButton" onClick={() => { setSendCardMode(true) }}><Icon name='send' />Send</wired-card>}
@@ -284,6 +283,12 @@ export function Focus(props: BoardProps<GameState>) {
                 <div style={styles.title}>Reshuffle into Deck</div>
                 <div style={styles.sendicon} onClick={() => { props.moves.moveCard(card.id, "deck"); setSendCardMode(false); unfocusCards() }}>
                   <Icon name='shuffle'></Icon>
+                </div>
+              </div>
+              <div key="box-retire" style={styles.sendplayer}>
+                <div style={styles.title}>Retire from Session</div>
+                <div style={styles.sendicon} onClick={() => { props.moves.moveCard(card.id, 'box'); setSendCardMode(false); unfocusCards() }}>
+                  <Icon name='hide' />
                 </div>
               </div>
               {props.matchData?.map((player, i) => {
