@@ -9,6 +9,7 @@
   "dependencies": {
     "@mcteamster/white-core": "*",
     "@mcteamster/white-engine": "*",
+    "koa-body": "^5.0.0",
     "nanoid": "^5.1.0"
   }
 }

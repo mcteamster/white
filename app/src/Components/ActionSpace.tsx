@@ -17,6 +17,8 @@ import { Tutorial } from './About.tsx';
 import { compressImage, resizeImage } from '../lib/images.ts';
 import { externalLink, useWindowDimensions, usePlayerData } from '../lib/hooks.ts';
 import { discordSdk } from '../lib/discord';
+import { BoosterStore } from './BoosterStore.tsx';
+// Card type is already imported above via '@mcteamster/white-core'
 
 interface ToolbarProps extends BoardProps<GameState> {
   mode: string;
@@ -442,6 +444,10 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
           </>
         }
       </wired-card>
+      {isMultiplayer && playerID === hostPlayerID && <wired-card style={{
+        ...styles.button,
+        color: 'black',
+      }} onClick={() => { setMode('menu-tools-boosters') }} elevation={2}><span aria-label="Boosters">🛒</span>Boosters</wired-card>}
       <wired-card style={{
         ...styles.button,
         width: '3em',
@@ -497,6 +503,16 @@ export function ActionSpace(props: BoardProps<GameState>) {
       <Tutorial {...props} mode={mode} setMode={setMode} />
       <DiscardBrowser {...props} mode={mode} setMode={setMode} />
       <BoxBrowser {...props} mode={mode} setMode={setMode} />
+      {mode === 'menu-tools-boosters' && (
+        <BoosterStore
+          isHost={props.playerID === '0'}
+          onLoad={(cards: Card[]) => {
+            props.moves.loadCards(cards);
+            setMode('play');
+          }}
+          onClose={() => setMode('menu-tools')}
+        />
+      )}
     </>
   )
 }

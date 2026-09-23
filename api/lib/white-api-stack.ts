@@ -173,6 +173,54 @@ export class WhiteApiStack extends cdk.Stack {
       .addResource('{id}')
       .addMethod('POST', new apigateway.LambdaIntegration(likeHandler));
 
+    // Booster catalog handler
+    const listBoostersHandler = new lambda.Function(this, 'ListBoostersHandler', {
+      runtime: lambda.Runtime.NODEJS_24_X,
+      memorySize: 256,
+      handler: 'handlers/listBoosters.listBoostersHandler',
+      code: lambda.Code.fromAsset('dist'),
+      timeout: cdk.Duration.seconds(10),
+      environment: {
+        BOOSTERS_CONFIG: '[]', // Operator sets this to a JSON array of BoosterPackConfig
+      },
+    });
+
+    // Booster purchase + fulfillment handler
+    const boosterHandler = new lambda.Function(this, 'BoosterHandler', {
+      runtime: lambda.Runtime.NODEJS_24_X,
+      memorySize: 512,
+      handler: 'handlers/boosters.purchaseBoosterHandler',
+      code: lambda.Code.fromAsset('dist'),
+      timeout: cdk.Duration.seconds(120), // AI generation can take time
+      environment: {
+        BOOSTERS_CONFIG: '[]',
+        BOOSTER_FULFILLMENT_SECRET: '', // Operator sets via SecretManager/env
+        AI_API_KEY: '',
+        AI_API_BASE: 'https://api.openai.com/v1',
+        AI_MODEL: 'gpt-4o-mini',
+      },
+    });
+
+    const boosterFulfillHandler = new lambda.Function(this, 'BoosterFulfillHandler', {
+      runtime: lambda.Runtime.NODEJS_24_X,
+      memorySize: 512,
+      handler: 'handlers/boosters.fulfillBoosterHandler',
+      code: lambda.Code.fromAsset('dist'),
+      timeout: cdk.Duration.seconds(120),
+      environment: {
+        BOOSTERS_CONFIG: '[]',
+        BOOSTER_FULFILLMENT_SECRET: '',
+        AI_API_KEY: '',
+        AI_API_BASE: 'https://api.openai.com/v1',
+        AI_MODEL: 'gpt-4o-mini',
+      },
+    });
+
+    const boosters = v1.addResource('boosters');
+    boosters.addMethod('GET', new apigateway.LambdaIntegration(listBoostersHandler));
+    boosters.addResource('purchase').addMethod('POST', new apigateway.LambdaIntegration(boosterHandler));
+    boosters.addResource('fulfill').addResource('{token}').addMethod('GET', new apigateway.LambdaIntegration(boosterFulfillHandler));
+
     new cdk.CfnOutput(this, 'ApiUrl', { value: api.url });
     new cdk.CfnOutput(this, 'CustomDomainUrl', { value: `https://${domain.domainName}` });
   }
