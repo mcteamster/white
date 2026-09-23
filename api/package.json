@@ -3,13 +3,15 @@
   "version": "2.3.13",
   "scripts": {
     "build": "tsc",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.145",
     "@types/node": "^22.0.0",
     "aws-cdk": "^2.1136.0",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "vitest": "^3.2.7"
   },
   "dependencies": {
     "@aws-sdk/client-cloudfront": "^3.0.0",
