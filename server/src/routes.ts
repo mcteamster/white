@@ -3,7 +3,7 @@ import { presetDecks } from '@mcteamster/white-core';
 import { loadPresets } from './presets';
 import { loadBoosters } from './boosters';
 import { SandboxPaymentAdapter } from './payment';
-import { createPurchaseRecord, getPurchaseRecord, updatePurchaseStatus } from './purchase-store';
+import { createPurchaseRecord, getPurchaseRecord, updatePurchaseStatus, markPaidWithToken } from './purchase-store';
 import { issueFulfillmentToken, verifyFulfillmentToken, consumeToken } from './fulfillment-auth';
 import { fulfillBoosterPack } from './fulfillment';
 import { randomUUID } from 'crypto';
@@ -254,14 +254,20 @@ export function registerRoutes(server: ServerInstance) {
       return;
     }
 
-    updatePurchaseStatus(purchaseId, 'paid');
-
-    const fulfillmentToken = issueFulfillmentToken(
-      purchase.purchaseId,
-      purchase.key,
-      purchase.cardCount,
-      fulfillmentSecret,
-    );
+    // Generate a token only once per purchase — idempotent on repeated webhook calls
+    const existingRecord = getPurchaseRecord(purchaseId)!;
+    let fulfillmentToken: string;
+    if (existingRecord.fulfillmentToken) {
+      fulfillmentToken = existingRecord.fulfillmentToken;
+    } else {
+      fulfillmentToken = issueFulfillmentToken(
+        purchase.purchaseId,
+        purchase.key,
+        purchase.cardCount,
+        fulfillmentSecret,
+      );
+      markPaidWithToken(purchaseId, fulfillmentToken);
+    }
 
     ctx.status = 200;
     ctx.body = { fulfillmentToken };
@@ -314,14 +320,22 @@ export function registerRoutes(server: ServerInstance) {
       return;
     }
 
-    const fulfillmentToken = issueFulfillmentToken(
-      purchase.purchaseId,
-      purchase.key,
-      purchase.cardCount,
-      fulfillmentSecret,
-    );
-
-    updatePurchaseStatus(purchaseId, 'paid');
+    // Issue the token only once per purchase — idempotent on repeated polls.
+    // Prevents token proliferation: multiple polls while paid would otherwise
+    // each return a distinct, independently usable token.
+    const currentRecord = getPurchaseRecord(purchaseId)!;
+    let fulfillmentToken: string;
+    if (currentRecord.fulfillmentToken) {
+      fulfillmentToken = currentRecord.fulfillmentToken;
+    } else {
+      fulfillmentToken = issueFulfillmentToken(
+        purchase.purchaseId,
+        purchase.key,
+        purchase.cardCount,
+        fulfillmentSecret,
+      );
+      markPaidWithToken(purchaseId, fulfillmentToken);
+    }
 
     ctx.status = 200;
     ctx.body = { status: 'paid', fulfillmentToken };

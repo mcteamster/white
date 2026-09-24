@@ -494,6 +494,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
 
 export function ActionSpace(props: BoardProps<GameState>) {
   const [mode, setMode] = useState(localStorage.getItem('tutorial') != "false" ? 'play-tutorial' : 'play');
+  const { hostPlayerID } = usePlayerData(props.plugins);
   return (
     <>
       <Focus {...props} />
@@ -505,7 +506,7 @@ export function ActionSpace(props: BoardProps<GameState>) {
       <BoxBrowser {...props} mode={mode} setMode={setMode} />
       {mode === 'menu-tools-boosters' && (
         <BoosterStore
-          isHost={props.playerID === '0'}
+          isHost={props.playerID === hostPlayerID}
           onLoad={(cards: Card[]) => {
             props.moves.loadCards(cards);
             setMode('play');
