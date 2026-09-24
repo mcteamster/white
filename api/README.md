@@ -9,8 +9,13 @@ api/
 ├── lib/white-api-stack.ts  # Stack definition
 ├── handlers/               # Lambda function handlers
 │   ├── queueCard.ts
+│   ├── queueCard.test.ts
 │   ├── submitCard.ts
-│   └── likeCard.ts
+│   ├── submitCard.test.ts
+│   ├── likeCard.ts
+│   ├── likeCard.test.ts
+│   ├── moderateCard.ts
+│   └── moderateCard.test.ts
 ├── cdk.json
 ├── tsconfig.json
 └── package.json
@@ -31,6 +36,14 @@ npx cdk deploy
 - `POST /v1/like/{id}` - Like a card
 
 ## Environment Variables
+The Lambda functions require the following environment variables:
+
+| Variable | Description |
+|---|---|
+| `WHITE_BUCKET` | S3 bucket name for card and deck storage |
+| `DISTRIBUTION_ID` | CloudFront distribution ID for cache invalidation |
+| `WHITE_QUEUE` | SQS queue URL for card submission |
+
 Set `VITE_CARD_API` in your `.env` file to point to this API:
 ```bash
 VITE_CARD_API='https://rest.blankwhite.cards'
@@ -39,5 +52,10 @@ VITE_CARD_API='https://rest.blankwhite.cards'
 ## Resources
 - API Gateway with CORS for https://blankwhite.cards
 - SQS Queue with DLQ
-- 3 Lambda functions
+- 4 Lambda functions
 - References existing S3 bucket and CloudFront distribution
+
+## Moderation
+The `moderateCard` handler provides admin-level card moderation. It reads and
+writes cards and the global deck in S3, updates card `location` to `"box"` (hide)
+or `"deck"` (show), and triggers a CloudFront invalidation to propagate changes.

@@ -7,14 +7,14 @@ const mockS3Send = vi.fn();
 const mockCFSend = vi.fn();
 
 vi.mock('@aws-sdk/client-s3', () => ({
-  S3Client: vi.fn().mockImplementation(() => ({ send: mockS3Send })),
-  GetObjectCommand: vi.fn().mockImplementation((input) => ({ input })),
-  PutObjectCommand: vi.fn().mockImplementation((input) => ({ input })),
+  S3Client: vi.fn(function () { return { send: mockS3Send }; }),
+  GetObjectCommand: vi.fn(function (input) { this.input = input; }),
+  PutObjectCommand: vi.fn(function (input) { this.input = input; }),
 }));
 
 vi.mock('@aws-sdk/client-cloudfront', () => ({
-  CloudFrontClient: vi.fn().mockImplementation(() => ({ send: mockCFSend })),
-  CreateInvalidationCommand: vi.fn().mockImplementation((input) => ({ input })),
+  CloudFrontClient: vi.fn(function () { return { send: mockCFSend }; }),
+  CreateInvalidationCommand: vi.fn(function (input) { this.input = input; }),
 }));
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
