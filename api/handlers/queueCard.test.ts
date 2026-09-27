@@ -6,8 +6,8 @@ import type { APIGatewayProxyEvent } from 'aws-lambda';
 const mockSend = vi.fn();
 
 vi.mock('@aws-sdk/client-sqs', () => ({
-  SQSClient: vi.fn().mockImplementation(() => ({ send: mockSend })),
-  SendMessageCommand: vi.fn().mockImplementation((input) => ({ input })),
+  SQSClient: vi.fn(function () { return { send: mockSend }; }),
+  SendMessageCommand: vi.fn(function (input) { this.input = input; }),
 }));
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -54,6 +54,7 @@ describe('queueHandler', () => {
     await queueHandler(makeEvent({ body }));
 
     expect(mockSend).toHaveBeenCalledTimes(1);
+    expect(mockSend.mock.calls[0][0].input.MessageBody).toBe(body);
   });
 
   it('returns 500 when SQS send throws', async () => {

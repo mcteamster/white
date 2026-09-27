@@ -161,3 +161,18 @@ white/
 ├── mcp/        ← MCP server (AI agent tools)
 └── docs/       ← Documentation
 ```
+
+### 9. Running Tests
+
+All three workspaces use [Vitest](https://vitest.dev/). Run them individually:
+
+```bash
+npm test -w core   # Game logic tests (Cards.ts, Game.ts)
+npm test -w app    # Frontend lib tests (hooks, indexedDB, animation, data)
+npm test -w api    # Lambda handler tests (queueCard, submitCard, likeCard, moderateCard)
+```
+
+Or run all three in sequence:
+```bash
+npm test -w core && npm test -w app && npm test -w api
+```
