@@ -174,6 +174,20 @@ describe('generateDeckHTML XSS safety', () => {
     expect(html).toMatch(/descDiv\.textContent\s*=\s*card\.content\.description/);
   });
 
+  // 2.2b — author field must also use a text-safe sink (spec: title, author, description all SHALL use textContent)
+  it('renders a malicious card author via textContent, not innerHTML', () => {
+    const xssAuthor = '<script>steal()</script>';
+    const cards: Card[] = [
+      { id: 1, content: { title: 'safe title', description: 'safe desc', author: xssAuthor }, location: 'deck' },
+    ];
+    const html = generateDeckHTML(cards);
+    // The author field must not appear in any innerHTML assignment.
+    expect(html).not.toMatch(/innerHTML\s*=\s*['"`][^'"`]*card\.content\.author/);
+    expect(html).not.toMatch(/innerHTML\s*=\s*['"`].*\+\s*card\.content\.author/);
+    // The author cell must be assigned via a textContent-style sink.
+    expect(html).toMatch(/insertCell\(\)\.textContent\s*=\s*card\.content\.author/);
+  });
+
   // 2.3 — benign content still produces the expected wrapper elements and classes
   it('preserves card-title and card-description wrapper divs with correct class names for benign content', () => {
     const cards: Card[] = [
