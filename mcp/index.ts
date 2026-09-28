@@ -7,7 +7,7 @@ const { SocketIO } = require('@mcteamster/white-engine/multiplayer');
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { execSync } from 'node:child_process';
+import { execSync, spawnSync } from 'node:child_process';
 import { readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -15,6 +15,7 @@ import { BlankWhiteCards } from '@mcteamster/white-core';
 import { version } from './package.json';
 import type { Card, Message, Rule } from '@mcteamster/white-core';
 import { getRegionFromMatchID, getServerForMatch, getServerForCreate } from './lib/regions.js';
+import { IMAGE_FILTER, validateUploadImagePath } from './lib/upload-image.js';
 
 // Temporary store for out-of-band image uploads: uploadId -> processed data URI.
 // Module-level so the HTTP POST /upload-image handler and any MCP session can share it.
@@ -735,9 +736,14 @@ mcp.registerTool(
     },
   },
   async ({ file_path }) => {
+    validateUploadImagePath(file_path);
     const outPath = join(tmpdir(), `bwc_${Date.now()}.png`);
     try {
-      execSync(`ffmpeg -y -i "${file_path}" -vf "crop=min(iw\\,ih):min(iw\\,ih),scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'" "${outPath}"`, { stdio: 'pipe' });
+      const result = spawnSync('ffmpeg', ['-y', '-i', file_path, '-vf', IMAGE_FILTER, outPath], { stdio: 'pipe' });
+      if (result.error) throw result.error;
+      if (result.status !== 0) {
+        throw new Error(`ffmpeg exited ${result.status}: ${result.stderr?.toString() ?? ''}`);
+      }
       const buf = readFileSync(outPath);
       const image_uuid = randomUUID();
       imageUploadStore.set(image_uuid, `data:image/png;base64,${buf.toString('base64')}`);
