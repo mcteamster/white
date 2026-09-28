@@ -371,10 +371,20 @@ export const generateDeckHTML = (cards: Card[], rules?: Pick<Rule, 'id' | 'text'
             }
             imgCell.appendChild(imgDiv);
             
-            row.insertCell().innerHTML = '<div class="card-title">' + card.content.title + '</div>';
+            // Use createElement + textContent (not innerHTML) so untrusted card
+            // text is rendered as inert text and cannot execute as markup.
+            const titleCell = row.insertCell();
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'card-title';
+            titleDiv.textContent = card.content.title;
+            titleCell.appendChild(titleDiv);
             row.insertCell().textContent = card.content.author;
             row.insertCell().textContent = new Date(Number(card.content.date)).toLocaleDateString();
-            row.insertCell().innerHTML = '<div class="card-description">' + card.content.description + '</div>';
+            const descCell = row.insertCell();
+            const descDiv = document.createElement('div');
+            descDiv.className = 'card-description';
+            descDiv.textContent = card.content.description;
+            descCell.appendChild(descDiv);
           });
         };
         
