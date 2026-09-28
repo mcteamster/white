@@ -260,4 +260,98 @@ describe('submitHandler', () => {
       });
     });
   });
+
+  describe('conditional writes (ETag / IfMatch)', () => {
+    // Task 3.1: PutObjectCommand for decks/global.json includes IfMatch set to the ETag from GET
+    it('3.1 passes the ETag from GET as IfMatch on PUT for decks/global.json', async () => {
+      const deck = makeCurrentDeck(3);
+      const testEtag = '"abc123etag"';
+      const getDeckResponse = {
+        ETag: testEtag,
+        Body: { transformToString: vi.fn().mockResolvedValue(JSON.stringify(deck)) },
+      };
+      mockS3Send
+        .mockResolvedValueOnce(getDeckResponse)  // GET global.json (returns ETag)
+        .mockResolvedValueOnce({})               // PUT card/<n>.json
+        .mockResolvedValueOnce({})               // PUT global.json
+        .mockResolvedValueOnce({})               // PUT chunk
+        .mockResolvedValueOnce({});              // PUT manifest
+
+      const { submitHandler } = await import('./submitCard.js');
+      await submitHandler(
+        makeSQSEvent({ title: 'ETag Test', description: 'Checking IfMatch', author: 'ghost' })
+      );
+
+      // Find the PUT call for decks/global.json (third S3 call: index 2)
+      const putGlobalCall = mockS3Send.mock.calls[2][0];
+      expect(putGlobalCall.input.Key).toBe('decks/global.json');
+      expect(putGlobalCall.input.IfMatch).toBe(testEtag);
+    });
+
+    // Task 3.2: First PUT rejects with PreconditionFailed, second succeeds → returns null
+    it('3.2 retries on PreconditionFailed and returns null when retry succeeds', async () => {
+      const deck = makeCurrentDeck(2);
+      const preconditionError = Object.assign(new Error('PreconditionFailed'), {
+        name: 'PreconditionFailed',
+      });
+      const makeDeckResponse = () => ({
+        ETag: '"etag-v1"',
+        Body: { transformToString: vi.fn().mockResolvedValue(JSON.stringify(deck)) },
+      });
+
+      mockS3Send
+        // First attempt
+        .mockResolvedValueOnce(makeDeckResponse())  // GET global.json (attempt 1)
+        .mockResolvedValueOnce({})                  // PUT card/<n>.json
+        .mockRejectedValueOnce(preconditionError)   // PUT global.json → PreconditionFailed
+        // Second attempt (retry)
+        .mockResolvedValueOnce(makeDeckResponse())  // GET global.json (attempt 2)
+        .mockResolvedValueOnce({})                  // PUT card/<n>.json
+        .mockResolvedValueOnce({})                  // PUT global.json → success
+        .mockResolvedValueOnce({})                  // PUT chunk
+        .mockResolvedValueOnce({});                 // PUT manifest
+
+      const messageId = 'msg-retry-success';
+      const { submitHandler } = await import('./submitCard.js');
+      const result = await submitHandler(
+        makeSQSEvent({ title: 'Retry Card', description: 'Race condition test', author: 'ghost' }, messageId)
+      );
+
+      expect(result).toBeNull();
+    });
+
+    // Task 3.3: All retry attempts return PreconditionFailed → returns batchItemFailures
+    it('3.3 returns batchItemFailures when all retries are exhausted by PreconditionFailed', async () => {
+      const deck = makeCurrentDeck(1);
+      const preconditionError = Object.assign(new Error('PreconditionFailed'), {
+        name: 'PreconditionFailed',
+      });
+      const makeDeckResponse = () => ({
+        ETag: '"etag-stale"',
+        Body: { transformToString: vi.fn().mockResolvedValue(JSON.stringify(deck)) },
+      });
+
+      // 3 attempts × (GET + PUT card + PUT global[PreconditionFailed])
+      mockS3Send
+        .mockResolvedValueOnce(makeDeckResponse()) // GET attempt 1
+        .mockResolvedValueOnce({})                 // PUT card
+        .mockRejectedValueOnce(preconditionError)  // PUT global → fail
+        .mockResolvedValueOnce(makeDeckResponse()) // GET attempt 2
+        .mockResolvedValueOnce({})                 // PUT card
+        .mockRejectedValueOnce(preconditionError)  // PUT global → fail
+        .mockResolvedValueOnce(makeDeckResponse()) // GET attempt 3
+        .mockResolvedValueOnce({})                 // PUT card
+        .mockRejectedValueOnce(preconditionError); // PUT global → fail
+
+      const messageId = 'msg-exhausted';
+      const { submitHandler } = await import('./submitCard.js');
+      const result = await submitHandler(
+        makeSQSEvent({ title: 'Exhausted', description: 'All retries fail', author: 'ghost' }, messageId)
+      );
+
+      expect(result).toMatchObject({
+        batchItemFailures: [{ itemIdentifier: messageId }],
+      });
+    });
+  });
 });

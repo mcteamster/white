@@ -7,6 +7,8 @@ const cfClient = new CloudFrontClient();
 const bucketName = process.env.WHITE_BUCKET;
 const distributionId = process.env.DISTRIBUTION_ID;
 
+const MAX_RETRIES = 3;
+
 interface CardContent {
   title: string;
   description: string;
@@ -23,6 +25,14 @@ interface Card {
 
 interface Deck {
   cards: Card[];
+}
+
+function isPreconditionFailed(error: unknown): boolean {
+  if (error && typeof error === 'object') {
+    const e = error as Record<string, unknown>;
+    return e['name'] === 'PreconditionFailed' || e['Code'] === 'PreconditionFailed';
+  }
+  return false;
 }
 
 export const submitHandler = async (event: SQSEvent): Promise<SQSBatchResponse | null> => {
@@ -60,65 +70,84 @@ export const submitHandler = async (event: SQSEvent): Promise<SQSBatchResponse |
   }
 
   try {
-    const response = await s3Client.send(new GetObjectCommand({
-      Bucket: bucketName,
-      Key: "decks/global.json",
-    }));
-    const responseString = await response.Body!.transformToString()
-    const currentDeck: Deck = JSON.parse(responseString)
-    card.id = currentDeck.cards.length + 1;
-    const newDeck = { cards: [...currentDeck.cards, card] };
-    const chunkNumber = Math.floor(currentDeck.cards.length / 100)
-    const newDeckChunk = { cards: newDeck.cards.slice(chunkNumber * 100) }
-    console.info(card);
+    // Retry loop: up to MAX_RETRIES attempts to handle PreconditionFailed (lost-update race)
+    let lastError: unknown;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        // 1.1 Capture ETag from GetObjectCommand response
+        const response = await s3Client.send(new GetObjectCommand({
+          Bucket: bucketName,
+          Key: "decks/global.json",
+        }));
+        const etag = response.ETag;
+        const responseString = await response.Body!.transformToString();
+        const currentDeck: Deck = JSON.parse(responseString);
+        card.id = currentDeck.cards.length + 1;
+        const newDeck = { cards: [...currentDeck.cards, card] };
+        const chunkNumber = Math.floor(currentDeck.cards.length / 100);
+        const newDeckChunk = { cards: newDeck.cards.slice(chunkNumber * 100) };
+        console.info(card);
 
-    try {
-      await s3Client.send(new PutObjectCommand({
-        Bucket: bucketName,
-        Key: `card/${newDeck.cards.length}.json`,
-        Body: JSON.stringify(card)
-      }));
+        await s3Client.send(new PutObjectCommand({
+          Bucket: bucketName,
+          Key: `card/${newDeck.cards.length}.json`,
+          Body: JSON.stringify(card)
+        }));
 
-      await s3Client.send(new PutObjectCommand({
-        Bucket: bucketName,
-        Key: "decks/global.json",
-        Body: JSON.stringify(newDeck),
-      }));
+        // 1.2 Pass IfMatch: etag on the PutObjectCommand for decks/global.json
+        await s3Client.send(new PutObjectCommand({
+          Bucket: bucketName,
+          Key: "decks/global.json",
+          Body: JSON.stringify(newDeck),
+          IfMatch: etag,
+        }));
 
-      await s3Client.send(new PutObjectCommand({
-        Bucket: bucketName,
-        Key: `decks/global_${chunkNumber}01.json`,
-        Body: JSON.stringify(newDeckChunk),
-      }));
+        // Chunk and manifest PUTs are unconditional (Decision 3)
+        await s3Client.send(new PutObjectCommand({
+          Bucket: bucketName,
+          Key: `decks/global_${chunkNumber}01.json`,
+          Body: JSON.stringify(newDeckChunk),
+        }));
 
-      const manifest = {
-        chunks: Math.ceil(newDeck.cards.length / 100),
-        totalCards: newDeck.cards.length
-      };
-      await s3Client.send(new PutObjectCommand({
-        Bucket: bucketName,
-        Key: "decks/global_manifest.json",
-        Body: JSON.stringify(manifest),
-      }));
+        const manifest = {
+          chunks: Math.ceil(newDeck.cards.length / 100),
+          totalCards: newDeck.cards.length
+        };
+        await s3Client.send(new PutObjectCommand({
+          Bucket: bucketName,
+          Key: "decks/global_manifest.json",
+          Body: JSON.stringify(manifest),
+        }));
 
-      await cfClient.send(new CreateInvalidationCommand({
-        DistributionId: distributionId,
-        InvalidationBatch: {
-          Paths: {
-            Quantity: 3,
-            Items: ["/decks/global.json",`/decks/global_${chunkNumber}01.json`,"/decks/global_manifest.json"],
+        await cfClient.send(new CreateInvalidationCommand({
+          DistributionId: distributionId,
+          InvalidationBatch: {
+            Paths: {
+              Quantity: 3,
+              Items: ["/decks/global.json", `/decks/global_${chunkNumber}01.json`, "/decks/global_manifest.json"],
+            },
+            CallerReference: String(new Date()),
           },
-          CallerReference: String(new Date()),
-        },
-      }));
+        }));
 
-      return null
-    } catch (error) {
-      console.error(error)
-      return { batchItemFailures: [{ "itemIdentifier": event.Records[0].messageId }] }
+        return null;
+      } catch (error) {
+        // 1.3 On PreconditionFailed, re-read and re-apply on next iteration
+        if (isPreconditionFailed(error)) {
+          console.warn(`PreconditionFailed on attempt ${attempt + 1}/${MAX_RETRIES}; retrying`);
+          lastError = error;
+          continue;
+        }
+        // Non-retryable error: surface it to the outer handler
+        throw error;
+      }
     }
+
+    // 1.4 Exhausted retries: return batchItemFailures to SQS
+    console.error('Exhausted retries on PreconditionFailed:', lastError);
+    return { batchItemFailures: [{ "itemIdentifier": event.Records[0].messageId }] };
   } catch (error) {
-    console.error(error)
-    return { batchItemFailures: [{ "itemIdentifier": event.Records[0].messageId }] }
+    console.error(error);
+    return { batchItemFailures: [{ "itemIdentifier": event.Records[0].messageId }] };
   }
 };
