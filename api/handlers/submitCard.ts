@@ -88,18 +88,21 @@ export const submitHandler = async (event: SQSEvent): Promise<SQSBatchResponse |
         const newDeckChunk = { cards: newDeck.cards.slice(chunkNumber * 100) };
         console.info(card);
 
-        await s3Client.send(new PutObjectCommand({
-          Bucket: bucketName,
-          Key: `card/${newDeck.cards.length}.json`,
-          Body: JSON.stringify(card)
-        }));
-
         // 1.2 Pass IfMatch: etag on the PutObjectCommand for decks/global.json
+        // Gate the write — only proceed to derivative writes after winning the race.
         await s3Client.send(new PutObjectCommand({
           Bucket: bucketName,
           Key: "decks/global.json",
           Body: JSON.stringify(newDeck),
           IfMatch: etag,
+        }));
+
+        // Write individual card file and chunk/manifest only after winning the conditional write
+        // (Decision 3: these are derived from the global deck and must not be written for a losing attempt)
+        await s3Client.send(new PutObjectCommand({
+          Bucket: bucketName,
+          Key: `card/${newDeck.cards.length}.json`,
+          Body: JSON.stringify(card)
         }));
 
         // Chunk and manifest PUTs are unconditional (Decision 3)

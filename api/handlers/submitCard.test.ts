@@ -80,8 +80,8 @@ describe('submitHandler', () => {
       const deck = makeCurrentDeck(5);
       mockS3Send
         .mockResolvedValueOnce(makeGetDeckResponse(deck))  // GET global.json
-        .mockResolvedValueOnce({})  // PUT card/<n>.json
-        .mockResolvedValueOnce({})  // PUT global.json
+        .mockResolvedValueOnce({})  // PUT global.json (IfMatch gate)
+        .mockResolvedValueOnce({})  // PUT card/<n>.json (after winning the race)
         .mockResolvedValueOnce({})  // PUT chunk
         .mockResolvedValueOnce({}); // PUT manifest
 
@@ -107,9 +107,8 @@ describe('submitHandler', () => {
         makeSQSEvent({ title: 'Card Eleven', description: 'The eleventh card', author: 'ghost' })
       );
 
-      // The PUT for the individual card should include id=11
-      // First PutObject call is PUT card/11.json
-      const putCall = mockS3Send.mock.calls[1][0];
+      // The PUT for the individual card is the third S3 call (index 2), after the IfMatch PUT
+      const putCall = mockS3Send.mock.calls[2][0];
       const body = JSON.parse(putCall.input.Body);
       expect(body.id).toBe(11);
     });
@@ -128,7 +127,8 @@ describe('submitHandler', () => {
         makeSQSEvent({ title: 'Anonymous Card', description: 'A card without an author' })
       );
 
-      const putCall = mockS3Send.mock.calls[1][0];
+      // The PUT for the individual card is the third S3 call (index 2), after the IfMatch PUT
+      const putCall = mockS3Send.mock.calls[2][0];
       const body = JSON.parse(putCall.input.Body);
       expect(body.content.author).toBe('anon');
     });
@@ -147,7 +147,8 @@ describe('submitHandler', () => {
         makeSQSEvent({ title: 'New Card', description: 'Goes to deck', author: 'ghost' })
       );
 
-      const putCall = mockS3Send.mock.calls[1][0];
+      // The PUT for the individual card is the third S3 call (index 2), after the IfMatch PUT
+      const putCall = mockS3Send.mock.calls[2][0];
       const body = JSON.parse(putCall.input.Body);
       expect(body.location).toBe('deck');
     });
@@ -247,7 +248,7 @@ describe('submitHandler', () => {
       const deck = makeCurrentDeck(0);
       mockS3Send
         .mockResolvedValueOnce(makeGetDeckResponse(deck))  // GET global.json
-        .mockRejectedValueOnce(new Error('S3 write error')); // PUT fails
+        .mockRejectedValueOnce(new Error('S3 write error')); // PUT global.json fails (non-retryable)
 
       const messageId = 'msg-put-fail';
       const { submitHandler } = await import('./submitCard.js');
@@ -272,8 +273,8 @@ describe('submitHandler', () => {
       };
       mockS3Send
         .mockResolvedValueOnce(getDeckResponse)  // GET global.json (returns ETag)
-        .mockResolvedValueOnce({})               // PUT card/<n>.json
-        .mockResolvedValueOnce({})               // PUT global.json
+        .mockResolvedValueOnce({})               // PUT global.json (IfMatch gate)
+        .mockResolvedValueOnce({})               // PUT card/<n>.json (after winning the race)
         .mockResolvedValueOnce({})               // PUT chunk
         .mockResolvedValueOnce({});              // PUT manifest
 
@@ -282,8 +283,8 @@ describe('submitHandler', () => {
         makeSQSEvent({ title: 'ETag Test', description: 'Checking IfMatch', author: 'ghost' })
       );
 
-      // Find the PUT call for decks/global.json (third S3 call: index 2)
-      const putGlobalCall = mockS3Send.mock.calls[2][0];
+      // Find the PUT call for decks/global.json (second S3 call: index 1)
+      const putGlobalCall = mockS3Send.mock.calls[1][0];
       expect(putGlobalCall.input.Key).toBe('decks/global.json');
       expect(putGlobalCall.input.IfMatch).toBe(testEtag);
     });
@@ -302,12 +303,11 @@ describe('submitHandler', () => {
       mockS3Send
         // First attempt
         .mockResolvedValueOnce(makeDeckResponse())  // GET global.json (attempt 1)
-        .mockResolvedValueOnce({})                  // PUT card/<n>.json
-        .mockRejectedValueOnce(preconditionError)   // PUT global.json → PreconditionFailed
+        .mockRejectedValueOnce(preconditionError)   // PUT global.json → PreconditionFailed (card file not written)
         // Second attempt (retry)
         .mockResolvedValueOnce(makeDeckResponse())  // GET global.json (attempt 2)
-        .mockResolvedValueOnce({})                  // PUT card/<n>.json
         .mockResolvedValueOnce({})                  // PUT global.json → success
+        .mockResolvedValueOnce({})                  // PUT card/<n>.json (after winning the race)
         .mockResolvedValueOnce({})                  // PUT chunk
         .mockResolvedValueOnce({});                 // PUT manifest
 
@@ -331,16 +331,13 @@ describe('submitHandler', () => {
         Body: { transformToString: vi.fn().mockResolvedValue(JSON.stringify(deck)) },
       });
 
-      // 3 attempts × (GET + PUT card + PUT global[PreconditionFailed])
+      // 3 attempts × (GET + PUT global[PreconditionFailed]) — card file is never written on a losing attempt
       mockS3Send
         .mockResolvedValueOnce(makeDeckResponse()) // GET attempt 1
-        .mockResolvedValueOnce({})                 // PUT card
         .mockRejectedValueOnce(preconditionError)  // PUT global → fail
         .mockResolvedValueOnce(makeDeckResponse()) // GET attempt 2
-        .mockResolvedValueOnce({})                 // PUT card
         .mockRejectedValueOnce(preconditionError)  // PUT global → fail
         .mockResolvedValueOnce(makeDeckResponse()) // GET attempt 3
-        .mockResolvedValueOnce({})                 // PUT card
         .mockRejectedValueOnce(preconditionError); // PUT global → fail
 
       const messageId = 'msg-exhausted';
