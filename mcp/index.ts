@@ -3,7 +3,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const { Client, LobbyClient } = require('@mcteamster/white-engine/client');
 const { SocketIO } = require('@mcteamster/white-engine/multiplayer');
-const { Virgo2AWS } = require('@mcteamster/virgo');
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -15,51 +14,18 @@ import { join } from 'node:path';
 import { BlankWhiteCards } from '@mcteamster/white-core';
 import { version } from './package.json';
 import type { Card, Message, Rule } from '@mcteamster/white-core';
+import { getRegionFromMatchID, getServerForMatch, getServerForCreate } from './lib/regions.js';
 
 // Temporary store for out-of-band image uploads: uploadId -> processed data URI.
 // Module-level so the HTTP POST /upload-image handler and any MCP session can share it.
 const imageUploadStore = new Map<string, string>();
 
-const GAME_SERVER_OVERRIDE = process.env.GAME_SERVER_URL;
 const GAME_NAME = 'blank-white-cards';
 const MIN_REACT_SECONDS = Number(process.env.MCP_MIN_REACT_SECONDS ?? 5);
 const MAX_WATCH_SECONDS = Number(process.env.MCP_MAX_WATCH_SECONDS ?? 30);
 const MOVE_TIMEOUT_MS = Number(process.env.MCP_MOVE_TIMEOUT_MS ?? 5000);
 
-// ── Server resolution ─────────────────────────────────────────────────────────
-
-const SERVERS: Record<string, string> = {
-  AP: 'https://ap.blankwhite.cards',
-  EU: 'https://eu.blankwhite.cards',
-  NA: 'https://na.blankwhite.cards',
-};
-
-function getRegionFromMatchID(matchID: string): string | undefined {
-  if (matchID.match(/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/)) {
-    if (matchID.match(/[BCDFG]$/)) return 'AP';
-    if (matchID.match(/[HJKLM]$/)) return 'EU';
-    if (matchID.match(/[NPQRS]$/)) return 'NA';
-  }
-  return undefined;
-}
-
-function getServerForMatch(matchID: string): string {
-  if (GAME_SERVER_OVERRIDE) return GAME_SERVER_OVERRIDE;
-  const region = getRegionFromMatchID(matchID);
-  if (region && SERVERS[region]) return SERVERS[region];
-  return 'http://localhost:3000';
-}
-
-function getServerForCreate(region?: string): string {
-  if (GAME_SERVER_OVERRIDE) return GAME_SERVER_OVERRIDE;
-  if (region && SERVERS[region.toUpperCase()]) return SERVERS[region.toUpperCase()];
-  // Auto-detect from timezone
-  const { closestRegion } = Virgo2AWS.getClosestRegion({ regions: ['us-east-1', 'eu-central-1', 'ap-southeast-1'] });
-  const awsToRegion: Record<string, string> = { 'us-east-1': 'NA', 'eu-central-1': 'EU', 'ap-southeast-1': 'AP' };
-  const detected = awsToRegion[closestRegion];
-  if (detected && SERVERS[detected]) return SERVERS[detected];
-  return SERVERS.NA;
-}
+// ── Server resolution — see lib/regions.ts ────────────────────────────────────
 
 // ── Session state ─────────────────────────────────────────────────────────────
 
