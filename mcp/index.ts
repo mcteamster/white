@@ -7,7 +7,7 @@ const { SocketIO } = require('@mcteamster/white-engine/multiplayer');
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { execSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -1446,7 +1446,11 @@ if (isCLI) {
           const outPath = join(tmpdir(), `bwc_upload_out_${Date.now()}.png`);
           try {
             writeFileSync(inPath, buf);
-            execSync(`ffmpeg -y -i "${inPath}" -vf "crop=min(iw\\,ih):min(iw\\,ih),scale=500:500,format=gray,lut=c0='if(val,if(gt(val\\,127)\\,255\\,0)\\,0)'" "${outPath}"`, { stdio: 'pipe' });
+            const uploadResult = spawnSync('ffmpeg', ['-y', '-i', inPath, '-vf', IMAGE_FILTER, outPath], { stdio: 'pipe' });
+            if (uploadResult.error) throw uploadResult.error;
+            if (uploadResult.status !== 0) {
+              throw new Error(`ffmpeg exited ${uploadResult.status}: ${uploadResult.stderr?.toString() ?? ''}`);
+            }
             const processed = readFileSync(outPath);
             const uploadId = randomUUID();
             imageUploadStore.set(uploadId, `data:image/png;base64,${processed.toString('base64')}`);
