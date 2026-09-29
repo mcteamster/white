@@ -1,6 +1,7 @@
 import { SQSEvent, SQSBatchResponse } from 'aws-lambda';
 import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { CloudFrontClient, CreateInvalidationCommand } from "@aws-sdk/client-cloudfront";
+import { chunkKey } from '../lib/chunkKey.js';
 
 const s3Client = new S3Client({ region: 'us-east-1' });
 const cfClient = new CloudFrontClient();
@@ -84,8 +85,8 @@ export const submitHandler = async (event: SQSEvent): Promise<SQSBatchResponse |
         const currentDeck: Deck = JSON.parse(responseString);
         card.id = currentDeck.cards.length + 1;
         const newDeck = { cards: [...currentDeck.cards, card] };
-        const chunkNumber = Math.floor(currentDeck.cards.length / 100);
-        const newDeckChunk = { cards: newDeck.cards.slice(chunkNumber * 100) };
+        const chunkIndex = Math.floor(currentDeck.cards.length / 100);
+        const newDeckChunk = { cards: newDeck.cards.slice(chunkIndex * 100) };
         console.info(card);
 
         // 1.2 Pass IfMatch: etag on the PutObjectCommand for decks/global.json
@@ -108,7 +109,7 @@ export const submitHandler = async (event: SQSEvent): Promise<SQSBatchResponse |
         // Chunk and manifest PUTs are unconditional (Decision 3)
         await s3Client.send(new PutObjectCommand({
           Bucket: bucketName,
-          Key: `decks/global_${chunkNumber}01.json`,
+          Key: `decks/global_${chunkKey(chunkIndex)}.json`,
           Body: JSON.stringify(newDeckChunk),
         }));
 
@@ -127,7 +128,7 @@ export const submitHandler = async (event: SQSEvent): Promise<SQSBatchResponse |
           InvalidationBatch: {
             Paths: {
               Quantity: 3,
-              Items: ["/decks/global.json", `/decks/global_${chunkNumber}01.json`, "/decks/global_manifest.json"],
+              Items: ["/decks/global.json", `/decks/global_${chunkKey(chunkIndex)}.json`, "/decks/global_manifest.json"],
             },
             CallerReference: String(new Date()),
           },

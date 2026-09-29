@@ -5,6 +5,7 @@ import { SocketIO } from '@mcteamster/white-engine/multiplayer';
 import { BlankWhiteCards, GameState } from '@mcteamster/white-core';
 import { BlankWhiteCardsBoard } from '../Board';
 import { Card } from '@mcteamster/white-core';
+import { chunkKey } from './chunkKey';
 
 // Global Deck Singleplayer
 export const startingDeck: GameState = { cards: [] };
@@ -37,7 +38,7 @@ const fetchGlobalDeck = async () => {
     const fetchChunk = async (chunk: number, retries = 3): Promise<{ chunk: number; data: GameState | null }> => {
       for (let attempt = 0; attempt < retries; attempt++) {
         try {
-          const data = await (await fetch(`/decks/global_${chunk}01.json`)).json();
+          const data = await (await fetch(`/decks/global_${chunkKey(chunk)}.json`)).json();
           return { chunk, data };
         } catch {
           if (attempt === retries - 1) return { chunk, data: null };
