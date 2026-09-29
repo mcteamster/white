@@ -158,6 +158,56 @@ describe('hideCard', () => {
     expect(result.results).toContain('2: shown');
   });
 
+  describe('chunk filtering', () => {
+    it('excludes a hidden card from the rewritten chunk', async () => {
+      const deck = makeDeck([
+        { id: 1, location: 'deck' },
+        { id: 2, location: 'deck' },
+      ]);
+      mockS3Send
+        .mockResolvedValueOnce(makeGetDeckResponse(deck))           // GET global.json
+        .mockResolvedValueOnce({})                                   // PUT global.json
+        .mockResolvedValueOnce({})                                   // PUT chunk
+        .mockResolvedValueOnce(makeGetCardResponse(deck.cards[0]))  // GET card/1.json
+        .mockResolvedValueOnce({});                                  // PUT card/1.json
+
+      const { hideCard } = await import('./moderateCard.js');
+      await hideCard({ hide: [1] });
+
+      // Chunk PUT is the third S3 call (index 2)
+      const chunkPutCall = mockS3Send.mock.calls[2][0];
+      const chunkBody = JSON.parse(chunkPutCall.input.Body);
+      const chunkIds = chunkBody.cards.map((c: { id: number }) => c.id);
+
+      expect(chunkIds).not.toContain(1); // hidden — must be absent
+      expect(chunkIds).toContain(2);     // visible — must be present
+    });
+
+    it('includes a shown card in the rewritten chunk', async () => {
+      const deck = makeDeck([
+        { id: 1, location: 'box' },   // currently hidden
+        { id: 2, location: 'deck' },
+      ]);
+      mockS3Send
+        .mockResolvedValueOnce(makeGetDeckResponse(deck))           // GET global.json
+        .mockResolvedValueOnce({})                                   // PUT global.json
+        .mockResolvedValueOnce({})                                   // PUT chunk
+        .mockResolvedValueOnce(makeGetCardResponse(deck.cards[0]))  // GET card/1.json
+        .mockResolvedValueOnce({});                                  // PUT card/1.json
+
+      const { hideCard } = await import('./moderateCard.js');
+      await hideCard({ show: [1] });
+
+      // Chunk PUT is the third S3 call (index 2)
+      const chunkPutCall = mockS3Send.mock.calls[2][0];
+      const chunkBody = JSON.parse(chunkPutCall.input.Body);
+      const chunkIds = chunkBody.cards.map((c: { id: number }) => c.id);
+
+      expect(chunkIds).toContain(1);  // shown — must now be present
+      expect(chunkIds).toContain(2);  // was already visible
+    });
+  });
+
   describe('conditional writes (ETag / IfMatch)', () => {
     // Task 4.1: PutObjectCommand for decks/global.json includes IfMatch set to the ETag from GET
     it('4.1 passes the ETag from GET as IfMatch on PUT for decks/global.json', async () => {

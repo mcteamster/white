@@ -297,6 +297,42 @@ describe('submitHandler', () => {
     });
   });
 
+  describe('chunk filtering', () => {
+    it('excludes hidden (box) cards from the chunk file write', async () => {
+      // Deck with 2 visible cards and 1 hidden card in the same chunk
+      const deck = {
+        cards: [
+          { id: 1, content: { title: 'Visible 1', description: 'D', author: 'ghost' }, location: 'deck' },
+          { id: 2, content: { title: 'Hidden',    description: 'D', author: 'ghost' }, location: 'box' },
+          { id: 3, content: { title: 'Visible 3', description: 'D', author: 'ghost' }, location: 'deck' },
+        ],
+      };
+      mockS3Send
+        .mockResolvedValueOnce(makeGetDeckResponse(deck))  // GET global.json
+        .mockResolvedValueOnce({})                          // PUT global.json (IfMatch gate)
+        .mockResolvedValueOnce({})                          // PUT card/<n>.json
+        .mockResolvedValueOnce({})                          // PUT chunk
+        .mockResolvedValueOnce({});                         // PUT manifest
+
+      const { submitHandler } = await import('./submitCard.js');
+      await submitHandler(
+        makeSQSEvent({ title: 'New Card', description: 'Fourth card', author: 'ghost' })
+      );
+
+      // The chunk PUT is the fourth S3 call (index 3)
+      const chunkPutCall = mockS3Send.mock.calls[3][0];
+      const chunkBody = JSON.parse(chunkPutCall.input.Body);
+      const chunkIds = chunkBody.cards.map((c: { id: number }) => c.id);
+
+      // Hidden card (id 2) must not appear in the chunk
+      expect(chunkIds).not.toContain(2);
+      // Visible cards and the new card must appear
+      expect(chunkIds).toContain(1);
+      expect(chunkIds).toContain(3);
+      expect(chunkIds).toContain(4); // newly submitted card
+    });
+  });
+
   describe('conditional writes (ETag / IfMatch)', () => {
     // Task 3.1: PutObjectCommand for decks/global.json includes IfMatch set to the ETag from GET
     it('3.1 passes the ETag from GET as IfMatch on PUT for decks/global.json', async () => {

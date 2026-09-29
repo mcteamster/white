@@ -19,12 +19,15 @@ const cards = data.cards;
 console.log(`Total cards: ${cards.length}`);
 
 for (let i = 0; i < cards.length; i += CHUNK_SIZE) {
-    const chunk = cards.slice(i, i + CHUNK_SIZE);
+    const chunk = cards.slice(i, i + CHUNK_SIZE).filter(c => c.location !== 'box');
     const chunkNumber = String(i + 1).padStart(3, '0');
     const filename = path.join(OUTPUT_DIR, `global_${chunkNumber}.json`);
     
     fs.writeFileSync(filename, JSON.stringify({cards: chunk}));
-    console.log(`Created ${filename} with ${chunk.length} cards (${i+1} to ${Math.min(i+CHUNK_SIZE, cards.length)})`);
+    const rangeEnd = Math.min(i + CHUNK_SIZE, cards.length);
+    const hidden = (rangeEnd - i) - chunk.length;
+    const hiddenNote = hidden > 0 ? `, ${hidden} hidden` : '';
+    console.log(`Created ${filename} with ${chunk.length} cards (ids ${i+1}–${rangeEnd}${hiddenNote})`);
 }
 
 const manifest = {
