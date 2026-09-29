@@ -142,6 +142,67 @@ describe('generateDeckHTML', () => {
   });
 });
 
+// ── generateDeckHTML — XSS regression ────────────────────────────────────────
+
+describe('generateDeckHTML XSS safety', () => {
+  // 2.1 — title with img onerror payload must NOT appear as a raw innerHTML assignment
+  it('does not concatenate a malicious card title into an innerHTML assignment', () => {
+    const xssTitle = '<img src=x onerror="alert(1)">';
+    const cards: Card[] = [
+      { id: 1, content: { title: xssTitle, description: 'safe desc', author: 'attacker' }, location: 'deck' },
+    ];
+    const html = generateDeckHTML(cards);
+    // The payload must NOT appear directly in an innerHTML-style concatenation.
+    // The fix uses textContent, so the rendered document sets titleDiv.textContent
+    // rather than injecting the raw string into innerHTML.
+    expect(html).not.toMatch(/innerHTML\s*=\s*['"`][^'"`]*card\.content\.title/);
+    expect(html).not.toMatch(/innerHTML\s*=\s*['"`].*\+\s*card\.content\.title/);
+    // The generator must use textContent for the title field.
+    expect(html).toMatch(/titleDiv\.textContent\s*=\s*card\.content\.title/);
+  });
+
+  // 2.2 — description with script payload must NOT appear as a raw innerHTML assignment
+  it('does not concatenate a malicious card description into an innerHTML assignment', () => {
+    const xssDesc = '<script>alert("xss")<\/script>';
+    const cards: Card[] = [
+      { id: 1, content: { title: 'safe title', description: xssDesc, author: 'attacker' }, location: 'deck' },
+    ];
+    const html = generateDeckHTML(cards);
+    expect(html).not.toMatch(/innerHTML\s*=\s*['"`][^'"`]*card\.content\.description/);
+    expect(html).not.toMatch(/innerHTML\s*=\s*['"`].*\+\s*card\.content\.description/);
+    // The generator must use textContent for the description field.
+    expect(html).toMatch(/descDiv\.textContent\s*=\s*card\.content\.description/);
+  });
+
+  // 2.2b — author field must also use a text-safe sink (spec: title, author, description all SHALL use textContent)
+  it('renders a malicious card author via textContent, not innerHTML', () => {
+    const xssAuthor = '<script>steal()</script>';
+    const cards: Card[] = [
+      { id: 1, content: { title: 'safe title', description: 'safe desc', author: xssAuthor }, location: 'deck' },
+    ];
+    const html = generateDeckHTML(cards);
+    // The author field must not appear in any innerHTML assignment.
+    expect(html).not.toMatch(/innerHTML\s*=\s*['"`][^'"`]*card\.content\.author/);
+    expect(html).not.toMatch(/innerHTML\s*=\s*['"`].*\+\s*card\.content\.author/);
+    // The author cell must be assigned via a textContent-style sink.
+    expect(html).toMatch(/insertCell\(\)\.textContent\s*=\s*card\.content\.author/);
+  });
+
+  // 2.3 — benign content still produces the expected wrapper elements and classes
+  it('preserves card-title and card-description wrapper divs with correct class names for benign content', () => {
+    const cards: Card[] = [
+      { id: 1, content: { title: 'Normal Title', description: 'Normal description', author: 'alice' }, location: 'deck' },
+    ];
+    const html = generateDeckHTML(cards);
+    // The generated script must create the wrapper divs with the correct class names.
+    expect(html).toMatch(/titleDiv\.className\s*=\s*['"]card-title['"]/);
+    expect(html).toMatch(/descDiv\.className\s*=\s*['"]card-description['"]/);
+    // The cells must have the divs appended (not innerHTML-assigned).
+    expect(html).toMatch(/titleCell\.appendChild\(titleDiv\)/);
+    expect(html).toMatch(/descCell\.appendChild\(descDiv\)/);
+  });
+});
+
 // ── downloadDeck (DOM interaction — verifies no throw in jsdom) ───────────────
 
 describe('downloadDeck', () => {
