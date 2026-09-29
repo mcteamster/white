@@ -49,6 +49,29 @@ function makeSQSEvent(body: CardBody, messageId = 'msg-001'): SQSEvent {
   };
 }
 
+function makeSQSEventRawBody(rawBody: string, messageId = 'msg-001'): SQSEvent {
+  return {
+    Records: [
+      {
+        messageId,
+        receiptHandle: 'handle',
+        body: rawBody,
+        attributes: {
+          ApproximateReceiveCount: '1',
+          SentTimestamp: '0',
+          SenderId: 'SENDER',
+          ApproximateFirstReceiveTimestamp: '0',
+        },
+        messageAttributes: {},
+        md5OfBody: '',
+        eventSource: 'aws:sqs',
+        eventSourceARN: 'arn:aws:sqs:us-east-1:000000000000:test-queue',
+        awsRegion: 'us-east-1',
+      },
+    ],
+  };
+}
+
 function makeCurrentDeck(cardCount: number) {
   return {
     cards: Array.from({ length: cardCount }, (_, i) => ({
@@ -254,6 +277,18 @@ describe('submitHandler', () => {
       const { submitHandler } = await import('./submitCard.js');
       const result = await submitHandler(
         makeSQSEvent({ title: 'Card', description: 'Content', author: 'ghost' }, messageId)
+      );
+
+      expect(result).toMatchObject({
+        batchItemFailures: [{ itemIdentifier: messageId }],
+      });
+    });
+
+    it('returns batchItemFailures when message body is not valid JSON', async () => {
+      const messageId = 'msg-bad-json';
+      const { submitHandler } = await import('./submitCard.js');
+      const result = await submitHandler(
+        makeSQSEventRawBody('this is not valid json {{{}', messageId)
       );
 
       expect(result).toMatchObject({

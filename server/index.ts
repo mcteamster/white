@@ -62,5 +62,5 @@ setInterval(async () => {
 
 process.on('SIGTERM', () => {
   console.error("Exiting due to SIGTERM");
-  process.exit(1);
+  process.exit(0);
 })

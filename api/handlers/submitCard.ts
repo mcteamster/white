@@ -39,7 +39,18 @@ function isPreconditionFailed(error: unknown): boolean {
 export const submitHandler = async (event: SQSEvent): Promise<SQSBatchResponse | null> => {
   console.info('received:', event);
 
-  const body = JSON.parse(event.Records[0].body);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let body: any;
+  try {
+    body = JSON.parse(event.Records[0].body);
+  } catch (err) {
+    if (err instanceof SyntaxError) {
+      const snippet = event.Records[0].body.slice(0, 200);
+      console.warn(`Malformed SQS message body (messageId=${event.Records[0].messageId}): ${snippet}`);
+      return { batchItemFailures: [{ itemIdentifier: event.Records[0].messageId }] };
+    }
+    throw err;
+  }
   const card: Card = {
     content: {
       title: body.title,
