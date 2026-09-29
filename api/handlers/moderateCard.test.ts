@@ -157,4 +157,82 @@ describe('hideCard', () => {
     expect(result.results).toContain('1: hidden');
     expect(result.results).toContain('2: shown');
   });
+
+  describe('conditional writes (ETag / IfMatch)', () => {
+    // Task 4.1: PutObjectCommand for decks/global.json includes IfMatch set to the ETag from GET
+    it('4.1 passes the ETag from GET as IfMatch on PUT for decks/global.json', async () => {
+      const deck = makeDeck([{ id: 3, location: 'deck' }]);
+      const testEtag = '"moderate-etag-xyz"';
+      const getDeckResponse = {
+        ETag: testEtag,
+        Body: { transformToString: vi.fn().mockResolvedValue(JSON.stringify(deck)) },
+      };
+      mockS3Send
+        .mockResolvedValueOnce(getDeckResponse)               // GET global.json (returns ETag)
+        .mockResolvedValueOnce({})                             // PUT global.json
+        .mockResolvedValueOnce({})                             // PUT chunk
+        .mockResolvedValueOnce(makeGetCardResponse(deck.cards[0]))  // GET card/3.json
+        .mockResolvedValueOnce({});                            // PUT card/3.json
+
+      const { hideCard } = await import('./moderateCard.js');
+      await hideCard({ hide: [3] });
+
+      // PUT global.json is the second S3 call (index 1)
+      const putGlobalCall = mockS3Send.mock.calls[1][0];
+      expect(putGlobalCall.input.Key).toBe('decks/global.json');
+      expect(putGlobalCall.input.IfMatch).toBe(testEtag);
+    });
+
+    // Task 4.2: First PUT rejects with PreconditionFailed, second succeeds → returns result
+    it('4.2 retries on PreconditionFailed and returns a successful result when retry succeeds', async () => {
+      const deck = makeDeck([{ id: 7, location: 'deck' }]);
+      const preconditionError = Object.assign(new Error('PreconditionFailed'), {
+        name: 'PreconditionFailed',
+      });
+      const makeDeckResponse = () => ({
+        ETag: '"etag-moderate-v1"',
+        Body: { transformToString: vi.fn().mockResolvedValue(JSON.stringify(deck)) },
+      });
+
+      mockS3Send
+        // First attempt: GET succeeds, PUT global fails with PreconditionFailed
+        .mockResolvedValueOnce(makeDeckResponse())           // GET global.json (attempt 1)
+        .mockRejectedValueOnce(preconditionError)            // PUT global.json → PreconditionFailed
+        // Second attempt: GET succeeds, PUT global succeeds
+        .mockResolvedValueOnce(makeDeckResponse())           // GET global.json (attempt 2)
+        .mockResolvedValueOnce({})                           // PUT global.json → success
+        .mockResolvedValueOnce({})                           // PUT chunk
+        .mockResolvedValueOnce(makeGetCardResponse(deck.cards[0]))  // GET card/7.json
+        .mockResolvedValueOnce({});                          // PUT card/7.json
+
+      const { hideCard } = await import('./moderateCard.js');
+      const result = await hideCard({ hide: [7] });
+
+      expect(result.results).toContain('7: hidden');
+    });
+
+    // Task 4.3: All retry attempts return PreconditionFailed → propagates error
+    it('4.3 propagates error when all retries are exhausted by PreconditionFailed', async () => {
+      const deck = makeDeck([{ id: 9, location: 'deck' }]);
+      const preconditionError = Object.assign(new Error('PreconditionFailed'), {
+        name: 'PreconditionFailed',
+      });
+      const makeDeckResponse = () => ({
+        ETag: '"etag-stale"',
+        Body: { transformToString: vi.fn().mockResolvedValue(JSON.stringify(deck)) },
+      });
+
+      // 3 attempts × (GET + PUT global[PreconditionFailed])
+      mockS3Send
+        .mockResolvedValueOnce(makeDeckResponse()) // GET attempt 1
+        .mockRejectedValueOnce(preconditionError)  // PUT global → fail
+        .mockResolvedValueOnce(makeDeckResponse()) // GET attempt 2
+        .mockRejectedValueOnce(preconditionError)  // PUT global → fail
+        .mockResolvedValueOnce(makeDeckResponse()) // GET attempt 3
+        .mockRejectedValueOnce(preconditionError); // PUT global → fail
+
+      const { hideCard } = await import('./moderateCard.js');
+      await expect(hideCard({ hide: [9] })).rejects.toThrow('PreconditionFailed');
+    });
+  });
 });
