@@ -1,5 +1,6 @@
 import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { CloudFrontClient, CreateInvalidationCommand } from "@aws-sdk/client-cloudfront";
+import { chunkKey } from '../lib/chunkKey.js';
 
 const s3Client = new S3Client({ region: 'us-east-1' });
 const cfClient = new CloudFrontClient();
@@ -84,13 +85,13 @@ export const hideCard = async (event: ModerateEvent) => {
     const invalidationPaths = ["/decks/global.json"];
     for (const chunkIndex of affectedChunks) {
       const chunkCards = deck.cards.slice(chunkIndex * 100, (chunkIndex + 1) * 100);
-      const chunkKey = `decks/global_${String(chunkIndex * 100 + 1).padStart(3, '0')}.json`;
+      const chunkKeyStr = `decks/global_${chunkKey(chunkIndex)}.json`;
       await s3Client.send(new PutObjectCommand({
         Bucket: bucketName,
-        Key: chunkKey,
+        Key: chunkKeyStr,
         Body: JSON.stringify({ cards: chunkCards }),
       }));
-      invalidationPaths.push(`/${chunkKey}`);
+      invalidationPaths.push(`/${chunkKeyStr}`);
     }
 
     // Update individual card files
