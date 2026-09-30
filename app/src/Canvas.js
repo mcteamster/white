@@ -76,7 +76,8 @@ function plotDot(x, y) {
   ctx.globalCompositeOperation = 'source-over';
   ctx.fillStyle = 'black';
   ctx.beginPath();
-  ctx.arc(x, y, sketchpad.weight / 2, 0, Math.PI * 2);
+  // Canvas buffer is DPR-scaled (canvasSize * dpr); scale CSS-pixel coords to device pixels.
+  ctx.arc(x * dpr, y * dpr, sketchpad.weight / 2 * dpr, 0, Math.PI * 2);
   ctx.fill();
 }
 
@@ -154,7 +155,8 @@ canvas.addEventListener('click', (e) => {
 function replayStippleStroke(stroke) {
   const ctx = document.getElementById("sketchpad")?.getContext('2d');
   if (!ctx) return;
-  const radius = (stroke.weight ?? 4) / 2;
+  // Segment coords are stored as CSS pixels (offsetX/offsetY); scale to device pixels.
+  const radius = (stroke.weight ?? 4) / 2 * dpr;
   const { spacing } = STIPPLE_PRESETS[stroke.stippleDensity];
   ctx.globalCompositeOperation = 'source-over';
   ctx.fillStyle = 'black';
@@ -163,14 +165,14 @@ function replayStippleStroke(stroke) {
   stroke.segments.forEach((seg, i) => {
     const { x, y } = seg.point;
     if (i === 0) {
-      ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x * dpr, y * dpr, radius, 0, Math.PI * 2); ctx.fill();
       lastPoint = { x, y };
       return;
     }
     const dx = x - lastPoint.x, dy = y - lastPoint.y;
     distSinceDot += Math.sqrt(dx * dx + dy * dy);
     if (distSinceDot >= spacing) {
-      ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x * dpr, y * dpr, radius, 0, Math.PI * 2); ctx.fill();
       distSinceDot = 0;
     }
     lastPoint = { x, y };
