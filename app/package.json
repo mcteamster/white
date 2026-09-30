@@ -17,7 +17,7 @@
     "@mcteamster/white-core": "*",
     "@mcteamster/white-engine": "*",
     "@microsoft/clarity": "^1.0.0",
-    "atrament": "^4.6.0",
+    "atrament": "^5.1.0",
     "lucide-react": "^1.30.0",
     "nanoid": "^5.1.0",
     "react": "^19.2.8",
@@ -27,7 +27,7 @@
     "wired-elements": "^3.0.0-rc.6"
   },
   "overrides": {
-    "atrament": "^4.6.0"
+    "atrament": "^5.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
