@@ -9,18 +9,33 @@ const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth
 const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
 const canvas = document.querySelector('#sketchpad');
 const canvasSize = Math.min(vw * 0.9, vh * 0.6);
+const dpr = window.devicePixelRatio || 1;
 
 // Set CSS size to control display size
 canvas.style.width = `${canvasSize}px`;
 canvas.style.height = `${canvasSize}px`;
 
 export const sketchpad = new Atrament(canvas, {
-  width: canvasSize,
-  height: canvasSize,
+  // Pass DPR-scaled dimensions so the canvas buffer is full resolution on HiDPI screens.
+  // v5 sets canvas.width = width (no internal DPR scaling), so we do it here.
+  // v5's coordinate transform (#y) uses canvas.width / canvas.offsetWidth = dpr,
+  // which correctly maps CSS-pixel pointer events to device-pixel canvas coordinates.
+  // lineWidth is scaled by the same ratio, so stroke weight is DPR-correct too.
+  width: canvasSize * dpr,
+  height: canvasSize * dpr,
   color: 'black',
+  // smoothing: v5 changed adaptive stroke internals — 0.1 matched v4 feel in testing.
+  // If strokes feel too flat or too variable, adjust here (higher = smoother/slower,
+  // lower = more responsive/jittery). v5 default is 0.85.
   smoothing: 0.1,
   adaptiveStroke: true,
   weight: 4,
+  // v5 added pressure-to-weight scaling via pressureLow/pressureHigh. On mobile,
+  // real touch pressure values (not 0.5) caused strokes to render thin. Setting both
+  // to 1.0 neutralises the mapping and restores v4 behaviour (weight unaffected by
+  // touch pressure; only distance-based adaptive stroke applies).
+  pressureLow: 1,
+  pressureHigh: 1,
 });
 
 // Stroke History and Undo: https://github.com/jakubfiala/atrament/issues/71#issuecomment-1214261577
@@ -191,9 +206,9 @@ export const undo = (baseImage = null) => {
   if (baseImage) {
     const replayCanvas = document.getElementById("sketchpad");
     const ctx = replayCanvas?.getContext('2d');
-    const logicalWidth = replayCanvas.width / (window.devicePixelRatio || 1);
-    const logicalHeight = replayCanvas.height / (window.devicePixelRatio || 1);
-    ctx?.drawImage(baseImage, 0, 0, logicalWidth, logicalHeight);
+    // v5 no longer DPR-scales canvas.width internally; we pass canvasSize * dpr
+    // directly, so canvas.width is the correct device-pixel size for drawImage.
+    ctx?.drawImage(baseImage, 0, 0, replayCanvas.width, replayCanvas.height);
   }
 
   // Replay all remaining strokes
@@ -288,10 +303,10 @@ export const redo = (baseImage = null) => {
   if (baseImage) {
     const replayCanvas = document.getElementById("sketchpad");
     const ctx = replayCanvas?.getContext('2d');
-    const logicalWidth = replayCanvas.width / (window.devicePixelRatio || 1);
-    const logicalHeight = replayCanvas.height / (window.devicePixelRatio || 1);
-    ctx?.clearRect(0, 0, logicalWidth, logicalHeight);
-    ctx?.drawImage(baseImage, 0, 0, logicalWidth, logicalHeight);
+    // v5 no longer DPR-scales canvas.width internally; we pass canvasSize * dpr
+    // directly, so canvas.width is the correct device-pixel size for drawImage.
+    ctx?.clearRect(0, 0, replayCanvas.width, replayCanvas.height);
+    ctx?.drawImage(baseImage, 0, 0, replayCanvas.width, replayCanvas.height);
 
     // Replay all strokes
     for (let i = 0; i < strokes.length; i++) {
