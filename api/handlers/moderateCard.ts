@@ -84,7 +84,7 @@ export const hideCard = async (event: ModerateEvent) => {
     // Successful conditional write — update affected chunks (unconditional per Decision 3)
     const invalidationPaths = ["/decks/global.json"];
     for (const chunkIndex of affectedChunks) {
-      const chunkCards = deck.cards.slice(chunkIndex * 100, (chunkIndex + 1) * 100).filter((c: { location: string }) => c.location !== 'box');
+      const chunkCards = deck.cards.slice(chunkIndex * 100, (chunkIndex + 1) * 100).map((c: { id: number; location: string; content?: unknown }) => c.location === 'box' ? { id: c.id, content: { title: '', description: '', author: '', date: 0 }, location: 'box' } : c);
       const chunkKeyStr = `decks/global_${chunkKey(chunkIndex)}.json`;
       await s3Client.send(new PutObjectCommand({
         Bucket: bucketName,

@@ -159,7 +159,7 @@ describe('hideCard', () => {
   });
 
   describe('chunk filtering', () => {
-    it('excludes a hidden card from the rewritten chunk', async () => {
+    it('includes hidden card as a stub in the rewritten chunk after hide', async () => {
       const deck = makeDeck([
         { id: 1, location: 'deck' },
         { id: 2, location: 'deck' },
@@ -179,11 +179,18 @@ describe('hideCard', () => {
       const chunkBody = JSON.parse(chunkPutCall.input.Body);
       const chunkIds = chunkBody.cards.map((c: { id: number }) => c.id);
 
-      expect(chunkIds).not.toContain(1); // hidden — must be absent
-      expect(chunkIds).toContain(2);     // visible — must be present
+      // Hidden card must appear as a stub — id and location preserved, content blanked
+      expect(chunkIds).toContain(1);
+      const stub = chunkBody.cards.find((c: { id: number }) => c.id === 1);
+      expect(stub.location).toBe('box');
+      expect(stub.content.title).toBe('');
+      expect(stub.content.description).toBe('');
+      expect(stub.content.author).toBe('');
+      expect(stub.content.image).toBeUndefined();
+      expect(chunkIds).toContain(2); // visible — must be present with full content
     });
 
-    it('includes a shown card in the rewritten chunk', async () => {
+    it('includes shown card with full content in the rewritten chunk after show', async () => {
       const deck = makeDeck([
         { id: 1, location: 'box' },   // currently hidden
         { id: 2, location: 'deck' },
@@ -203,7 +210,11 @@ describe('hideCard', () => {
       const chunkBody = JSON.parse(chunkPutCall.input.Body);
       const chunkIds = chunkBody.cards.map((c: { id: number }) => c.id);
 
-      expect(chunkIds).toContain(1);  // shown — must now be present
+      // Shown card must appear with full content (not a stub)
+      expect(chunkIds).toContain(1);
+      const shown = chunkBody.cards.find((c: { id: number }) => c.id === 1);
+      expect(shown.location).toBe('deck');
+      expect(shown.content.title).toBe('Card 1'); // full content restored from global.json
       expect(chunkIds).toContain(2);  // was already visible
     });
   });

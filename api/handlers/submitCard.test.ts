@@ -298,7 +298,7 @@ describe('submitHandler', () => {
   });
 
   describe('chunk filtering', () => {
-    it('excludes hidden (box) cards from the chunk file write', async () => {
+    it('includes hidden (box) cards as stubs in the chunk file write', async () => {
       // Deck with 2 visible cards and 1 hidden card in the same chunk
       const deck = {
         cards: [
@@ -324,12 +324,21 @@ describe('submitHandler', () => {
       const chunkBody = JSON.parse(chunkPutCall.input.Body);
       const chunkIds = chunkBody.cards.map((c: { id: number }) => c.id);
 
-      // Hidden card (id 2) must not appear in the chunk
-      expect(chunkIds).not.toContain(2);
-      // Visible cards and the new card must appear
+      // Hidden card (id 2) must appear as a stub — id and location preserved, content blanked
+      expect(chunkIds).toContain(2);
+      const stub = chunkBody.cards.find((c: { id: number }) => c.id === 2);
+      expect(stub.location).toBe('box');
+      expect(stub.content.title).toBe('');
+      expect(stub.content.description).toBe('');
+      expect(stub.content.author).toBe('');
+      expect(stub.content.image).toBeUndefined();
+
+      // Visible cards and the new card must appear with full content
       expect(chunkIds).toContain(1);
       expect(chunkIds).toContain(3);
       expect(chunkIds).toContain(4); // newly submitted card
+      const visible = chunkBody.cards.find((c: { id: number }) => c.id === 1);
+      expect(visible.content.title).toBe('Visible 1');
     });
   });
 

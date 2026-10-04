@@ -97,7 +97,7 @@ export const submitHandler = async (event: SQSEvent): Promise<SQSBatchResponse |
         card.id = currentDeck.cards.length + 1;
         const newDeck = { cards: [...currentDeck.cards, card] };
         const chunkIndex = Math.floor(currentDeck.cards.length / 100);
-        const newDeckChunk = { cards: newDeck.cards.slice(chunkIndex * 100).filter(c => c.location !== 'box') };
+        const newDeckChunk = { cards: newDeck.cards.slice(chunkIndex * 100).map(c => c.location === 'box' ? { id: c.id, content: { title: '', description: '', author: '', date: 0 }, location: 'box' } : c) };
         console.info(card);
 
         // 1.2 Pass IfMatch: etag on the PutObjectCommand for decks/global.json

@@ -19,14 +19,17 @@ const cards = data.cards;
 console.log(`Total cards: ${cards.length}`);
 
 for (let i = 0; i < cards.length; i += CHUNK_SIZE) {
-    const chunk = cards.slice(i, i + CHUNK_SIZE).filter(c => c.location !== 'box');
+    const chunk = cards.slice(i, i + CHUNK_SIZE).map(c => c.location === 'box'
+        ? { id: c.id, content: { title: '', description: '', author: '', date: 0 }, location: 'box' }
+        : c
+    );
     const chunkNumber = String(i + 1).padStart(3, '0');
     const filename = path.join(OUTPUT_DIR, `global_${chunkNumber}.json`);
     
     fs.writeFileSync(filename, JSON.stringify({cards: chunk}));
     const rangeEnd = Math.min(i + CHUNK_SIZE, cards.length);
-    const hidden = (rangeEnd - i) - chunk.length;
-    const hiddenNote = hidden > 0 ? `, ${hidden} hidden` : '';
+    const hiddenCount = chunk.filter(c => c.location === 'box').length;
+    const hiddenNote = hiddenCount > 0 ? `, ${hiddenCount} stubbed` : '';
     console.log(`Created ${filename} with ${chunk.length} cards (ids ${i+1}–${rangeEnd}${hiddenNote})`);
 }
 
