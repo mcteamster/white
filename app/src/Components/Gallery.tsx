@@ -177,12 +177,42 @@ export function Gallery() {
   const globalDeck = { cards: allCards };
   const params = useParams();
   const viewedCard = globalDeck.cards.find((card) => card.id == Number(params.cardID));
+
+  // When viewing a hidden (stub) card, fetch its full content from card/<id>.json
+  const [fullCard, setFullCard] = useState<Card | null>(null);
+  const [fullCardImage, setFullCardImage] = useState<string | null>(null);
+  useEffect(() => {
+    if (viewedCard?.location === 'box') {
+      fetch(`/card/${viewedCard.id}.json`)
+        .then(r => r.ok ? r.json() : null)
+        .then((data: Card | null) => {
+          if (data) {
+            setFullCard(data);
+            if (data.content.image) {
+              if (data.content.image.startsWith('data:image/')) {
+                setFullCardImage(data.content.image);
+              } else {
+                decompressImage(data.content.image).then(setFullCardImage);
+              }
+            } else {
+              setFullCardImage(BLANK_IMAGE);
+            }
+          }
+        })
+        .catch(() => {});
+    } else {
+      setFullCard(null);
+      setFullCardImage(null);
+    }
+  }, [viewedCard?.id, viewedCard?.location]);
+
+  const displayCard = (viewedCard?.location === 'box' && fullCard) ? fullCard : viewedCard;
   let localDate;
   let viewDialog = <></>;
 
   if (viewedCard) {
-    if (viewedCard.content.date) {
-      localDate = new Date(Number(viewedCard.content.date)).toLocaleDateString();
+    if (displayCard?.content.date) {
+      localDate = new Date(Number(displayCard.content.date)).toLocaleDateString();
     }
 
     const changeViewed = (direction: 'old' | 'new') => {
@@ -226,17 +256,18 @@ export function Gallery() {
       <wired-dialog open onClick={(e) => { navigate('/card'); e.stopPropagation() }}>
         <Permalink />
         <div style={styles.focus}>
-          <div style={styles.title}>{viewedCard.content.title}</div>
-          <div style={styles.credit}>by {viewedCard.content.author}</div>
+          <div style={styles.title}>{displayCard?.content.title}</div>
+          <div style={styles.credit}>by {displayCard?.content.author}</div>
           <div style={styles.credit}>{localDate ? `${localDate}` : ''}</div>
           {
-            imageCache[viewedCard.id] ?
-            <img style={styles.image} src={imageCache[viewedCard.id]} /> :
-            <div style={styles.spinner} className='spin'>
-              <Icon name='loading'></Icon>
-            </div>
+            (() => {
+              const imgSrc = viewedCard.location === 'box' ? fullCardImage : imageCache[viewedCard.id];
+              return imgSrc
+                ? <img style={styles.image} src={imgSrc} />
+                : <div style={styles.spinner} className='spin'><Icon name='loading'></Icon></div>;
+            })()
           }
-          <div style={styles.description}>{viewedCard.content.description}</div>
+          <div style={styles.description}>{displayCard?.content.description}</div>
           {browse}
         </div>
       </wired-dialog>
