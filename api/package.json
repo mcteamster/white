@@ -17,7 +17,7 @@
     "@aws-sdk/client-cloudfront": "^3.0.0",
     "@aws-sdk/client-s3": "^3.0.0",
     "@aws-sdk/client-sqs": "^3.0.0",
-    "aws-cdk-lib": "^2.265.0",
+    "aws-cdk-lib": "^2.273.0",
     "constructs": "^10.0.0"
   }
 }
