@@ -644,7 +644,7 @@ mcp.registerTool(
       playerName: player_name ?? 'Player 0',
     });
     await connectSession(matchID, '0', playerCredentials, server, player_name ?? 'Player 0');
-    return text({ matchID, playerID: '0', credentials: playerCredentials, server, message: `Joined ${matchID} as player 0` });
+    return text({ matchID, playerID: '0', credentials: playerCredentials, server, join_url: `https://blankwhite.cards/${matchID}`, message: `Joined ${matchID} as player 0` });
   }
 );
 
