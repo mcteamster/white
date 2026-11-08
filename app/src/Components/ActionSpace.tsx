@@ -301,36 +301,36 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
       } else {
         mainButtonContent = <>
           <Icon name='play'></Icon>
-          PICK UP CARD
+          <span>PICK UP CARD</span>
         </>
       }
     } else if (G.cards.length == 0) {
       if (playerID == hostPlayerID) {
         mainButtonContent = <>
           <Icon name='load' />
-          Load Deck?
+          <span>Load Deck?</span>
         </>
       } else {
         mainButtonContent = <>
           <Icon name='create' />
-          Create Cards
+          <span>Create Cards</span>
         </>
       }
     } else if (pile.length + discard.length > 0) {
       mainButtonContent = <>
         <Icon name='discard' />
-        Reset Pile ({pile.length + discard.length})
+        <span key={`reset-${pile.length + discard.length}`}>Reset Pile ({pile.length + discard.length})</span>
       </>
     } else {
       if (playerID == hostPlayerID) {
         mainButtonContent = <>
           <Icon name='shuffle' />
-          Shuffle ALL ({G.cards.length})
+          <span key={`shuffle-${G.cards.length}`}>Shuffle ALL ({G.cards.length})</span>
         </>
       } else {
         mainButtonContent = <>
           <Icon name='create' />
-          Create Cards
+          <span>Create Cards</span>
         </>
       }
     }
@@ -371,12 +371,12 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
           setCanvasMode(newMode);
           setDrawMode(newMode);
         }} elevation={2}><Icon name='wand' />Erase</wired-card>
-        <wired-card style={{ ...styles.button }} onClick={() => { setBrushSize(cycleBrushSize()); }} elevation={2}><Icon name='weight' />{brushSize}</wired-card>
+        <wired-card style={{ ...styles.button }} onClick={() => { setBrushSize(cycleBrushSize()); }} elevation={2}><Icon name='weight' /><span key={brushSize}>{brushSize}</span></wired-card>
         <wired-card style={{ ...styles.button }} onClick={() => {
           const newMode = drawMode === MODE_DOTS ? MODE_DRAW : MODE_DOTS;
           setCanvasMode(newMode);
           setDrawMode(newMode);
-        }} elevation={2}><Icon name={drawMode === MODE_DOTS ? 'stipple' : 'solid'} />{drawMode === MODE_DOTS ? 'Dots' : 'Solid'}</wired-card>
+        }} elevation={2}><Icon name={drawMode === MODE_DOTS ? 'stipple' : 'solid'} /><span key={drawMode === MODE_DOTS ? 'dots' : 'solid'}>{drawMode === MODE_DOTS ? 'Dots' : 'Solid'}</span></wired-card>
       </div>
     );
     toolset = <>
@@ -479,7 +479,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
   return (
     <>
       {topRow}
-      <div style={styles.toolbar} >
+      <div key={mode} style={styles.toolbar} >
         {toolset}
       </div>
     </>

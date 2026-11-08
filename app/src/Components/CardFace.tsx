@@ -156,12 +156,12 @@ export function CardFace(card: Card) {
           {<img style={styles.image} src={image || BLANK_IMAGE}></img>}
           <div style={styles.title}>{card.content.title}</div>
           <div style={styles.description}>{card.content.description}</div>
-          <div style={styles.credit}>{card.content.author && `${card.content.author}`}{card.content.date && ` - ${localDate}`}</div>
+          <div style={styles.credit}>{card.content.author && <span key={card.content.author}>{card.content.author}</span>}{card.content.date && <span key={card.content.date}>{` - ${localDate}`}</span>}</div>
         </>
       }
 
       display(
-        <wired-card style={{ ...baseStyles.card, ...styles.card }} elevation={1}>
+        <wired-card key={card.id === 0 ? 'placeholder' : 'card'} style={{ ...baseStyles.card, ...styles.card }} elevation={1}>
           {content}
         </wired-card>
       );

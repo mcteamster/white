@@ -121,7 +121,7 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
         </wired-card>
         <wired-card elevation={2} style={styles.button} onClick={handleBrushSizeToggle}>
           <Icon name="weight" />
-          {brushSize}
+          <span key={brushSize}>{brushSize}</span>
         </wired-card>
         <wired-card
           elevation={2}
@@ -129,7 +129,7 @@ function DrawingControls({ onBack, onUndo, onRedo, onCancel }: {
           onClick={handleStippleToggle}
         >
           <Icon name={drawMode === MODE_DOTS ? 'stipple' : 'solid'} />
-          {drawMode === MODE_DOTS ? 'Dots' : 'Solid'}
+          <span key={drawMode === MODE_DOTS ? 'dots' : 'solid'}>{drawMode === MODE_DOTS ? 'Dots' : 'Solid'}</span>
         </wired-card>
       </div>
       <div style={styles.bottomRow}>
@@ -781,7 +781,7 @@ export function DeckEditor() {
             onClick={() => { setEditingCard(undefined); setShowCardCreator(true); }}
             elevation={2}
           >
-            <Icon name="create" /> {!compact && 'Create'}
+            <Icon name="create" /> {!compact && <span>Create</span>}
           </wired-card>
 
           {/* Edit - enabled when exactly 1 card selected */}
@@ -790,7 +790,7 @@ export function DeckEditor() {
             onClick={selectedCards.size === 1 ? handleEditCard : undefined}
             elevation={2}
           >
-            <Icon name="wand" /> {!compact && 'Edit'}
+            <Icon name="wand" /> {!compact && <span>Edit</span>}
           </wired-card>
 
           {/* Delete - enabled when any cards are selected */}
@@ -799,7 +799,7 @@ export function DeckEditor() {
             onClick={selectedCards.size > 0 ? () => setModalState('deleteConfirm') : undefined}
             elevation={2}
           >
-            <Icon name="discard" /> {!compact && 'Delete'}
+            <Icon name="discard" /> {!compact && <span>Delete</span>}
           </wired-card>
 
           {/* Hide/Show - enabled when cards are selected */}
@@ -808,7 +808,7 @@ export function DeckEditor() {
             onClick={selectedCards.size > 0 ? (Array.from(selectedCards).every(id => deck.cards.find((card: Card) => card.id === id)?.location === 'box') ? handleShowCards : handleHideCards) : undefined} 
             elevation={2}
           >
-            <Icon name={selectedCards.size > 0 && Array.from(selectedCards).every(id => deck.cards.find((card: Card) => card.id === id)?.location === 'box') ? "show" : "hide"} /> {!compact && (selectedCards.size > 0 && Array.from(selectedCards).every(id => deck.cards.find((card: Card) => card.id === id)?.location === 'box') ? 'Show' : 'Hide')}
+            <Icon name={selectedCards.size > 0 && Array.from(selectedCards).every(id => deck.cards.find((card: Card) => card.id === id)?.location === 'box') ? "show" : "hide"} /> {!compact && <span key={selectedCards.size > 0 && Array.from(selectedCards).every(id => deck.cards.find((card: Card) => card.id === id)?.location === 'box') ? 'show' : 'hide'}>{selectedCards.size > 0 && Array.from(selectedCards).every(id => deck.cards.find((card: Card) => card.id === id)?.location === 'box') ? 'Show' : 'Hide'}</span>}
           </wired-card>
           
           {/* Clear/Select All - toggles based on selection state */}
@@ -817,7 +817,7 @@ export function DeckEditor() {
             onClick={filteredCards.length > 0 ? (selectedCards.size > 0 ? clearSelection : () => setSelectedCards(new Set(filteredCards.map(c => c.id)))) : undefined} 
             elevation={2}
           >
-            <Icon name={selectedCards.size > 0 ? "exit" : "checklist"} /> {!compact && (selectedCards.size > 0 ? `Clear (${selectedCards.size})` : 'All')}
+            <Icon name={selectedCards.size > 0 ? "exit" : "checklist"} /> {!compact && <span key={selectedCards.size}>{selectedCards.size > 0 ? `Clear (${selectedCards.size})` : 'All'}</span>}
           </wired-card>
         </div>
 
