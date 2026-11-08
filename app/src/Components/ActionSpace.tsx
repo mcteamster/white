@@ -319,13 +319,13 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
     } else if (pile.length + discard.length > 0) {
       mainButtonContent = <>
         <Icon name='discard' />
-        <span>Reset Pile ({pile.length + discard.length})</span>
+        <span key={`reset-${pile.length + discard.length}`}>Reset Pile ({pile.length + discard.length})</span>
       </>
     } else {
       if (playerID == hostPlayerID) {
         mainButtonContent = <>
           <Icon name='shuffle' />
-          <span>Shuffle ALL ({G.cards.length})</span>
+          <span key={`shuffle-${G.cards.length}`}>Shuffle ALL ({G.cards.length})</span>
         </>
       } else {
         mainButtonContent = <>
