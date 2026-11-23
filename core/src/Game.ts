@@ -57,6 +57,9 @@ const moveCard: Move<GameState> = ({ G, ctx, playerID, player, gamelog, chat }: 
   const selectedCard = getCardById(G.cards, id);
   if (selectedCard) {
     const sourceLocation = selectedCard.location;
+    if (sourceLocation === 'box' && target !== 'box' && !player.isHost(playerID)) {
+      return INVALID_MOVE;
+    }
     if (['pile', 'discard', 'deck', 'box'].includes(target)) {
       selectedCard.location = target;
       selectedCard.owner = undefined;

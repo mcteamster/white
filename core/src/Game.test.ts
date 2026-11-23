@@ -120,6 +120,39 @@ function moveToPile(client: ReturnType<typeof makeClient>, cardId: number) {
   client.moves.moveCard(cardId, 'pile');
 }
 
+function makeClientWithBoxedCard(playerID: string) {
+  const client = makeClient(playerID, 2);
+  client.moves.submitCard({
+    id: 0,
+    content: { title: 'Boxed Card', description: 'desc', author: 'ghost' },
+    location: 'box',
+    owner: playerID,
+    timestamp: 123,
+  });
+  return { client, card: client.getState()!.G.cards[0] as Card };
+}
+
+describe('moveCard from box', () => {
+  test('rejects non-host moves out of box without changing the card', () => {
+    const { client, card } = makeClientWithBoxedCard('1');
+    const before = { ...client.getState()!.G.cards[0] };
+
+    for (const target of ['deck', 'pile', 'discard', 'hand', 'table']) {
+      client.moves.moveCard(card.id, target);
+      expect(client.getState()!.G.cards[0]).toEqual(before);
+    }
+  });
+
+  test('allows the host to restore a boxed card to deck', () => {
+    const { client, card } = makeClientWithBoxedCard('0');
+    client.moves.moveCard(card.id, 'deck');
+
+    const restoredCard = client.getState()!.G.cards[0];
+    expect(restoredCard.location).toBe('deck');
+    expect(restoredCard.owner).toBeUndefined();
+  });
+});
+
 // ── pickupCard ────────────────────────────────────────────────────────────────
 
 describe('pickupCard', () => {
