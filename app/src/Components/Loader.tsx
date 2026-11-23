@@ -1,29 +1,38 @@
-import { Properties } from "csstype";
+import type { Properties } from "csstype";
 import { externalLink, useWindowDimensions } from "../lib/hooks";
 import { sanitiseCard } from "../lib/data";
-import { useCallback, useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { Card, Rule, getCardsByLocation } from "@mcteamster/white-core";
 import { Icon } from "./Icons";
-import { BoardProps } from "@mcteamster/white-engine/react";
-import { GameState } from "@mcteamster/white-core";
+import type { BoardProps } from "@mcteamster/white-engine/react";
+import type { GameState } from "@mcteamster/white-core";
 import { submitGlobalCard } from "../lib/clients";
 import { BLANK_IMAGE, compressImage, decompressImage, resizeImage } from "../lib/images";
 import { ImageCacheType } from "../lib/contexts";
+import { usePlayerData } from "../lib/hooks";
 
 interface LoaderProps extends BoardProps<GameState> {
   mode: string;
   setMode: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
+export function Loader({ G, moves, isMultiplayer, mode, playerID, plugins, setMode }: LoaderProps) {
   const { width, height } = useWindowDimensions();
   const [globalSubmit, setGlobalSubmit] = useState(false); // Global Submission Mode - Only one card can be uploaded
   const [loaded, setLoaded] = useState([] as Card[]); // List of cards staged for submitting
   const [loadedRules, setLoadedRules] = useState<Omit<Rule, 'playerID' | 'playerName'>[]>([]); // Rules parsed from deck file
   const [progress, setProgress] = useState([-1, 0]); // Progress index of currently processing load: [currentIndex, endIndex]. -1 means no processing
   const [compressImages, setCompressImages] = useState(true); // Whether to compress PNG images on load
+  const [restoreView, setRestoreView] = useState(false);
+  const boxCards = useMemo(() => getCardsByLocation(G.cards, 'box'), [G.cards]);
+  const { hostPlayerID } = usePlayerData(plugins);
+  const canRestore = isMultiplayer && playerID === hostPlayerID;
   const isCustomServer = !!localStorage.getItem('customServerUrl');
   const fileSelector = document.getElementById('fileselector') as HTMLInputElement;
+
+  useEffect(() => {
+    if (mode !== 'menu-tools-loader') setRestoreView(false);
+  }, [mode]);
 
   // Cache All Images from Imported Deck
   const [imageCache, dispatchImage] = useReducer((cache: ImageCacheType, image: { id: number, value: string }) => {
@@ -305,6 +314,76 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
       compressionWarning: {
         color: 'red',
       },
+      restoreAction: {
+        border: 'none',
+        background: 'transparent',
+        color: '#666',
+        textDecoration: 'underline',
+        fontSize: '0.9em',
+        cursor: 'pointer',
+        padding: '0.5em',
+      },
+      restoreView: {
+        width: '100%',
+        minHeight: 0,
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '0.5em',
+      },
+      restoreBack: {
+        height: '2.5em',
+        minWidth: '6em',
+        padding: '0 0.75em',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#eee',
+        borderRadius: '0.75em',
+        cursor: 'pointer',
+      },
+      restoreGrid: {
+        width: '100%',
+        maxHeight: '50vh',
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        gap: '0.5em',
+        padding: '0.25em',
+      },
+      restoreCard: {
+        width: '10em',
+        padding: '0.5em',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '0.25em',
+        backgroundColor: '#eee',
+        borderRadius: '0.5em',
+      },
+      restoreCardTitle: {
+        fontSize: '0.9em',
+        fontWeight: 'bold',
+        textAlign: 'center',
+        wordBreak: 'break-word',
+      },
+      restoreButton: {
+        height: '2em',
+        width: '6em',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#ddd',
+        borderRadius: '0.5em',
+        cursor: 'pointer',
+      },
+      restoreEmpty: {
+        color: 'grey',
+        fontStyle: 'italic',
+      },
     }
 
       // Submit loaded cards to server
@@ -316,8 +395,28 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
       <wired-dialog open={mode == 'menu-tools-loader' ? true : undefined} onClick={(e) => { setMode('menu-tools'); e.stopPropagation() }}>
         <div style={styles.loader} onClick={(e) => e.stopPropagation()}>
           <div style={styles.title}>
-            Deck Loader
+            {restoreView ? 'Restore Hidden Cards' : 'Deck Loader'}
           </div>
+          {restoreView ? (
+            <div style={styles.restoreView}>
+              <wired-card style={styles.restoreBack} onClick={() => setRestoreView(false)}>
+                <Icon name='back' />Back
+              </wired-card>
+              <div style={styles.restoreGrid}>
+                {boxCards.length === 0
+                  ? <div style={styles.restoreEmpty}>No hidden cards to restore.</div>
+                  : boxCards.map((card) => (
+                    <wired-card key={card.id} style={styles.restoreCard} elevation={1}>
+                      <div style={styles.restoreCardTitle}>{card.content.title}</div>
+                      <wired-card style={styles.restoreButton} onClick={() => moves.moveCard(card.id, 'deck')} elevation={1}>
+                        <Icon name='shuffle' />Yoink
+                      </wired-card>
+                    </wired-card>
+                  ))
+                }
+              </div>
+            </div>
+          ) : <>
           <div>
           {
             loaded.length > 0 ?
@@ -422,6 +521,15 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
                     )}
                   </div>
                 )}
+                {canRestore && boxCards.length > 0 && (
+                  <button
+                    type="button"
+                    style={styles.restoreAction}
+                    onClick={() => setRestoreView(true)}
+                  >
+                    Restore Hidden Cards
+                  </button>
+                )}
               </div>
           } 
           </div>
@@ -451,10 +559,11 @@ export function Loader({ moves, isMultiplayer, mode, setMode }: LoaderProps) {
               <Icon name='done' />{(progress[0] == -1) ? 'Upload' : 'Uploading'}
             </wired-card>
           </div>
+          </>}
         </div>
       </wired-dialog>
     )
-  }, [compressImages, globalSubmit, height, imageCache, isMultiplayer, leaveLoader, loaded, mode, progress, setMode, uploadDeck, width])
+  }, [boxCards, canRestore, compressImages, globalSubmit, height, imageCache, isMultiplayer, leaveLoader, loaded, mode, progress, restoreView, setMode, uploadDeck, width])
 
   return (displayLoader)
 }

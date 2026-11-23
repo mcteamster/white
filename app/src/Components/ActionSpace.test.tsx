@@ -37,4 +37,18 @@ describe('translated toolbar counts', () => {
     rerender(<MemoryRouter><Toolbar {...props} G={{ cards: [card(1, 'pile'), card(2, 'discard')] }} /></MemoryRouter>);
     expect(screen.getByText('Reset Pile (2)')).toBeTruthy();
   });
+
+  it('lays out Tools controls in rows of at most four and omits the Box control', () => {
+    const { container } = render(<MemoryRouter><Toolbar
+      {...props}
+      mode="menu-tools"
+      plugins={{ player: { data: { connectedPlayers: ['0'], kickedPlayers: [] } } }}
+      G={{ cards: [card(1, 'box'), card(2, 'discard')] }}
+    /></MemoryRouter>);
+
+    const controls = container.querySelector('div[style*="grid-template-columns"]');
+    expect(controls?.getAttribute('style')).toContain('grid-template-columns: repeat(4, 3.5em)');
+    expect(controls?.children).toHaveLength(5);
+    expect(screen.queryByText(/Box \(/)).toBeNull();
+  });
 });
