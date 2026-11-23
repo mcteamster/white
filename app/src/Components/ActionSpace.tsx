@@ -429,8 +429,8 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
       }
       <wired-card style={{
         ...styles.button,
-        color: ((playerID == '0') ? undefined : 'grey'), // Only the host can load cards
-      }} onClick={() => { if (playerID == '0') { setMode('menu-tools-loader') } }} elevation={2}>
+        color: (playerID === hostPlayerID ? undefined : 'grey'), // Only the host can load cards
+      }} onClick={() => { if (playerID === hostPlayerID) { setMode('menu-tools-loader') } }} elevation={2}>
         {
           isMultiplayer ?
           <>

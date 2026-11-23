@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Toolbar } from './ActionSpace';
@@ -36,6 +36,21 @@ describe('translated toolbar counts', () => {
     translateTextNodes(label);
     rerender(<MemoryRouter><Toolbar {...props} G={{ cards: [card(1, 'pile'), card(2, 'discard')] }} /></MemoryRouter>);
     expect(screen.getByText('Reset Pile (2)')).toBeTruthy();
+  });
+
+  it('lets the elected host open the Loader after player 0 is kicked', () => {
+    const setMode = vi.fn();
+    render(<MemoryRouter><Toolbar
+      {...props}
+      playerID="1"
+      mode="menu-tools"
+      setMode={setMode}
+      plugins={{ player: { data: { connectedPlayers: ['0', '1'], kickedPlayers: ['0'] } } }}
+      G={{ cards: [card(1, 'box')] }}
+    /></MemoryRouter>);
+
+    fireEvent.click(screen.getByText('Load').closest('wired-card')!);
+    expect(setMode).toHaveBeenCalledWith('menu-tools-loader');
   });
 
   it('lays out Tools controls in rows of at most four and omits the Box control', () => {
