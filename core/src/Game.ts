@@ -91,12 +91,13 @@ const moveCard: Move<GameState> = ({ G, ctx, playerID, player, gamelog, chat }: 
   }
 }
 
-const claimCard: Move<GameState> = ({ G, ctx, playerID, player, gamelog, chat }: any, id) => {
+const claimCard: Move<GameState> = ({ G, ctx, playerID, player, gamelog, chat }: any, id, source = 'pile') => {
   if (player.isKicked(playerID)) return INVALID_MOVE;
+  if (source !== 'pile' && !(source === 'discard' && ctx.numPlayers > 1)) return INVALID_MOVE;
   const selectedCard = getCardById(G.cards, id);
   if (selectedCard) {
-    if (selectedCard.location == 'pile') {
-      // Cards in the pile have no owner and can be "claimed" by anyone into their hand
+    if (selectedCard.location === source) {
+      // Shared pile cards become owned by the player who claims them.
       selectedCard.owner = playerID;
       selectedCard.timestamp = Number(Date.now());
       selectedCard.location = 'hand';

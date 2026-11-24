@@ -240,6 +240,21 @@ describe('claimCard', () => {
     expect(claimed.owner).toBe('0');
   });
 
+  test('lets a non-host recover a discard and rejects later claims', () => {
+    const client = makeClient('0', 2);
+    const card = submitAndGetCard(client);
+    client.moves.moveCard(card.id, 'discard');
+
+    client.updatePlayerID('1');
+    client.moves.claimCard(card.id, 'discard');
+    const claimed = client.getState()!.G.cards.find((entry: Card) => entry.id === card.id);
+    expect(claimed).toMatchObject({ location: 'hand', owner: '1' });
+
+    client.updatePlayerID('0');
+    client.moves.claimCard(card.id, 'discard');
+    expect(client.getState()!.G.cards.find((entry: Card) => entry.id === card.id)).toEqual(claimed);
+  });
+
   test('returns INVALID_MOVE for a card not in the pile', () => {
     const client = makeClient();
     const card = submitAndGetCard(client);

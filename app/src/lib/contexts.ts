@@ -27,6 +27,7 @@ export const AuthContext = createContext<AuthContextType>({ setAuth: () => {} })
 // Focus
 export interface FocusType {
   id?: number,
+  zone?: 'discard',
 }
 
 export interface FocusContextType {

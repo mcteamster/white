@@ -142,7 +142,7 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
 
     // Determine current zone from focused card
     let currentZoneIndex = -1;
-    if (focus?.id) {
+    if (focus?.id && focus.zone !== 'discard') {
       const focusedCard = props.G.cards.find(c => c.id === focus.id);
       if (focusedCard) {
         currentZoneIndex = zones.findIndex(z => z.name === focusedCard.location);
@@ -158,7 +158,7 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
       const newestCard = targetZone.name === 'pile' ? targetZone.cards[0] : targetZone.cards[targetZone.cards.length - 1];
       setFocus({ id: newestCard.id });
     }
-  }, [hotkeys.tab, hotkeys.shiftTab, focus?.id, props.G.cards, props.playerID, setFocus]);
+  }, [hotkeys.tab, hotkeys.shiftTab, focus?.id, focus.zone, props.G.cards, props.playerID, setFocus]);
 
   // Helper to read local player's score
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
