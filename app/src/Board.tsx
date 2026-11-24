@@ -125,9 +125,10 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
     if (!hotkeys.tab) return;
 
     // Determine zone order: Hand → Table → Pile
-    const myHand = getCardsByLocation(getCardsByOwner(props.G.cards, props.playerID || '0'), 'hand')
+    const localPlayerID = props.playerID || '0';
+    const myHand = getCardsByLocation(getCardsByOwner(props.G.cards, localPlayerID), 'hand')
       .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-    const myTable = getCardsByLocation(getCardsByOwner(props.G.cards, props.playerID || '0'), 'table')
+    const myTable = getCardsByLocation(getCardsByOwner(props.G.cards, localPlayerID), 'table')
       .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
     const pile = getCardsByLocation(props.G.cards, 'pile')
       .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // Newest to Oldest
@@ -142,16 +143,22 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
 
     // Determine current zone from focused card
     let currentZoneIndex = -1;
-    if (focus?.id && focus.zone !== 'discard') {
+    if (focus?.id) {
       const focusedCard = props.G.cards.find(c => c.id === focus.id);
       if (focusedCard) {
-        currentZoneIndex = zones.findIndex(z => z.name === focusedCard.location);
+        const isLocalHandOrTable = focusedCard.owner === localPlayerID
+          && (focusedCard.location === 'hand' || focusedCard.location === 'table');
+        if (isLocalHandOrTable || focusedCard.location === 'pile') {
+          currentZoneIndex = zones.findIndex(z => z.name === focusedCard.location);
+        }
       }
     }
 
     // Shift+Tab cycles backwards, Tab cycles forward
     const direction = hotkeys.shiftTab ? -1 : 1;
-    const nextIndex = (currentZoneIndex + direction + zones.length) % zones.length;
+    const nextIndex = currentZoneIndex < 0
+      ? (direction === -1 ? zones.length - 1 : 0)
+      : (currentZoneIndex + direction + zones.length) % zones.length;
     const targetZone = zones[nextIndex];
     if (targetZone.cards.length > 0) {
       // Newest card: last item for hand/table (sorted oldest-first), first item for pile (sorted newest-first)
