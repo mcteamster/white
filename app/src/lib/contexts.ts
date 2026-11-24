@@ -57,6 +57,7 @@ export interface HotkeysType {
   f?: boolean | undefined,
   r?: boolean | undefined,
   x?: boolean | undefined,
+  v?: boolean,
   b?: boolean | undefined,
   g?: boolean | undefined,
   c?: boolean | undefined,

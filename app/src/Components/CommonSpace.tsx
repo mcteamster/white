@@ -7,7 +7,7 @@ import { getCardsByLocation, getCardsByOwner } from '@mcteamster/white-core';
 import { Icon } from './Icons';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { useWindowDimensions, usePlayerData } from '../lib/hooks.ts';
-import { FocusContext } from '../lib/contexts.ts';
+import { FocusContext, HotkeysContext } from '../lib/contexts.ts';
 import { discordSdk } from '../lib/discord.ts';
 import { Likes } from './Focus.tsx';
 import { Calculator, formatScore } from './Calculator.tsx';
@@ -254,8 +254,17 @@ export function Header(props: HeaderProps) {
   const { hostPlayerID: headerHostID } = usePlayerData(props.plugins);
 
   const { setFocus } = useContext(FocusContext);
+  const { hotkeys } = useContext(HotkeysContext);
   const discard = getCardsByLocation(props.G.cards, 'discard')
     .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))[0];
+
+  const viewDiscards = useCallback(() => {
+    if (props.isMultiplayer && discard) setFocus({ id: discard.id, zone: 'discard' });
+  }, [props.isMultiplayer, discard, setFocus]);
+
+  useEffect(() => {
+    if (hotkeys.v) viewDiscards();
+  }, [hotkeys.v, viewDiscards]);
 
   const playerName = props.isMultiplayer && props.matchData?.find((player) => player.id == Number(props.playerID))?.name?.toUpperCase() || ""
   const myScore = getPlayerScore(props.plugins, props.playerID || '0');
@@ -311,9 +320,9 @@ export function Header(props: HeaderProps) {
         <div style={{ ...styles.item, ...styles.match }} onClick={ () => setShowShare(true) }><Icon name='copy' />&nbsp;{props.matchID !== 'default' ? `${props.matchID}` : "Blank White Cards"}</div>
         <div style={styles.centerActions}>
           {props.isMultiplayer && discard && (
-            <button type="button" aria-label="Discard" title="Discard"
+            <button type="button" aria-label="View Discards" title="View Discards (V)"
               style={styles.centerAction}
-              onClick={() => setFocus({ id: discard.id, zone: 'discard' })}>
+              onClick={viewDiscards}>
               <Icon name='discard' />
             </button>
           )}
