@@ -5,6 +5,8 @@ import { FocusContext, HotkeysContext, ImageCacheContext, LoadingContext } from 
 import { Focus } from './Focus';
 import { Header } from './CommonSpace';
 
+vi.mock('../lib/clients', () => ({ likeGlobalCard: vi.fn() }));
+
 const discardCard = (id: number, timestamp: number) => ({
   id,
   location: 'discard',
