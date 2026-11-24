@@ -5,65 +5,100 @@ import { usePlayerData, useWindowDimensions } from './hooks';
 // ── usePlayerData ─────────────────────────────────────────────────────────────
 
 describe('usePlayerData', () => {
-  function pluginsFor(connectedPlayers: string[], kickedPlayers: string[] = []) {
+  function pluginsFor(kickedPlayers: string[] = [], connectedPlayers = ['0']) {
     return { player: { data: { connectedPlayers, kickedPlayers } } };
   }
 
-  it('returns hostPlayerID as the lowest-numbered connected non-kicked player', () => {
+  function matchDataFor(connectedPlayers: string[], allPlayers = connectedPlayers) {
+    return allPlayers.map((id) => ({
+      id: Number(id),
+      name: `Player ${id}`,
+      isConnected: connectedPlayers.includes(id),
+    }));
+  }
+
+  it('returns the lowest-numbered connected non-kicked player', () => {
     const { result } = renderHook(() =>
-      usePlayerData(pluginsFor(['2', '0', '1']))
+      usePlayerData(pluginsFor(), matchDataFor(['2', '0', '1']))
     );
     expect(result.current.hostPlayerID).toBe('0');
   });
 
   it('skips kicked players when computing hostPlayerID', () => {
     const { result } = renderHook(() =>
-      usePlayerData(pluginsFor(['0', '1', '2'], ['0']))
+      usePlayerData(pluginsFor(['0']), matchDataFor(['0', '1', '2']))
     );
     expect(result.current.hostPlayerID).toBe('1');
   });
 
-  it('returns all connected players', () => {
+  it('returns connected players from server match data', () => {
     const { result } = renderHook(() =>
-      usePlayerData(pluginsFor(['0', '1', '2']))
+      usePlayerData(pluginsFor([], ['0']), matchDataFor(['0', '2'], ['0', '1', '2']))
     );
-    expect(result.current.connectedPlayers).toEqual(['0', '1', '2']);
+    expect(result.current.connectedPlayers).toEqual(['0', '2']);
   });
 
-  it('returns kicked players list', () => {
+  it('ignores stale plugin connection data', () => {
     const { result } = renderHook(() =>
-      usePlayerData(pluginsFor(['0', '1', '2'], ['1']))
+      usePlayerData(pluginsFor([], ['0']), matchDataFor(['1'], ['0', '1']))
+    );
+    expect(result.current.hostPlayerID).toBe('1');
+    expect(result.current.connectedPlayers).toEqual(['1']);
+  });
+
+  it('does not elect a joined but disconnected player', () => {
+    const { result } = renderHook(() =>
+      usePlayerData(pluginsFor(), matchDataFor([], ['0']))
+    );
+    expect(result.current.hostPlayerID).toBe('0');
+  });
+
+  it('returns kicked players from plugin state', () => {
+    const { result } = renderHook(() =>
+      usePlayerData(pluginsFor(['1']), matchDataFor(['0', '1']))
     );
     expect(result.current.kickedPlayers).toEqual(['1']);
   });
 
   it('defaults to hostPlayerID "0" when no connected players', () => {
     const { result } = renderHook(() =>
-      usePlayerData(pluginsFor([]))
+      usePlayerData(pluginsFor(), [])
     );
     expect(result.current.hostPlayerID).toBe('0');
   });
 
   it('handles null/undefined plugins gracefully', () => {
-    const { result } = renderHook(() => usePlayerData(null));
+    const { result } = renderHook(() => usePlayerData(null, null));
     expect(result.current.hostPlayerID).toBe('0');
     expect(result.current.connectedPlayers).toEqual([]);
     expect(result.current.kickedPlayers).toEqual([]);
   });
 
-  it('returns sorted eligible players when all are connected', () => {
+  it('uses numeric ordering for player IDs above 9', () => {
     const { result } = renderHook(() =>
-      usePlayerData(pluginsFor(['3', '1', '2', '0']))
+      usePlayerData(pluginsFor(), matchDataFor(['10', '2', '1']))
     );
-    // eligible is sorted numerically; host is the first (lowest)
+    expect(result.current.hostPlayerID).toBe('1');
+  });
+
+  it('updates host election when players disconnect and reconnect', () => {
+    const { result, rerender } = renderHook(
+      ({ matchData }) => usePlayerData(pluginsFor(), matchData),
+      { initialProps: { matchData: matchDataFor(['0', '1']) } }
+    );
+    expect(result.current.hostPlayerID).toBe('0');
+
+    rerender({ matchData: matchDataFor(['1'], ['0', '1']) });
+    expect(result.current.hostPlayerID).toBe('1');
+
+    rerender({ matchData: matchDataFor(['0', '1']) });
     expect(result.current.hostPlayerID).toBe('0');
   });
 
-  it('handles all players being kicked', () => {
+  it('falls back to player 0 when all connected players are kicked', () => {
     const { result } = renderHook(() =>
-      usePlayerData(pluginsFor(['0', '1'], ['0', '1']))
+      usePlayerData(pluginsFor(['0', '1']), matchDataFor(['0', '1']))
     );
-    // No eligible players → default '0'
     expect(result.current.hostPlayerID).toBe('0');
   });
 });

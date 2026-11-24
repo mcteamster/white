@@ -17,7 +17,7 @@ export function Console({ G, moves, playerID, playerName, plugins, matchData, op
   const messages: Message[] = (plugins as any)?.chat?.data?.messages ?? [];
   const rules: Rule[] = G?.rules ?? [];
   const dimensions = useWindowDimensions();
-  const { hostPlayerID } = usePlayerData(plugins);
+  const { hostPlayerID } = usePlayerData(plugins, matchData);
   const headerHeight = (discordSdk && dimensions.upright) ? '4.75em' : '2em';
   const [localOpen, setLocalOpen] = useState(false);
   const open = openProp ?? localOpen;

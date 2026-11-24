@@ -165,15 +165,7 @@ export function BlankWhiteCardsBoard(props: BoardProps<GameState>) {
   const myScore: number = (props.plugins as any)?.player?.data?.players?.[props.playerID || '0']?.score ?? 0;
   const playerName = props.matchData?.find(p => p.id === Number(props.playerID))?.name;
 
-  // Sync connected players to plugin state for derived host convention
-  const { kickedPlayers } = usePlayerData(props.plugins);
-  useEffect(() => {
-    if (!props.isMultiplayer || !props.matchData) return;
-    const connectedPlayers = props.matchData
-      .filter(p => p.isConnected && p.name)
-      .map(p => String(p.id));
-    (props as any).pluginDispatchers?.player?.({ action: 'syncPlayers', connectedPlayers });
-  }, [props.isMultiplayer, props.matchData]);
+  const { kickedPlayers } = usePlayerData(props.plugins, props.matchData);
 
   // Kick detection: if local player is kicked, disconnect and navigate away
   const [kicked, setKicked] = useState(false);

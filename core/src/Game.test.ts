@@ -3,9 +3,14 @@
  */
 
 import { describe, test, expect } from 'vitest';
+import * as ActionCreators from '../../engine/src/core/action-creators';
+import { Master } from '../../engine/src/master/master';
+import { InMemory } from '../../engine/src/server/db/inmemory';
+import { createMatch } from '../../engine/src/server/util';
 import { Client } from '../../engine/packages/client.ts';
 import { BlankWhiteCards } from './Game.ts';
 import type { Card } from './Cards.ts';
+import type { CredentialedActionShape } from '../../engine/src/types';
 
 // ── moveCard with target: 'box' ───────────────────────────────────────────────
 
@@ -159,6 +164,85 @@ describe('moveCard from box', () => {
     const restoredCard = client.getState()!.G.cards[0];
     expect(restoredCard.location).toBe('hand');
     expect(restoredCard.owner).toBe('0');
+  });
+});
+
+describe('server-owned host election and restore authorization', () => {
+  test('handles disconnect, reconnect, kicked-player exclusion, and boxed-card restores', async () => {
+    const matchID = 'server-owned-host';
+    const created = createMatch({
+      game: BlankWhiteCards,
+      numPlayers: 2,
+      setupData: undefined,
+      unlisted: false,
+    });
+    if ('setupDataError' in created) throw new Error(created.setupDataError);
+
+    const metadata = created.metadata;
+    metadata.players[0].name = 'Player 0';
+    metadata.players[1].name = 'Player 1';
+    const initialState = {
+      ...created.initialState,
+      G: {
+        ...created.initialState.G,
+        cards: [1, 2, 3].map((id) => ({
+          id,
+          content: { title: `Boxed ${id}`, description: 'Test card', author: 'test' },
+          location: 'box',
+          owner: undefined,
+          timestamp: id,
+        })),
+      },
+    };
+    const db = new InMemory();
+    db.createMatch(matchID, { initialState, metadata });
+    const master = new Master(BlankWhiteCards, db, {
+      send: () => {},
+      sendAll: () => {},
+    });
+
+    const update = async (playerID: string, action: CredentialedActionShape.Any) => {
+      const { state } = db.fetch(matchID, { state: true });
+      await master.onUpdate(action, state._stateID, matchID, playerID);
+      return db.fetch(matchID, { state: true }).state;
+    };
+    const move = (playerID: string, type: string, ...args: unknown[]) =>
+      ActionCreators.makeMove(type, args, playerID);
+
+    await master.onConnectionChange(matchID, '0', undefined, true);
+    await master.onConnectionChange(matchID, '1', undefined, true);
+
+    let state = await update(
+      '1',
+      ActionCreators.plugin('player', {
+        action: 'syncPlayers',
+        connectedPlayers: ['1'],
+      }, '1')
+    );
+    expect(state.plugins.player.data.connectedPlayers).toEqual(['0', '1']);
+
+    state = await update('1', move('1', 'moveCard', 1, 'deck'));
+    expect(state.G.cards.find((card) => card.id === 1)?.location).toBe('box');
+
+    await master.onConnectionChange(matchID, '0', undefined, false);
+    state = await update('1', move('1', 'moveCard', 1, 'deck'));
+    expect(state.G.cards.find((card) => card.id === 1)?.location).toBe('deck');
+
+    await master.onConnectionChange(matchID, '0', undefined, true);
+    state = await update('0', move('0', 'moveCard', 2, 'deck'));
+    expect(state.G.cards.find((card) => card.id === 2)?.location).toBe('deck');
+
+    await master.onConnectionChange(matchID, '0', undefined, false);
+    state = await update('1', move('1', 'forceLeave', '0', 'Player 0'));
+    expect(state.plugins.player.data.kickedPlayers).toContain('0');
+
+    await master.onConnectionChange(matchID, '0', undefined, true);
+    state = await update('0', move('0', 'moveCard', 3, 'deck'));
+    expect(state.G.cards.find((card) => card.id === 3)?.location).toBe('box');
+
+    state = await update('1', move('1', 'moveCard', 3, 'deck'));
+    expect(state.G.cards.find((card) => card.id === 3)?.location).toBe('deck');
+    expect(state.plugins.player.data.connectedPlayers).toEqual(['0', '1']);
   });
 });
 

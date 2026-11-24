@@ -28,7 +28,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
   const { setAuth } = useContext(AuthContext);
   const { loading, setLoading } = useContext(LoadingContext);
   const dimensions = useWindowDimensions();
-  const { hostPlayerID } = usePlayerData(plugins);
+  const { hostPlayerID } = usePlayerData(plugins, matchData);
   const headerHeight = (discordSdk && dimensions.upright) ? '4.75em' : '2em';
   const [submitStatus, setSubmitStatus] = useState('Submit');
   const [drawMode, setDrawMode] = useState<string>(MODE_DRAW);
@@ -444,8 +444,8 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
       <wired-card style={{
         ...styles.button,
         width: '3em',
-        color: ((playerID == '0' && G.cards.length > 0) ? undefined : 'grey') // Only the host can reset the game
-      }} onClick={() => { if (playerID == '0' && G.cards.length > 0) { setMode('menu-tools-reset') } }} elevation={2}><Icon name='shuffle' />Reset</wired-card>
+        color: ((playerID === hostPlayerID && G.cards.length > 0) ? undefined : 'grey') // Only the host can reset the game
+      }} onClick={() => { if (playerID === hostPlayerID && G.cards.length > 0) { setMode('menu-tools-reset') } }} elevation={2}><Icon name='shuffle' />Reset</wired-card>
     </>
   } else if (mode === 'menu-tools-reset') {
     toolset = <>

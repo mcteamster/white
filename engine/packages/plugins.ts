@@ -6,8 +6,8 @@
  * https://opensource.org/licenses/MIT.
  */
 
-import PluginPlayer from '../src/plugins/plugin-player';
+import PluginPlayer, { getHostPlayerID } from '../src/plugins/plugin-player';
 import type { PlayerPlugin } from '../src/plugins/plugin-player';
 
-export { PluginPlayer };
+export { PluginPlayer, getHostPlayerID };
 export type { PlayerPlugin };

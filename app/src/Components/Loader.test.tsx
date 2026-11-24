@@ -24,12 +24,19 @@ const card = (id: number, title: string): TestCard => ({
   content: { title, description: 'Test card' },
 });
 
-const loaderProps = (cards: TestCard[], playerID = '0', moveCard = vi.fn(), shuffleCards = vi.fn()): LoaderTestProps => ({
+const loaderProps = (
+  cards: TestCard[],
+  playerID = '0',
+  moveCard = vi.fn(),
+  shuffleCards = vi.fn(),
+  matchData = [{ id: 0, name: 'Player 0', isConnected: true }]
+): LoaderTestProps => ({
   G: { cards },
   playerID,
   isMultiplayer: true,
   mode: 'menu-tools-loader',
   moves: { moveCard, shuffleCards, loadCards: vi.fn() },
+  matchData,
   plugins: { player: { data: { connectedPlayers: ['0'], kickedPlayers: [] } } },
   setMode: vi.fn(),
 } as unknown as LoaderTestProps);
@@ -57,6 +64,18 @@ describe('Deck Loader hidden-card restoration', () => {
     expect(restoreAction.style.textAlign).toBe(loadChoiceCard.style.textAlign);
     expect(restoreAction.style.backgroundColor).toBe(loadChoiceCard.style.backgroundColor);
     expect(restoreAction.textContent).toContain('Restore Hidden Cards');
+  });
+
+  it('exposes restoration to the server-elected host after a handoff', async () => {
+    render(<Loader {...loaderProps(
+      [card(1, 'Hidden card')],
+      '1',
+      vi.fn(),
+      vi.fn(),
+      [{ id: 1, name: 'Player 1', isConnected: true }]
+    )} />);
+
+    expect(await screen.findByRole('button', { name: 'Restore Hidden Cards' })).toBeTruthy();
   });
 
   it('does not expose restoration to non-hosts or when the box is empty', async () => {

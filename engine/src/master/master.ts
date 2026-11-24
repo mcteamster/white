@@ -196,6 +196,26 @@ export class Master {
       return;
     }
 
+    const playerPlugin = state.plugins?.player;
+    if (playerPlugin) {
+      const connectedPlayers = Object.values(metadata?.players ?? {})
+        .filter(({ name, isConnected }) => Boolean(name && isConnected))
+        .map(({ id }) => String(id));
+      state = {
+        ...state,
+        plugins: {
+          ...state.plugins,
+          player: {
+            ...playerPlugin,
+            data: {
+              ...(playerPlugin.data ?? {}),
+              connectedPlayers,
+            },
+          },
+        },
+      };
+    }
+
     const reducer = CreateGameReducer({
       game: this.game,
     });

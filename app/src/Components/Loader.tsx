@@ -75,7 +75,7 @@ interface LoaderProps extends BoardProps<GameState> {
   setMode: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export function Loader({ G, moves, isMultiplayer, mode, playerID, plugins, setMode }: LoaderProps) {
+export function Loader({ G, moves, isMultiplayer, mode, playerID, plugins, matchData, setMode }: LoaderProps) {
   const { width, height } = useWindowDimensions();
   const [globalSubmit, setGlobalSubmit] = useState(false); // Global Submission Mode - Only one card can be uploaded
   const [loaded, setLoaded] = useState([] as Card[]); // List of cards staged for submitting
@@ -89,7 +89,7 @@ export function Loader({ G, moves, isMultiplayer, mode, playerID, plugins, setMo
   const [restoreImages, setRestoreImages] = useState<Record<number, string>>({});
   const boxCards = useMemo(() => getCardsByLocation(G.cards, 'box'), [G.cards]);
   const selectedBoxCards = useMemo(() => boxCards.filter((card) => selectedBoxCardIDs.has(card.id)), [boxCards, selectedBoxCardIDs]);
-  const { hostPlayerID } = usePlayerData(plugins);
+  const { hostPlayerID } = usePlayerData(plugins, matchData);
   const canRestore = isMultiplayer && playerID != null && playerID === hostPlayerID;
   const showRestoreView = canRestore && restoreView;
   const restoreSelectedCards = useCallback((target: 'hand' | 'deck') => {

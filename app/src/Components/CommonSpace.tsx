@@ -178,7 +178,7 @@ export function Players(props: PlayersProps) {
     }
   }
 
-  const { hostPlayerID, kickedPlayers } = usePlayerData(props.plugins);
+  const { hostPlayerID, kickedPlayers } = usePlayerData(props.plugins, props.matchData);
   const isHost = props.playerID === hostPlayerID;
 
   const playerAvatars = props.matchData ? props.matchData.map((player, i) => {
@@ -251,7 +251,7 @@ export function Header(props: HeaderProps) {
   const [showShare, setShowShare] = useState(false);
   const [editingMyScore, setEditingMyScore] = useState(false);
   const dimensions = useWindowDimensions();
-  const { hostPlayerID: headerHostID } = usePlayerData(props.plugins);
+  const { hostPlayerID: headerHostID } = usePlayerData(props.plugins, props.matchData);
 
   const { setFocus } = useContext(FocusContext);
   const { hotkeys } = useContext(HotkeysContext);
