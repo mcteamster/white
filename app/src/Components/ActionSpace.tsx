@@ -446,10 +446,6 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
         width: '3em',
         color: ((playerID == '0' && G.cards.length > 0) ? undefined : 'grey') // Only the host can reset the game
       }} onClick={() => { if (playerID == '0' && G.cards.length > 0) { setMode('menu-tools-reset') } }} elevation={2}><Icon name='shuffle' />Reset</wired-card>
-      {isMultiplayer && <wired-card style={{
-        ...styles.button,
-        color: (discard.length > 0 ? undefined : 'grey'),
-      }} onClick={() => { setMode('menu-discard') }} elevation={2}><Icon name='discard' />Discard ({discard.length})</wired-card>}
     </>
   } else if (mode === 'menu-discard') {
     toolset = <>
@@ -470,18 +466,7 @@ export function Toolbar({ G, playerID, moves, isMultiplayer, matchData, matchID,
   return (
     <>
       {topRow}
-      <div key={mode} style={{
-        ...styles.toolbar,
-        ...(mode === 'menu-tools' ? {
-          height: 'auto',
-          minHeight: '7em',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 3.5em)',
-          gridAutoRows: '3.5em',
-          justifyContent: 'center',
-          alignContent: 'center',
-        } : {}),
-      }} >
+      <div key={mode} style={styles.toolbar}>
         {toolset}
       </div>
     </>
