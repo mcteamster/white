@@ -215,7 +215,7 @@ describe('server-owned host election and restore authorization', () => {
       ...created.initialState,
       G: {
         ...created.initialState.G,
-        cards: [1, 2, 3].map((id) => ({
+        cards: [1, 2, 3, 4].map((id) => ({
           id,
           content: { title: `Boxed ${id}`, description: 'Test card', author: 'test' },
           location: 'box',
@@ -273,6 +273,13 @@ describe('server-owned host election and restore authorization', () => {
     state = await update('1', move('1', 'moveCard', 3, 'deck'));
     expect(state.G.cards.find((card) => card.id === 3)?.location).toBe('deck');
     expect(state.plugins.player.data.connectedPlayers).toEqual(['0', '1']);
+
+    state = await update('1', move('1', 'moveCard', 4, 'hand'));
+    expect(state.G.cards.find((card) => card.id === 4)).toMatchObject({
+      location: 'hand',
+      owner: '1',
+      previousOwner: '1',
+    });
   });
 });
 

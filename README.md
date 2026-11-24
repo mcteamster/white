@@ -35,7 +35,7 @@ Other quality of life improvements include:
 - The Deck draws without replacement (can be reshuffled)
 - Improved RNG: card popularity no longer affects chance of appearance
 - Browse the main Pile's history (and general browsing UI)
-- A separate Discard Pile (hidden from view)
+- A multiplayer Discard pile that opens from the centered top-bar trash icon or V; browse cards and Yoink one into your hand
 - Card ownership: and the ability to transfer between locations
 
 Other noteworthy features:

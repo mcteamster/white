@@ -9,7 +9,7 @@ Player names are resolved client-side from `matchData` using `playerID`. Events 
 | Move | Message | Notes |
 |------|---------|-------|
 | `pickupCard` | `{name}` picked up a card | |
-| `claimCard` | `{name}` ← `"{title}"` | Title always shown (pile is public) |
+| `claimCard` | `{name}` ← `"{title}"` | Includes the claimed title (up to 30 characters) for Pile and Discard claims; the source zone is not recorded |
 | `moveCard` | `{name}` → `{dest}`: `"{title}"` | See below |
 | `submitCard` | `{name}` made a card | Name passed from client |
 | `shuffleCards` | `{name}` shuffled — `{n}` in deck | |
@@ -18,9 +18,11 @@ Player names are resolved client-side from `matchData` using `playerID`. Events 
 
 ## moveCard title visibility
 
-Title is shown if **either the source or destination** is a public location. Only `pile` and `table` are public — `discard`, `hand`, and `deck` are private.
+For `moveCard` events, the title is shown if either the source or destination is `pile` or `table`. `discard`, `hand`, and `deck` do not show the title by themselves.
 
 Note: all combinations are valid server-side. The UI restricts which moves are exposed, but the MCP or direct API calls can trigger any combination.
+
+This title visibility rule applies to `moveCard` events. `claimCard` events always include the claimed title, including when a card is Yoinked from Discard; the event does not distinguish Pile from Discard as its source.
 
 | → dest ↓ src | pile | table | hand | discard | deck |
 |--------------|:----:|:-----:|:----:|:-------:|:----:|
