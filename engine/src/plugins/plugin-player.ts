@@ -29,6 +29,16 @@ export interface PlayerAPI<PlayerState extends any = any> {
   kick(playerID: string): void;
 }
 
+export const getHostPlayerID = (
+  connectedPlayers: string[],
+  kickedPlayers: string[] = []
+): string => {
+  const eligible = connectedPlayers
+    .filter(id => !kickedPlayers.includes(id))
+    .sort((a, b) => Number(a) - Number(b));
+  return eligible.length > 0 ? eligible[0] : '0';
+};
+
 interface PluginPlayerOpts<PlayerState extends any = any> {
   setup?: (playerID: string) => PlayerState;
   playerView?: (
@@ -57,14 +67,6 @@ const PlayerPlugin = <PlayerState extends any = any>({
 > => ({
   name: 'player',
 
-  action: (data, payload) => {
-    const args = Array.isArray(payload.args) ? payload.args[0] : payload.args;
-    if (args?.action === 'syncPlayers' && Array.isArray(args.connectedPlayers)) {
-      return { ...data, connectedPlayers: args.connectedPlayers };
-    }
-    return data;
-  },
-
   flush: ({ api, data }) => {
     // Player scores come from api.state (mutated via api.set/state assignment in moves),
     // but connectedPlayers/kickedPlayers are mutated directly on `data` by action/kick()
@@ -87,14 +89,8 @@ const PlayerPlugin = <PlayerState extends any = any>({
       return (state[ctx.currentPlayer] = value);
     };
 
-    const isHost = (playerID: string) => {
-      const connected = data.connectedPlayers ?? [];
-      const kicked = data.kickedPlayers ?? [];
-      const eligible = connected
-        .filter(id => !kicked.includes(id))
-        .sort((a, b) => Number(a) - Number(b));
-      return eligible.length > 0 ? eligible[0] === playerID : playerID === '0';
-    };
+    const isHost = (playerID: string) =>
+      getHostPlayerID(data.connectedPlayers ?? [], data.kickedPlayers ?? []) === playerID;
     const isKicked = (playerID: string) => (data.kickedPlayers ?? []).includes(playerID);
     const kick = (playerID: string) => {
       if (!data.kickedPlayers) data.kickedPlayers = [];

@@ -7,7 +7,7 @@ import { getCardsByLocation, getCardsByOwner } from '@mcteamster/white-core';
 import { Icon } from './Icons';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { useWindowDimensions, usePlayerData } from '../lib/hooks.ts';
-import { FocusContext } from '../lib/contexts.ts';
+import { FocusContext, HotkeysContext } from '../lib/contexts.ts';
 import { discordSdk } from '../lib/discord.ts';
 import { Likes } from './Focus.tsx';
 import { Calculator, formatScore } from './Calculator.tsx';
@@ -45,9 +45,9 @@ export function Pile(props: BoardProps<GameState>) {
 
   return (
     <div style={styles.pile}>
-      <div onClick={() => { 
-        if (pile.length > 0) { 
-          focusCard(pile[0].id, true) 
+      <div onClick={() => {
+        if (pile.length > 0) {
+          focusCard(pile[0].id, true)
         }
       }} style={{ position: 'relative' }}>
         {pile.length > 0 && (
@@ -178,7 +178,7 @@ export function Players(props: PlayersProps) {
     }
   }
 
-  const { hostPlayerID, kickedPlayers } = usePlayerData(props.plugins);
+  const { hostPlayerID, kickedPlayers } = usePlayerData(props.plugins, props.matchData);
   const isHost = props.playerID === hostPlayerID;
 
   const playerAvatars = props.matchData ? props.matchData.map((player, i) => {
@@ -251,7 +251,20 @@ export function Header(props: HeaderProps) {
   const [showShare, setShowShare] = useState(false);
   const [editingMyScore, setEditingMyScore] = useState(false);
   const dimensions = useWindowDimensions();
-  const { hostPlayerID: headerHostID } = usePlayerData(props.plugins);
+  const { hostPlayerID: headerHostID } = usePlayerData(props.plugins, props.matchData);
+
+  const { setFocus } = useContext(FocusContext);
+  const { hotkeys } = useContext(HotkeysContext);
+  const discard = getCardsByLocation(props.G.cards, 'discard')
+    .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))[0];
+
+  const viewDiscards = useCallback(() => {
+    if (props.isMultiplayer && discard) setFocus({ id: discard.id, zone: 'discard' });
+  }, [props.isMultiplayer, discard, setFocus]);
+
+  useEffect(() => {
+    if (hotkeys.v) viewDiscards();
+  }, [hotkeys.v, viewDiscards]);
 
   const playerName = props.isMultiplayer && props.matchData?.find((player) => player.id == Number(props.playerID))?.name?.toUpperCase() || ""
   const myScore = getPlayerScore(props.plugins, props.playerID || '0');
@@ -271,6 +284,26 @@ export function Header(props: HeaderProps) {
       justifyContent: 'space-between',
       alignItems: (discordSdk && dimensions.upright) ? 'flex-end' : 'center',
     },
+    centerActions: {
+      position: 'absolute',
+      left: '50%',
+      bottom: 0,
+      transform: 'translateX(-50%)',
+      display: 'flex',
+      alignItems: 'center',
+    },
+    centerAction: {
+      width: '2.75em',
+      height: '2em',
+      display: 'grid',
+      placeItems: 'center',
+      border: 0,
+      padding: 0,
+      background: 'transparent',
+      color: 'inherit',
+      cursor: 'pointer',
+      font: 'inherit',
+    },
     item: {
       display: 'flex',
       flexDirection: 'row',
@@ -285,6 +318,15 @@ export function Header(props: HeaderProps) {
     <>
       <div style={styles.header}>
         <div style={{ ...styles.item, ...styles.match }} onClick={ () => setShowShare(true) }><Icon name='copy' />&nbsp;{props.matchID !== 'default' ? `${props.matchID}` : "Blank White Cards"}</div>
+        <div style={styles.centerActions}>
+          {props.isMultiplayer && discard && (
+            <button type="button" aria-label="View Discards" title="View Discards (V)"
+              style={styles.centerAction}
+              onClick={viewDiscards}>
+              <Icon name='discard' />
+            </button>
+          )}
+        </div>
         {props.isMultiplayer && props.matchID !== 'default' && (
           <div style={{ ...styles.item, fontSize: '1em', paddingRight: '0.5em' }}>
             {playerName && (editingMyScore ? (

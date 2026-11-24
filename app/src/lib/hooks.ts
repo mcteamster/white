@@ -2,20 +2,23 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { HotkeysContextType } from './contexts';
 import { discordSdk } from './discord';
+import { getHostPlayerID } from '@mcteamster/white-engine/plugins';
 
 // Plugin Player Data
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function usePlayerData(plugins: any) {
+export function usePlayerData(
+  plugins: any,
+  matchData?: Array<{ id: number; name?: string; isConnected?: boolean }> | null
+) {
   const data = plugins?.player?.data;
   return useMemo(() => {
-    const connectedPlayers = (data?.connectedPlayers ?? []) as string[];
+    const connectedPlayers = (matchData ?? [])
+      .filter(player => player.isConnected && player.name)
+      .map(player => String(player.id));
     const kickedPlayers = (data?.kickedPlayers ?? []) as string[];
-    const eligible = connectedPlayers
-      .filter(id => !kickedPlayers.includes(id))
-      .sort((a, b) => Number(a) - Number(b));
-    const hostPlayerID = eligible.length > 0 ? eligible[0] : '0';
+    const hostPlayerID = getHostPlayerID(connectedPlayers, kickedPlayers);
     return { hostPlayerID, kickedPlayers, connectedPlayers };
-  }, [data?.connectedPlayers, data?.kickedPlayers]);
+  }, [matchData, data]);
 }
 
 // Dimensions
@@ -68,6 +71,7 @@ export const useHotkeys = ({ hotkeys, setHotkeys}: HotkeysContextType) => {
       KeyX: 'x',
       KeyG: 'g',
       KeyB: 'b',
+      KeyV: 'v',
       KeyC: 'c',
       KeyP: 'p',
       KeyT: 't',

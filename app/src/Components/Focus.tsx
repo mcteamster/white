@@ -1,7 +1,7 @@
 import type { BoardProps } from '@mcteamster/white-engine/react';
 import type { GameState } from '@mcteamster/white-core'
 import type { Properties } from 'csstype';
-import { Card, getAdjacentCard, getCardById } from '@mcteamster/white-core';
+import { Card, getAdjacentCard, getCardById, getCardsByLocation } from '@mcteamster/white-core';
 import { Icon, Browse } from './Icons';
 import { CardFace } from './CardFace.tsx';
 import { useCallback, useContext, useEffect, useState } from 'react';
@@ -20,7 +20,7 @@ export function Focus(props: BoardProps<GameState>) {
 
   const focusCard = useCallback(((id: number, focusState: boolean) => {
     if (focus?.id != id && focusState == true) {
-      setFocus({ id });
+      setFocus({ id, zone: focus.zone });
     } else {
       setFocus({});
     }
@@ -31,6 +31,18 @@ export function Focus(props: BoardProps<GameState>) {
     setSendCardMode(false);
     setDisplayedCard(<></>);
   }, [focusCard, setSendCardMode, setDisplayedCard])
+
+  useEffect(() => {
+    if (focus.zone !== 'discard') return;
+    const focusedCard = props.G.cards.find(card => card.id === focus.id);
+    if (focusedCard?.location === 'discard') return;
+
+    setLoading(false);
+    const next = getCardsByLocation(props.G.cards, 'discard')
+      .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))[0];
+    if (next) setFocus({ id: next.id, zone: 'discard' });
+    else unfocusCards();
+  }, [focus, props.G.cards, setFocus, setLoading, unfocusCards]);
 
   const changeFocus = useCallback((direction: 'prev' | 'next') => {
     if (focus?.id) {
@@ -141,6 +153,7 @@ export function Focus(props: BoardProps<GameState>) {
     let card: Card | undefined;
     if (focus?.id) {
       card = getCardById(props.G.cards, focus?.id)
+      if (focus.zone === 'discard' && card?.location !== 'discard') card = undefined;
     };
 
     if (card) {
@@ -164,9 +177,9 @@ export function Focus(props: BoardProps<GameState>) {
           {props.isMultiplayer && <wired-card style={{ ...styles.button }} id="sendButton" onClick={() => { setSendCardMode(true) }}><Icon name='send' />Send</wired-card>}
           {<wired-card style={{ ...styles.button }} id="pileButton" onClick={() => { moveCardTo(card.id, 'pile') }}><Icon name='pile' />Play on Pile</wired-card>}
         </div>
-      } else if (card.location == 'pile') {
+      } else if (card.location === 'pile' || (props.isMultiplayer && card.location === 'discard')) {
         tray = <div style={styles.tray}>
-          {<wired-card style={{ ...styles.button }} id="claimButton" onClick={(e) => { props.moves.claimCard(card.id); setLoading(true); if (!props.isMultiplayer) unfocusCards(); e.stopPropagation() }}>
+          {<wired-card style={{ ...styles.button }} id="claimButton" onClick={(e) => { props.moves.claimCard(card.id, card.location); setLoading(true); if (!props.isMultiplayer) unfocusCards(); e.stopPropagation() }}>
             {
               loading ?
                 <div className='spin'>
@@ -206,6 +219,7 @@ export function Focus(props: BoardProps<GameState>) {
         const loc = card.location;
         if (loc === 'hand') return <><Icon name='hand' />Hand</>;
         if (loc === 'table') return <><Icon name='display' />Table</>;
+        if (loc === 'discard') return <><Icon name='discard' />Discard</>;
         if (loc === 'pile') return <><Icon name='pile' />Pile</>;
         return '';
       })();
@@ -363,7 +377,7 @@ export function Focus(props: BoardProps<GameState>) {
   // Hotkeys
   useEffect(() => {
     const card = focus?.id && getCardById(props.G.cards, focus?.id)
-    if (card) {
+    if (card && (focus.zone !== 'discard' || card.location === 'discard')) {
       const owned = card.owner == props.playerID;
 
       if (hotkeys.escape || hotkeys.q) {
@@ -398,9 +412,9 @@ export function Focus(props: BoardProps<GameState>) {
         } else {
           unfocusCards();
         }
-      } else if (!owned && card.location === 'pile' && (hotkeys.down || hotkeys.s)) {
+      } else if (!owned && (card.location === 'pile' || (props.isMultiplayer && card.location === 'discard')) && (hotkeys.down || hotkeys.s)) {
         // Yoink — claim pile card into hand
-        props.moves.claimCard(card.id);
+        props.moves.claimCard(card.id, card.location);
         setLoading(true);
         if (!props.isMultiplayer) unfocusCards();
       } else if (owned && (hotkeys.delete || hotkeys.x)) {

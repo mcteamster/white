@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Toolbar } from './ActionSpace';
@@ -13,6 +13,7 @@ const card = (id: number, location: string) => ({ id, location, content: { title
 const props = {
   playerID: '0', mode: 'play', setMode: vi.fn(), isMultiplayer: true,
   moves: {}, ctx: {}, plugins: {},
+  matchData: [{ id: 0, name: 'Host', isConnected: true }],
 } as unknown as Parameters<typeof Toolbar>[0];
 
 function translateTextNodes(element: Element) {
@@ -36,5 +37,55 @@ describe('translated toolbar counts', () => {
     translateTextNodes(label);
     rerender(<MemoryRouter><Toolbar {...props} G={{ cards: [card(1, 'pile'), card(2, 'discard')] }} /></MemoryRouter>);
     expect(screen.getByText('Reset Pile (2)')).toBeTruthy();
+  });
+
+  it('lets the elected host open the Loader after player 0 is kicked', () => {
+    const setMode = vi.fn();
+    render(<MemoryRouter><Toolbar
+      {...props}
+      playerID="1"
+      mode="menu-tools"
+      setMode={setMode}
+      matchData={[
+        { id: 0, name: 'Player 0', isConnected: true },
+        { id: 1, name: 'Player 1', isConnected: true },
+      ]}
+      plugins={{ player: { data: { connectedPlayers: ['0'], kickedPlayers: ['0'] } } }}
+      G={{ cards: [card(1, 'box')] }}
+    /></MemoryRouter>);
+
+    fireEvent.click(screen.getByText('Load').closest('wired-card')!);
+    expect(setMode).toHaveBeenCalledWith('menu-tools-loader');
+  });
+
+  it('lets the server-elected host reset after a handoff', () => {
+    const setMode = vi.fn();
+    render(<MemoryRouter><Toolbar
+      {...props}
+      playerID="1"
+      mode="menu-tools"
+      setMode={setMode}
+      matchData={[{ id: 1, name: 'Player 1', isConnected: true }]}
+      plugins={{ player: { data: { connectedPlayers: ['0'], kickedPlayers: [] } } }}
+      G={{ cards: [card(1, 'deck')] }}
+    /></MemoryRouter>);
+
+    fireEvent.click(screen.getByText('Reset').closest('wired-card')!);
+    expect(setMode).toHaveBeenCalledWith('menu-tools-reset');
+  });
+
+  it('lays out Tools controls in rows of at most four and omits Box and Discard', () => {
+    render(<MemoryRouter><Toolbar
+      {...props}
+      mode="menu-tools"
+      plugins={{ player: { data: { connectedPlayers: ['0'], kickedPlayers: [] } } }}
+      G={{ cards: [card(1, 'box'), card(2, 'discard')] }}
+    /></MemoryRouter>);
+
+    const controls = screen.getByText('Load').closest('wired-card')?.parentElement;
+    expect(controls?.style.justifyContent).toBe('space-around');
+    expect(controls?.children).toHaveLength(4);
+    expect(screen.queryByText(/Box \(/)).toBeNull();
+    expect(screen.queryByText(/^Discard \(/)).toBeNull();
   });
 });

@@ -6,7 +6,7 @@
  * https://opensource.org/licenses/MIT.
  */
 
-import PluginPlayer from './plugin-player';
+import PluginPlayer, { getHostPlayerID } from './plugin-player';
 import { Client } from '../client/client';
 
 describe('default values', () => {
@@ -185,95 +185,31 @@ describe('with playerView', () => {
   });
 });
 
-describe('derived host', () => {
-  let client;
-  const plugin = PluginPlayer();
-  const game = {
-    moves: {
-      checkHost: ({ G, player, playerID }) => {
-        G.isHost = player.isHost(playerID);
-      },
-    },
-    plugins: [plugin],
-  };
-
-  beforeEach(() => {
-    client = Client({ game });
+describe('derived host election', () => {
+  test('falls back to player 0 when there are no connected players', () => {
+    expect(getHostPlayerID([])).toBe('0');
   });
 
-  test('fallback to player 0 when connectedPlayers is empty', () => {
-    // No syncPlayers dispatched yet — fallback
-    client.moves.checkHost();
-    expect(client.getState().G.isHost).toBe(true); // player 0
+  test('elects the lowest connected non-kicked player', () => {
+    expect(getHostPlayerID(['2', '0', '5'], ['0'])).toBe('2');
   });
 
-  test('lowest connected non-kicked player is host', () => {
-    client.plugins.player({ action: 'syncPlayers', connectedPlayers: ['1', '2', '0'] });
-    client.moves.checkHost();
-    expect(client.getState().G.isHost).toBe(true); // player 0 is lowest
+  test('uses numeric ordering for player IDs above 9', () => {
+    expect(getHostPlayerID(['10', '2', '1'])).toBe('1');
   });
 
-  test('host shifts when lowest player is kicked', () => {
-    client.plugins.player({ action: 'syncPlayers', connectedPlayers: ['0', '1', '2'] });
-    // Simulate kick of player 0 via a move that calls player.kick
-    const kickGame = {
-      moves: {
-        doKick: ({ player }, targetID: string) => { player.kick(targetID); },
-        checkHost: ({ G, player, playerID }) => { G.isHost = player.isHost(playerID); },
-      },
-      plugins: [PluginPlayer()],
-    };
-    const kickClient = Client({ game: kickGame });
-    kickClient.plugins.player({ action: 'syncPlayers', connectedPlayers: ['0', '1', '2'] });
-    kickClient.moves.doKick('0');
-    // Now player 1 should be host (player 0 is kicked)
-    kickClient.events.endTurn(); // switch to player 1
-    kickClient.moves.checkHost();
-    expect(kickClient.getState().G.isHost).toBe(true); // player 1
-  });
-
-  test('numeric sort — player 1 beats player 10', () => {
-    const largeGame = {
-      moves: {
-        checkHost: ({ G, player, playerID }) => { G.isHost = player.isHost(playerID); },
-      },
-      plugins: [PluginPlayer()],
-    };
-    const largeClient = Client({ game: largeGame, numPlayers: 11 });
-    largeClient.plugins.player({ action: 'syncPlayers', connectedPlayers: ['10', '2', '1'] });
-    largeClient.moves.checkHost(); // player 0 is current but not connected — should not be host
-    expect(largeClient.getState().G.isHost).toBe(false); // player 0 is not in connectedPlayers
+  test('falls back to player 0 when every connected player is kicked', () => {
+    expect(getHostPlayerID(['0', '1'], ['0', '1'])).toBe('0');
   });
 });
 
-describe('syncPlayers plugin action', () => {
-  const plugin = PluginPlayer();
-  const game = {
-    plugins: [plugin],
-  };
+describe('client connection sync', () => {
+  test('ignores client-submitted syncPlayers lists', () => {
+    const plugin = PluginPlayer();
+    const client = Client({ game: { plugins: [plugin] } });
 
-  test('updates connectedPlayers', () => {
-    const client = Client({ game });
     client.plugins.player({ action: 'syncPlayers', connectedPlayers: ['0', '2'] });
-    expect(client.getState().plugins[plugin.name].data.connectedPlayers).toEqual(['0', '2']);
-  });
 
-  test('idempotent — same list produces same state', () => {
-    const client = Client({ game });
-    client.plugins.player({ action: 'syncPlayers', connectedPlayers: ['1', '3'] });
-    client.plugins.player({ action: 'syncPlayers', connectedPlayers: ['1', '3'] });
-    expect(client.getState().plugins[plugin.name].data.connectedPlayers).toEqual(['1', '3']);
-  });
-
-  test('unknown action is ignored', () => {
-    const client = Client({ game });
-    client.plugins.player({ action: 'unknownAction', foo: 'bar' });
-    expect(client.getState().plugins[plugin.name].data.connectedPlayers).toEqual([]);
-  });
-
-  test('invalid connectedPlayers is ignored', () => {
-    const client = Client({ game });
-    client.plugins.player({ action: 'syncPlayers', connectedPlayers: 'not-an-array' });
     expect(client.getState().plugins[plugin.name].data.connectedPlayers).toEqual([]);
   });
 });

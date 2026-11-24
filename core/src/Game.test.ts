@@ -3,9 +3,15 @@
  */
 
 import { describe, test, expect } from 'vitest';
+import * as ActionCreators from '../../engine/src/core/action-creators';
+import { Master } from '../../engine/src/master/master';
+import { InMemory } from '../../engine/src/server/db/inmemory';
+import * as StorageAPI from '../../engine/src/server/db/base';
+import { createMatch } from '../../engine/src/server/util';
 import { Client } from '../../engine/packages/client.ts';
 import { BlankWhiteCards } from './Game.ts';
 import type { Card } from './Cards.ts';
+import type { CredentialedActionShape } from '../../engine/src/types';
 
 // ── moveCard with target: 'box' ───────────────────────────────────────────────
 
@@ -120,6 +126,163 @@ function moveToPile(client: ReturnType<typeof makeClient>, cardId: number) {
   client.moves.moveCard(cardId, 'pile');
 }
 
+function makeClientWithBoxedCard(playerID: string) {
+  const client = makeClient(playerID, 2);
+  client.moves.submitCard({
+    id: 0,
+    content: { title: 'Boxed Card', description: 'desc', author: 'ghost' },
+    location: 'box',
+    owner: playerID,
+    timestamp: 123,
+  });
+  return { client, card: client.getState()!.G.cards[0] as Card };
+}
+
+describe('moveCard from box', () => {
+  test('rejects non-host moves out of box without changing the card', () => {
+    const { client, card } = makeClientWithBoxedCard('1');
+    const before = { ...client.getState()!.G.cards[0] };
+
+    for (const target of ['deck', 'pile', 'discard', 'hand', 'table']) {
+      client.moves.moveCard(card.id, target);
+      expect(client.getState()!.G.cards[0]).toEqual(before);
+    }
+  });
+
+  test('allows the host to restore a boxed card to deck', () => {
+    const { client, card } = makeClientWithBoxedCard('0');
+    client.moves.moveCard(card.id, 'deck');
+
+    const restoredCard = client.getState()!.G.cards[0];
+    expect(restoredCard.location).toBe('deck');
+    expect(restoredCard.owner).toBeUndefined();
+  });
+
+  test('assigns the host as owner when restoring a boxed card to hand', () => {
+    const { client, card } = makeClientWithBoxedCard('0');
+    client.moves.moveCard(card.id, 'hand');
+
+    const restoredCard = client.getState()!.G.cards[0];
+    expect(restoredCard.location).toBe('hand');
+    expect(restoredCard.owner).toBe('0');
+  });
+});
+
+describe('server-owned host election and restore authorization', () => {
+  test('broadcasts connection changes only after async metadata persistence', async () => {
+    const created = createMatch({
+      game: BlankWhiteCards,
+      numPlayers: 2,
+      setupData: undefined,
+      unlisted: false,
+    });
+    if ('setupDataError' in created) throw new Error(created.setupDataError);
+
+    let metadataPersisted = false;
+    const broadcasts: boolean[] = [];
+    const storage = {
+      type: () => StorageAPI.Type.ASYNC,
+      fetch: async () => ({ metadata: created.metadata }),
+      setMetadata: async () => {
+        await Promise.resolve();
+        metadataPersisted = true;
+      },
+    } as unknown as StorageAPI.Async;
+    const master = new Master(BlankWhiteCards, storage, {
+      send: () => {},
+      sendAll: () => broadcasts.push(metadataPersisted),
+    });
+
+    await master.onConnectionChange('async-connection-change', '0', undefined, true);
+
+    expect(broadcasts).toEqual([true]);
+  });
+
+  test('handles disconnect, reconnect, kicked-player exclusion, and boxed-card restores', async () => {
+    const matchID = 'server-owned-host';
+    const created = createMatch({
+      game: BlankWhiteCards,
+      numPlayers: 2,
+      setupData: undefined,
+      unlisted: false,
+    });
+    if ('setupDataError' in created) throw new Error(created.setupDataError);
+
+    const metadata = created.metadata;
+    metadata.players[0].name = 'Player 0';
+    metadata.players[1].name = 'Player 1';
+    const initialState = {
+      ...created.initialState,
+      G: {
+        ...created.initialState.G,
+        cards: [1, 2, 3, 4].map((id) => ({
+          id,
+          content: { title: `Boxed ${id}`, description: 'Test card', author: 'test' },
+          location: 'box',
+          owner: undefined,
+          timestamp: id,
+        })),
+      },
+    };
+    const db = new InMemory();
+    db.createMatch(matchID, { initialState, metadata });
+    const master = new Master(BlankWhiteCards, db, {
+      send: () => {},
+      sendAll: () => {},
+    });
+
+    const update = async (playerID: string, action: CredentialedActionShape.Any) => {
+      const { state } = db.fetch(matchID, { state: true });
+      await master.onUpdate(action, state._stateID, matchID, playerID);
+      return db.fetch(matchID, { state: true }).state;
+    };
+    const move = (playerID: string, type: string, ...args: unknown[]) =>
+      ActionCreators.makeMove(type, args, playerID);
+
+    await master.onConnectionChange(matchID, '0', undefined, true);
+    await master.onConnectionChange(matchID, '1', undefined, true);
+
+    let state = await update(
+      '1',
+      ActionCreators.plugin('player', {
+        action: 'syncPlayers',
+        connectedPlayers: ['1'],
+      }, '1')
+    );
+    expect(state.plugins.player.data.connectedPlayers).toEqual(['0', '1']);
+
+    state = await update('1', move('1', 'moveCard', 1, 'deck'));
+    expect(state.G.cards.find((card) => card.id === 1)?.location).toBe('box');
+
+    await master.onConnectionChange(matchID, '0', undefined, false);
+    state = await update('1', move('1', 'moveCard', 1, 'deck'));
+    expect(state.G.cards.find((card) => card.id === 1)?.location).toBe('deck');
+
+    await master.onConnectionChange(matchID, '0', undefined, true);
+    state = await update('0', move('0', 'moveCard', 2, 'deck'));
+    expect(state.G.cards.find((card) => card.id === 2)?.location).toBe('deck');
+
+    await master.onConnectionChange(matchID, '0', undefined, false);
+    state = await update('1', move('1', 'forceLeave', '0', 'Player 0'));
+    expect(state.plugins.player.data.kickedPlayers).toContain('0');
+
+    await master.onConnectionChange(matchID, '0', undefined, true);
+    state = await update('0', move('0', 'moveCard', 3, 'deck'));
+    expect(state.G.cards.find((card) => card.id === 3)?.location).toBe('box');
+
+    state = await update('1', move('1', 'moveCard', 3, 'deck'));
+    expect(state.G.cards.find((card) => card.id === 3)?.location).toBe('deck');
+    expect(state.plugins.player.data.connectedPlayers).toEqual(['0', '1']);
+
+    state = await update('1', move('1', 'moveCard', 4, 'hand'));
+    expect(state.G.cards.find((card) => card.id === 4)).toMatchObject({
+      location: 'hand',
+      owner: '1',
+      previousOwner: '1',
+    });
+  });
+});
+
 // ── pickupCard ────────────────────────────────────────────────────────────────
 
 describe('pickupCard', () => {
@@ -196,6 +359,21 @@ describe('claimCard', () => {
     const claimed = after.find((c: Card) => c.id === card.id)!;
     expect(claimed.location).toBe('hand');
     expect(claimed.owner).toBe('0');
+  });
+
+  test('lets a non-host recover a discard and rejects later claims', () => {
+    const client = makeClient('0', 2);
+    const card = submitAndGetCard(client);
+    client.moves.moveCard(card.id, 'discard');
+
+    client.updatePlayerID('1');
+    client.moves.claimCard(card.id, 'discard');
+    const claimed = client.getState()!.G.cards.find((entry: Card) => entry.id === card.id);
+    expect(claimed).toMatchObject({ location: 'hand', owner: '1' });
+
+    client.updatePlayerID('0');
+    client.moves.claimCard(card.id, 'discard');
+    expect(client.getState()!.G.cards.find((entry: Card) => entry.id === card.id)).toEqual(claimed);
   });
 
   test('returns INVALID_MOVE for a card not in the pile', () => {

@@ -57,13 +57,22 @@ const moveCard: Move<GameState> = ({ G, ctx, playerID, player, gamelog, chat }: 
   const selectedCard = getCardById(G.cards, id);
   if (selectedCard) {
     const sourceLocation = selectedCard.location;
+    if (target === 'box' && (playerID == null || selectedCard.owner !== playerID)) {
+      return INVALID_MOVE;
+    }
+    if (sourceLocation === 'box' && target !== 'box' && !player.isHost(playerID)) {
+      return INVALID_MOVE;
+    }
     if (['pile', 'discard', 'deck', 'box'].includes(target)) {
       selectedCard.location = target;
       selectedCard.owner = undefined;
       selectedCard.previousOwner = playerID;
       selectedCard.timestamp = Number(Date.now());
     } else if (['hand', 'table'].includes(target)) {
-      if (owner && owner != playerID) {
+      if (sourceLocation === 'box' && target === 'hand') {
+        selectedCard.owner = playerID;
+        selectedCard.previousOwner = playerID;
+      } else if (owner && owner != playerID) {
         selectedCard.owner = owner;
         selectedCard.previousOwner = playerID;
       }
@@ -85,12 +94,13 @@ const moveCard: Move<GameState> = ({ G, ctx, playerID, player, gamelog, chat }: 
   }
 }
 
-const claimCard: Move<GameState> = ({ G, ctx, playerID, player, gamelog, chat }: any, id) => {
+const claimCard: Move<GameState> = ({ G, ctx, playerID, player, gamelog, chat }: any, id, source = 'pile') => {
   if (player.isKicked(playerID)) return INVALID_MOVE;
+  if (source !== 'pile' && !(source === 'discard' && ctx.numPlayers > 1)) return INVALID_MOVE;
   const selectedCard = getCardById(G.cards, id);
   if (selectedCard) {
-    if (selectedCard.location == 'pile') {
-      // Cards in the pile have no owner and can be "claimed" by anyone into their hand
+    if (selectedCard.location === source) {
+      // Shared pile cards become owned by the player who claims them.
       selectedCard.owner = playerID;
       selectedCard.timestamp = Number(Date.now());
       selectedCard.location = 'hand';
