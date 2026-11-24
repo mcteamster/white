@@ -6,6 +6,7 @@ import { describe, test, expect } from 'vitest';
 import * as ActionCreators from '../../engine/src/core/action-creators';
 import { Master } from '../../engine/src/master/master';
 import { InMemory } from '../../engine/src/server/db/inmemory';
+import * as StorageAPI from '../../engine/src/server/db/base';
 import { createMatch } from '../../engine/src/server/util';
 import { Client } from '../../engine/packages/client.ts';
 import { BlankWhiteCards } from './Game.ts';
@@ -168,6 +169,35 @@ describe('moveCard from box', () => {
 });
 
 describe('server-owned host election and restore authorization', () => {
+  test('broadcasts connection changes only after async metadata persistence', async () => {
+    const created = createMatch({
+      game: BlankWhiteCards,
+      numPlayers: 2,
+      setupData: undefined,
+      unlisted: false,
+    });
+    if ('setupDataError' in created) throw new Error(created.setupDataError);
+
+    let metadataPersisted = false;
+    const broadcasts: boolean[] = [];
+    const storage = {
+      type: () => StorageAPI.Type.ASYNC,
+      fetch: async () => ({ metadata: created.metadata }),
+      setMetadata: async () => {
+        await Promise.resolve();
+        metadataPersisted = true;
+      },
+    } as unknown as StorageAPI.Async;
+    const master = new Master(BlankWhiteCards, storage, {
+      send: () => {},
+      sendAll: () => broadcasts.push(metadataPersisted),
+    });
+
+    await master.onConnectionChange('async-connection-change', '0', undefined, true);
+
+    expect(broadcasts).toEqual([true]);
+  });
+
   test('handles disconnect, reconnect, kicked-player exclusion, and boxed-card restores', async () => {
     const matchID = 'server-owned-host';
     const created = createMatch({

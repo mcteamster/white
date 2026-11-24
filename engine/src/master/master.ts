@@ -463,18 +463,17 @@ export class Master {
 
     metadata.players[playerID as unknown as number].isConnected = connected;
 
-    const filteredMetadata = filterMatchData(metadata);
-
-    this.transportAPI.sendAll({
-      type: 'matchData',
-      args: [matchID, filteredMetadata],
-    });
-
     if (StorageAPI.isSynchronous(this.storageAPI)) {
       this.storageAPI.setMetadata(key, metadata);
     } else {
       await this.storageAPI.setMetadata(key, metadata);
     }
+
+    const filteredMetadata = filterMatchData(metadata);
+    this.transportAPI.sendAll({
+      type: 'matchData',
+      args: [matchID, filteredMetadata],
+    });
   }
 
   async onChatMessage(
