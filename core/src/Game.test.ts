@@ -151,6 +151,15 @@ describe('moveCard from box', () => {
     expect(restoredCard.location).toBe('deck');
     expect(restoredCard.owner).toBeUndefined();
   });
+
+  test('assigns the host as owner when restoring a boxed card to hand', () => {
+    const { client, card } = makeClientWithBoxedCard('0');
+    client.moves.moveCard(card.id, 'hand');
+
+    const restoredCard = client.getState()!.G.cards[0];
+    expect(restoredCard.location).toBe('hand');
+    expect(restoredCard.owner).toBe('0');
+  });
 });
 
 // ── pickupCard ────────────────────────────────────────────────────────────────

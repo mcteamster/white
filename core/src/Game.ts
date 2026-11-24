@@ -66,7 +66,10 @@ const moveCard: Move<GameState> = ({ G, ctx, playerID, player, gamelog, chat }: 
       selectedCard.previousOwner = playerID;
       selectedCard.timestamp = Number(Date.now());
     } else if (['hand', 'table'].includes(target)) {
-      if (owner && owner != playerID) {
+      if (sourceLocation === 'box' && target === 'hand') {
+        selectedCard.owner = playerID;
+        selectedCard.previousOwner = playerID;
+      } else if (owner && owner != playerID) {
         selectedCard.owner = owner;
         selectedCard.previousOwner = playerID;
       }
