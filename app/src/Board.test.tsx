@@ -19,6 +19,8 @@ const cards = [
   { id: 3, location: 'pile', timestamp: 30, content: { title: 'Pile', description: '' } },
   { id: 4, location: 'discard', timestamp: 40, content: { title: 'Discard', description: '' } },
 ];
+const opponentTableCard = { id: 5, location: 'table', owner: '1', timestamp: 50, content: { title: 'Opponent table', description: '' } };
+const cardsWithOpponentTable = [...cards, opponentTableCard];
 
 const boardProps = {
   G: { cards },
@@ -34,9 +36,11 @@ const boardProps = {
 function BoardHarness({
   initialFocus,
   onHotkeysReady,
+  gameCards = cards,
 }: {
   initialFocus: FocusType;
   onHotkeysReady: (setter: Dispatch<SetStateAction<HotkeysType>>) => void;
+  gameCards?: typeof cards;
 }) {
   const [focus, setFocusState] = useState(initialFocus);
   const [hotkeys, setHotkeys] = useState<HotkeysType>({});
@@ -50,22 +54,59 @@ function BoardHarness({
     <FocusContext.Provider value={{ focus, setFocus }}>
       <HotkeysContext.Provider value={{ hotkeys, setHotkeys }}>
         <output data-testid="focused-card">{focus.id ?? 'none'}</output>
-        <BlankWhiteCardsBoard {...boardProps} />
+        <BlankWhiteCardsBoard {...boardProps} G={{ ...boardProps.G, cards: gameCards }} />
       </HotkeysContext.Provider>
     </FocusContext.Provider>
   );
 }
 
-describe('Discard and the Tab focus cycle', () => {
-  it.each([
-    { shiftTab: false, expectedID: 3 },
-    { shiftTab: true, expectedID: 1 },
-  ])('cycles from Table with Tab (shiftTab: $shiftTab) without including Discard', async ({ shiftTab, expectedID }) => {
+const outsideFocusCases: Array<{
+  origin: string;
+  focus: FocusType;
+  shiftTab: boolean;
+  expectedID: number;
+  gameCards: typeof cards;
+}> = [
+  { origin: 'unfocused state', focus: {}, shiftTab: false, expectedID: 1, gameCards: cards },
+  { origin: 'unfocused state', focus: {}, shiftTab: true, expectedID: 3, gameCards: cards },
+  { origin: 'Discard', focus: { id: 4, zone: 'discard' }, shiftTab: false, expectedID: 1, gameCards: cards },
+  { origin: 'Discard', focus: { id: 4, zone: 'discard' }, shiftTab: true, expectedID: 3, gameCards: cards },
+  { origin: "another player's Table", focus: { id: 5 }, shiftTab: false, expectedID: 1, gameCards: cardsWithOpponentTable },
+  { origin: "another player's Table", focus: { id: 5 }, shiftTab: true, expectedID: 3, gameCards: cardsWithOpponentTable },
+  { origin: 'Discard with an empty Hand', focus: { id: 4, zone: 'discard' }, shiftTab: false, expectedID: 2, gameCards: cards.filter(card => card.id !== 1) },
+  { origin: "another player's Table with an empty Pile", focus: { id: 5 }, shiftTab: true, expectedID: 2, gameCards: cardsWithOpponentTable.filter(card => card.id !== 3) },
+];
+
+describe('Tab focus cycle', () => {
+  it.each(outsideFocusCases)('enters the cycle from $origin (shiftTab: $shiftTab)', async ({ focus, shiftTab, expectedID, gameCards }) => {
     let setHotkeys: Dispatch<SetStateAction<HotkeysType>> = () => {};
-    render(<BoardHarness initialFocus={{ id: 2 }} onHotkeysReady={(setter) => { setHotkeys = setter; }} />);
+    render(<BoardHarness initialFocus={focus} gameCards={gameCards} onHotkeysReady={(setter) => { setHotkeys = setter; }} />);
 
     act(() => setHotkeys(shiftTab ? { tab: true, shiftTab: true } : { tab: true }));
 
     await waitFor(() => expect(screen.getByTestId('focused-card').textContent).toBe(String(expectedID)));
+  });
+
+  it.each([
+    { focus: { id: 2 }, shiftTab: false, expectedID: 3 },
+    { focus: { id: 2 }, shiftTab: true, expectedID: 1 },
+    { focus: { id: 1 }, shiftTab: true, expectedID: 3 },
+    { focus: { id: 3 }, shiftTab: false, expectedID: 1 },
+  ] as Array<{ focus: FocusType; shiftTab: boolean; expectedID: number }>)('cycles within the local zones (shiftTab: $shiftTab)', async ({ focus, shiftTab, expectedID }) => {
+    let setHotkeys: Dispatch<SetStateAction<HotkeysType>> = () => {};
+    render(<BoardHarness initialFocus={focus} onHotkeysReady={(setter) => { setHotkeys = setter; }} />);
+
+    act(() => setHotkeys(shiftTab ? { tab: true, shiftTab: true } : { tab: true }));
+
+    await waitFor(() => expect(screen.getByTestId('focused-card').textContent).toBe(String(expectedID)));
+  });
+
+  it.each([false, true])('keeps external focus when every cycle zone is empty (shiftTab: %s)', async (shiftTab) => {
+    let setHotkeys: Dispatch<SetStateAction<HotkeysType>> = () => {};
+    render(<BoardHarness initialFocus={{ id: 4, zone: 'discard' }} gameCards={cards.filter(card => card.id === 4)} onHotkeysReady={(setter) => { setHotkeys = setter; }} />);
+
+    act(() => setHotkeys(shiftTab ? { tab: true, shiftTab: true } : { tab: true }));
+
+    expect(screen.getByTestId('focused-card').textContent).toBe('4');
   });
 });
